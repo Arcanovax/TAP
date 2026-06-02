@@ -1,4 +1,5 @@
-mod { items, quests};
+use crate::structures::items::Items;
+use crate::structures::quests::Quest;
 
 struct Player {
 	name: String,

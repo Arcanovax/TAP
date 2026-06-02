@@ -1,27 +1,19 @@
-use rust_yaml::Yaml;
+mod structures;
 
-fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let yaml = Yaml::new();
+use serde_yaml;
+use crate::structures::items::{self, Items};
+use crate::structures::enums::item_kind::ItemKind;
 
-    // Parse YAML from a string
-    let yaml_content = r#"
-        name: "rust-yaml"
-        version: "1.1.0"
-        features:
-          - fast
-          - safe
-          - reliable
-        config:
-          debug: true
-          max_depth: 100
-    "#;
+fn main() {
+    let yaml_data = "
+name: Bouclier
+price: 300
+number: 1
+kind:
+ Weapon:
+  damages: 15
+";
 
-    let parsed = yaml.load_str(yaml_content)?;
-    println!("Parsed: {:#?}", parsed);
-
-    // Dump back to YAML
-    let output = yaml.dump_str(&parsed)?;
-    println!("Output:\n{}", output);
-
-    Ok(())
+    let deserialized_config: Items = serde_yaml::from_str(yaml_data).unwrap();
+    println!("{:?}", deserialized_config);
 }

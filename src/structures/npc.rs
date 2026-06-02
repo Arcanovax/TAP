@@ -1,4 +1,4 @@
-mod npc_kind;
+use crate::structures::enums::npc_kind::NPCKind;
 
 pub struct NPC {
 	name: String,
