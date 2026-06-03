@@ -5,5 +5,5 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Debug, PartialEq, Serialize, Deserialize)]
 pub struct Global {
-	locations: HashMap<String, Location>,
+	pub locations: HashMap<String, Location>,
 }

@@ -10,11 +10,11 @@ use crate::structures::{
 fn main() -> Result<(), Box<dyn std::error::Error>> {
 
 	let f = std::fs::File::open("config.yaml")?;
-	let d: Global = serde_yaml::from_reader(f)?;
+	let mut d: Global = serde_yaml::from_reader(f)?;
 	// println!("Read YAML string: {:#?}", d);
 	let mut list_players: ListPlayers = ListPlayers{ list: Vec::new() };
 	
-	match list_players.create_player(String::from("Bruno")) {
+	match list_players.create_player(String::from("Bruno"), String::from("start")) {
 		Ok(()) => println!("New Player!!! {:#?}", list_players.list),
 		Err(e) => eprintln!("{}", e),
 	}

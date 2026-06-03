@@ -4,9 +4,9 @@ use std::collections::HashMap;
 
 #[derive(Debug, PartialEq, Serialize, Deserialize)]
 pub struct Location {
-	name: String,
-	exits: Vec<Exits>,
-	description: String,
-	npc: HashMap<String, NPC>,
-	items: Option<Vec<Items>>
+	pub name: String,
+	pub exits: Vec<Exits>,
+	pub description: String,
+	pub npc: HashMap<String, NPC>,
+	pub items: Option<Vec<Items>>
 }

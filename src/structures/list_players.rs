@@ -1,4 +1,4 @@
-use crate::structures::player::Player;
+use crate::structures::{location::Location, player::Player};
 
 #[derive(Debug)]
 pub struct ListPlayers {
@@ -6,7 +6,7 @@ pub struct ListPlayers {
 }
 
 impl ListPlayers {
-	pub fn create_player(&mut self, name: String) -> Result<(), &'static str> {
+	pub fn create_player(&mut self, name: String, location: String) -> Result<(), &'static str> {
 	for player in &self.list {
 		if *player.name == name {
 			return Err("This name is already use.");
@@ -16,6 +16,7 @@ impl ListPlayers {
 		name,
 		hp: 100,
 		max_hp: 100,
+		location,
 		inventory: Vec::new(),
 		available_quests: Vec::new()
 	});
