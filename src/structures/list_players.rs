@@ -6,7 +6,7 @@ pub struct ListPlayers {
 }
 
 impl ListPlayers {
-	pub fn create_player(&mut self, name: String, location: String) -> Result<(), &'static str> {
+	pub fn create_player(&mut self, name: String) -> Result<(), &'static str> {
 	for player in &self.list {
 		if *player.name == name {
 			return Err("This name is already use.");
@@ -16,7 +16,7 @@ impl ListPlayers {
 		name,
 		hp: 100,
 		max_hp: 100,
-		location,
+		location: String::from("start"),
 		inventory: Vec::new(),
 		available_quests: Vec::new()
 	});

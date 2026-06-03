@@ -3,8 +3,8 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Debug, PartialEq, Serialize, Deserialize)]
 pub struct NPC {
-	name: String,
-	dialogue: Vec<String>,
-	description: String,
-	kind: NPCKind
+	pub name: String,
+	pub dialogue: Vec<String>,
+	pub description: String,
+	pub kind: NPCKind
 }

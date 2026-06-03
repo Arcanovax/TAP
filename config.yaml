@@ -11,7 +11,9 @@ locations:
       gard:
         name: "Village Guard"
         description: "A stern-looking guard watching over the square."
-        dialogue: ["Stay safe, traveler.", "The roads can be dangerous."]
+        dialogue: 
+          - "Stay safe, traveler."
+          - "The roads can be dangerous."
         kind: Gard
   tavern:
     name: "The Prancing Pony"
@@ -23,7 +25,9 @@ locations:
       Bar_owner:
         name: "Bar owner"
         description: "A friendly bar owner eager to trade."
-        dialogue: ["Welcome to my shop!", "What can I get for you today?"]
+        dialogue: 
+          - "Welcome to my shop!"
+          - "What can I get for you today?"
         kind:
           Merchant:
             gold: 45
@@ -45,7 +49,9 @@ locations:
       merchant:
         name: "Shop Keeper"
         description: "A friendly merchant eager to trade."
-        dialogue: ["Welcome to my shop!", "What can I get for you today?"]
+        dialogue: 
+          - "Welcome to my shop!"
+          - "What can I get for you today?"
         kind:
           Merchant:
             gold: 45
