@@ -143,8 +143,8 @@ async fn main() {
 
 
     let mut player = Player {
-        x: 200.0,
-        y: 100.0,
+        x: 150.0,
+        y: 150.0,
         line: 0,
 		row: 0,
         is_mooving: false,
@@ -152,7 +152,7 @@ async fn main() {
     };
 
 	let rooms: std::collections::HashMap<String, rooms::Room> = get_rooms().await;
-    let map: &rooms::Room = rooms.get("market").unwrap();
+    let map: &rooms::Room = rooms.get("montain").unwrap();
 
 	let spritesheet = load_texture("assets/skins/alex.png").await.unwrap();
     let floor = map.first_layer.clone();
