@@ -1,14 +1,16 @@
-use tokio::io::{AsyncReadExt, AsyncWriteExt};
+use serde::{Deserialize, Serialize};
+use std::sync::{Arc, Mutex};
+use tokio::io::{AsyncBufReadExt, AsyncWriteExt, BufReader};
 use tokio::net::TcpListener;
 
-use crate::ErrorCode::NONE;
-
+#[derive(Serialize, Deserialize, PartialEq, Eq)]
 enum MessageType {
     COMMAND,
     RESPONSE,
     EVENT,
 }
 
+#[derive(Serialize, Deserialize)]
 #[allow(non_camel_case_types)]
 enum ErrorCode {
     NAME_IN_USE,
@@ -44,10 +46,12 @@ impl ErrorCode {
     }
 }
 
+#[derive(Serialize, Deserialize)]
 enum EventType {
     NONE,
 }
 
+#[derive(Serialize, Deserialize)]
 struct Message {
     message: MessageType,
     command_line: String,
@@ -59,6 +63,31 @@ struct Message {
     error_code: u16,
     event_type: EventType,
     event_data: String,
+}
+
+impl Message {
+    fn default() -> Self {
+        Message {
+            message: MessageType::COMMAND,
+            command_line: String::new(),
+            response_line: String::new(),
+            event_line: String::new(),
+            command_name: String::new(),
+            args: Vec::new(),
+            error_response: ErrorCode::NONE,
+            error_code: ErrorCode::NONE.code(),
+            event_type: EventType::NONE,
+            event_data: String::new(),
+        }
+    }
+
+    fn parse(str: String) -> Self {
+        serde_json::from_str(&str).unwrap_or_else(|_| Message::default())
+    }
+
+    fn to_str(message: Self) -> String {
+        serde_json::to_string(&message).unwrap_or_default() + "\n"
+    }
 }
 
 struct ServerInfo {
@@ -73,8 +102,14 @@ impl ServerInfo {
     }
 }
 
-fn connect_request(request: Message, server_info: &ServerInfo) -> Message {
-    if server_info.players.contains(&request.args[0]) {
+fn connect_request(request: Message, server_info: &Arc<Mutex<ServerInfo>>) -> Message {
+    if request.args.len() != 1
+        || server_info
+            .lock()
+            .unwrap()
+            .players
+            .contains(&request.args[0])
+    {
         return Message {
             message: MessageType::RESPONSE,
             error_response: ErrorCode::NAME_IN_USE,
@@ -82,6 +117,12 @@ fn connect_request(request: Message, server_info: &ServerInfo) -> Message {
             ..request
         };
     }
+    server_info
+        .lock()
+        .unwrap()
+        .players
+        .push(request.args[0].clone());
+    println!("{}", server_info.lock().unwrap().players.last().unwrap());
     return Message {
         message: MessageType::RESPONSE,
         error_response: ErrorCode::NONE,
@@ -90,9 +131,33 @@ fn connect_request(request: Message, server_info: &ServerInfo) -> Message {
     };
 }
 
+fn parse_command(line: &str) -> Message {
+    let mut parts = line.split_whitespace();
+    let command_name = parts.next().unwrap_or("").to_string();
+    let args: Vec<String> = parts.map(String::from).collect();
+
+    Message {
+        message: MessageType::COMMAND,
+        command_line: line.to_string(),
+        command_name,
+        args,
+        ..Message::default()
+    }
+}
+
+fn handle_request(request: Message, server_info: &Arc<Mutex<ServerInfo>>) -> Message {
+    if request.message != MessageType::COMMAND {
+        return Message::default();
+    };
+    match request.command_name.to_uppercase().as_str() {
+        "CONNECT" => connect_request(request, server_info),
+        _ => Message::default(),
+    }
+}
+
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let server_info = ServerInfo::new();
+    let server_info: Arc<Mutex<ServerInfo>> = Arc::new(Mutex::new(ServerInfo::new()));
     let listener = TcpListener::bind("127.0.0.1:8080").await?;
 
     loop {
@@ -104,48 +169,29 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         {
             eprintln!("failed to connect establish TCP connection with server");
         }
-        tokio::spawn(async move {
-            let mut buf = [0; 1024];
 
+        let (read_half, mut write_half) = socket.into_split();
+        let mut reader = BufReader::new(read_half);
+        let mut line = String::new();
+
+        let server_info_copy = Arc::clone(&server_info);
+
+        tokio::spawn(async move {
             // In a loop, read data from the socket and write the data back.
             loop {
-                let n = match socket.read(&mut buf).await {
-                    // socket closed
-                    Ok(0) => return,
-                    Ok(n) => n,
-                    Err(e) => {
-                        eprintln!("failed to read from socket; err = {:?}", e);
-                        return;
-                    }
-                };
-
-                let _ = match std::str::from_utf8(&buf[0..n]) {
-                    Ok(text) => {
-                        let text = text.trim();
-
-                        if text == "CONNECT" {
-                            connect_request(
-                                Message {
-                                    message: MessageType::COMMAND,
-                                    command_line: String::from("CONNECT Jonh\n"),
-                                    response_line: String::new(),
-                                    event_line: String::new(),
-                                    command_name: String::from("CONNECT"),
-                                    args: vec![String::from("John")],
-                                    error_response: ErrorCode::NONE,
-                                    error_code: ErrorCode::NONE.code(),
-                                    event_type: EventType::NONE,
-                                    event_data: String::new(),
-                                },
-                                &server_info,
-                            );
-                        } else {
-                            let _ = socket.write_all("Command Not found\n".as_bytes()).await;
-                        }
-                    }
-                    Err(_) => eprintln!("Command not utf8"),
-                };
+                line.clear();
+                let n = reader.read_line(&mut line).await?;
+                if n == 0 {
+                    break;
+                }
+                let line = parse_command(line.as_str());
+                let response = handle_request(line, &server_info_copy);
+                let _ = write_half
+                    .write_all(Message::to_str(response).as_bytes())
+                    .await;
             }
+
+            Ok::<(), std::io::Error>(())
         });
     }
 }
