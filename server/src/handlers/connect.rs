@@ -2,6 +2,7 @@ use crate::error::ErrorCode;
 use crate::protocol::{Message, MessageType};
 use crate::state::ServerInfo;
 use std::sync::{Arc, Mutex};
+use tracing::info;
 
 pub(super) fn connect_request(request: Message, server_info: &Arc<Mutex<ServerInfo>>) -> Message {
     if request.args.len() != 1 {
@@ -18,7 +19,7 @@ pub(super) fn connect_request(request: Message, server_info: &Arc<Mutex<ServerIn
         .try_add_player(request.args[0].to_string())
     {
         true => {
-            println!("{} is connected", request.args[0]);
+            info!("{} is connected", request.args[0]);
             Message {
                 message: MessageType::RESPONSE,
                 error_response: ErrorCode::NONE,
