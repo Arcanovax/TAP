@@ -1,5 +1,7 @@
 use crate::structures::items::Items;
+use serde::{Deserialize, Serialize};
 
+#[derive(Debug, PartialEq, Serialize, Deserialize)]
 pub enum NPCKind {
 	Merchant {
 		inventory: Vec<Items>,
@@ -11,5 +13,6 @@ pub enum NPCKind {
 		damages: u32,
 		loot: Vec<Items>
 	},
-	Citizen {}
+	Citizen,
+	Gard
 }

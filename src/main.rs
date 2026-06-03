@@ -1,19 +1,12 @@
 mod structures;
 
 use serde_yaml;
-use crate::structures::items::{self, Items};
-use crate::structures::enums::item_kind::ItemKind;
+use crate::structures::global::{self, Global};
 
-fn main() {
-    let yaml_data = "
-name: Bouclier
-price: 300
-number: 1
-kind:
- Weapon:
-  damages: 15
-";
+fn main() -> Result<(), Box<dyn std::error::Error>> {
 
-    let deserialized_config: Items = serde_yaml::from_str(yaml_data).unwrap();
-    println!("{:?}", deserialized_config);
+	let f = std::fs::File::open("config.yaml")?;
+    let d: Global = serde_yaml::from_reader(f)?;
+    println!("Read YAML string: {:?}", d);
+    Ok(())
 }
