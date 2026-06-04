@@ -26,6 +26,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 		Ok(sentence) => println!("{}", sentence),
 		Err(e) => eprintln!("{}", e),
 		};
+	} else {
+		eprintln!("Oups!!");
 	}
 
 	if let Some(loc) = current_loc {
@@ -33,6 +35,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 		Ok(()) => println!("{:#?}", d.locations.get(&pl.location)),
 		Err(e) => eprintln!("{}", e),
 		};
+	} else {
+		eprintln!("Oups!!");
 	}
 
 	Ok(())

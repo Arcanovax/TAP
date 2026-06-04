@@ -11,7 +11,8 @@ pub enum NPCKind {
 		hp: u32,
 		max_hp: u32,
 		damages: u32,
-		loot: Vec<Items>
+		loot: Vec<Items>,
+		beaten_by: Vec<String>
 	},
 	Citizen,
 	Gard

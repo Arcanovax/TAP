@@ -1,0 +1,33 @@
+locations:
+  start:
+    id: "loc.city_square"
+    name: "Village Square"
+    description: "A small, quiet square with a bulletin board and a tavern to the north."
+    exits:
+      - North: 
+         toward: "loc.tavern"
+      - East: 
+         toward: "loc.blacksmith's_shop"
+      - West:
+          toward: "loc.farm"
+      - South:
+          toward: "loc."
+    npc:
+      - "city_gard"
+  tavern:
+    name: "The Prancing Pony"
+    description: "A cozy tavern filled with warmth and laughter."
+    exits:
+      - South:
+         toward: "start"
+    npc:
+      - "bar_owner"
+
+  shop:
+    name: "General Store"
+    description: "Shelves lined with various goods and supplies."
+    exits:
+      - West:
+         toward: "start"
+    npc:
+      - "shop_merchant"

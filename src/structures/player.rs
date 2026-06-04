@@ -36,4 +36,6 @@ impl Player {
 		}
 		return Err("No gateway on that direction.");
 	}
+
+	pub fn fight(&mut self, )
 }
