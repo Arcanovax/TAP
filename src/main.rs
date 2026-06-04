@@ -4,31 +4,38 @@ mod rooms;
 use rooms::get_rooms;
 
 fn player_handler(player: &mut Player, map: &[[i32; 25]; 15], tile_size: f32, sprite_width: f32, sprite_height: f32) {
-    let mut add_x: f32 = 0.0;
-	let mut add_y: f32 = 0.0;
+	let mut direction = Vec2::ZERO;
 	let animation_speed: f64 = 0.15;
+	let mut add_x: f32 = 0.0;
+    let mut add_y: f32 = 0.0;
 	player.is_mooving = false;
+
 	if is_key_down(KeyCode::D) {
-        add_x += player.speed;
+        direction.x += player.speed;
         player.line = 1;
         player.is_mooving = true;
     }
     if is_key_down(KeyCode::A) {
-        add_x -= player.speed;
+        direction.x -= player.speed;
         player.line = 3;
         player.is_mooving = true;
     }
     if is_key_down(KeyCode::S) {
-        add_y += player.speed;
+        direction.y += player.speed;
         player.line = 0;
         player.is_mooving = true;
     }
     if is_key_down(KeyCode::W) {
-        add_y -= player.speed;
+        direction.y -= player.speed;
         player.line = 2;
         player.is_mooving = true;
     }
+
 	if player.is_mooving {
+		let velocity: Vec2 = direction.normalize() * player.speed;
+		add_x = velocity.x;
+        add_y = velocity.y;
+
         player.row = ((get_time() / animation_speed) as i32) % 4
     }
 	else {
@@ -139,9 +146,6 @@ fn config() -> Conf {
 #[macroquad::main(config)]
 async fn main() {
 
-
-
-
     let mut player = Player {
         x: 150.0,
         y: 150.0,
@@ -152,10 +156,10 @@ async fn main() {
     };
 
 	let rooms: std::collections::HashMap<String, rooms::Room> = get_rooms().await;
-    let map: &rooms::Room = rooms.get("montain").unwrap();
+    let map: &rooms::Room = rooms.get("place").unwrap();
 
 	let spritesheet = load_texture("assets/skins/alex.png").await.unwrap();
-    let floor = map.first_layer.clone();
+    let floor: Texture2D = map.first_layer.clone();
     let builds = map.second_layer.clone();
 
     if let Some(builds_texture) = builds.as_ref() {
