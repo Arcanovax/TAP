@@ -1,7 +1,11 @@
 use macroquad::prelude::*;
 mod rooms;
+mod chat;
 
 use rooms::get_rooms;
+use chat::update_chat;
+use chat::Chat;
+use chat::draw_chat;
 
 fn player_handler(player: &mut Player, map: &[[i32; 25]; 15], tile_size: f32, sprite_width: f32, sprite_height: f32) {
 	let mut direction = Vec2::ZERO;
@@ -11,32 +15,32 @@ fn player_handler(player: &mut Player, map: &[[i32; 25]; 15], tile_size: f32, sp
 	player.is_mooving = false;
 
 	if is_key_down(KeyCode::D) {
-        direction.x += player.speed;
+        direction.x += 1.0;
         player.line = 1;
         player.is_mooving = true;
     }
     if is_key_down(KeyCode::A) {
-        direction.x -= player.speed;
+        direction.x -= 1.0;
         player.line = 3;
         player.is_mooving = true;
     }
     if is_key_down(KeyCode::S) {
-        direction.y += player.speed;
+        direction.y += 1.0;
         player.line = 0;
         player.is_mooving = true;
     }
     if is_key_down(KeyCode::W) {
-        direction.y -= player.speed;
+        direction.y -= 1.0;
         player.line = 2;
         player.is_mooving = true;
     }
 
-	if player.is_mooving {
-		let velocity: Vec2 = direction.normalize() * player.speed;
+	if player.is_mooving && direction != Vec2::ZERO{
+		let velocity: Vec2 = direction.normalize_or_zero() * player.speed;
 		add_x = velocity.x;
         add_y = velocity.y;
 
-        player.row = ((get_time() / animation_speed) as i32) % 4
+        player.row = ((get_time() / animation_speed) as i32).abs() % 4
     }
 	else {
 		player.row = 0
@@ -152,8 +156,10 @@ async fn main() {
         line: 0,
 		row: 0,
         is_mooving: false,
-		speed: 0.075
+		speed: 0.08
     };
+
+	let mut chat = Chat::new();
 
 	let rooms: std::collections::HashMap<String, rooms::Room> = get_rooms().await;
     let map: &rooms::Room = rooms.get("place").unwrap();
@@ -176,21 +182,21 @@ async fn main() {
 
     let mut camera = Camera2D::default();
 
-
+	camera_handler(&mut camera, tile_size);
 
     let map_obstacles = map.colliders;
 
     loop {
         clear_background(BLACK);
-
-		player_handler(&mut player, &map_obstacles, tile_size, sprite_width, sprite_height);
-
-		camera_handler(&mut camera, tile_size);
-
-
-		if is_key_down(KeyCode::Escape) {
+		if is_key_pressed(KeyCode::Escape) && chat.hidden{
             break;
         }
+
+		update_chat(&mut chat);
+
+		if chat.hidden{
+			player_handler(&mut player, &map_obstacles, tile_size, sprite_width, sprite_height);
+		}
 
         let source_x: f32 = player.row as f32 * sprite_width;
         let source_y: f32 = player.line as f32 * sprite_height;
@@ -208,6 +214,7 @@ async fn main() {
         };
 
 
+
         draw_texture_ex(
             &floor,
         	0.0,
@@ -215,6 +222,7 @@ async fn main() {
             WHITE,
             map_params,
         );
+
 
 
         draw_texture_ex(
@@ -239,6 +247,7 @@ async fn main() {
             );
         }
 		draw_text(map.name.clone(), 5.0, 5.0, 10.0, WHITE);
+		draw_chat(&mut chat);
         next_frame().await
     }
 }
