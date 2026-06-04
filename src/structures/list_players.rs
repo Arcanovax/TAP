@@ -16,7 +16,7 @@ impl ListPlayers {
 		name,
 		hp: 100,
 		max_hp: 100,
-		location: String::from("start"),
+		location: String::from("loc.city_square"),
 		inventory: Vec::new(),
 		available_quests: Vec::new()
 	});
