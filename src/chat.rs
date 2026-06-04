@@ -35,14 +35,21 @@ pub fn update_chat(chat: &mut Chat) {
 	if is_key_pressed(KeyCode::Escape) {
 		chat.is_active = false;
 	}
+    if !chat.is_active {
+        while get_char_pressed().is_some() {
+        }
+    }
+    if !chat.is_active{
+        return;
+    }
 
-	if is_key_pressed(KeyCode::Up) && chat.is_active && chat.prev<(chat.messages.len()as i32){
+	if is_key_pressed(KeyCode::Up) && chat.prev < (chat.messages.len()as i32){
 		if let Some(msg) = chat.messages.iter().rev().nth(chat.prev as usize){
 			chat.current_input = msg.clone();
 			chat.prev += 1;
 		}
 	}
-	if is_key_pressed(KeyCode::Down) && chat.is_active && chat.prev>0{
+	if is_key_pressed(KeyCode::Down) && chat.prev>0{
 		chat.prev -= 1;
 
 		if chat.prev == 0{
@@ -55,10 +62,7 @@ pub fn update_chat(chat: &mut Chat) {
 		}
 	}
 
-    if !chat.is_active {
-        while get_char_pressed().is_some() {
-        }
-    }
+
 
     if is_key_pressed(KeyCode::Backspace) {
         chat.current_input.pop();

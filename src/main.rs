@@ -1,11 +1,14 @@
 use macroquad::prelude::*;
 mod rooms;
 mod chat;
+mod menu;
 
 use rooms::get_rooms;
 use chat::update_chat;
 use chat::Chat;
 use chat::draw_chat;
+use menu::*;
+
 
 fn player_handler(player: &mut Player, map: &[[i32; 25]; 15], tile_size: f32, sprite_width: f32, sprite_height: f32) {
 	let mut direction = Vec2::ZERO;
@@ -36,7 +39,7 @@ fn player_handler(player: &mut Player, map: &[[i32; 25]; 15], tile_size: f32, sp
     }
 
 	if player.is_mooving && direction != Vec2::ZERO{
-		let velocity: Vec2 = direction.normalize_or_zero() * player.speed;
+		let velocity: Vec2 = direction.normalize_or_zero() * (player.speed * get_frame_time() * 60.0);
 		add_x = velocity.x;
         add_y = velocity.y;
 
@@ -156,10 +159,11 @@ async fn main() {
         line: 0,
 		row: 0,
         is_mooving: false,
-		speed: 0.08
+		speed: 0.8
     };
 
-	let mut chat = Chat::new();
+	let mut chat: Chat = Chat::new();
+    let mut menu: Menu = Menu::new();
 
 	let rooms: std::collections::HashMap<String, rooms::Room> = get_rooms().await;
     let map: &rooms::Room = rooms.get("place").unwrap();
@@ -182,19 +186,22 @@ async fn main() {
 
     let mut camera = Camera2D::default();
 
-	camera_handler(&mut camera, tile_size);
+	
 
     let map_obstacles = map.colliders;
-
+    camera_handler(&mut camera, tile_size);
     loop {
+        
         clear_background(BLACK);
-		if is_key_pressed(KeyCode::Escape) && !chat.is_active{
+		if is_key_pressed(KeyCode::C) && !chat.is_active{
             break;
         }
 
-		update_chat(&mut chat);
+        update_chat(&mut chat);
+        update_menu(&mut menu, &mut camera);
 
-		if !chat.is_active{
+
+		if !chat.is_active && !menu.is_active{
 			player_handler(&mut player, &map_obstacles, tile_size, sprite_width, sprite_height);
 		}
 
@@ -213,7 +220,7 @@ async fn main() {
             ..Default::default()
         };
 
-
+    
 
         draw_texture_ex(
             &floor,
@@ -248,6 +255,8 @@ async fn main() {
         }
 		draw_text(map.name.clone(), 5.0, 5.0, 10.0, WHITE);
 		draw_chat(&mut chat);
+        draw_menu(&mut menu, &mut camera);
+  
         next_frame().await
     }
 }
