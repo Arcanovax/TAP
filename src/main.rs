@@ -1,3 +1,5 @@
+#[warn(unused_variables)]
+
 mod structures;
 mod global_func;
 
@@ -7,17 +9,19 @@ use crate::global_func::{
 	create_player::create_player,
 	is_he_there::is_he_there,
 };
+
 use crate::structures::{
-	// list_players::ListPlayers,
 	location::Location,
 	player::Player,
 	items::Items,
-	npc::NPC
+	npc::NPC,
+	fight::Fight
 };
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
 
 	let mut rooms_list: HashMap<String, Location> = HashMap::new();
+	let mut fights_list: HashMap<String, Fight> = HashMap::new();
 	let mut items_list: HashMap<String, Items> = HashMap::new();
 	let mut npc_list: HashMap<String, NPC> = HashMap::new();
 	let mut list_players: HashMap<String, Player> = HashMap::new();

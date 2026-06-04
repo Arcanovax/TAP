@@ -3,8 +3,8 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Debug, PartialEq, Serialize, Deserialize)]
 pub struct Items {
-	id: String,
-	name: String,
-	price: u32,
-	kind: ItemKind
+	pub id: String,
+	pub name: String,
+	pub price: u32,
+	pub kind: ItemKind
 }
