@@ -35,7 +35,7 @@ pub fn update_chat(chat: &mut Chat) {
 	if is_key_pressed(KeyCode::Escape) {
 		chat.hidden = true;
 	}
-	
+
 	if is_key_pressed(KeyCode::Up) && !chat.hidden && chat.prev<(chat.messages.len()as i32){
 		if let Some(msg) = chat.messages.iter().rev().nth(chat.prev as usize){
 			chat.current_input = msg.clone();
@@ -55,12 +55,8 @@ pub fn update_chat(chat: &mut Chat) {
 		}
 	}
 
-
-
-
     if chat.hidden {
         while get_char_pressed().is_some() {
-
         }
     }
 
