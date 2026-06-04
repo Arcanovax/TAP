@@ -18,8 +18,8 @@ impl Chat {
     }
 }
 
-pub fn update_chat(chat: &mut Chat) {
-    if is_key_pressed(KeyCode::Enter) {
+pub fn update_chat(chat: &mut Chat, menu_active:bool) {
+    if is_key_pressed(KeyCode::Enter) && !menu_active{
         if !chat.is_active {
             chat.is_active = true;
         }

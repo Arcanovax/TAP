@@ -15,8 +15,8 @@ impl Menu {
     }
 }
 
-pub fn update_menu(menu: &mut Menu, camera: &Camera2D) {
-    if is_key_pressed(KeyCode::Escape) {
+pub fn update_menu(menu: &mut Menu, camera: &Camera2D, chat_active: bool) {
+    if is_key_pressed(KeyCode::Escape) && !chat_active{
         if !menu.is_active {
             menu.is_active = true;
         }
@@ -65,7 +65,7 @@ pub fn update_menu(menu: &mut Menu, camera: &Camera2D) {
 pub fn draw_menu(menu: &Menu, camera: &Camera2D) {
 
     if menu.is_active {
-        draw_rectangle(100.0, 70.0 , 200.0, 100.0, Color::new(255.0, 193.0, 0.0, 1.0));
+        draw_rectangle(100.0, 70.0 , 200.0, 100.0, Color::new(255.0, 193.0, 0.0, 0.9));
         let labels = ["Jouer", "Options", "Quitter"];
         let (mx, my) = mouse_position();
         let world_mouse = camera.screen_to_world(vec2(mx, my)); // ← idem ici
@@ -75,7 +75,7 @@ pub fn draw_menu(menu: &Menu, camera: &Camera2D) {
             let hovered = rect.contains(world_mouse); 
 
             let bg_color = if hovered {
-                Color::new(1.0, 1.0, 1.0, 0.2)
+                Color::new(1.0, 1.0, 1.0, 1.0)
             } else {
                 Color::new(1.0, 1.0, 1.0, 0.05)
             };

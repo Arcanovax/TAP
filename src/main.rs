@@ -197,8 +197,9 @@ async fn main() {
             break;
         }
 
-        update_chat(&mut chat);
-        update_menu(&mut menu, &mut camera);
+        update_menu(&mut menu, &mut camera, chat.is_active);
+        update_chat(&mut chat, menu.is_active);
+       
 
 
 		if !chat.is_active && !menu.is_active{
