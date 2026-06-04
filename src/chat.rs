@@ -3,7 +3,7 @@ use macroquad::prelude::*;
 pub struct Chat {
     current_input: String,
     messages: Vec<String>,
-    pub hidden: bool,
+    pub is_active: bool,
 	prev: i32
 }
 
@@ -12,7 +12,7 @@ impl Chat {
         Self {
             current_input: String::new(),
             messages: Vec::new(),
-            hidden: true,
+            is_active: false,
 			prev: 0
         }
     }
@@ -20,8 +20,8 @@ impl Chat {
 
 pub fn update_chat(chat: &mut Chat) {
     if is_key_pressed(KeyCode::Enter) {
-        if chat.hidden {
-            chat.hidden = false;
+        if !chat.is_active {
+            chat.is_active = true;
         }
 		else {
 			if !chat.current_input.trim().is_empty() {
@@ -29,20 +29,20 @@ pub fn update_chat(chat: &mut Chat) {
 				chat.current_input.clear();
 				chat.prev = 0;
         	}
-			chat.hidden = true;
+			chat.is_active = false;
 	}
 	}
 	if is_key_pressed(KeyCode::Escape) {
-		chat.hidden = true;
+		chat.is_active = false;
 	}
 
-	if is_key_pressed(KeyCode::Up) && !chat.hidden && chat.prev<(chat.messages.len()as i32){
+	if is_key_pressed(KeyCode::Up) && chat.is_active && chat.prev<(chat.messages.len()as i32){
 		if let Some(msg) = chat.messages.iter().rev().nth(chat.prev as usize){
 			chat.current_input = msg.clone();
 			chat.prev += 1;
 		}
 	}
-	if is_key_pressed(KeyCode::Down) && !chat.hidden && chat.prev>0{
+	if is_key_pressed(KeyCode::Down) && chat.is_active && chat.prev>0{
 		chat.prev -= 1;
 
 		if chat.prev == 0{
@@ -55,7 +55,7 @@ pub fn update_chat(chat: &mut Chat) {
 		}
 	}
 
-    if chat.hidden {
+    if !chat.is_active {
         while get_char_pressed().is_some() {
         }
     }
@@ -85,7 +85,7 @@ pub fn draw_chat(chat: &Chat) {
     }
 
 
-    if !chat.hidden {
+    if chat.is_active {
 
         draw_rectangle(15.0, start_y + 110.0, 400.0, 30.0, Color::new(0.0, 0.0, 0.0, 0.5));
 

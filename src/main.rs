@@ -188,13 +188,13 @@ async fn main() {
 
     loop {
         clear_background(BLACK);
-		if is_key_pressed(KeyCode::Escape) && chat.hidden{
+		if is_key_pressed(KeyCode::Escape) && !chat.is_active{
             break;
         }
 
 		update_chat(&mut chat);
 
-		if chat.hidden{
+		if !chat.is_active{
 			player_handler(&mut player, &map_obstacles, tile_size, sprite_width, sprite_height);
 		}
 
