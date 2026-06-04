@@ -14,6 +14,5 @@ pub enum NPCKind {
 		loot: Vec<Items>,
 		beaten_by: Vec<String>
 	},
-	Citizen,
-	Gard
+	Citizen
 }

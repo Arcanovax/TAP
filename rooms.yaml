@@ -1,7 +1,7 @@
 locations:
-  start:
+  loc.city_square:
     id: "loc.city_square"
-    name: "Village Square"
+    name: "The Answer Place"
     description: "A small, quiet square with a bulletin board and a tavern to the north."
     exits:
       - North: 
@@ -11,23 +11,127 @@ locations:
       - West:
           toward: "loc.farm"
       - South:
-          toward: "loc."
+          toward: "loc.market"
     npc:
-      - "city_gard"
-  tavern:
-    name: "The Prancing Pony"
-    description: "A cozy tavern filled with warmth and laughter."
+      - "npc.city_gard"
+
+  loc.tavern:
+    id: "loc.tavern"
+    name: "The Awesome Pub"
+    description: "A warm and lively tavern. From outside, we can hear the clinking of glasses, off-key singing, and hearty, joyful laughter."
     exits:
       - South:
-         toward: "start"
+         toward: "loc.city_square"
+      - North:
+         toward: "loc.gambling"
     npc:
-      - "bar_owner"
+      - "npc.bar_owner"
+      - "npc.client_1"
+      - "npc.client_2"
 
-  shop:
-    name: "General Store"
-    description: "Shelves lined with various goods and supplies."
+  loc.game_room:
+    id: "loc.game_room"
+    name: "The Ace Play"
+    description: "A room restricted to those 18 and older, with several gaming tables. In the background, we can see another room hidden behind a pink curtain, but it’s inaccessible without the DLC."
+    exits:
+      - South:
+         toward: "loc.tavern"
+    npc:
+      - "npc.dealer"
+  
+  loc.farm:
+    id: "loc.farm"
+    name: "The Abundant Pasture"
+    description: "A charming little farm with fields and animals. A farmer is there with his cow."
+    exits:
+      - East:
+         toward: "loc.city_square"
+    npc:
+      - "npc.farmer"
+      - "npc.cow"
+
+  loc.market:
+    id: "loc.market"
+    name: "The Artisan Plaza"
+    description: "A charming little market."
+    exits:
+      - North:
+         toward: "loc.city_square"
+      - East:
+         toward: "loc.parc"
+      - South:
+         toward: "loc.beach"
+    npc:
+      - "npc.seller"
+      - "npc.citizen_3"
+      - "npc.citizen_4"
+
+  loc.beach:
+    id: "loc.beach"
+    name: "Tranquil Azure Playa"
+    description: "A charming little beach. The sea is calm, the sand is warm beneath our feet, and there’s just an old man muttering to himself in the shade of a rock."
+    exits:
+      - North:
+         toward: "loc.market"
+    npc:
+      - "npc.old_man"
+
+  loc.parc:
+    id: "loc.parc"
+    name: "The Amazing Parc"
+    description: "A charming little park filled with children playing under their parents' watchful eyes. There's even a reading corner for those who prefer a quieter spot."
+    exits:
+      - North:
+         toward: "loc.blacksmith's_shop"
+      - West:
+         toward: "loc.market"
+    npc:
+      - "npc.bookseller"
+      - "npc.citizen_5"
+      - "npc.citizen_6"
+
+  loc.blacksmith's_shop:
+    id: "loc.blacksmith's_shop"
+    name: "Tongs, Anvils & Pincers"
+    description: "A blacksmith's shop where the sounds of a hammer striking red-hot metal, a blade heated to white-hot and plunged into cold water, and a bellows stoking the roaring flames echo through the air."
+    exits:
+      - North:
+         toward: "loc.quarry"
+      - East:
+         toward: "loc.forest"
+      - South:
+         toward: "loc.parc"
+      - West:
+         toward: "loc.city_square"
+    npc:
+      - "npc.blacksmith"
+
+  loc.forest:
+    id: "loc.forest"
+    name: "The Awkward Patch"
+    description: "A foreboding forest. Its twisted trees and flocks of crows perched on bare branches—despite the season—create an unsettling atmosphere."
     exits:
       - West:
-         toward: "start"
+         toward: "loc.blacksmith's_shop"
+      # - East:
+      #    toward: "loc.dunjon"
+
+  loc.quarry:
+    id: "loc.quarry"
+    name: "The Ancient Pit"
+    description: "An abandoned quarry. There are only scattered rocks, the ruins of an old building, and animal bones. In the far corner, you can see three goblins who appear to be guarding the entrance to an old mine."
+    exits:
+      - North:
+         toward: "loc.mine"
+      - South:
+         toward: "loc.blacksmith's_shop"
     npc:
-      - "shop_merchant"
+      - "npc.goblins"
+
+  loc.mine:
+    id: "loc.mine"
+    name: "The Abandoned Prospect"
+    description: "A dark, damp mine. All you can hear is the sound of water dripping from the stalactites and the flapping of bats’ wings. In the center stands an old mine car, still on its tracks."
+    exits:
+      - South:
+         toward: "loc.quarry"

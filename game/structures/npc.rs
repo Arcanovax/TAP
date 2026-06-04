@@ -5,6 +5,5 @@ use serde::{Deserialize, Serialize};
 pub struct NPC {
 	pub name: String,
 	pub dialogue: Vec<String>,
-	pub description: String,
 	pub kind: NPCKind
 }
