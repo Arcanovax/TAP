@@ -16,6 +16,7 @@ pub enum ErrorCode {
     SEND_FAILED,
     INVALID_ARGS,
     INVALID_COMMAND,
+    ALREADY_CONNECTED,
     NONE,
 }
 
@@ -35,6 +36,7 @@ impl ErrorCode {
             ErrorCode::SEND_FAILED => 901,
             ErrorCode::INVALID_ARGS => 902,
             ErrorCode::INVALID_COMMAND => 903,
+            ErrorCode::ALREADY_CONNECTED => 904,
             ErrorCode::NONE => 0,
         }
     }

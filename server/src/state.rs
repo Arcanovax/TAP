@@ -1,17 +1,33 @@
-use std::collections::HashSet;
+use std::{collections::HashMap, net::SocketAddr};
+
+use crate::error::ErrorCode;
+
+struct Connection {
+    player_name: String,
+}
 
 pub struct ServerInfo {
-    players: HashSet<String>,
+    connections: HashMap<SocketAddr, Connection>,
 }
 
 impl ServerInfo {
     pub fn new() -> Self {
         ServerInfo {
-            players: HashSet::new(),
+            connections: HashMap::new(),
         }
     }
 
-    pub fn try_add_player(&mut self, name: String) -> bool {
-        self.players.insert(name)
+    pub fn try_add_player(&mut self, name: String, peer_addr: SocketAddr) -> Result<(), ErrorCode> {
+        if self.connections.contains_key(&peer_addr) {
+            return Err(ErrorCode::ALREADY_CONNECTED);
+        }
+        for (_, con) in self.connections.iter() {
+            if con.player_name == name {
+                return Err(ErrorCode::NAME_IN_USE);
+            }
+        }
+        self.connections
+            .insert(peer_addr, Connection { player_name: name });
+        Ok(())
     }
 }

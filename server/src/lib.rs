@@ -6,6 +6,7 @@ use tokio::io::{AsyncBufReadExt, AsyncWriteExt, BufReader};
 use tokio::net::TcpListener;
 use tracing::{Instrument, error, info};
 
+mod command;
 pub mod error;
 mod handlers;
 pub mod protocol;
@@ -65,7 +66,7 @@ pub async fn run(addr: String, port: String) -> Result<(), Box<dyn std::error::E
                     }
                     let request = parse_command(line.as_str()); // DEV TEST
                     // let request = Message::parse(line); // PROD
-                    let response = handle_request(request, &server_info_copy);
+                    let response = handle_request(request, &server_info_copy, peer_addr);
                     let _ = write_half.write_all(response.to_str().as_bytes()).await;
                 }
 
