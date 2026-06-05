@@ -4,5 +4,6 @@ use serde::{Deserialize, Serialize};
 pub enum State {
 	InFight {target_id: String},
     Idle,
-    Respawn
+    Respawn,
+	Discuss
 }

@@ -2,14 +2,17 @@
 
 mod structures;
 mod global_func;
+mod fight_func;
 
+use std::io;
 use std::collections::HashMap;
 use std::fs::File;
 use crate::global_func::{
 	create_player::create_player,
-	is_he_there::is_he_there,
 };
 
+use crate::structures::enums::attack_res::AttackRes;
+use crate::structures::enums::fight_outcome::FightOutput;
 use crate::structures::{
 	location::Location,
 	player::Player,
@@ -41,36 +44,50 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 		Ok(()) => println!("New Player!!! {:#?}", list_players),
 		Err(e) => eprintln!("{}", e),
 	}
-	// match list_players.create_player(String::from("Bruno")) {
-	// 	Ok(()) => println!("New Player!!! {:#?}", list_players.list),
+
+	// match create_player("Bruno", &mut list_players) {
+	// 	Ok(()) => println!("New Player!!! {:#?}", list_players),
 	// 	Err(e) => eprintln!("{}", e),
 	// }
 
+	let mut input = String::new();
 	if let Some(pl) = list_players.get_mut("Bruno"){
-		let current_loc: Option<&Location> = rooms_list.get(&pl.location);
-	
-		if let Some(loc) = current_loc {
-			if is_he_there("npc.city_gard", loc) {
-				println!("{}", npc_list["npc.city_gard"].dialogue[0]);
-			} else {
-				eprintln!("No character by that name");
+		while io::stdin().read_line(&mut input).is_ok(){
+			let splitted: Vec<&str> = input.split_whitespace().collect();
+			let first: String = splitted[0].to_uppercase();
+			match first.as_str() {
+				"MOVE" => match pl.move_to(&rooms_list, splitted[1]) {
+					Ok(()) => println!("{} move to {}", pl.name, pl.location),
+					Err(e) => eprintln!("{}", e),
+					},
+				"TALK" => match pl.talk_to(splitted[1], &rooms_list, &npc_list) {
+					Ok(s) => println!("{}", s),
+					Err(e) => eprintln!("{}", e),
+					},
+				"ATTACK" => match pl.fight(splitted[1], &rooms_list, &mut fights_list){
+					Ok(FightOutput::Enter(s)) => println!("{}", s),
+					Ok(FightOutput::ReadyToAttack) => {
+						match pl.attack(splitted[1], &mut npc_list, &items_list) {
+							AttackRes::Hit(msg) => {
+								println!("{}", msg);
+								fights_list[splitted[1]].turn += 1;
+							},
+							AttackRes::KillTarget(msg) |
+							AttackRes::KillPlayer(msg) |
+							AttackRes::Peace(msg) |
+							AttackRes::NotFound(msg) => println!("{}", msg),
+					}
+				},
+					Ok(FightOutput::WaitingToAttack) => println!("It's not your turn!"),
+					Err(error) => println!("{}", error)
+				}
+				"STATUS" => println!("{:#?}", pl),
+				_ => println!("OUps!")
 			}
-		} else {
-			eprintln!("Oups!!");
+
+			// println!("{:?}", splitted);
+			input.clear();
 		}
-	
-		if let Some(loc) = current_loc {
-			match pl.move_to(loc, "North") {
-			Ok(()) => println!("{:#?}", rooms_list.get(&pl.location)),
-			Err(e) => eprintln!("{}", e),
-			};
-		} else {
-			eprintln!("Oups!!");
-		}
-		
 	}
-
-
-
 	Ok(())
 }

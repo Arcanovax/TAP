@@ -22,7 +22,7 @@ loc.tavern:
     - South:
         toward: "loc.city_square"
     - North:
-        toward: "loc.gambling"
+        toward: "loc.game_room"
   npc:
     - "npc.bar_owner"
     - "npc.client_1"

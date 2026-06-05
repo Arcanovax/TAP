@@ -6,7 +6,7 @@ pub enum NPCKind {
 		inventory: Vec<String>,
 		gold: u32
 	},
-	Ennemy {
+	Enemy {
 		hp: u32,
 		max_hp: u32,
 		damages: u32,
