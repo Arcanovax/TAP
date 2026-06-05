@@ -146,6 +146,9 @@ fn config() -> Conf {
         window_title: "TAP".to_owned(),
         window_width: 1280,
         window_height: 720,
+		// window_resizable: false,
+
+		fullscreen: false,
         ..Default::default()
     }
 }
@@ -186,21 +189,20 @@ async fn main() {
 
     let mut camera = Camera2D::default();
 
-	
+
 
     let map_obstacles = map.colliders;
-    camera_handler(&mut camera, tile_size);
+
     loop {
-        
+
         clear_background(BLACK);
 		if is_key_pressed(KeyCode::C) && !chat.is_active{
             break;
         }
 
-        update_menu(&mut menu, &mut camera, chat.is_active);
-        update_chat(&mut chat, menu.is_active);
-       
 
+
+		camera_handler(&mut camera, tile_size);
 
 		if !chat.is_active && !menu.is_active{
 			player_handler(&mut player, &map_obstacles, tile_size, sprite_width, sprite_height);
@@ -221,7 +223,7 @@ async fn main() {
             ..Default::default()
         };
 
-    
+
 
         draw_texture_ex(
             &floor,
@@ -254,10 +256,17 @@ async fn main() {
                 builds_params,
             );
         }
-		draw_text(map.name.clone(), 5.0, 5.0, 10.0, WHITE);
+
+
+		set_default_camera();
+		update_menu(&mut menu, chat.is_active);
+        update_chat(&mut chat, menu.is_active);
+
+		draw_text(map.name.clone(), 5.0, 30.0, 60.0, WHITE);
 		draw_chat(&mut chat);
-        draw_menu(&mut menu, &mut camera);
-  
+		draw_menu(&mut menu);
+
+
         next_frame().await
     }
 }

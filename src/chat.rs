@@ -78,24 +78,26 @@ pub fn update_chat(chat: &mut Chat, menu_active:bool) {
 }
 
 pub fn draw_chat(chat: &Chat) {
-    let start_y = 70.0;
-    let line_height = 20.0;
+    let bottom_y = screen_height();
+    let line_height = 25.0;
 
     let max_visible_messages = 5;
     let visible_messages = chat.messages.iter().rev().take(max_visible_messages).rev();
 
     for (i, msg) in visible_messages.enumerate() {
-        draw_text(msg, 20.0, start_y + (i as f32 * line_height), 10.0, WHITE);
+        draw_text(msg, 20.0, bottom_y - 180.0 + (i as f32 * line_height), 32.0, WHITE);
     }
 
 
     if chat.is_active {
 
-        draw_rectangle(15.0, start_y + 110.0, 400.0, 30.0, Color::new(0.0, 0.0, 0.0, 0.5));
+        draw_rectangle(15.0, bottom_y - 15.0, 600.0, -40.0, Color::new(0.0, 0.0, 0.0, 0.5));
 
         let display_text = format!("Chat: {}_", chat.current_input);
-        draw_text(&display_text, 20.0, start_y + 130.0, 20.0, YELLOW);
+        draw_text(&display_text, 20.0, bottom_y - 25.0, 35.0, YELLOW);
     } else {
-        draw_text("Appuyez sur [Entrée] pour parler", 20.0, start_y + 130.0, 16.0, GRAY);
+		draw_rectangle(15.0, bottom_y - 15.0, 600.0, -40.0, Color::new(0.0, 0.0, 0.0, 0.3));
+        draw_text("Press [Enter]", 20.0, bottom_y - 25.0, 35.0, WHITE);
+
     }
 }
