@@ -1,8 +1,12 @@
+use crate::{error::ErrorCode, protocol::Message};
 use std::{collections::HashMap, net::SocketAddr};
+use tokio::sync::mpsc::UnboundedSender;
 
-use crate::error::ErrorCode;
+pub type Tx = UnboundedSender<Message>;
 
-struct Connection {
+pub struct Connection {
+    pub addr: SocketAddr,
+    pub tx: Tx,
     player_name: String,
 }
 
@@ -17,7 +21,12 @@ impl ServerInfo {
         }
     }
 
-    pub fn try_add_player(&mut self, name: String, peer_addr: SocketAddr) -> Result<(), ErrorCode> {
+    pub fn try_add_player(
+        &mut self,
+        name: String,
+        peer_addr: SocketAddr,
+        tx: &Tx,
+    ) -> Result<(), ErrorCode> {
         if self.connections.contains_key(&peer_addr) {
             return Err(ErrorCode::ALREADY_CONNECTED);
         }
@@ -26,8 +35,14 @@ impl ServerInfo {
                 return Err(ErrorCode::NAME_IN_USE);
             }
         }
-        self.connections
-            .insert(peer_addr, Connection { player_name: name });
+        self.connections.insert(
+            peer_addr,
+            Connection {
+                player_name: name,
+                addr: peer_addr,
+                tx: tx.clone(),
+            },
+        );
         Ok(())
     }
 
@@ -43,5 +58,16 @@ impl ServerInfo {
 
     pub fn get_number_of_players(&mut self) -> usize {
         self.connections.len()
+    }
+
+    pub fn get_global_receivers(&mut self, peer_addr: SocketAddr) -> Vec<&Connection> {
+        let mut receivers = Vec::new();
+
+        for (_, con) in &self.connections {
+            if con.addr != peer_addr {
+                receivers.push(con);
+            }
+        }
+        receivers
     }
 }

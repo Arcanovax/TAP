@@ -8,8 +8,9 @@ pub enum MessageType {
     EVENT,
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, PartialEq, Eq)]
 pub enum EventType {
+    CHAT,
     NONE,
 }
 

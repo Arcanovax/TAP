@@ -2,6 +2,7 @@ pub enum Command {
     CONNECT,
     QUIT,
     WHO,
+    CHAT,
 }
 
 impl Command {
@@ -10,6 +11,7 @@ impl Command {
             "CONNECT" => Some(Command::CONNECT),
             "QUIT" => Some(Command::QUIT),
             "WHO" => Some(Command::WHO),
+            "CHAT" => Some(Command::CHAT),
             _ => None,
         }
     }

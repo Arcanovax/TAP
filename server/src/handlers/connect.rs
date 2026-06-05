@@ -1,6 +1,6 @@
 use crate::error::ErrorCode;
 use crate::protocol::{Message, MessageType};
-use crate::state::ServerInfo;
+use crate::state::{ServerInfo, Tx};
 use std::net::SocketAddr;
 use std::sync::{Arc, Mutex};
 use tracing::info;
@@ -9,6 +9,7 @@ pub(super) fn connect_request(
     request: Message,
     server_info: &Arc<Mutex<ServerInfo>>,
     peer_addr: SocketAddr,
+    tx: &Tx,
 ) -> Message {
     if request.args.len() != 1 {
         return Message {
@@ -21,7 +22,7 @@ pub(super) fn connect_request(
     match server_info
         .lock()
         .unwrap()
-        .try_add_player(request.args[0].to_string(), peer_addr)
+        .try_add_player(request.args[0].to_string(), peer_addr, tx)
     {
         Ok(()) => {
             info!("{} is connected", request.args[0]);

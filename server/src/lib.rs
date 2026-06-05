@@ -1,5 +1,5 @@
 use crate::handlers::handle_request;
-use crate::protocol::{Message, MessageType};
+use crate::protocol::{EventType, Message, MessageType};
 use crate::state::ServerInfo;
 use std::net::SocketAddr;
 use std::sync::{Arc, Mutex};
@@ -67,20 +67,31 @@ pub async fn run(addr: String, port: String) -> Result<(), Box<dyn std::error::E
                 let mut reader = BufReader::new(read_half);
                 let mut line = String::new();
 
+                let (tx, mut rx) = tokio::sync::mpsc::unbounded_channel::<Message>();
+
                 loop {
-                    line.clear();
-                    match reader.read_line(&mut line).await {
-                        Ok(0) => break,
-                        Ok(_) => {}
-                        Err(_) => break,
+                    tokio::select! {
+                        result = reader.read_line(&mut line) => {
+                            match result {
+                                Ok(0) => break,
+                                Ok(_) => {}
+                                Err(_) => break,
+                            }
+                            let request = parse_command(line.as_str()); // DEV TEST
+                            // let request = Message::parse(line); // PROD
+                            if request.command_name.to_uppercase() == "QUIT" {
+                                break;
+                            }
+                            let response = handle_request(request, &server_info_copy, peer_addr, &tx);
+                            let _ = write_half.write_all(response.to_str().as_bytes()).await;
+                            line.clear();
+                        }
+                        Some(event) = rx.recv() => {
+                            if event.event_type == EventType::CHAT {
+                                let _ = write_half.write_all(event.data.as_bytes()).await;
+                            }
+                        }
                     }
-                    let request = parse_command(line.as_str()); // DEV TEST
-                    // let request = Message::parse(line); // PROD
-                    if request.command_name.to_uppercase() == "QUIT" {
-                        break;
-                    }
-                    let response = handle_request(request, &server_info_copy, peer_addr);
-                    let _ = write_half.write_all(response.to_str().as_bytes()).await;
                 }
 
                 cleanup_tcp_connection(&server_info_copy, peer_addr);
