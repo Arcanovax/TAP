@@ -103,7 +103,8 @@ struct Player {
     line: i32,
 	row: i32,
     is_mooving: bool,
-	speed: f32
+	speed: f32,
+    spritesheet_index: usize
 }
 
 fn rect_collides_map(rect: Rect, map: &[[i32; 25]; 15], tile_size: f32) -> bool {
@@ -162,23 +163,37 @@ async fn main() {
         line: 0,
 		row: 0,
         is_mooving: false,
-		speed: 0.8
+		speed: 0.8,
+        spritesheet_index: 0
     };
 
 	let mut chat: Chat = Chat::new();
     let mut menu: Menu = Menu::new();
 
+
+
 	let rooms: std::collections::HashMap<String, rooms::Room> = get_rooms().await;
     let map: &rooms::Room = rooms.get("place").unwrap();
 
-	let spritesheet = load_texture("assets/skins/alex.png").await.unwrap();
+    let skin_paths = vec![
+        "assets/skins/alex.png",
+        "assets/skins/kent.png",
+        "assets/skins/pierre.png",
+        "assets/skins/shane.png",
+    ];
+
+    let mut skins: Vec<Texture2D> = Vec::new();
+    for path in skin_paths {
+        let texture = load_texture(path).await.unwrap();
+        texture.set_filter(FilterMode::Nearest);
+        skins.push(texture);
+    }
     let floor: Texture2D = map.first_layer.clone();
-    let builds = map.second_layer.clone();
+    let builds: Option<Texture2D> = map.second_layer.clone();
 
     if let Some(builds_texture) = builds.as_ref() {
         builds_texture.set_filter(FilterMode::Nearest);
     }
-	spritesheet.set_filter(FilterMode::Nearest);
     floor.set_filter(FilterMode::Nearest);
 	let sprite_width: f32 = 16.0;
     let sprite_height: f32 = 32.0;
@@ -208,6 +223,7 @@ async fn main() {
 			player_handler(&mut player, &map_obstacles, tile_size, sprite_width, sprite_height);
 		}
 
+        let spritesheet = &skins[player.spritesheet_index];
         let source_x: f32 = player.row as f32 * sprite_width;
         let source_y: f32 = player.line as f32 * sprite_height;
 
@@ -264,7 +280,7 @@ async fn main() {
 
 		draw_text(map.name.clone(), 5.0, 30.0, 60.0, WHITE);
 		draw_chat(&mut chat);
-		draw_menu(&mut menu);
+		draw_menu(&mut menu, &mut player);
 
 
         next_frame().await

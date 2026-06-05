@@ -1,15 +1,15 @@
-use macroquad::{miniquad::window::set_window_size, prelude::*};
+use macroquad::prelude::*;
+mod options;
+
 
 const MENU_SIZE: Vec2 = vec2(300.0, 400.0);
-const  OPTION_SIZE: Vec2 = vec2(400.0, 600.0);
 const LABELS: [&str; 3] = ["Play", "Options", "Quit"];
 
 
-pub struct OptionsSettings {
-    pub charactere: usize,
-	pub	is_fullscreen: bool,
+use crate::Player;
+use options::OptionsSettings;
+use options::handle_options;
 
-}
 
 pub struct Menu {
     pub is_active: bool,
@@ -25,60 +25,12 @@ impl Menu {
             state: 0,
 			options: OptionsSettings{
 				is_fullscreen: false,
-				charactere: 0
 			}
         }
     }
 }
 
-fn draw_checkbox(x: f32, y: f32, label: &str, checked: bool, mouse: (f32, f32)) -> bool {
-    let size = 24.0;
-    let rect = Rect::new(x, y, size, size);
-    let hovered = rect.contains(Vec2::new(mouse.0, mouse.1));
 
-
-    let bg = if hovered { Color::new(0.3, 0.3, 0.3, 1.0) } else { Color::new(0.15, 0.15, 0.15, 1.0) };
-    draw_rectangle(x, y, size, size, bg);
-    draw_rectangle_lines(x, y, size, size, 4.0, WHITE);
-
-
-    if checked {
-        draw_rectangle(x + 5.0, y + 5.0, size - 10.0, size - 10.0, WHITE);
-    }
-
-
-    draw_text(label, x + size + 15.0, y + 18.0, 35.0, WHITE);
-
-    hovered && is_mouse_button_pressed(MouseButton::Left)
-}
-
-pub fn process_options_menu(settings: &mut OptionsSettings) {
-    let mouse = mouse_position();
-	let menu_name: &str = "OPTIONS";
-
-	let title_size = measure_text(menu_name, None, 70, 1.0);
-	let title_pos = Vec2::new(
-            	(screen_width() - title_size.width) / 2.0,
-            	(screen_height() + title_size.height) / 10.0
-        	);
-    draw_text(menu_name, title_pos.x, title_pos.y+ 60.0, 70.0, WHITE);
-
-
-    let start_x = title_pos.x;
-    let current_y = title_pos.y + 110.0;
-
-	if draw_checkbox(start_x, current_y, "Full screen", settings.is_fullscreen, mouse) {
-        settings.is_fullscreen = !settings.is_fullscreen;
-        if settings.is_fullscreen {
-            set_fullscreen(true);
-        } else {
-            set_fullscreen(false);
-            set_window_size(1280, 720);
-        }
-    }
-
-
-}
 
 fn get_menu_rect() -> Rect {
     let center_x = screen_width() / 2.0;
@@ -108,6 +60,9 @@ pub fn update_menu(menu: &mut Menu, chat_active: bool) {
     if !menu.is_active {
         return;
     }
+    if menu.state == 4{
+        return;
+    }
 
 	let menu_rect = get_menu_rect();
 	let mouse = mouse_position();
@@ -120,6 +75,7 @@ pub fn update_menu(menu: &mut Menu, chat_active: bool) {
         	}
         }
 
+    
     match menu.state {
         1 => {
             menu.state = 0;
@@ -137,7 +93,7 @@ pub fn update_menu(menu: &mut Menu, chat_active: bool) {
 }
 }
 
-pub fn draw_menu(menu: &mut Menu) {
+pub fn draw_menu(menu: &mut Menu, player: &mut Player) {
 
 
     if !menu.is_active {
@@ -170,7 +126,7 @@ pub fn draw_menu(menu: &mut Menu) {
 		}
     }
 	else if menu.state == 4{
-		process_options_menu(&mut menu.options);
+		handle_options(&mut menu.options, player);
 	}
 
 }
