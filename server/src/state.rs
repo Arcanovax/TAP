@@ -40,4 +40,8 @@ impl ServerInfo {
         self.connections.remove(&peer_addr);
         Ok(name)
     }
+
+    pub fn get_number_of_players(&mut self) -> usize {
+        self.connections.len()
+    }
 }

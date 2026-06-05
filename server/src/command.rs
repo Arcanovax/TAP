@@ -1,6 +1,7 @@
 pub enum Command {
     CONNECT,
     QUIT,
+    WHO,
 }
 
 impl Command {
@@ -8,6 +9,7 @@ impl Command {
         match name.to_uppercase().as_str() {
             "CONNECT" => Some(Command::CONNECT),
             "QUIT" => Some(Command::QUIT),
+            "WHO" => Some(Command::WHO),
             _ => None,
         }
     }

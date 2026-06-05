@@ -5,8 +5,10 @@ use crate::state::ServerInfo;
 use connect::connect_request;
 use std::net::SocketAddr;
 use std::sync::{Arc, Mutex};
+use who::who_request;
 
 mod connect;
+mod who;
 
 pub fn handle_request(
     request: Message,
@@ -19,6 +21,7 @@ pub fn handle_request(
     match Command::parse(&request.command_name) {
         Some(Command::CONNECT) => connect_request(request, server_info, peer_addr),
         Some(Command::QUIT) => Message::default(),
+        Some(Command::WHO) => who_request(request, server_info),
         None => Message {
             message: MessageType::RESPONSE,
             error_response: ErrorCode::INVALID_COMMAND,

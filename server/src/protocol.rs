@@ -24,7 +24,7 @@ pub struct Message {
     pub error_response: ErrorCode,
     pub error_code: u16,
     pub event_type: EventType,
-    pub event_data: String,
+    pub data: String,
 }
 
 impl Message {
@@ -49,7 +49,7 @@ impl Default for Message {
             error_response: ErrorCode::SUCCESS,
             error_code: ErrorCode::SUCCESS.code(),
             event_type: EventType::NONE,
-            event_data: String::new(),
+            data: String::new(),
         }
     }
 }
