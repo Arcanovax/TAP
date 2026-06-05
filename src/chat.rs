@@ -97,7 +97,14 @@ pub fn draw_chat(chat: &Chat) {
         draw_text(&display_text, 20.0, bottom_y - 25.0, 35.0, YELLOW);
     } else {
 		draw_rectangle(15.0, bottom_y - 15.0, 600.0, -40.0, Color::new(0.0, 0.0, 0.0, 0.3));
-        draw_text("Press [Enter]", 20.0, bottom_y - 25.0, 35.0, WHITE);
+		if chat.current_input.trim().is_empty(){
+			draw_text("Press [Enter]", 20.0, bottom_y - 25.0, 35.0, WHITE);
+		}
+		else {
+			let text = format!("Chat: {}_", chat.current_input.clone());
+			draw_text(text, 20.0, bottom_y - 25.0, 35.0, WHITE);
+		}
+
 
     }
 }
