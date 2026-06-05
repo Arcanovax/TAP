@@ -82,10 +82,10 @@ pub fn draw_chat(chat: &Chat) {
     let line_height = 25.0;
 
     let max_visible_messages = 5;
-    let visible_messages = chat.messages.iter().rev().take(max_visible_messages).rev();
+    let visible_messages = chat.messages.iter().rev().take(max_visible_messages);
 
     for (i, msg) in visible_messages.enumerate() {
-        draw_text(msg, 20.0, bottom_y - 180.0 + (i as f32 * line_height), 32.0, WHITE);
+        draw_text(msg, 20.0, bottom_y - 80.0 - (i as f32 * line_height), 32.0, WHITE);
     }
 
 
