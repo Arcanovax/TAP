@@ -1,5 +1,5 @@
 use crate::handlers::handle_request;
-use crate::protocol::{EventType, Message, MessageType};
+use crate::protocol::{EventType, Message};
 use crate::state::ServerInfo;
 use std::net::SocketAddr;
 use std::sync::{Arc, Mutex};
@@ -18,12 +18,9 @@ fn parse_command(line: &str) -> Message {
     let command_name = parts.next().unwrap_or("").to_string();
     let args: Vec<String> = parts.map(String::from).collect();
 
-    Message {
-        message: MessageType::COMMAND,
-        command_line: line.to_string(),
-        command_name,
+    Message::Command {
+        name: command_name,
         args,
-        ..Message::default()
     }
 }
 
@@ -79,16 +76,20 @@ pub async fn run(addr: String, port: String) -> Result<(), Box<dyn std::error::E
                             }
                             let request = parse_command(line.as_str()); // DEV TEST
                             // let request = Message::parse(line); // PROD
-                            if request.command_name.to_uppercase() == "QUIT" {
-                                break;
+                            if let Message::Command { name, .. } = &request {
+                                if name.to_uppercase() == "QUIT" {
+                                    break;
+                                }
                             }
                             let response = handle_request(request, &server_info_copy, peer_addr, &tx);
                             let _ = write_half.write_all(response.to_str().as_bytes()).await;
                             line.clear();
                         }
                         Some(event) = rx.recv() => {
-                            if event.event_type == EventType::CHAT {
-                                let _ = write_half.write_all(event.data.as_bytes()).await;
+                            if let Message::Event { kind, data } = event {
+                                if kind == EventType::CHAT {
+                                    let _ = write_half.write_all(data.as_bytes()).await;
+                                }
                             }
                         }
                     }

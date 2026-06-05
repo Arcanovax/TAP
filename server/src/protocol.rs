@@ -2,31 +2,37 @@ use crate::error::ErrorCode;
 use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize, PartialEq, Eq)]
-pub enum MessageType {
-    COMMAND,
-    RESPONSE,
-    EVENT,
-}
-
-#[derive(Serialize, Deserialize, PartialEq, Eq)]
 pub enum EventType {
     CHAT,
     NONE,
 }
 
 #[derive(Serialize, Deserialize)]
-pub struct Message {
-    pub message: MessageType,
-    pub command_line: String,
-    pub response_line: String,
-    pub event_line: String,
-    pub command_name: String,
-    pub args: Vec<String>,
-    pub error_response: ErrorCode,
-    pub error_code: u16,
-    pub event_type: EventType,
-    pub data: String,
+#[serde(tag = "type")]
+pub enum Message {
+    Command {
+        name: String,
+        args: Vec<String>,
+    },
+    Response {
+        error: ErrorCode,
+        data: Option<String>,
+    },
+    Event {
+        kind: EventType,
+        data: String,
+    },
 }
+// pub struct Message {
+//     pub message: MessageType,
+//     pub command_line: String,
+//     pub command_name: String,
+//     pub args: Vec<String>,
+//     pub error_response: ErrorCode,
+//     pub error_code: u16,
+//     pub event_type: EventType,
+//     pub data: Option<String>,
+// }
 
 impl Message {
     pub fn parse(str: String) -> Self {
@@ -40,17 +46,9 @@ impl Message {
 
 impl Default for Message {
     fn default() -> Self {
-        Message {
-            message: MessageType::COMMAND,
-            command_line: String::new(),
-            response_line: String::new(),
-            event_line: String::new(),
-            command_name: String::new(),
-            args: Vec::new(),
-            error_response: ErrorCode::SUCCESS,
-            error_code: ErrorCode::SUCCESS.code(),
-            event_type: EventType::NONE,
-            data: String::new(),
+        Message::Response {
+            error: ErrorCode::INVALID_COMMAND,
+            data: None,
         }
     }
 }

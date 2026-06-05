@@ -1,6 +1,6 @@
 use crate::command::Command;
 use crate::error::ErrorCode;
-use crate::protocol::{Message, MessageType};
+use crate::protocol::Message;
 use crate::state::{ServerInfo, Tx};
 use chat::chat_request;
 use connect::connect_request;
@@ -18,19 +18,20 @@ pub fn handle_request(
     peer_addr: SocketAddr,
     tx: &Tx,
 ) -> Message {
-    if request.message != MessageType::COMMAND {
-        return Message::default();
-    };
-    match Command::parse(&request.command_name) {
-        Some(Command::CONNECT) => connect_request(request, server_info, peer_addr, tx),
-        Some(Command::QUIT) => Message::default(),
-        Some(Command::WHO) => who_request(request, server_info),
-        Some(Command::CHAT) => chat_request(request, server_info, peer_addr),
-        None => Message {
-            message: MessageType::RESPONSE,
-            error_response: ErrorCode::INVALID_COMMAND,
-            error_code: ErrorCode::INVALID_COMMAND.code(),
-            ..request
+    match request {
+        Message::Command { name, args } => match Command::parse(&name) {
+            Some(Command::CONNECT) => connect_request(args, server_info, peer_addr, tx),
+            Some(Command::QUIT) => Message::default(),
+            Some(Command::WHO) => who_request(server_info),
+            Some(Command::CHAT) => chat_request(args, server_info, peer_addr),
+            None => Message::Response {
+                error: ErrorCode::INVALID_COMMAND,
+                data: None,
+            },
+        },
+        _ => Message::Response {
+            error: ErrorCode::INVALID_COMMAND,
+            data: None,
         },
     }
 }
