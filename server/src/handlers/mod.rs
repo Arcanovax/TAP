@@ -18,6 +18,7 @@ pub fn handle_request(
     };
     match Command::parse(&request.command_name) {
         Some(Command::CONNECT) => connect_request(request, server_info, peer_addr),
+        Some(Command::QUIT) => Message::default(),
         None => Message {
             message: MessageType::RESPONSE,
             error_response: ErrorCode::INVALID_COMMAND,

@@ -30,4 +30,14 @@ impl ServerInfo {
             .insert(peer_addr, Connection { player_name: name });
         Ok(())
     }
+
+    pub fn try_remove_player(&mut self, peer_addr: SocketAddr) -> Result<String, ErrorCode> {
+        let con = self.connections.get(&peer_addr);
+        if con.is_none() {
+            return Err(ErrorCode::INVALID_COMMAND);
+        }
+        let name = con.unwrap().player_name.clone();
+        self.connections.remove(&peer_addr);
+        Ok(name)
+    }
 }

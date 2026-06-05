@@ -27,8 +27,8 @@ pub(super) fn connect_request(
             info!("{} is connected", request.args[0]);
             Message {
                 message: MessageType::RESPONSE,
-                error_response: ErrorCode::NONE,
-                error_code: ErrorCode::NONE.code(),
+                error_response: ErrorCode::SUCCESS,
+                error_code: ErrorCode::SUCCESS.code(),
                 ..request
             }
         }

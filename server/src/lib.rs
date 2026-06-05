@@ -1,6 +1,7 @@
 use crate::handlers::handle_request;
 use crate::protocol::{Message, MessageType};
 use crate::state::ServerInfo;
+use std::net::SocketAddr;
 use std::sync::{Arc, Mutex};
 use tokio::io::{AsyncBufReadExt, AsyncWriteExt, BufReader};
 use tokio::net::TcpListener;
@@ -24,6 +25,14 @@ fn parse_command(line: &str) -> Message {
         args,
         ..Message::default()
     }
+}
+
+fn cleanup_tcp_connection(server_info: &Arc<Mutex<ServerInfo>>, peer_addr: SocketAddr) {
+    match server_info.lock().unwrap().try_remove_player(peer_addr) {
+        Ok(name) => info!("{} disconnected", name),
+        Err(_) => {}
+    }
+    info!("TCP connection closed");
 }
 
 pub async fn run(addr: String, port: String) -> Result<(), Box<dyn std::error::Error>> {
@@ -60,16 +69,21 @@ pub async fn run(addr: String, port: String) -> Result<(), Box<dyn std::error::E
 
                 loop {
                     line.clear();
-                    let n = reader.read_line(&mut line).await?;
-                    if n == 0 {
-                        break;
+                    match reader.read_line(&mut line).await {
+                        Ok(0) => break,
+                        Ok(_) => {}
+                        Err(_) => break,
                     }
                     let request = parse_command(line.as_str()); // DEV TEST
                     // let request = Message::parse(line); // PROD
+                    if request.command_name.to_uppercase() == "QUIT" {
+                        break;
+                    }
                     let response = handle_request(request, &server_info_copy, peer_addr);
                     let _ = write_half.write_all(response.to_str().as_bytes()).await;
                 }
 
+                cleanup_tcp_connection(&server_info_copy, peer_addr);
                 Ok::<(), std::io::Error>(())
             }
             .instrument(span),

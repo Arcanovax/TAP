@@ -46,8 +46,8 @@ impl Default for Message {
             event_line: String::new(),
             command_name: String::new(),
             args: Vec::new(),
-            error_response: ErrorCode::NONE,
-            error_code: ErrorCode::NONE.code(),
+            error_response: ErrorCode::SUCCESS,
+            error_code: ErrorCode::SUCCESS.code(),
             event_type: EventType::NONE,
             event_data: String::new(),
         }
