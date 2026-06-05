@@ -9,6 +9,14 @@ pub(super) fn chat_request(
     server_info: &Arc<Mutex<ServerInfo>>,
     peer_addr: SocketAddr,
 ) -> Message {
+    if !server_info.lock().unwrap().is_connected(peer_addr) {
+        return Message {
+            message: MessageType::RESPONSE,
+            error_response: ErrorCode::INVALID_COMMAND,
+            error_code: ErrorCode::INVALID_COMMAND.code(),
+            ..request
+        };
+    }
     if request.args.len() <= 1 {
         return Message {
             message: MessageType::RESPONSE,

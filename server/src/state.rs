@@ -70,4 +70,8 @@ impl ServerInfo {
         }
         receivers
     }
+
+    pub fn is_connected(&mut self, peer_addr: SocketAddr) -> bool {
+        self.connections.contains_key(&peer_addr)
+    }
 }
