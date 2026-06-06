@@ -28,10 +28,6 @@ fn parse_command(line: &str) -> Message {
 
 fn cleanup_tcp_connection(server_info: &SharedServer, peer_addr: SocketAddr) {
     let _ = server_info.lock().unwrap().try_leave_group(peer_addr);
-    server_info
-        .lock()
-        .unwrap()
-        .cleanup_player_invitation(peer_addr);
     match server_info.lock().unwrap().try_remove_player(peer_addr) {
         Ok(name) => info!("{} disconnected", name),
         Err(_) => {}

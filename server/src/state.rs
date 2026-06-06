@@ -73,6 +73,7 @@ impl ServerInfo {
         let name = con.unwrap().player.name.clone();
         self.connections.remove(&peer_addr);
         self.name_to_addr.remove(&name);
+        self.cleanup_player_invitation(peer_addr);
         Ok(name)
     }
 
