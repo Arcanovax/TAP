@@ -1,13 +1,12 @@
 use crate::error::ErrorCode;
 use crate::protocol::Message;
-use crate::state::{ServerInfo, Tx};
+use crate::state::{SharedServer, Tx};
 use std::net::SocketAddr;
-use std::sync::{Arc, Mutex};
 use tracing::info;
 
 pub(super) fn connect_request(
     args: Vec<String>,
-    server_info: &Arc<Mutex<ServerInfo>>,
+    server_info: &SharedServer,
     peer_addr: SocketAddr,
     tx: &Tx,
 ) -> Message {

@@ -1,12 +1,12 @@
 use crate::error::ErrorCode;
 use crate::protocol::{EventType, Message};
-use crate::state::ServerInfo;
+use crate::state::SharedServer;
 use std::net::SocketAddr;
-use std::sync::{Arc, Mutex};
+use tracing::info;
 
 pub(super) fn chat_request(
     args: Vec<String>,
-    server_info: &Arc<Mutex<ServerInfo>>,
+    server_info: &SharedServer,
     peer_addr: SocketAddr,
 ) -> Message {
     if !server_info.lock().unwrap().is_connected(peer_addr) {
@@ -39,6 +39,7 @@ pub(super) fn chat_request(
             data: body.clone(),
         });
     }
+    info!("Send {} scoped chat: {}", scope.to_uppercase(), body);
     return Message::Response {
         error: ErrorCode::SUCCESS,
         data: None,

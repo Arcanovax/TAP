@@ -4,7 +4,7 @@ use serde::{Deserialize, Serialize};
 #[derive(Serialize, Deserialize, PartialEq, Eq)]
 pub enum EventType {
     CHAT,
-    NONE,
+    INVITE,
 }
 
 #[derive(Serialize, Deserialize)]
@@ -23,16 +23,6 @@ pub enum Message {
         data: String,
     },
 }
-// pub struct Message {
-//     pub message: MessageType,
-//     pub command_line: String,
-//     pub command_name: String,
-//     pub args: Vec<String>,
-//     pub error_response: ErrorCode,
-//     pub error_code: u16,
-//     pub event_type: EventType,
-//     pub data: Option<String>,
-// }
 
 impl Message {
     pub fn parse(str: String) -> Self {

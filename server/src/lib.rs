@@ -1,6 +1,6 @@
 use crate::handlers::handle_request;
 use crate::protocol::{EventType, Message};
-use crate::state::ServerInfo;
+use crate::state::{ServerInfo, SharedServer};
 use std::net::SocketAddr;
 use std::sync::{Arc, Mutex};
 use tokio::io::{AsyncBufReadExt, AsyncWriteExt, BufReader};
@@ -9,7 +9,9 @@ use tracing::{Instrument, error, info};
 
 mod command;
 pub mod error;
+mod group;
 mod handlers;
+mod player;
 pub mod protocol;
 pub mod state;
 
@@ -24,7 +26,12 @@ fn parse_command(line: &str) -> Message {
     }
 }
 
-fn cleanup_tcp_connection(server_info: &Arc<Mutex<ServerInfo>>, peer_addr: SocketAddr) {
+fn cleanup_tcp_connection(server_info: &SharedServer, peer_addr: SocketAddr) {
+    let _ = server_info.lock().unwrap().try_leave_group(peer_addr);
+    server_info
+        .lock()
+        .unwrap()
+        .cleanup_player_invitation(peer_addr);
     match server_info.lock().unwrap().try_remove_player(peer_addr) {
         Ok(name) => info!("{} disconnected", name),
         Err(_) => {}
@@ -40,7 +47,7 @@ pub async fn run(addr: String, port: String) -> Result<(), Box<dyn std::error::E
         )
         .init();
 
-    let server_info: Arc<Mutex<ServerInfo>> = Arc::new(Mutex::new(ServerInfo::new()));
+    let server_info: SharedServer = Arc::new(Mutex::new(ServerInfo::new()));
     let listener = TcpListener::bind(format!("{}:{}", addr, port)).await?;
 
     loop {
@@ -88,6 +95,9 @@ pub async fn run(addr: String, port: String) -> Result<(), Box<dyn std::error::E
                         Some(event) = rx.recv() => {
                             if let Message::Event { kind, data } = event {
                                 if kind == EventType::CHAT {
+                                    let _ = write_half.write_all(data.as_bytes()).await;
+                                }
+                                else if kind == EventType::INVITE {
                                     let _ = write_half.write_all(data.as_bytes()).await;
                                 }
                             }

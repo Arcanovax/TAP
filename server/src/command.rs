@@ -3,6 +3,7 @@ pub enum Command {
     QUIT,
     WHO,
     CHAT,
+    GROUP,
 }
 
 impl Command {
@@ -12,6 +13,7 @@ impl Command {
             "QUIT" => Some(Command::QUIT),
             "WHO" => Some(Command::WHO),
             "CHAT" => Some(Command::CHAT),
+            "GROUP" => Some(Command::GROUP),
             _ => None,
         }
     }

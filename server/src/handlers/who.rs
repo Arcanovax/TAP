@@ -1,9 +1,8 @@
 use crate::error::ErrorCode;
 use crate::protocol::Message;
-use crate::state::ServerInfo;
-use std::sync::{Arc, Mutex};
+use crate::state::SharedServer;
 
-pub(super) fn who_request(server_info: &Arc<Mutex<ServerInfo>>) -> Message {
+pub(super) fn who_request(server_info: &SharedServer) -> Message {
     Message::Response {
         error: ErrorCode::SUCCESS,
         data: Some(
