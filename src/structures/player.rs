@@ -8,6 +8,7 @@ use crate::global_func::{
 };
 
 use crate::structures::enums::attack_res::AttackRes;
+use crate::structures::enums::turn_res::TurnRes;
 use crate::structures::enums::{
 	exits::Exits,
 	state::State,
@@ -90,10 +91,9 @@ impl Player {
 				State::InFight { target_id: target } => {
 					let fight = check_fight(&target, list_fights).expect("There is no fight.");
 
-					if is_it_my_turn(&self.name, fight){
-						Ok(FightOutput::ReadyToAttack)
-					} else {
-						Ok(FightOutput::WaitingToAttack)
+					match is_it_my_turn(&self.name, fight){
+						TurnRes::MyTurn => Ok(FightOutput::ReadyToAttack),
+						TurnRes::NotMyTurn | TurnRes::EnemyTurn => Ok(FightOutput::WaitingToAttack)
 					}
 				},
 				State::Discuss | State::Respawn => Err("You can't fight in your state.")
@@ -103,39 +103,32 @@ impl Player {
 		}
 	}
 
-	pub fn attack(&self, target: &str, list_npc: &mut HashMap<String, NPC>, list_items: &HashMap<String, Items>) -> AttackRes<String> {
-	if let Some(enemy) = list_npc.get_mut(target) {
-		let mut curr_damages: u32 = 15;
-		for id in self.inventory.keys() {
-			if let Some(item) = list_items.get(id) {
-				if let ItemKind::Weapon { damages } = item.kind{
-					if curr_damages < damages {
-						curr_damages = damages;
-					}
-				}
-				// match item.kind {
-				// 	ItemKind::Weapon { damages } => {
-				// 		if curr_damages < damages {
-				// 			curr_damages = damages;
-				// 		}
-				// 	}
-				// 	_ => (),
-				// }
-			}
-		}
+// 	pub fn attack(&mut self, enemy: &mut NPC, list_items: &HashMap<String, Items>) -> AttackRes {
+// 	// if let Some(enemy) = list_npc.get_mut(target) {
+// 		let mut curr_damages: u32 = 15;
+// 		for id in self.inventory.keys() {
+// 			if let Some(item) = list_items.get(id) {
+// 				if let ItemKind::Weapon { damages } = item.kind{
+// 					if curr_damages < damages {
+// 						curr_damages = damages;
+// 					}
+// 				}
+// 			}
+// 		}
 
-		if let NPCKind::Enemy { ref mut hp, ref loot, .. } = enemy.kind {
-			if curr_damages <= *hp {
-				*hp -= curr_damages;
-				return AttackRes::Hit(format!("{name} deals {curr_damages} damages to {e_name}. Remains {hp} HP to the enemy", name=self.name, e_name=enemy.name, hp=*hp));
-			} else {
-				*hp = 0;
-				return AttackRes::KillTarget(format!("{name} defeats {e_name}. Each fighter earn {loots:#?}", name=self.name, e_name=enemy.name, loots=*loot));
-			}
-		} else {
-			return AttackRes::Peace("Peace man! This target is not an enemy.");
-		}
-	}
-	AttackRes::NotFound("No Enemy")
-}
+// 		if let NPCKind::Enemy { ref mut hp, ref loot, .. } = enemy.kind {
+// 			if curr_damages <= *hp {
+// 				*hp -= curr_damages;
+// 				return AttackRes::Hit(format!("{name} deals {curr_damages} damages to {e_name}. Remains {hp} HP to the enemy", name=self.name, e_name=enemy.name, hp=*hp));
+// 			} else {
+// 				*hp = 0;
+// 				self.status = State::Idle;
+// 				return AttackRes::KillTarget(format!("{name} defeats {e_name}. Each fighter earn {loots:#?}", name=self.name, e_name=enemy.name, loots=*loot));
+// 			}
+// 		} else {
+// 			return AttackRes::Peace("Peace man! This target is not an enemy.");
+// 		}
+// 	// }
+// 	AttackRes::NotFound("No Enemy")
+// }
 }
