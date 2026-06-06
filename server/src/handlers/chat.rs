@@ -26,6 +26,7 @@ pub(super) fn chat_request(
     let mut binding = server_info.lock().unwrap();
     let receivers = match scope.to_uppercase().as_str() {
         "GLOBAL" => binding.get_global_receivers(peer_addr),
+        "GROUP" => binding.get_group_receivers(peer_addr).unwrap_or(Vec::new()),
         _ => {
             return Message::Response {
                 error: ErrorCode::INVALID_ARGS,

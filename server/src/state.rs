@@ -92,6 +92,24 @@ impl ServerInfo {
         receivers
     }
 
+    pub fn get_group_receivers(
+        &mut self,
+        peer_addr: SocketAddr,
+    ) -> Result<Vec<&Connection>, ErrorCode> {
+        let sender_con = self.get_connection(peer_addr)?;
+        let group_id = sender_con.player.group_id.ok_or(ErrorCode::NOT_IN_GROUP)?;
+        let receivers = self
+            .groups
+            .get(&group_id)
+            .ok_or(ErrorCode::INVALID_COMMAND)?
+            .players
+            .iter()
+            .filter_map(|addr| self.connections.get(addr))
+            .filter(|con| con.addr != peer_addr)
+            .collect();
+        Ok(receivers)
+    }
+
     pub fn is_connected(&mut self, peer_addr: SocketAddr) -> bool {
         self.connections.contains_key(&peer_addr)
     }
@@ -122,7 +140,7 @@ impl ServerInfo {
             .get_mut(&group_id)
             .unwrap()
             .players
-            .push(con.player.id);
+            .push(con.addr);
         info!("{} added to group({})", con.player.name, group_id);
         Ok(())
     }
@@ -171,7 +189,7 @@ impl ServerInfo {
             .get_mut(&group_id)
             .unwrap()
             .players
-            .retain(|&id| id != con.player.id);
+            .retain(|&addr| addr != con.addr);
         con.player.group_id = None;
         info!("{} leaved group({})", con.player.name, group_id);
         self.delete_group(group_id);
@@ -215,7 +233,7 @@ impl ServerInfo {
         self.invitations.insert(receiver_addr, group_id);
         let _ = receiver_tx.send(Message::Event {
             kind: EventType::INVITE,
-            data: format!("{} is inviting you into his group", inviter_name),
+            data: format!("{} is inviting you into his group\n", inviter_name),
         });
         Ok(())
     }

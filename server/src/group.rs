@@ -1,8 +1,10 @@
+use std::net::SocketAddr;
+
 use uuid::Uuid;
 
 pub struct Group {
     pub id: Uuid,
-    pub players: Vec<Uuid>,
+    pub players: Vec<SocketAddr>,
 }
 
 impl Group {
