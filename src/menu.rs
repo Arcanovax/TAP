@@ -6,7 +6,7 @@ const MENU_SIZE: Vec2 = vec2(300.0, 400.0);
 const LABELS: [&str; 3] = ["Play", "Options", "Quit"];
 
 
-use crate::Player;
+use crate::Game;
 use options::OptionsSettings;
 use options::handle_options;
 
@@ -93,15 +93,15 @@ pub fn update_menu(menu: &mut Menu, chat_active: bool) {
 }
 }
 
-pub fn draw_menu(menu: &mut Menu, player: &mut Player) {
+pub fn draw_menu(game: &mut Game) {
 
 
-    if !menu.is_active {
+    if !game.menu.is_active {
 		return;
 	}
 	draw_rectangle(0.0,0.0, screen_width(), screen_height(), Color::from_rgba(0, 0, 0, 150));
 
-	if menu.state == 0{
+	if game.menu.state == 0{
 		let menu_rect = get_menu_rect();
 		let mouse = mouse_position();
 
@@ -125,8 +125,8 @@ pub fn draw_menu(menu: &mut Menu, player: &mut Player) {
 			draw_text(label, text_pos.x, text_pos.y, 60.0, BLACK);
 		}
     }
-	else if menu.state == 4{
-		handle_options(&mut menu.options, player);
+	else if game.menu.state == 4{
+		handle_options(game);
 	}
 
 }

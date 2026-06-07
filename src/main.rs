@@ -154,47 +154,71 @@ fn config() -> Conf {
     }
 }
 
+struct Skin {
+    texture: Texture2D,
+    name: String,
+}
+
+struct Game {
+    pub menu: Menu,
+    pub player: Player,
+    pub chat: Chat,
+    pub skins: Vec<Skin>,
+    pub room_name: String 
+}
+
+impl Game {
+    pub async fn load_skins(&mut self, skin_data: Vec<(&str, &str)>){
+        for (path, name) in skin_data {
+            let texture = load_texture(path).await.unwrap();
+            texture.set_filter(FilterMode::Nearest);
+            self.skins.push(Skin {
+                texture: texture,
+                name: name.to_string(),
+            });
+    }
+    }
+}
+
+
+
 #[macroquad::main(config)]
 async fn main() {
 
-    let mut player = Player {
-        x: 150.0,
-        y: 150.0,
-        line: 0,
-		row: 0,
-        is_mooving: false,
-		speed: 0.8,
-        spritesheet_index: 0
+    let mut game: Game = Game{
+        chat: Chat::new(),
+        menu: Menu::new(),
+        player: Player {
+            x: 150.0,
+            y: 150.0,
+            line: 0,
+            row: 0,
+            is_mooving: false,
+            speed: 0.8,
+            spritesheet_index: 0
+        },
+        skins: Vec::new(),
+        room_name: "place".to_string()
     };
-
-	let mut chat: Chat = Chat::new();
-    let mut menu: Menu = Menu::new();
 
 
 
 	let rooms: std::collections::HashMap<String, rooms::Room> = get_rooms().await;
-    let map: &rooms::Room = rooms.get("place").unwrap();
+   
 
-    let skin_paths = vec![
-        "assets/skins/alex.png",
-        "assets/skins/kent.png",
-        "assets/skins/pierre.png",
-        "assets/skins/shane.png",
+    let skin_data: Vec<(&str, &str)> = vec![
+        ("assets/skins/alex.png", "Alex"),
+        ("assets/skins/kent.png", "Kent"),
+        ("assets/skins/pierre.png", "Pierre"),
+        ("assets/skins/shane.png", "Shane"),
     ];
+    game.load_skins(skin_data).await;
+    
 
-    let mut skins: Vec<Texture2D> = Vec::new();
-    for path in skin_paths {
-        let texture = load_texture(path).await.unwrap();
-        texture.set_filter(FilterMode::Nearest);
-        skins.push(texture);
-    }
-    let floor: Texture2D = map.first_layer.clone();
-    let builds: Option<Texture2D> = map.second_layer.clone();
+    
+    
 
-    if let Some(builds_texture) = builds.as_ref() {
-        builds_texture.set_filter(FilterMode::Nearest);
-    }
-    floor.set_filter(FilterMode::Nearest);
+
 	let sprite_width: f32 = 16.0;
     let sprite_height: f32 = 32.0;
 
@@ -206,12 +230,21 @@ async fn main() {
 
 
 
-    let map_obstacles = map.colliders;
-
+    
     loop {
 
+        let map: &rooms::Room = rooms.get(&game.room_name).unwrap();
+        let floor: Texture2D = map.first_layer.clone();
+        let builds: Option<Texture2D> = map.second_layer.clone();
+        let map_obstacles = map.colliders;
+
+        if let Some(builds_texture) = builds.as_ref() {
+            builds_texture.set_filter(FilterMode::Nearest);
+        }
+        floor.set_filter(FilterMode::Nearest);
+
         clear_background(BLACK);
-		if is_key_pressed(KeyCode::C) && !chat.is_active{
+		if is_key_pressed(KeyCode::C) && !game.chat.is_active{
             break;
         }
 
@@ -219,13 +252,13 @@ async fn main() {
 
 		camera_handler(&mut camera, tile_size);
 
-		if !chat.is_active && !menu.is_active{
-			player_handler(&mut player, &map_obstacles, tile_size, sprite_width, sprite_height);
+		if !game.chat.is_active && !game.menu.is_active{
+			player_handler(&mut game.player, &map_obstacles, tile_size, sprite_width, sprite_height);
 		}
 
-        let spritesheet = &skins[player.spritesheet_index];
-        let source_x: f32 = player.row as f32 * sprite_width;
-        let source_y: f32 = player.line as f32 * sprite_height;
+        let current_skin = &game.skins[game.player.spritesheet_index as usize];
+        let source_x: f32 = game.player.row as f32 * sprite_width;
+        let source_y: f32 = game.player.line as f32 * sprite_height;
 
 
         let cut_sheet = DrawTextureParams {
@@ -252,8 +285,8 @@ async fn main() {
 
 
         draw_texture_ex(
-            &spritesheet,
-			player.x.round(), player.y.round(),
+            &current_skin.texture,
+			game.player.x.round(), game.player.y.round(),
             WHITE,
             cut_sheet
         );
@@ -275,12 +308,12 @@ async fn main() {
 
 
 		set_default_camera();
-		update_menu(&mut menu, chat.is_active);
-        update_chat(&mut chat, menu.is_active);
+		update_menu(&mut game.menu, game.chat.is_active);
+        update_chat(&mut game.chat, game.menu.is_active);
 
 		draw_text(map.name.clone(), 5.0, 30.0, 60.0, WHITE);
-		draw_chat(&mut chat);
-		draw_menu(&mut menu, &mut player);
+		draw_chat(&mut game.chat);
+		draw_menu(&mut game);
 
 
         next_frame().await
