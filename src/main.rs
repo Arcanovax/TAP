@@ -308,10 +308,12 @@ async fn main() {
 
 
 		set_default_camera();
+        draw_text(map.name.clone(), 5.0, 30.0, 60.0, WHITE);
+
 		update_menu(&mut game.menu, game.chat.is_active);
         update_chat(&mut game.chat, game.menu.is_active);
 
-		draw_text(map.name.clone(), 5.0, 30.0, 60.0, WHITE);
+
 		draw_chat(&mut game.chat);
 		draw_menu(&mut game);
 

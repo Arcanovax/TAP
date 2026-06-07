@@ -1,11 +1,14 @@
 use macroquad::prelude::*;
+const CHANNELS: [&str; 3] = ["Room", "Global", "Group"];
 
 pub struct Chat {
     current_input: String,
     messages: Vec<String>,
     pub is_active: bool,
-	prev: i32
+	prev: i32,
+    channel: i32
 }
+
 
 impl Chat {
     pub fn new() -> Self {
@@ -13,10 +16,29 @@ impl Chat {
             current_input: String::new(),
             messages: Vec::new(),
             is_active: false,
-			prev: 0
+			prev: 0,
+            channel: 0
         }
     }
 }
+
+
+fn draw_chat_selection(x: f32, y: f32, mouse: (f32, f32)) -> i32 {
+    let mouse_pos = Vec2::new(mouse.0, mouse.1);
+    
+    for i in 0..CHANNELS.len(){
+            let btn = Rect::new(x+(i as f32)*100.0, y, 100.0, 30.0);
+            let hovered = btn.contains(mouse_pos);
+            let bg = if hovered { Color::new(0.3, 0.3, 0.3, 1.0) } else { Color::new(0.15, 0.15, 0.15, 1.0) };
+            draw_rectangle(btn.x, btn.y, btn.w, btn.h, bg);
+            draw_text(CHANNELS[i], btn.x+ 6.0, btn.y + 18.0, 30.0, WHITE);
+			if hovered && is_mouse_button_pressed(MouseButton::Left) {
+				return i as i32 + 1;
+        	}
+        }
+    return 0;
+}
+
 
 pub fn update_chat(chat: &mut Chat, menu_active:bool) {
     if is_key_pressed(KeyCode::Enter) && !menu_active{
@@ -77,7 +99,8 @@ pub fn update_chat(chat: &mut Chat, menu_active:bool) {
     }
 }
 
-pub fn draw_chat(chat: &Chat) {
+pub fn draw_chat(chat:&mut Chat) {
+    let mouse = mouse_position();
     let bottom_y = screen_height();
     let line_height = 25.0;
 
@@ -95,6 +118,9 @@ pub fn draw_chat(chat: &Chat) {
 
         let display_text = format!("Chat: {}_", chat.current_input);
         draw_text(&display_text, 20.0, bottom_y - 25.0, 35.0, YELLOW);
+        chat.channel =  draw_chat_selection(15.0, bottom_y - 80.0, mouse);
+        println!("{}", chat.channel)
+        
     } else {
 		draw_rectangle(15.0, bottom_y - 15.0, 600.0, -40.0, Color::new(0.0, 0.0, 0.0, 0.3));
 		if chat.current_input.trim().is_empty(){
