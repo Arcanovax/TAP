@@ -48,17 +48,16 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 		};
 		
 	};
-	
-	match create_player("Bruno", &mut world.players) {
-		Ok(()) => println!("New Player!!! {:#?}", world.players),
-		Err(e) => eprintln!("{}", e),
-	}
 
 	let mut input = String::new();
 	while io::stdin().read_line(&mut input).is_ok(){
 		let splitted: Vec<&str> = input.split_whitespace().collect();
 		let first: String = splitted[1].to_uppercase();
 		match first.as_str() {
+			"CONNECT" => match create_player(splitted[2], &mut world.players) {
+					Ok(()) => println!("New Player!!! {:#?}", world.players),
+					Err(e) => eprintln!("{}", e)
+				},
 			"MOVE" => match move_to(&mut world, splitted[0], splitted[2]) {
 				Ok(msg) => println!("{}", msg),
 				Err(e) => eprintln!("{}", e),

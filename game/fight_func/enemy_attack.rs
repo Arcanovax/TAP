@@ -11,6 +11,7 @@ pub fn enemy_attack(opponent_id: &str, world: &mut World) -> EnnAttRes {
         target = world.players.get_mut(fight.fighters.get(0).unwrap()).unwrap() 
     } else {
         for fighter in &fight.fighters {
+			println!("{}", res);
             let name_len: i32 = fighter.len()as i32;
             res += name_len;
             while res > nb_fighters as i32 - 1 { res = (nb_fighters as i32 - res).abs() }

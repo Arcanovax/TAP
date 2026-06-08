@@ -13,6 +13,7 @@ loc.city_square:
         toward: "loc.market"
   npc:
     - "npc.city_gard"
+    - "npc.h"
 
 loc.tavern:
   id: "loc.tavern"

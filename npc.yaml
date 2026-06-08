@@ -144,9 +144,24 @@ npc.goblins:
         - "The roads can be dangerous."
   kind: 
     Enemy:
-        hp: 20
-        max_hp: 20
-        damages: 10
+        hp: 2000
+        max_hp: 2000
+        damages: 50
+        loot:
+          - "item.gold"
+        beaten: false
+
+npc.h:
+  id: "npc.h"
+  name: "Sansabrix"
+  dialogue: 
+        - "Stay safe, traveler."
+        - "The roads can be dangerous."
+  kind: 
+    Enemy:
+        hp: 2000
+        max_hp: 2000
+        damages: 50
         loot:
           - "item.gold"
         beaten: false
