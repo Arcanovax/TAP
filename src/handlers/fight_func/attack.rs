@@ -1,14 +1,18 @@
-use crate::structures::{enums::{attack_res::AttackRes, item_kind::ItemKind, npc_kind::NPCKind, state::State}, world::World};
+use std::{net::SocketAddr, sync::MutexGuard};
 
-pub fn execute_attack<'a>(player_id: &str, target_id: &str, world: &mut World) -> AttackRes<'a> {
+use crate::{state::{ServerInfo, SharedServer}, structures::enums::{attack_res::AttackRes, item_kind::ItemKind, npc_kind::NPCKind, state::State}};
+
+pub fn execute_attack<'a>(player_id: SocketAddr, target_id: Vec<String>, world: &mut MutexGuard<'_, ServerInfo>) -> AttackRes<'a> {
     
-    let player = world.players.get_mut(player_id).unwrap();
-    let enemy = world.npcs.get_mut(target_id).unwrap();
-    let fight = world.fights.get_mut(target_id).unwrap();
+	// let mut pre_world_mut = world.lock().unwrap();
+    let world_mut = &mut *world;
+    let player = world_mut.connections.get_mut(&player_id).unwrap();
+    let enemy = world_mut.npcs.get_mut(&target_id[0]).unwrap();
+    let fight = world_mut.fights.get_mut(&target_id[0]).unwrap();
     
     let mut curr_damages: u32 = 15;
     for id in player.inventory.keys() {
-        if let Some(item) = world.items.get(id) {
+        if let Some(item) = world_mut.items.get(id) {
             if let ItemKind::Weapon { damages } = item.kind {
                 if curr_damages < damages { curr_damages = damages; }
             }
@@ -29,7 +33,7 @@ pub fn execute_attack<'a>(player_id: &str, target_id: &str, world: &mut World) -
             *hp = 0;
 			*defeated = true;
 			for pl_name in &mut fight.fighters {
-				let mut pl = world.players.get_mut(pl_name).unwrap();
+				let pl = world_mut.connections.get_mut(pl_name).unwrap();
 				pl.status = State::Idle;
 				for loot_item in loot {
 					let amount = if loot_item == "item.gold" { 50 } else { 1 };

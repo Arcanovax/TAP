@@ -46,7 +46,7 @@ pub async fn run(addr: String, port: String) -> Result<(), Box<dyn std::error::E
         )
         .init();
 
-	let prev_server_info: ServerInfo = ServerInfo::new();
+	let mut prev_server_info: ServerInfo = ServerInfo::new();
 
 	for file_path in ["rooms.yaml", "npc.yaml", "items.yaml"] {
 		let f = File::open(file_path)?;

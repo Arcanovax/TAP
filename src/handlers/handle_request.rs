@@ -1,20 +1,5 @@
-// use crate::command::Command;
-// use crate::error::ErrorCode;
-// use crate::protocol::Message;
-// use crate::state::{SharedServer, Tx};
-// use crate::handlers::global_func::move_to::move_to;
-// use chat::chat_request;
-// use connect::connect_request;
-// use group::group_request;
-// use status::status_request;
-// use std::net::SocketAddr;
-// use who::who_request;
-
-// mod chat;
-// mod connect;
-// mod group;
-// mod status;
-// mod who;
+use crate::state::{SharedServer, Tx};
+use std::net::SocketAddr;
 
 use crate::{
 	command::Command,
@@ -29,7 +14,9 @@ use crate::{
 		group::group_request,
 		status::status_request,
 		who::who_request
-		}, protocol::Message
+		},
+        protocol::Message,
+        error::ErrorCode
 	};
 
 pub fn handle_request(

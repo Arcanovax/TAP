@@ -1,9 +1,12 @@
 use serde::{Deserialize, Serialize};
+use tokio::sync::mpsc::UnboundedSender;
 // use std::collections::HashMap;
 use uuid::Uuid;
 pub type Tx = UnboundedSender<Message>;
 
-use std::net::SocketAddr;
+use std::{collections::HashMap, net::SocketAddr};
+
+use crate::{protocol::Message, structures::enums::state::State};
 
 // #[derive(Debug, PartialEq, Serialize, Deserialize)]
 // pub enum State {
