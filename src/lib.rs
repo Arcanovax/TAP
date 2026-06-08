@@ -1,6 +1,4 @@
 mod structures;
-mod global_func;
-mod fight_func;
 mod command;
 pub mod error;
 mod group;
@@ -9,13 +7,14 @@ mod player;
 pub mod protocol;
 pub mod state;
 
-use crate::handlers::handle_request;
+use crate::handlers::handle_request::handle_request;
 use crate::protocol::{EventType, Message};
 use crate::state::{ServerInfo, SharedServer};
 use std::net::SocketAddr;
 use std::sync::{Arc, Mutex};
 use tokio::io::{AsyncBufReadExt, AsyncWriteExt, BufReader};
 use tokio::net::TcpListener;
+use std::fs::File;
 use tracing::{Instrument, error, info};
 
 
@@ -47,7 +46,19 @@ pub async fn run(addr: String, port: String) -> Result<(), Box<dyn std::error::E
         )
         .init();
 
-    let server_info: SharedServer = Arc::new(Mutex::new(ServerInfo::new()));
+	let prev_server_info: ServerInfo = ServerInfo::new();
+
+	for file_path in ["rooms.yaml", "npc.yaml", "items.yaml"] {
+		let f = File::open(file_path)?;
+		match file_path {
+			"rooms.yaml" => prev_server_info.rooms = serde_yaml::from_reader(f)?,
+			"npc.yaml" => prev_server_info.npcs = serde_yaml::from_reader(f)?,
+			"items.yaml" => prev_server_info.items = serde_yaml::from_reader(f)?,
+			_ => {}
+		}	
+	};
+
+    let server_info: SharedServer = Arc::new(Mutex::new(prev_server_info));
     let listener = TcpListener::bind(format!("{}:{}", addr, port)).await?;
 
     loop {

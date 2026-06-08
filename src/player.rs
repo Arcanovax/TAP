@@ -1,6 +1,9 @@
 use serde::{Deserialize, Serialize};
 // use std::collections::HashMap;
 use uuid::Uuid;
+pub type Tx = UnboundedSender<Message>;
+
+use std::net::SocketAddr;
 
 // #[derive(Debug, PartialEq, Serialize, Deserialize)]
 // pub enum State {
@@ -13,25 +16,29 @@ use uuid::Uuid;
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Player {
     pub name: String,
-    //     pub hp: u32,
-    //     pub max_hp: u32,
-    //     pub location: String,
-    //     pub status: State,
-    //     pub inventory: HashMap<String, u32>,
-    //     pub available_quests: Vec<String>,
+	pub hp: u32,
+	pub max_hp: u32,
+	pub location: String,
+	pub status: State,
+	pub inventory: HashMap<String, u32>,
+	pub available_quests: Vec<String>,
+	pub addr: SocketAddr,
+    pub tx: Tx,
     pub group_id: Option<Uuid>,
 }
 
 impl Player {
-    pub fn new(name: String) -> Self {
+    pub fn new(name: String, addr: SocketAddr, tx: Tx) -> Self {
         Player {
             name,
-            // hp: 10,
-            // max_hp: 10,
-            // location: String::from("place"),
-            // status: State::Idle,
-            // inventory: HashMap::new(),
-            // available_quests: Vec::new(),
+			addr,
+    		tx,
+            hp: 10,
+            max_hp: 10,
+            location: String::from("place"),
+            status: State::Idle,
+            inventory: HashMap::new(),
+            available_quests: Vec::new(),
             group_id: None,
         }
     }

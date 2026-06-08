@@ -16,17 +16,21 @@ use uuid::Uuid;
 pub type Tx = UnboundedSender<Message>;
 pub type SharedServer = Arc<Mutex<ServerInfo>>;
 
-pub struct Connection {
-    pub addr: SocketAddr,
-    pub tx: Tx,
-    player: Player,
-}
+// pub struct Connection {
+//     pub addr: SocketAddr,
+//     pub tx: Tx,
+//     player: Player,
+// }
 
 pub struct ServerInfo {
-    connections: HashMap<SocketAddr, Connection>,
+    pub connections: HashMap<SocketAddr, Player>,
     name_to_addr: HashMap<String, SocketAddr>,
     groups: HashMap<Uuid, Group>,
     invitations: HashMap<SocketAddr, Uuid>,
+	pub rooms: HashMap<String, Location>,
+    pub items: HashMap<String, Items>,
+    pub fights: HashMap<String, Fight>,
+    pub npcs: HashMap<String, NPC>,
 }
 
 impl ServerInfo {
@@ -36,6 +40,10 @@ impl ServerInfo {
             name_to_addr: HashMap::new(),
             groups: HashMap::new(),
             invitations: HashMap::new(),
+			rooms: HashMap::new(),
+			items: HashMap::new(),
+			npcs: HashMap::new(),
+			fights: HashMap::new(),
         }
     }
 
@@ -55,11 +63,7 @@ impl ServerInfo {
         }
         self.connections.insert(
             peer_addr,
-            Connection {
-                player: Player::new(name.clone()),
-                addr: peer_addr,
-                tx: tx.clone(),
-            },
+            Player::new(name.clone(), peer_addr, tx)
         );
         self.name_to_addr.insert(name, peer_addr);
         Ok(())
@@ -70,7 +74,7 @@ impl ServerInfo {
         if con.is_none() {
             return Err(ErrorCode::INVALID_COMMAND);
         }
-        let name = con.unwrap().player.name.clone();
+        let name = con.unwrap().name.clone();
         self.connections.remove(&peer_addr);
         self.name_to_addr.remove(&name);
         self.cleanup_player_invitation(peer_addr);
@@ -202,10 +206,6 @@ impl ServerInfo {
             .get(&peer_addr)
             .ok_or(ErrorCode::INVALID_COMMAND)?;
         Ok(con)
-    }
-
-    pub fn get_player(&self, peer_addr: SocketAddr) -> Result<&Player, ErrorCode> {
-        Ok(&self.get_connection(peer_addr)?.player)
     }
 
     fn get_name_addr(&self, name: String) -> Result<&SocketAddr, ErrorCode> {

@@ -149,7 +149,7 @@ npc.goblins:
         damages: 50
         loot:
           - "item.gold"
-        beaten: false
+        defeated: false
 
 npc.h:
   id: "npc.h"
@@ -164,4 +164,4 @@ npc.h:
         damages: 50
         loot:
           - "item.gold"
-        beaten: false
+        defeated: false

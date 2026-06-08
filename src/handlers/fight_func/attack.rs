@@ -15,7 +15,7 @@ pub fn execute_attack<'a>(player_id: &str, target_id: &str, world: &mut World) -
         }
     }
 
-    if let NPCKind::Enemy { ref mut hp, ref loot, ref mut beaten, .. } = enemy.kind {
+    if let NPCKind::Enemy { ref mut hp, ref loot, ref mut defeated, .. } = enemy.kind {
         if curr_damages < *hp {
             *hp -= curr_damages;
             if fight.turn == fight.fighters.len() as u32 - 1 {
@@ -27,7 +27,7 @@ pub fn execute_attack<'a>(player_id: &str, target_id: &str, world: &mut World) -
             return AttackRes::Hit(format!("{} hits for {}", player.name, curr_damages));
         } else {
             *hp = 0;
-			*beaten = true;
+			*defeated = true;
 			for pl_name in &mut fight.fighters {
 				let mut pl = world.players.get_mut(pl_name).unwrap();
 				pl.status = State::Idle;

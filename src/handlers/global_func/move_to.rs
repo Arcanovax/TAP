@@ -1,9 +1,19 @@
-use crate::{global_func::get_player::get_player_mut, structures::{enums::exits::Exits, world::World}};
+use crate::{
+	error::ErrorCode, handlers::global_func::get_player::get_player_mut, protocol::Message, state::{ServerInfo, SharedServer}, structures::enums::exits::Exits
+};
 
-pub fn move_to(world: &mut World, player_name: &str, dest: &str) -> Result<String, &'static str>{
-	match get_player_mut(&mut world.players, player_name) {
+pub fn move_to(world: &SharedServer, player_addr: &str, dest: &str) -> Message{
+
+	if args.len() != 1 {
+        return Message::Response {
+            error: ErrorCode::INVALID_ARGS,
+            data: None,
+        };
+    }
+	let mut world_mut: &mut ServerInfo = world.lock().unwrap();
+	match get_player_mut(world_mut.connections, player_addr) {
 		Ok(player) => {
-			if let Some(loc) = world.rooms.get(&player.location) {
+			if let Some(loc) = world_mut.rooms.get(&player.location) {
 	
 				for exit in &loc.exits {
 					let (dir_name, target) = match exit {
@@ -16,13 +26,26 @@ pub fn move_to(world: &mut World, player_name: &str, dest: &str) -> Result<Strin
 					if dir_name == dest {
 						// println!("{} et {}", dir_name, target);
 						player.location = target.clone();
-						return Ok(format!("{} move to {}", player.name, target));
+						return Message::Response {
+							error: ErrorCode::SUCCESS,
+							data: Some(serde_json::to_string(format!("{} move to {}", player.name, target)).unwrap()),
+						}
 					}
 				}
-				return Err("No gateway on that direction.");
+				return Message::Response {
+							error: ErrorCode::NO_EXIT,
+							data: Some(serde_json::to_string("No gateway on that direction.").unwrap()),
+						};
+			} else {
+				Message::Response {
+					error: ErrorCode::ROOM_NOT_FOUND,
+					data: Some(serde_json::to_string("You're nowhere. I can't find you.").unwrap()),
+				}
 			}
-			Err("You're nowhere. I can't find you.")
 		}
-		Err(msg) => Err(msg)
+		Err(msg) => Message::Response {
+					error: ErrorCode::PLAYER_NOT_FOUND,
+					data: Some(serde_json::to_string(msg).unwrap()),
+				}
 	}
 	}

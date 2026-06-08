@@ -5,6 +5,9 @@ pub enum Command {
     CHAT,
     GROUP,
     STATUS,
+	MOVE,
+	TALK,
+	ATTACK
 }
 
 impl Command {
