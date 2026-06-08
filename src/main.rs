@@ -2,12 +2,14 @@ use macroquad::prelude::*;
 mod rooms;
 mod chat;
 mod menu;
+mod inventory;
 
 use rooms::get_rooms;
 use chat::update_chat;
 use chat::Chat;
 use chat::draw_chat;
 use menu::*;
+use inventory::*;
 
 
 fn player_handler(player: &mut Player, map: &[[i32; 25]; 15], tile_size: f32, sprite_width: f32, sprite_height: f32) {
@@ -104,7 +106,8 @@ struct Player {
 	row: i32,
     is_mooving: bool,
 	speed: f32,
-    spritesheet_index: usize
+    spritesheet_index: usize,
+	inventory: Inventory
 }
 
 fn rect_collides_map(rect: Rect, map: &[[i32; 25]; 15], tile_size: f32) -> bool {
@@ -164,7 +167,7 @@ struct Game {
     pub player: Player,
     pub chat: Chat,
     pub skins: Vec<Skin>,
-    pub room_name: String 
+    pub room_name: String
 }
 
 impl Game {
@@ -195,7 +198,8 @@ async fn main() {
             row: 0,
             is_mooving: false,
             speed: 0.8,
-            spritesheet_index: 0
+            spritesheet_index: 0,
+			inventory: Inventory::new()
         },
         skins: Vec::new(),
         room_name: "place".to_string()
@@ -204,7 +208,7 @@ async fn main() {
 
 
 	let rooms: std::collections::HashMap<String, rooms::Room> = get_rooms().await;
-   
+
 
     let skin_data: Vec<(&str, &str)> = vec![
         ("assets/skins/alex.png", "Alex"),
@@ -213,10 +217,10 @@ async fn main() {
         ("assets/skins/shane.png", "Shane"),
     ];
     game.load_skins(skin_data).await;
-    
 
-    
-    
+
+
+
 
 
 	let sprite_width: f32 = 16.0;
@@ -230,7 +234,7 @@ async fn main() {
 
 
 
-    
+
     loop {
 
         let map: &rooms::Room = rooms.get(&game.room_name).unwrap();
@@ -312,11 +316,11 @@ async fn main() {
 
 		update_menu(&mut game.menu, game.chat.is_active);
         update_chat(&mut game.chat, game.menu.is_active);
-
+		update_inv(&mut game);
 
 		draw_chat(&mut game.chat);
 		draw_menu(&mut game);
-
+		draw_inv(&mut game);
 
         next_frame().await
     }
