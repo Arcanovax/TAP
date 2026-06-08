@@ -168,6 +168,7 @@ struct Game {
     pub room_name: String,
 	pub tx_to_serv: tokio::sync::mpsc::Sender<String>,
     pub init_end: bool,
+    pub rx_from_serv: std::sync::mpsc::Receiver<String>
 }
 
 impl Game {
@@ -246,6 +247,7 @@ async fn main() {
         skins: Vec::new(),
         room_name: "place".to_string(),
 		tx_to_serv: tx_to_serv,
+        rx_from_serv: rx_from_serv,
         init_end: false
     };
 
@@ -274,7 +276,6 @@ async fn main() {
     loop {
         if !game.init_end{
             handle_starter(&mut game);
-            println!("{}", game.init_end);
             next_frame().await
         }
         else {
@@ -290,7 +291,11 @@ async fn main() {
         
         
         
+        while let Ok(msg) = game.rx_from_serv.try_recv() {
+            println!("Reçu : {}", msg);
+            game.chat.all_messages.push(msg);
         
+        }
 
 
         let map: &rooms::Room = rooms.get(&game.room_name).unwrap();
@@ -371,7 +376,7 @@ async fn main() {
         draw_text(map.name.clone(), 5.0, 30.0, 60.0, WHITE);
 
 		update_menu(&mut game.menu, game.chat.is_active);
-        update_chat(&mut game.chat, game.menu.is_active);
+        update_chat(&mut game);
 		update_inv(&mut game);
 
 		draw_chat(&mut game.chat);

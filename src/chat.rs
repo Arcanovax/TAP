@@ -1,12 +1,14 @@
 use macroquad::prelude::*;
 const CHANNELS: [&str; 3] = ["Room", "Global", "Group"];
+use crate::Game;
 
 pub struct Chat {
     current_input: String,
-    messages: Vec<String>,
+    sended_messages: Vec<String>,
     pub is_active: bool,
 	prev: i32,
-    channel: i32
+    channel: i32,
+    pub all_messages: Vec<String>
 }
 
 
@@ -14,10 +16,11 @@ impl Chat {
     pub fn new() -> Self {
         Self {
             current_input: String::new(),
-            messages: Vec::new(),
+            sended_messages: Vec::new(),
             is_active: false,
 			prev: 0,
-            channel: 0
+            channel: 0,
+            all_messages: Vec::new()
         }
     }
 }
@@ -42,18 +45,24 @@ fn draw_chat_selection(x: f32, y: f32,selected: i32, mouse: (f32, f32)) -> i32 {
 }
 
 
-pub fn update_chat(chat: &mut Chat, menu_active:bool) {
-    if is_key_pressed(KeyCode::Enter) && !menu_active{
+pub fn update_chat(game: &mut Game) {
+    let chat = &mut game.chat;
+    if is_key_pressed(KeyCode::Enter) && !game.menu.is_active{
         if !chat.is_active {
             chat.is_active = true;
         }
 		else {
 			if !chat.current_input.trim().is_empty() {
-				chat.messages.push(chat.current_input.clone());
+                chat.all_messages.push(chat.current_input.clone());
+				chat.sended_messages.push(chat.current_input.clone());
+                let rq: String = format!("CHAT {} {}\n", CHANNELS[chat.channel as usize],chat.current_input);
+                game.tx_to_serv.try_send(rq).ok();
+			    
 				chat.current_input.clear();
 				chat.prev = 0;
         	}
-			chat.is_active = false;
+            chat.is_active = false;
+            
 	}
 	}
 	if is_key_pressed(KeyCode::Escape) {
@@ -67,8 +76,8 @@ pub fn update_chat(chat: &mut Chat, menu_active:bool) {
         return;
     }
 
-	if is_key_pressed(KeyCode::Up) && chat.prev < (chat.messages.len()as i32){
-		if let Some(msg) = chat.messages.iter().rev().nth(chat.prev as usize){
+	if is_key_pressed(KeyCode::Up) && chat.prev < (chat.sended_messages.len()as i32){
+		if let Some(msg) = chat.sended_messages.iter().rev().nth(chat.prev as usize){
 			chat.current_input = msg.clone();
 			chat.prev += 1;
 		}
@@ -80,7 +89,7 @@ pub fn update_chat(chat: &mut Chat, menu_active:bool) {
 			chat.current_input.clear();
 		}
 		else{
-			if let Some(msg) = chat.messages.iter().rev().nth((chat.prev - 1) as usize){
+			if let Some(msg) = chat.sended_messages.iter().rev().nth((chat.prev - 1) as usize){
 				chat.current_input = msg.clone();
 			}
 		}
@@ -107,7 +116,7 @@ pub fn draw_chat(chat:&mut Chat) {
     let line_height = 25.0;
 
     let max_visible_messages = 5;
-    let visible_messages = chat.messages.iter().rev().take(max_visible_messages);
+    let visible_messages = chat.all_messages.iter().rev().take(max_visible_messages);
 
     for (i, msg) in visible_messages.enumerate() {
         draw_text(msg, 20.0, bottom_y - 80.0 - (i as f32 * line_height), 32.0, WHITE);
