@@ -1,5 +1,5 @@
 use crate::error::ErrorCode;
-use crate::protocol::{EventType, Message};
+use crate::protocol::Message;
 use crate::state::SharedServer;
 use std::net::SocketAddr;
 

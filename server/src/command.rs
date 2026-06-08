@@ -4,6 +4,7 @@ pub enum Command {
     WHO,
     CHAT,
     GROUP,
+    STATUS,
 }
 
 impl Command {
@@ -14,6 +15,7 @@ impl Command {
             "WHO" => Some(Command::WHO),
             "CHAT" => Some(Command::CHAT),
             "GROUP" => Some(Command::GROUP),
+            "STATUS" => Some(Command::STATUS),
             _ => None,
         }
     }

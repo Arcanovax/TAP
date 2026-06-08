@@ -204,6 +204,10 @@ impl ServerInfo {
         Ok(con)
     }
 
+    pub fn get_player(&self, peer_addr: SocketAddr) -> Result<&Player, ErrorCode> {
+        Ok(&self.get_connection(peer_addr)?.player)
+    }
+
     fn get_name_addr(&self, name: String) -> Result<&SocketAddr, ErrorCode> {
         let addr = self
             .name_to_addr

@@ -2,17 +2,16 @@ use serde::{Deserialize, Serialize};
 // use std::collections::HashMap;
 use uuid::Uuid;
 
-#[derive(Debug, PartialEq, Serialize, Deserialize)]
-pub enum State {
-    InFight { target_id: String },
-    Idle,
-    Respawn,
-    Discuss,
-}
+// #[derive(Debug, PartialEq, Serialize, Deserialize)]
+// pub enum State {
+//     InFight { target_id: String },
+//     Idle,
+//     Respawn,
+//     Discuss,
+// }
 
-#[derive(Debug)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct Player {
-    pub id: Uuid,
     pub name: String,
     //     pub hp: u32,
     //     pub max_hp: u32,
@@ -26,7 +25,6 @@ pub struct Player {
 impl Player {
     pub fn new(name: String) -> Self {
         Player {
-            id: Uuid::new_v4(),
             name,
             // hp: 10,
             // max_hp: 10,
