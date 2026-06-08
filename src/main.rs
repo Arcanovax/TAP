@@ -86,7 +86,6 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 						AttackRes::KillTarget(msg) => {
 							println!("{}", msg);
 						},
-						AttackRes::KillPlayer(msg) => println!("{}", msg),
 						AttackRes::Peace(msg) => println!("{}", msg),
 				}
 			},
