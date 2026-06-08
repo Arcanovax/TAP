@@ -3,6 +3,7 @@ mod rooms;
 mod chat;
 mod menu;
 mod inventory;
+mod start;
 
 
 use rooms::get_rooms;
@@ -14,6 +15,7 @@ use inventory::*;
 use std::sync::mpsc;
 use tokio::io::{AsyncReadExt, AsyncWriteExt};
 use tokio::net::TcpStream;
+use start::*;
 
 
 
@@ -112,7 +114,8 @@ struct Player {
     is_mooving: bool,
 	speed: f32,
     spritesheet_index: usize,
-	inventory: Inventory
+	inventory: Inventory,
+    name: String
 }
 
 fn rect_collides_map(rect: Rect, map: &[[i32; 25]; 15], tile_size: f32) -> bool {
@@ -163,7 +166,8 @@ struct Game {
     pub chat: Chat,
     pub skins: Vec<Skin>,
     pub room_name: String,
-	pub tx_to_serv: tokio::sync::mpsc::Sender<String>
+	pub tx_to_serv: tokio::sync::mpsc::Sender<String>,
+    pub init_end: bool,
 }
 
 impl Game {
@@ -237,10 +241,12 @@ async fn main() {
             speed: 0.8,
             spritesheet_index: 0,
 			inventory: Inventory::new(),
+            name:"".to_string()
         },
         skins: Vec::new(),
         room_name: "place".to_string(),
-		tx_to_serv: tx_to_serv
+		tx_to_serv: tx_to_serv,
+        init_end: false
     };
 
 
@@ -265,13 +271,26 @@ async fn main() {
 
     let mut camera = Camera2D::default();
 
+    loop {
+        if !game.init_end{
+            handle_starter(&mut game);
+            println!("{}", game.init_end);
+            next_frame().await
+        }
+        else {
+            break;
+        }
+    }
+    println!("Trying to connect {}", game.player.name);
+    let msg: String = format!("connect {}\n", game.player.name);
+    game.tx_to_serv.try_send(msg).ok();
 
     loop {
-		if is_key_pressed(KeyCode::Q){
-			println!("Trying to connect Alex");
-            let msg: String = format!("connect {}\n", "Alex");
-    		game.tx_to_serv.try_send(msg).ok();
-        }
+        
+        
+        
+        
+        
 
 
         let map: &rooms::Room = rooms.get(&game.room_name).unwrap();
@@ -360,5 +379,5 @@ async fn main() {
 		draw_inv(&mut game);
 
         next_frame().await
-    }
-}
+    }}
+
