@@ -4,12 +4,17 @@ mod chat;
 mod menu;
 mod inventory;
 
+
 use rooms::get_rooms;
 use chat::update_chat;
 use chat::Chat;
 use chat::draw_chat;
 use menu::*;
 use inventory::*;
+use std::sync::mpsc;
+use tokio::io::{AsyncReadExt, AsyncWriteExt};
+use tokio::net::TcpStream;
+
 
 
 fn player_handler(player: &mut Player, map: &[[i32; 25]; 15], tile_size: f32, sprite_width: f32, sprite_height: f32) {
@@ -145,17 +150,7 @@ fn rect_collides_map(rect: Rect, map: &[[i32; 25]; 15], tile_size: f32) -> bool 
 
 
 
-fn config() -> Conf {
-    Conf {
-        window_title: "TAP".to_owned(),
-        window_width: 1280,
-        window_height: 720,
-		// window_resizable: false,
 
-		fullscreen: false,
-        ..Default::default()
-    }
-}
 
 struct Skin {
     texture: Texture2D,
@@ -167,7 +162,8 @@ struct Game {
     pub player: Player,
     pub chat: Chat,
     pub skins: Vec<Skin>,
-    pub room_name: String
+    pub room_name: String,
+	pub tx_to_serv: tokio::sync::mpsc::Sender<String>
 }
 
 impl Game {
@@ -182,11 +178,52 @@ impl Game {
     }
     }
 }
+async fn network_task(tx: mpsc::Sender<String>, mut rx: tokio::sync::mpsc::Receiver<String>) {
+    let stream = TcpStream::connect("127.0.0.1:8080").await.unwrap();
+    let (mut reader, mut writer) = stream.into_split();
 
 
+    let read_task = tokio::spawn(async move {
+        let mut buf = [0u8; 1024];
+        loop {
+            let n = reader.read(&mut buf).await.unwrap();
+            if n == 0 { break; }
+            tx.send(String::from_utf8_lossy(&buf[..n]).to_string()).ok();
+        }
+    });
+
+    let write_task = tokio::spawn(async move {
+        while let Some(msg) = rx.recv().await {
+            writer.write_all(msg.as_bytes()).await.unwrap();
+        }
+    });
+
+    let _ = tokio::join!(read_task, write_task);
+}
+
+
+fn config() -> Conf {
+    Conf {
+        window_title: "TAP".to_owned(),
+        window_width: 1280,
+        window_height: 720,
+		// window_resizable: false,
+
+		fullscreen: false,
+        ..Default::default()
+    }
+}
 
 #[macroquad::main(config)]
 async fn main() {
+
+	let (tx_to_game, rx_from_serv) = mpsc::channel::<String>();
+	let (tx_to_serv, rx_from_game) = tokio::sync::mpsc::channel::<String>(32);
+	std::thread::spawn(move || {
+			tokio::runtime::Runtime::new()
+				.unwrap()
+				.block_on(network_task(tx_to_game, rx_from_game));
+		});
 
     let mut game: Game = Game{
         chat: Chat::new(),
@@ -199,10 +236,11 @@ async fn main() {
             is_mooving: false,
             speed: 0.8,
             spritesheet_index: 0,
-			inventory: Inventory::new()
+			inventory: Inventory::new(),
         },
         skins: Vec::new(),
-        room_name: "place".to_string()
+        room_name: "place".to_string(),
+		tx_to_serv: tx_to_serv
     };
 
 
@@ -218,11 +256,6 @@ async fn main() {
     ];
     game.load_skins(skin_data).await;
 
-
-
-
-
-
 	let sprite_width: f32 = 16.0;
     let sprite_height: f32 = 32.0;
 
@@ -233,9 +266,13 @@ async fn main() {
     let mut camera = Camera2D::default();
 
 
-
-
     loop {
+		if is_key_pressed(KeyCode::Q){
+			println!("Trying to connect Alex");
+            let msg: String = format!("connect {}\n", "Alex");
+    		game.tx_to_serv.try_send(msg).ok();
+        }
+
 
         let map: &rooms::Room = rooms.get(&game.room_name).unwrap();
         let floor: Texture2D = map.first_layer.clone();
