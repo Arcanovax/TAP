@@ -1,4 +1,4 @@
-use crate::structures::{enums::{enn_att_res::EnnAttRes, npc_kind::NPCKind}, fight::Fight, npc::NPC, player::Player, world::World };
+use crate::structures::{enums::{enn_att_res::EnnAttRes, npc_kind::NPCKind, state::State}, fight::Fight, npc::NPC, player::Player, world::World };
 
 pub fn enemy_attack(opponent_id: &str, world: &mut World) -> EnnAttRes {
     let fight: &mut Fight = world.fights.get_mut(opponent_id).unwrap();
@@ -25,6 +25,7 @@ pub fn enemy_attack(opponent_id: &str, world: &mut World) -> EnnAttRes {
         } else {
             target.hp = target.max_hp - 10;
             target.location = String::from("loc.city_square");
+			target.status = State::Idle;
             if nb_fighters == 1 {
                 world.fights.remove(opponent_id);
                 EnnAttRes::KillAndWin(format!("{enn_name} have killed {pl}. {enn_name} won the fight. Shame on you players!", pl=target.name, enn_name=opponent.name))

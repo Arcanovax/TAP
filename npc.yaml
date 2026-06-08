@@ -149,3 +149,4 @@ npc.goblins:
         damages: 10
         loot:
           - "item.gold"
+        beaten: false

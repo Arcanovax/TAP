@@ -11,7 +11,7 @@ pub enum NPCKind {
 		max_hp: u32,
 		damages: u32,
 		loot: Vec<String>,
-		beaten_by: Option<Vec<String>>
+		beaten: bool
 	},
 	Citizen
 }
