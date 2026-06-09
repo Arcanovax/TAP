@@ -1,0 +1,4 @@
+import:
+  - "config/items.yaml"
+  - "config/rooms.yaml"
+  - "config/npc.yaml"

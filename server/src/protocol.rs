@@ -25,20 +25,20 @@ pub enum Message {
 }
 
 impl Message {
-    pub fn parse(str: String) -> Self {
-        serde_json::from_str(&str).unwrap_or_else(|_| Message::default())
+    pub fn parse(str: String) -> Result<Self, serde_json::Error> {
+        serde_json::from_str(&str)
     }
 
     pub fn to_str(&self) -> String {
         serde_json::to_string(self).unwrap_or_default() + "\n"
     }
 }
-
-impl Default for Message {
-    fn default() -> Self {
-        Message::Response {
-            error: ErrorCode::INVALID_COMMAND,
-            data: None,
-        }
-    }
-}
+//
+// impl Default for Message {
+//     fn default() -> Self {
+//         Message::Response {
+//             error: ErrorCode::INVALID_COMMAND,
+//             data: None,
+//         }
+//     }
+// }

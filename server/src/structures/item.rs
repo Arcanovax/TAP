@@ -8,9 +8,3 @@ pub struct Item {
     pub price: u32,
     pub kind: ItemKind,
 }
-
-impl Item {
-    pub fn references(&self) -> Vec<&str> {
-        Vec::new()
-    }
-}

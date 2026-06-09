@@ -11,12 +11,12 @@ use tracing::{Instrument, error, info};
 
 mod command;
 mod config;
-pub mod error;
+mod error;
 mod game;
 mod group;
 mod handlers;
 pub mod protocol;
-pub mod state;
+mod state;
 mod structures;
 
 fn parse_command(line: &str) -> Message {
