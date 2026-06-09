@@ -151,17 +151,17 @@ npc.goblins:
           - "item.gold"
         defeated: false
 
-npc.h:
-  id: "npc.h"
-  name: "Sansabrix"
-  dialogue: 
-        - "Stay safe, traveler."
-        - "The roads can be dangerous."
-  kind: 
-    Enemy:
-        hp: 2000
-        max_hp: 2000
-        damages: 50
-        loot:
-          - "item.gold"
-        defeated: false
+# npc.h:
+#   id: "npc.h"
+#   name: "Sansabrix"
+#   dialogue: 
+#         - "Stay safe, traveler."
+#         - "The roads can be dangerous."
+#   kind: 
+#     Enemy:
+#         hp: 2000
+#         max_hp: 2000
+#         damages: 50
+#         loot:
+#           - "item.gold"
+#         defeated: false

@@ -1,11 +1,9 @@
 use serde::{Deserialize, Serialize};
-use tokio::sync::mpsc::UnboundedSender;
 use uuid::Uuid;
-pub type Tx = UnboundedSender<Message>;
 
 use std::collections::HashMap;
 
-use crate::{protocol::Message, structures::enums::state::State};
+use crate::structures::enums::state::State;
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Player {

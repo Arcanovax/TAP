@@ -1,4 +1,4 @@
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    TAP::run("127.0.0.1".to_string(), "8080".to_string()).await
+    tap::run("127.0.0.1".to_string(), "8080".to_string()).await
 }
