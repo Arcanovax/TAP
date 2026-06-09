@@ -252,7 +252,7 @@ async fn main() {
 		tx_to_serv: tx_to_serv,
         rx_from_serv: rx_from_serv,
         init_end: false,
-		group: Group{is_active: false, in_group: false}
+		group: Group::new()
     };
 
 
@@ -292,6 +292,7 @@ async fn main() {
 
     loop {
 
+
         while let Ok(msg) = game.rx_from_serv.try_recv() {
             println!("GET: {}", msg);
             game.chat.all_messages.push(msg);
@@ -310,7 +311,7 @@ async fn main() {
         floor.set_filter(FilterMode::Nearest);
 
         clear_background(BLACK);
-		if is_key_pressed(KeyCode::C) && !game.chat.is_active{
+		if is_key_pressed(KeyCode::C) && !game.chat.is_active && !game.group.is_active{
             break;
         }
 
@@ -318,7 +319,7 @@ async fn main() {
 
 		camera_handler(&mut camera, tile_size);
 
-		if !game.chat.is_active && !game.menu.is_active{
+		if !game.chat.is_active && !game.menu.is_active && !game.group.chat_is_active{
 			player_handler(&mut game.player, &map_obstacles, tile_size, sprite_width, sprite_height);
 		}
 
@@ -379,6 +380,9 @@ async fn main() {
 		update_menu(&mut game.menu, game.chat.is_active);
         update_chat(&mut game);
 		update_inv(&mut game);
+		if game.group.is_active {
+			update_group(&mut game);
+    	}
 
 		draw_chat(&mut game.chat);
 		draw_menu(&mut game);
