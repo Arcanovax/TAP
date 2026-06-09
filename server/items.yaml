@@ -1,0 +1,70 @@
+item.ale:
+    id: "item.ale"
+    name: "Amber beer"
+    price: 10
+    kind: 
+      Potion:
+        healing: 25
+
+item.pint:
+    id: "item.pint"
+    name: "Amber pint"
+    price: 20
+    kind: 
+      Potion:
+        healing: 55
+
+item.peanuts:
+    id: "item.peanuts"
+    name: "Bag of peanuts"
+    price: 5
+    kind: 
+      Potion:
+        healing: 10
+
+item.strawberry:
+    id: "item.strawberry"
+    name: "Strawberries"
+    price: 5
+    kind: 
+      Potion:
+        healing: 10
+
+item.orange:
+    id: "item.orange"
+    name: "Orange"
+    price: 5
+    kind: 
+      Potion:
+        healing: 10
+
+item.sword:
+    id: "item.sword"
+    name: "Excalibur"
+    price: 25
+    kind: 
+      Weapon:
+        damages: 10
+
+item.shield:
+    id: "item.shield"
+    name: "You_shall_not_pass"
+    price: 25
+    kind: 
+      Armor:
+        protection: 20
+
+item.helmet:
+    id: "item.helmet"
+    name: "Helmetique"
+    price: 15
+    kind: 
+      Armor:
+        protection: 10
+
+item.gold:
+    id: "item.gold"
+    name: "Gold"
+    price: 1
+    kind: 
+      Miscellaneous
