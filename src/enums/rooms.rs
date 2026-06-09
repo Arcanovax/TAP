@@ -1,0 +1,13 @@
+pub enum Rooms {
+	START,
+	FARM,
+	MARKET,
+	BEACH,
+	TAVERN,
+	GAMING,
+	BLACKSMITH,
+	PARC,
+	QUARRY,
+	MINE,
+	FOREST
+}

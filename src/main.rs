@@ -1,4 +1,12 @@
-#[tokio::main]
-async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    tap::run("127.0.0.1".to_string(), "8080".to_string()).await
+pub mod structures;
+pub mod enums;
+
+
+fn main() {
+	for i in 0..10 {
+    let area = Rect::new(0, i, frame.area().width, 1);
+    frame.render_widget(Paragraph::new("Hello world!"), area);
+}
+	println!("Hello, world!");
+
 }
