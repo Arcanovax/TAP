@@ -30,21 +30,34 @@ fn get_rect_right(size: Vec2, y: f32) -> Rect {
 
 pub struct Group {
 	pub is_active: bool,
-	pub is_created: bool,
+	pub in_group: bool,
 }
 
 
 
-pub fn update_group(game: &mut Game) {
+pub fn update_group(game: &mut Game, mouse: (f32, f32)){
 	let rect: Rect = get_rect_right(RECT_MENU, screen_height());
     draw_rectangle(rect.x, rect.y, rect.w, rect.h, Color::new(0.0, 0.0, 0.0, 0.5));
 
+	if !game.group.in_group {
+		let btn: Rect = Rect::new(rect.x,rect.y, 100.0, 20.0);
+		let hovered = btn.contains(Vec2::new(mouse.0, mouse.1));
+		let bg = if hovered { Color::new(0.3, 0.3, 0.3, 0.75) }
+		else { Color::new(0.10, 0.10, 0.10, 0.75) };
+		draw_rectangle(btn.x, btn.y, btn.w, btn.h, bg);
+		draw_text("Create", btn.x+ 6.0, btn.y + 22.5, 30.0, WHITE);
+		if hovered && is_mouse_button_pressed(MouseButton::Left) {
+            game.tx_to_serv.try_send("GROUP JOIN test".to_string()).ok();
+			game.group.in_group = true;
+		}
+	}
+	else {
 	let text: String = format!("{}'s Group", game.player.name);
 	let text_dimensions = measure_text(&text, None,30, 1.0);
 	let text_x = rect.x + (rect.w - text_dimensions.width) / 2.0;
 
 	draw_text(text, text_x, rect.y + 30.0, 30.0, WHITE);
-	return;
+	}
 }
 
 pub fn draw_icon(game: &mut Game, mouse: (f32, f32)){
@@ -80,6 +93,6 @@ pub fn handle_group(game: &mut Game) {
 
 
     if game.group.is_active {
-		update_group(game)
+		update_group(game, mouse);
     }
 }

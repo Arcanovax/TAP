@@ -252,7 +252,7 @@ async fn main() {
 		tx_to_serv: tx_to_serv,
         rx_from_serv: rx_from_serv,
         init_end: false,
-		group: Group{is_active: false, is_created: false}
+		group: Group{is_active: false, in_group: false}
     };
 
 
@@ -292,11 +292,8 @@ async fn main() {
 
     loop {
 
-
-
-
         while let Ok(msg) = game.rx_from_serv.try_recv() {
-            println!("Reçu : {}", msg);
+            println!("GET: {}", msg);
             game.chat.all_messages.push(msg);
 
         }

@@ -55,8 +55,15 @@ pub fn update_chat(game: &mut Game) {
 			if !chat.current_input.trim().is_empty() {
                 chat.all_messages.push(chat.current_input.clone());
 				chat.sended_messages.push(chat.current_input.clone());
-                let rq: String = format!("CHAT {} {}\n", CHANNELS[chat.channel as usize],chat.current_input);
-                game.tx_to_serv.try_send(rq).ok();
+				if chat.current_input.starts_with("/"){
+					let rq: String = format!("{}\n",&chat.current_input[1..].to_string());
+					println!("{}", rq);
+                	game.tx_to_serv.try_send(rq).ok();
+				}
+				else{
+					let rq: String = format!("CHAT {} {}\n", CHANNELS[chat.channel as usize],chat.current_input);
+                	game.tx_to_serv.try_send(rq).ok();
+				}
 
 				chat.current_input.clear();
 				chat.prev = 0;
