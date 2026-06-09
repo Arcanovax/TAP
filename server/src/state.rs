@@ -240,10 +240,10 @@ impl ServerInfo {
             return Err(ErrorCode::INVALID_ARGS);
         }
         self.invitations.insert(receiver_addr, group_id);
-        let _ = receiver_tx.send(Message::Event {
-            kind: EventType::INVITE,
-            data: format!("{} is inviting you into his group\n", inviter_name),
-        });
+        let _ = receiver_tx.send(Message::Event(EventType::INVITE {
+            sender: inviter_name,
+            group_id: group_id,
+        }));
         Ok(())
     }
 

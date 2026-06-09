@@ -1,10 +1,39 @@
+use std::str::FromStr;
+
 use crate::error::ErrorCode;
 use serde::{Deserialize, Serialize};
+use uuid::Uuid;
+
+#[derive(Serialize, Deserialize, PartialEq, Eq, Clone)]
+pub enum ChatScope {
+    GLOBAL,
+    GROUP,
+    ROOM,
+}
+
+impl FromStr for ChatScope {
+    type Err = ErrorCode;
+    fn from_str(s: &str) -> Result<Self, ErrorCode> {
+        match s.to_uppercase().as_str() {
+            "GLOBAL" => Ok(ChatScope::GLOBAL),
+            "GROUP" => Ok(ChatScope::GROUP),
+            "ROOM" => Ok(ChatScope::ROOM),
+            _ => Err(ErrorCode::INVALID_ARGS),
+        }
+    }
+}
 
 #[derive(Serialize, Deserialize, PartialEq, Eq)]
 pub enum EventType {
-    CHAT,
-    INVITE,
+    CHAT {
+        body: String,
+        sender: String,
+        scope: ChatScope,
+    },
+    INVITE {
+        sender: String,
+        group_id: Uuid,
+    },
 }
 
 #[derive(Serialize, Deserialize)]
@@ -18,10 +47,7 @@ pub enum Message {
         error: ErrorCode,
         data: Option<String>,
     },
-    Event {
-        kind: EventType,
-        data: String,
-    },
+    Event(EventType),
 }
 
 impl Message {
@@ -33,12 +59,3 @@ impl Message {
         serde_json::to_string(self).unwrap_or_default() + "\n"
     }
 }
-//
-// impl Default for Message {
-//     fn default() -> Self {
-//         Message::Response {
-//             error: ErrorCode::INVALID_COMMAND,
-//             data: None,
-//         }
-//     }
-// }

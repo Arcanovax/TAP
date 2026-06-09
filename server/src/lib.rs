@@ -1,6 +1,6 @@
 use crate::config::load;
 use crate::handlers::handle_request::handle_request;
-use crate::protocol::{EventType, Message};
+use crate::protocol::Message;
 use crate::state::{ServerInfo, SharedServer};
 use std::net::SocketAddr;
 use std::path::Path;
@@ -96,14 +96,14 @@ pub async fn run(addr: String, port: String) -> Result<(), Box<dyn std::error::E
                         Some(event) = rx.recv() => {
                             let _ = write_half.write_all(event.to_str().as_bytes()).await;
                             // Debug
-                            if let Message::Event { kind, data } = event {
-                                if kind == EventType::CHAT {
-                                    let _ = write_half.write_all(data.as_bytes()).await;
-                                }
-                                else if kind == EventType::INVITE {
-                                    let _ = write_half.write_all(data.as_bytes()).await;
-                                }
-                            }
+                            // if let Message::Event { kind, data } = event {
+                            //     if kind == EventType::CHAT {
+                            //         let _ = write_half.write_all(data.as_bytes()).await;
+                            //     }
+                            //     else if kind == EventType::INVITE {
+                            //         let _ = write_half.write_all(data.as_bytes()).await;
+                            //     }
+                            // }
                         }
                     }
                 }

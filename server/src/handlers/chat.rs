@@ -1,5 +1,6 @@
 use crate::error::ErrorCode;
-use crate::protocol::{EventType, Message};
+use crate::handlers::global_func::get_player;
+use crate::protocol::{ChatScope, EventType, Message};
 use crate::state::SharedServer;
 use std::net::SocketAddr;
 use tracing::info;
@@ -24,6 +25,17 @@ pub(super) fn chat_request(
     let scope = &args[0];
     let body = args[1..].join(" ") + "\n";
     let mut binding = server_info.lock().unwrap();
+
+    let sender_name = match binding.get_player(peer_addr) {
+        Ok(player) => player.name.clone(),
+        Err(code) => {
+            return Message::Response {
+                error: code,
+                data: None,
+            };
+        }
+    };
+
     let receivers = match scope.to_uppercase().as_str() {
         "GLOBAL" => binding.get_global_receivers(peer_addr),
         "GROUP" => match binding.get_group_receivers(peer_addr) {
@@ -42,11 +54,21 @@ pub(super) fn chat_request(
             };
         }
     };
+    let chat_scope = match scope.parse::<ChatScope>() {
+        Ok(scope) => scope,
+        Err(code) => {
+            return Message::Response {
+                error: code,
+                data: None,
+            };
+        }
+    };
     for con in receivers {
-        let _ = con.tx.send(Message::Event {
-            kind: EventType::CHAT,
-            data: body.clone(),
-        });
+        let _ = con.tx.send(Message::Event(EventType::CHAT {
+            body: body.clone(),
+            sender: sender_name.clone(),
+            scope: chat_scope.clone(),
+        }));
     }
     info!("Send {} scoped chat: {}", scope.to_uppercase(), body);
     return Message::Response {
