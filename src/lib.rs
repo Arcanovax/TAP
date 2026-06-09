@@ -1,5 +1,17 @@
+<<<<<<< HEAD:server/src/lib.rs
 use crate::config::load;
 use crate::handlers::handle_request;
+=======
+mod structures;
+mod command;
+pub mod error;
+mod group;
+mod handlers;
+pub mod protocol;
+pub mod state;
+
+use crate::handlers::handle_request::handle_request;
+>>>>>>> origin/test-merge:src/lib.rs
 use crate::protocol::{EventType, Message};
 use crate::state::{ServerInfo, SharedServer};
 use std::net::SocketAddr;
@@ -7,8 +19,10 @@ use std::path::Path;
 use std::sync::{Arc, Mutex};
 use tokio::io::{AsyncBufReadExt, AsyncWriteExt, BufReader};
 use tokio::net::TcpListener;
+use std::fs::File;
 use tracing::{Instrument, error, info};
 
+<<<<<<< HEAD:server/src/lib.rs
 mod command;
 mod config;
 pub mod error;
@@ -18,6 +32,8 @@ mod handlers;
 mod player;
 pub mod protocol;
 pub mod state;
+=======
+>>>>>>> origin/test-merge:src/lib.rs
 
 fn parse_command(line: &str) -> Message {
     let mut parts = line.split_whitespace();
@@ -47,8 +63,24 @@ pub async fn run(addr: String, port: String) -> Result<(), Box<dyn std::error::E
         )
         .init();
 
+<<<<<<< HEAD:server/src/lib.rs
     let world = load(Path::new("config.yaml"))?;
     let server_info: SharedServer = Arc::new(Mutex::new(ServerInfo::new()));
+=======
+	let mut prev_server_info: ServerInfo = ServerInfo::new();
+
+	for file_path in ["rooms.yaml", "npc.yaml", "items.yaml"] {
+		let f = File::open(file_path)?;
+		match file_path {
+			"rooms.yaml" => prev_server_info.rooms = serde_yaml::from_reader(f)?,
+			"npc.yaml" => prev_server_info.npcs = serde_yaml::from_reader(f)?,
+			"items.yaml" => prev_server_info.items = serde_yaml::from_reader(f)?,
+			_ => {}
+		}	
+	};
+
+    let server_info: SharedServer = Arc::new(Mutex::new(prev_server_info));
+>>>>>>> origin/test-merge:src/lib.rs
     let listener = TcpListener::bind(format!("{}:{}", addr, port)).await?;
 
     loop {

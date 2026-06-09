@@ -5,6 +5,9 @@ pub enum Command {
     CHAT,
     GROUP,
     STATUS,
+	MOVE,
+	TALK,
+	ATTACK
 }
 
 impl Command {
@@ -16,6 +19,9 @@ impl Command {
             "CHAT" => Some(Command::CHAT),
             "GROUP" => Some(Command::GROUP),
             "STATUS" => Some(Command::STATUS),
+            "MOVE" => Some(Command::MOVE),
+            "TALK" => Some(Command::TALK),
+            "ATTACK" => Some(Command::ATTACK),
             _ => None,
         }
     }

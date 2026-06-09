@@ -1,0 +1,167 @@
+npc.city_gard:
+  id: "npc.city_gard"
+  name: "Haltlarix"
+  dialogue: 
+        - "Stay safe, traveler."
+        - "The roads can be dangerous."
+  kind: Citizen
+
+npc.bar_owner:
+  id: "npc.bar_owner"
+  name: "Grossbarrix"
+  dialogue: 
+        - "Stay safe, traveler."
+        - "The roads can be dangerous."
+  kind: 
+    Merchant:
+          gold: 45
+          inventory:
+            - "item.ale"
+            - "item.pint"
+            - "item.peanuts"
+  
+npc.citizen_1:
+  id: "npc.citizen_1"
+  name: "Nésousix"
+  dialogue: 
+        - "Stay safe, traveler."
+        - "The roads can be dangerous."
+  kind: Citizen
+
+npc.citizen_2:
+  id: "npc.citizen_2"
+  name: "Spacix"
+  dialogue: 
+        - "Stay safe, traveler."
+        - "The roads can be dangerous."
+  kind: Citizen
+
+npc.citizen_3:
+  id: "npc.citizen_3"
+  name: "Alavavix"
+  dialogue: 
+        - "Stay safe, traveler."
+        - "The roads can be dangerous."
+  kind: Citizen
+
+npc.citizen_4:
+  id: "npc.citizen_4"
+  name: "Cinematix"
+  dialogue: 
+        - "Stay safe, traveler."
+        - "The roads can be dangerous."
+  kind: Citizen
+
+npc.citizen_5:
+  id: "npc.citizen_5"
+  name: "Iwanttobreakfrix"
+  dialogue: 
+        - "Stay safe, traveler."
+        - "The roads can be dangerous."
+  kind: Citizen
+
+npc.citizen_6:
+  id: "npc.citizen_6"
+  name: "Soirénetflix"
+  dialogue: 
+        - "Stay safe, traveler."
+        - "The roads can be dangerous."
+  kind: Citizen
+
+npc.dealer:
+  id: "npc.dealer"
+  name: "Donnetonfrix"
+  dialogue: 
+        - "Stay safe, traveler."
+        - "The roads can be dangerous."
+  kind: Citizen
+
+npc.farmer:
+  id: "npc.farmer"
+  name: "Sanpesticix"
+  dialogue: 
+        - "Stay safe, traveler."
+        - "The roads can be dangerous."
+  kind: Citizen
+
+npc.cow:
+  id: "npc.cow"
+  name: "Bigtastix"
+  dialogue: 
+        - "Stay safe, traveler."
+        - "The roads can be dangerous."
+  kind: Citizen
+
+npc.seller:
+  id: "npc.seller"
+  name: "Oncassléprix"
+  dialogue: 
+        - "Stay safe, traveler."
+        - "The roads can be dangerous."
+  kind: 
+    Merchant:
+          gold: 45
+          inventory:
+            - "item.strawberry"
+            - "item.orange"
+
+
+npc.old_man:
+  id: "npc.old_man"
+  name: "Enigmatix"
+  dialogue: 
+        - "Stay safe, traveler."
+        - "The roads can be dangerous."
+  kind: Citizen
+
+npc.bookseller:
+  id: "npc.bookseller"
+  name: "Damducédéix"
+  dialogue: 
+        - "Stay safe, traveler."
+        - "The roads can be dangerous."
+  kind: Citizen
+
+npc.blacksmith:
+  id: "npc.blacksmith"
+  name: "Métallurgix"
+  dialogue: 
+        - "Stay safe, traveler."
+        - "The roads can be dangerous."
+  kind: 
+    Merchant:
+          gold: 45
+          inventory:
+            - "item.sword"
+            - "item.shield"
+            - "item.helmet"
+
+npc.goblins:
+  id: "npc.goblins"
+  name: "Sansabrix"
+  dialogue: 
+        - "Stay safe, traveler."
+        - "The roads can be dangerous."
+  kind: 
+    Enemy:
+        hp: 2000
+        max_hp: 2000
+        damages: 50
+        loot:
+          - "item.gold"
+        defeated: false
+
+# npc.h:
+#   id: "npc.h"
+#   name: "Sansabrix"
+#   dialogue: 
+#         - "Stay safe, traveler."
+#         - "The roads can be dangerous."
+#   kind: 
+#     Enemy:
+#         hp: 2000
+#         max_hp: 2000
+#         damages: 50
+#         loot:
+#           - "item.gold"
+#         defeated: false

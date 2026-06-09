@@ -1,8 +1,7 @@
 use crate::{
     error::ErrorCode,
     group::Group,
-    player::Player,
-    protocol::{EventType, Message},
+    protocol::{EventType, Message}, structures::{fight::Fight, items::Items, location::Location, npc::NPC, player::Player},
 };
 use std::{
     collections::HashMap,
@@ -19,14 +18,18 @@ pub type SharedServer = Arc<Mutex<ServerInfo>>;
 pub struct Connection {
     pub addr: SocketAddr,
     pub tx: Tx,
-    player: Player,
+    pub player: Player,
 }
 
 pub struct ServerInfo {
-    connections: HashMap<SocketAddr, Connection>,
+    pub connections: HashMap<SocketAddr, Connection>,
     name_to_addr: HashMap<String, SocketAddr>,
     groups: HashMap<Uuid, Group>,
     invitations: HashMap<SocketAddr, Uuid>,
+	pub rooms: HashMap<String, Location>,
+    pub items: HashMap<String, Items>,
+    pub fights: HashMap<String, Fight>,
+    pub npcs: HashMap<String, NPC>,
 }
 
 impl ServerInfo {
@@ -36,6 +39,10 @@ impl ServerInfo {
             name_to_addr: HashMap::new(),
             groups: HashMap::new(),
             invitations: HashMap::new(),
+			rooms: HashMap::new(),
+			items: HashMap::new(),
+			npcs: HashMap::new(),
+			fights: HashMap::new(),
         }
     }
 
@@ -196,16 +203,16 @@ impl ServerInfo {
         Ok(())
     }
 
-    fn get_connection(&self, peer_addr: SocketAddr) -> Result<&Connection, ErrorCode> {
+	pub fn get_player(&self, peer_addr: SocketAddr) -> Result<&Player, ErrorCode> {
+		Ok(&self.get_connection(peer_addr)?.player)
+    }
+
+    pub fn get_connection(&self, peer_addr: SocketAddr) -> Result<&Connection, ErrorCode> {
         let con = self
             .connections
             .get(&peer_addr)
             .ok_or(ErrorCode::INVALID_COMMAND)?;
         Ok(con)
-    }
-
-    pub fn get_player(&self, peer_addr: SocketAddr) -> Result<&Player, ErrorCode> {
-        Ok(&self.get_connection(peer_addr)?.player)
     }
 
     fn get_name_addr(&self, name: String) -> Result<&SocketAddr, ErrorCode> {

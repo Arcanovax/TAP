@@ -1,19 +1,23 @@
-use crate::command::Command;
-use crate::error::ErrorCode;
-use crate::protocol::Message;
 use crate::state::{SharedServer, Tx};
-use chat::chat_request;
-use connect::connect_request;
-use group::group_request;
-use status::status_request;
 use std::net::SocketAddr;
-use who::who_request;
 
-mod chat;
-mod connect;
-mod group;
-mod status;
-mod who;
+use crate::{
+	command::Command,
+	handlers::{
+		chat::chat_request,
+		connect::connect_request,
+		fight_func::fight::fight,
+		global_func::{
+			move_to::move_to,
+			talk_to::talk_to
+		},
+		group::group_request,
+		status::status_request,
+		who::who_request
+		},
+        protocol::Message,
+        error::ErrorCode
+	};
 
 pub fn handle_request(
     request: Message,
@@ -29,7 +33,10 @@ pub fn handle_request(
             Some(Command::CHAT) => chat_request(args, server_info, peer_addr),
             Some(Command::GROUP) => group_request(args, server_info, peer_addr),
             Some(Command::STATUS) => status_request(server_info, peer_addr),
-            None => Message::Response {
+            Some(Command::MOVE) => move_to(server_info, peer_addr, args),
+            Some(Command::TALK) => talk_to(peer_addr, args, server_info),
+            Some(Command::ATTACK) => fight(peer_addr, args, server_info),
+            _ => Message::Response {
                 error: ErrorCode::INVALID_COMMAND,
                 data: None,
             },
