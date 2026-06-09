@@ -62,12 +62,9 @@ fn input_text(x: f32,y: f32,game: &mut Game, mouse: (f32, f32)) -> bool{
     draw_rectangle(input_rect.x, input_rect.y, input_rect.w, input_rect.h, input_bg);
     draw_rectangle_lines(input_rect.x, input_rect.y, input_rect.w, input_rect.h, 2.0, GRAY);
 
-    // if is_key_pressed(KeyCode::Backspace) {
-    //     field.pop();
-    // }
-	// if is_key_pressed(KeyCode::Enter) && !field.is_empty(){
-	// 	return true;
-	// }
+    if is_key_pressed(KeyCode::Backspace) {
+        field.pop();
+    }
 
     while let Some(character) = get_char_pressed() {
 		println!("{}", character.clone());
@@ -91,10 +88,12 @@ fn input_text(x: f32,y: f32,game: &mut Game, mouse: (f32, f32)) -> bool{
 	return false;
 }
 
-pub fn update_group(game: &mut Game){
+pub fn draw_group(game: &mut Game){
 	let mouse = mouse_position();
 	let rect: Rect = get_rect_right(RECT_MENU, screen_height());
     draw_rectangle(rect.x, rect.y, rect.w, rect.h, Color::new(0.0, 0.0, 0.0, 0.5));
+
+
 
 	if !game.group.in_group {
 		let btn: Rect = Rect::new(rect.x,rect.y, 100.0, 20.0);
@@ -107,16 +106,17 @@ pub fn update_group(game: &mut Game){
             game.tx_to_serv.try_send("GROUP JOIN test".to_string()).ok();
 			game.group.in_group = true;
 		}
+
 		if input_text(rect.x, rect.y + 60.0,game, mouse){
 			game.group.in_group = true;
 		}
 	}
 	else {
-	let text: String = format!("{}'s Group", game.player.name);
-	let text_dimensions = measure_text(&text, None,30, 1.0);
-	let text_x = rect.x + (rect.w - text_dimensions.width) / 2.0;
+		let text: String = format!("{}'s Group", game.player.name);
+		let text_dimensions = measure_text(&text, None,30, 1.0);
+		let text_x = rect.x + (rect.w - text_dimensions.width) / 2.0;
 
-	draw_text(&text, text_x, rect.y + 30.0, 30.0, WHITE);
+		draw_text(&text, text_x, rect.y + 30.0, 30.0, WHITE);
 	}
 }
 
@@ -136,18 +136,18 @@ pub fn draw_icon(game: &mut Game, mouse: (f32, f32)){
 
 pub fn handle_group(game: &mut Game) {
     let mouse = mouse_position();
-
-	if is_key_pressed(KeyCode::F) && !game.group.chat_is_active{
-        if !game.group.is_active {
-            game.group.is_active = true;
-        }
-		else
-        {
-			game.group.is_active = false;
-        }
-    }
-
 	if !game.group.is_active {
 		draw_icon(game, mouse);
+		if is_key_pressed(KeyCode::F) && game.focus == InputFocus::Game {
+            game.group.is_active = true;
+        }
     }
+	else{
+		game.focus = InputFocus::GroupMenu;
+		if is_key_pressed(KeyCode::F) {
+			game.group.is_active = false;
+			game.focus = InputFocus::Game;
+		}
+		draw_group(game);
+	}
 }

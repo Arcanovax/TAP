@@ -1,6 +1,6 @@
 use macroquad::prelude::*;
 const CHANNELS: [&str; 3] = ["Room", "Global", "Group"];
-use crate::Game;
+use crate::*;
 
 pub struct Chat {
     current_input: String,
@@ -47,38 +47,29 @@ fn draw_chat_selection(x: f32, y: f32,selected: i32, mouse: (f32, f32)) -> i32 {
 
 pub fn update_chat(game: &mut Game) {
     let chat = &mut game.chat;
-    if is_key_pressed(KeyCode::Enter) && !game.menu.is_active{
-        if !chat.is_active {
-            chat.is_active = true;
-        }
-		else {
-			if !chat.current_input.trim().is_empty() {
-                chat.all_messages.push(chat.current_input.clone());
-				chat.sended_messages.push(chat.current_input.clone());
-				if chat.current_input.starts_with("/"){
-					let rq: String = format!("{}\n",&chat.current_input[1..].to_string());
-					println!("{}", rq);
-                	game.tx_to_serv.try_send(rq).ok();
-				}
-				else{
-					let rq: String = format!("CHAT {} {}\n", CHANNELS[chat.channel as usize],chat.current_input);
-                	game.tx_to_serv.try_send(rq).ok();
-				}
 
-				chat.current_input.clear();
-				chat.prev = 0;
-        	}
-            chat.is_active = false;
+	if is_key_pressed(KeyCode::Enter) {
+		if !chat.current_input.trim().is_empty() {
+			chat.all_messages.push(chat.current_input.clone());
+			chat.sended_messages.push(chat.current_input.clone());
+			if chat.current_input.starts_with("/"){
+				let rq: String = format!("{}\n",&chat.current_input[1..].to_string());
+				println!("{}", rq);
+				game.tx_to_serv.try_send(rq).ok();
+			}
+			else{
+				let rq: String = format!("CHAT {} {}\n", CHANNELS[chat.channel as usize],chat.current_input);
+				game.tx_to_serv.try_send(rq).ok();
+			}
 
-	}
+			chat.current_input.clear();
+			chat.prev = 0;
+		}
 	}
 	if is_key_pressed(KeyCode::Escape) {
 		chat.is_active = false;
+		game.focus = InputFocus::Game;
 	}
-    if !chat.is_active {
-        while get_char_pressed().is_some() {
-        }
-    }
     if !chat.is_active{
         return;
     }
@@ -108,8 +99,6 @@ pub fn update_chat(game: &mut Game) {
 			}
 		}
 	}
-
-
 
     if is_key_pressed(KeyCode::Backspace) {
         chat.current_input.pop();
@@ -158,4 +147,21 @@ pub fn draw_chat(chat:&mut Chat) {
 
 
     }
+}
+
+
+pub fn handle_chat(game: &mut Game) {
+	draw_chat(&mut game.chat);
+	if game.chat.is_active{
+		game.focus = InputFocus::Chat;
+		update_chat(game);
+		if is_key_pressed(KeyCode::Escape) {
+            game.chat.is_active = false;
+            game.focus = InputFocus::Game;
+        }
+	}
+	else if is_key_pressed(KeyCode::Enter) && game.focus == InputFocus::Game {
+        game.chat.is_active = true;
+
+	}
 }

@@ -19,6 +19,8 @@ use tokio::net::TcpStream;
 use start::*;
 use group::*;
 
+use crate::chat::handle_chat;
+
 
 
 fn player_handler(player: &mut Player, map: &[[i32; 25]; 15], tile_size: f32, sprite_width: f32, sprite_height: f32) {
@@ -163,6 +165,7 @@ struct Skin {
 }
 
 struct Game {
+	pub focus: InputFocus,
     pub menu: Menu,
     pub player: Player,
     pub chat: Chat,
@@ -222,6 +225,13 @@ fn config() -> Conf {
     }
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum InputFocus {
+    Game,
+    Chat,
+    GroupMenu,
+}
+
 #[macroquad::main(config)]
 async fn main() {
 
@@ -234,6 +244,7 @@ async fn main() {
 		});
 
     let mut game: Game = Game{
+		focus: InputFocus::Game,
         chat: Chat::new(),
         menu: Menu::new(),
         player: Player {
@@ -293,10 +304,10 @@ async fn main() {
     loop {
 
 
+
         while let Ok(msg) = game.rx_from_serv.try_recv() {
             println!("GET: {}", msg);
             game.chat.all_messages.push(msg);
-
         }
 
 
@@ -311,15 +322,13 @@ async fn main() {
         floor.set_filter(FilterMode::Nearest);
 
         clear_background(BLACK);
-		if is_key_pressed(KeyCode::C) && !game.chat.is_active && !game.group.is_active{
-            break;
-        }
+
 
 
 
 		camera_handler(&mut camera, tile_size);
 
-		if !game.chat.is_active && !game.menu.is_active && !game.group.chat_is_active{
+		if game.focus == InputFocus::Game{
 			player_handler(&mut game.player, &map_obstacles, tile_size, sprite_width, sprite_height);
 		}
 
@@ -377,16 +386,28 @@ async fn main() {
 		set_default_camera();
         draw_text(map.name.clone(), 5.0, 30.0, 60.0, WHITE);
 
-		update_menu(&mut game.menu, game.chat.is_active);
-        update_chat(&mut game);
-		update_inv(&mut game);
-		if game.group.is_active {
-			update_group(&mut game);
-    	}
+		if game.focus == InputFocus::Game {
+			while get_char_pressed().is_some() {}
+		}
+		if is_key_pressed(KeyCode::C) &&  game.focus == InputFocus::Game{
+            break;
+        }
 
-		draw_chat(&mut game.chat);
+		update_menu(&mut game);
+		update_inv(&mut game);
+
+		// if is_key_pressed(KeyCode::F) && game.focus == InputFocus::Game {
+		// 	game.group.is_active = true;
+    	// }
+
+		// if is_key_pressed(KeyCode::Enter) && game.focus == InputFocus::Game {
+		// 	game.chat.is_active = true;
+		// }
+
+
 		draw_menu(&mut game);
 		draw_inv(&mut game);
+		handle_chat(&mut game);
 		handle_group(&mut game);
 
         next_frame().await

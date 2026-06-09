@@ -6,7 +6,7 @@ const MENU_SIZE: Vec2 = vec2(300.0, 400.0);
 const LABELS: [&str; 3] = ["Play", "Options", "Quit"];
 
 
-use crate::Game;
+use crate::*;
 use options::OptionsSettings;
 use options::handle_options;
 
@@ -46,8 +46,9 @@ fn get_menu_rect() -> Rect {
 
 
 
-pub fn update_menu(menu: &mut Menu, chat_active: bool) {
-    if is_key_pressed(KeyCode::Escape) && !chat_active{
+pub fn update_menu(game: &mut Game) {
+	let menu: &mut Menu = &mut game.menu;
+    if is_key_pressed(KeyCode::Escape) && game.focus == InputFocus::Game{
         if !menu.is_active {
             menu.is_active = true;
         }
@@ -75,7 +76,7 @@ pub fn update_menu(menu: &mut Menu, chat_active: bool) {
         	}
         }
 
-    
+
     match menu.state {
         1 => {
             menu.state = 0;
