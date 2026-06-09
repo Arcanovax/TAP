@@ -1,14 +1,18 @@
+use crate::config::load;
 use crate::handlers::handle_request;
 use crate::protocol::{EventType, Message};
 use crate::state::{ServerInfo, SharedServer};
 use std::net::SocketAddr;
+use std::path::Path;
 use std::sync::{Arc, Mutex};
 use tokio::io::{AsyncBufReadExt, AsyncWriteExt, BufReader};
 use tokio::net::TcpListener;
 use tracing::{Instrument, error, info};
 
 mod command;
+mod config;
 pub mod error;
+mod game;
 mod group;
 mod handlers;
 mod player;
@@ -43,6 +47,7 @@ pub async fn run(addr: String, port: String) -> Result<(), Box<dyn std::error::E
         )
         .init();
 
+    let world = load(Path::new("config.yaml"))?;
     let server_info: SharedServer = Arc::new(Mutex::new(ServerInfo::new()));
     let listener = TcpListener::bind(format!("{}:{}", addr, port)).await?;
 
