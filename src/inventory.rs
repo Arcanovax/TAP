@@ -84,7 +84,7 @@ pub fn draw_inv(game: &mut Game) {
     if game.player.inventory.is_active {
 
 		let rect: Rect = get_inv_rect();
-        draw_rectangle(rect.x, rect.y, rect.h, rect.w, Color::new(0.0, 0.0, 0.0, 0.5));
+        draw_rectangle(rect.x, rect.y, rect.w, rect.h, Color::new(0.0, 0.0, 0.0, 0.5));
 
 
     }

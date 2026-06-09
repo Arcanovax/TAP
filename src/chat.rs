@@ -57,12 +57,12 @@ pub fn update_chat(game: &mut Game) {
 				chat.sended_messages.push(chat.current_input.clone());
                 let rq: String = format!("CHAT {} {}\n", CHANNELS[chat.channel as usize],chat.current_input);
                 game.tx_to_serv.try_send(rq).ok();
-			    
+
 				chat.current_input.clear();
 				chat.prev = 0;
         	}
             chat.is_active = false;
-            
+
 	}
 	}
 	if is_key_pressed(KeyCode::Escape) {
@@ -75,6 +75,13 @@ pub fn update_chat(game: &mut Game) {
     if !chat.is_active{
         return;
     }
+
+	if is_key_pressed(KeyCode::Right){
+		chat.channel = ((chat.channel as usize + CHANNELS.len() + 1) % CHANNELS.len()) as i32;
+	}
+	if is_key_pressed(KeyCode::Left){
+		chat.channel = ((chat.channel as usize + CHANNELS.len() - 1) % CHANNELS.len()) as i32;
+	}
 
 	if is_key_pressed(KeyCode::Up) && chat.prev < (chat.sended_messages.len()as i32){
 		if let Some(msg) = chat.sended_messages.iter().rev().nth(chat.prev as usize){

@@ -4,6 +4,7 @@ mod chat;
 mod menu;
 mod inventory;
 mod start;
+mod group;
 
 
 use rooms::get_rooms;
@@ -16,6 +17,7 @@ use std::sync::mpsc;
 use tokio::io::{AsyncReadExt, AsyncWriteExt};
 use tokio::net::TcpStream;
 use start::*;
+use group::*;
 
 
 
@@ -168,7 +170,8 @@ struct Game {
     pub room_name: String,
 	pub tx_to_serv: tokio::sync::mpsc::Sender<String>,
     pub init_end: bool,
-    pub rx_from_serv: std::sync::mpsc::Receiver<String>
+    pub rx_from_serv: std::sync::mpsc::Receiver<String>,
+	pub group: Group
 }
 
 impl Game {
@@ -248,7 +251,8 @@ async fn main() {
         room_name: "place".to_string(),
 		tx_to_serv: tx_to_serv,
         rx_from_serv: rx_from_serv,
-        init_end: false
+        init_end: false,
+		group: Group{is_active: false, is_created: false}
     };
 
 
@@ -287,14 +291,14 @@ async fn main() {
     game.tx_to_serv.try_send(msg).ok();
 
     loop {
-        
-        
-        
-        
+
+
+
+
         while let Ok(msg) = game.rx_from_serv.try_recv() {
             println!("Reçu : {}", msg);
             game.chat.all_messages.push(msg);
-        
+
         }
 
 
@@ -382,6 +386,7 @@ async fn main() {
 		draw_chat(&mut game.chat);
 		draw_menu(&mut game);
 		draw_inv(&mut game);
+		handle_group(&mut game);
 
         next_frame().await
     }}
