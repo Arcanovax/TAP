@@ -36,7 +36,8 @@ pub fn fight(peer_addr: SocketAddr, enn_name: Vec<String>, world: &SharedServer)
             data: None,
         };
     }
-	let mut world_mut = world.lock().unwrap();
+	let mut pre_world = world.lock().unwrap();
+	let world_mut = &mut *pre_world;
 	match get_player_mut(&mut world_mut.connections, &peer_addr) {
 		Ok(player) => {
 			if let Some(loc) = world_mut.rooms.get(&player.location) {
@@ -47,7 +48,7 @@ pub fn fight(peer_addr: SocketAddr, enn_name: Vec<String>, world: &SharedServer)
 						data: Some(serde_json::to_string("This target isn't here.").unwrap()),
 					};
 				}
-				if let NPCKind::Enemy { ref defeated, .. } = &world_mut.npcs[&enn_name[0]].kind {
+				if let NPCKind::Enemy { defeated, .. } = &world_mut.npcs[&enn_name[0]].kind {
 					if *defeated {
 						return Message::Response {
 							error: ErrorCode::DEFEATED_ENEMY,
@@ -80,12 +81,12 @@ pub fn fight(peer_addr: SocketAddr, enn_name: Vec<String>, world: &SharedServer)
 					State::InFight { target_id: target } => {
 						let fight = check_fight(&target, &mut world_mut.fights).expect("There is no fight.");
 	
-						match is_it_my_turn(&player.name, fight){
+						match is_it_my_turn(peer_addr, fight){
 							TurnRes::MyTurn => {
-								match execute_attack(peer_addr, enn_name, &mut world_mut) {
+								match execute_attack(peer_addr, enn_name.clone(), world_mut) {
 										AttackRes::Hit(message) => {
 											if world_mut.fights.get(&enn_name[0]).unwrap().enemy_turn {
-												match enemy_attack(&enn_name[0], &mut world_mut) {
+												match enemy_attack(&enn_name[0], world_mut) {
 													EnnAttRes::Hit(msg) |
 													EnnAttRes::Kill(msg) |
 													EnnAttRes::KillAndWin(msg) |

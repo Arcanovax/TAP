@@ -1,12 +1,12 @@
-use std::{net::SocketAddr, sync::MutexGuard};
+use std::net::SocketAddr;
 
-use crate::{state::{ServerInfo, SharedServer}, structures::enums::{attack_res::AttackRes, item_kind::ItemKind, npc_kind::NPCKind, state::State}};
+use crate::{state::ServerInfo, structures::enums::{attack_res::AttackRes, item_kind::ItemKind, npc_kind::NPCKind, state::State}};
 
-pub fn execute_attack<'a>(player_id: SocketAddr, target_id: Vec<String>, world: &mut MutexGuard<'_, ServerInfo>) -> AttackRes<'a> {
+pub fn execute_attack<'a>(player_id: SocketAddr, target_id: Vec<String>, world_mut: &mut ServerInfo) -> AttackRes<'a> {
     
 	// let mut pre_world_mut = world.lock().unwrap();
-    let world_mut = &mut *world;
-    let player = world_mut.connections.get_mut(&player_id).unwrap();
+    // let world_mut = &mut *world;
+    let player = &mut world_mut.connections.get_mut(&player_id).unwrap().player;
     let enemy = world_mut.npcs.get_mut(&target_id[0]).unwrap();
     let fight = world_mut.fights.get_mut(&target_id[0]).unwrap();
     
@@ -33,7 +33,7 @@ pub fn execute_attack<'a>(player_id: SocketAddr, target_id: Vec<String>, world: 
             *hp = 0;
 			*defeated = true;
 			for pl_name in &mut fight.fighters {
-				let pl = world_mut.connections.get_mut(pl_name).unwrap();
+				let pl = &mut world_mut.connections.get_mut(pl_name).unwrap().player;
 				pl.status = State::Idle;
 				for loot_item in loot {
 					let amount = if loot_item == "item.gold" { 50 } else { 1 };

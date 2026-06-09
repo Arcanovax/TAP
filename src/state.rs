@@ -1,8 +1,7 @@
 use crate::{
     error::ErrorCode,
     group::Group,
-    player::Player,
-    protocol::{EventType, Message}, structures::{fight::Fight, items::Items, location::Location, npc::NPC},
+    protocol::{EventType, Message}, structures::{fight::Fight, items::Items, location::Location, npc::NPC, player::Player},
 };
 use std::{
     collections::HashMap,
@@ -16,14 +15,14 @@ use uuid::Uuid;
 pub type Tx = UnboundedSender<Message>;
 pub type SharedServer = Arc<Mutex<ServerInfo>>;
 
-// pub struct Connection {
-//     pub addr: SocketAddr,
-//     pub tx: Tx,
-//     player: Player,
-// }
+pub struct Connection {
+    pub addr: SocketAddr,
+    pub tx: Tx,
+    pub player: Player,
+}
 
 pub struct ServerInfo {
-    pub connections: HashMap<SocketAddr, Player>,
+    pub connections: HashMap<SocketAddr, Connection>,
     name_to_addr: HashMap<String, SocketAddr>,
     groups: HashMap<Uuid, Group>,
     invitations: HashMap<SocketAddr, Uuid>,
@@ -57,13 +56,17 @@ impl ServerInfo {
             return Err(ErrorCode::ALREADY_CONNECTED);
         }
         for (_, con) in self.connections.iter() {
-            if con.name == name {
+            if con.player.name == name {
                 return Err(ErrorCode::NAME_IN_USE);
             }
         }
         self.connections.insert(
             peer_addr,
-            Player::new(name.clone(), peer_addr, tx.clone())
+            Connection {
+                player: Player::new(name.clone()),
+                addr: peer_addr,
+                tx: tx.clone(),
+            },
         );
         self.name_to_addr.insert(name, peer_addr);
         Ok(())
@@ -74,7 +77,7 @@ impl ServerInfo {
         if con.is_none() {
             return Err(ErrorCode::INVALID_COMMAND);
         }
-        let name = con.unwrap().name.clone();
+        let name = con.unwrap().player.name.clone();
         self.connections.remove(&peer_addr);
         self.name_to_addr.remove(&name);
         self.cleanup_player_invitation(peer_addr);
@@ -85,7 +88,7 @@ impl ServerInfo {
         self.connections.len()
     }
 
-    pub fn get_global_receivers(&mut self, peer_addr: SocketAddr) -> Vec<&Player> {
+    pub fn get_global_receivers(&mut self, peer_addr: SocketAddr) -> Vec<&Connection> {
         let mut receivers = Vec::new();
 
         for (_, con) in &self.connections {
@@ -99,9 +102,9 @@ impl ServerInfo {
     pub fn get_group_receivers(
         &mut self,
         peer_addr: SocketAddr,
-    ) -> Result<Vec<&Player>, ErrorCode> {
+    ) -> Result<Vec<&Connection>, ErrorCode> {
         let sender_con = self.get_connection(peer_addr)?;
-        let group_id = sender_con.group_id.ok_or(ErrorCode::NOT_IN_GROUP)?;
+        let group_id = sender_con.player.group_id.ok_or(ErrorCode::NOT_IN_GROUP)?;
         let receivers = self
             .groups
             .get(&group_id)
@@ -134,18 +137,18 @@ impl ServerInfo {
             .connections
             .get(&peer_addr)
             .ok_or(ErrorCode::INVALID_COMMAND)?;
-        if con.group_id.is_some() {
+        if con.player.group_id.is_some() {
             return Err(ErrorCode::ALREADY_IN_GROUP);
         }
 
         let con = self.connections.get_mut(&peer_addr).unwrap();
-        con.group_id = Some(group_id);
+        con.player.group_id = Some(group_id);
         self.groups
             .get_mut(&group_id)
             .unwrap()
             .players
             .push(con.addr);
-        info!("{} added to group({})", con.name, group_id);
+        info!("{} added to group({})", con.player.name, group_id);
         Ok(())
     }
 
@@ -154,11 +157,11 @@ impl ServerInfo {
             .connections
             .get(&peer_addr)
             .ok_or(ErrorCode::INVALID_COMMAND)?;
-        if con.group_id.is_some() {
+        if con.player.group_id.is_some() {
             return Err(ErrorCode::ALREADY_IN_GROUP);
         }
 
-        let name = con.name.clone();
+        let name = con.player.name.clone();
         let group_id = self.create_new_group();
         info!("{} created group({})", name, group_id);
         self.try_add_player_to_group(peer_addr, group_id)
@@ -183,24 +186,28 @@ impl ServerInfo {
 
     pub fn try_leave_group(&mut self, peer_addr: SocketAddr) -> Result<(), ErrorCode> {
         let con = self.get_connection(peer_addr)?;
-        if con.group_id.is_none() {
+        if con.player.group_id.is_none() {
             return Err(ErrorCode::NOT_IN_GROUP);
         }
 
         let con = self.connections.get_mut(&peer_addr).unwrap();
-        let group_id = con.group_id.unwrap();
+        let group_id = con.player.group_id.unwrap();
         self.groups
             .get_mut(&group_id)
             .unwrap()
             .players
             .retain(|&addr| addr != con.addr);
-        con.group_id = None;
-        info!("{} leaved group({})", con.name, group_id);
+        con.player.group_id = None;
+        info!("{} leaved group({})", con.player.name, group_id);
         self.delete_group(group_id);
         Ok(())
     }
 
-    pub fn get_connection(&self, peer_addr: SocketAddr) -> Result<&Player, ErrorCode> {
+	pub fn get_player(&self, peer_addr: SocketAddr) -> Result<&Player, ErrorCode> {
+		Ok(&self.get_connection(peer_addr)?.player)
+    }
+
+    pub fn get_connection(&self, peer_addr: SocketAddr) -> Result<&Connection, ErrorCode> {
         let con = self
             .connections
             .get(&peer_addr)
@@ -222,11 +229,11 @@ impl ServerInfo {
         peer_addr: SocketAddr,
     ) -> Result<(), ErrorCode> {
         let con = self.get_connection(peer_addr)?;
-        if con.group_id.is_none() {
+        if con.player.group_id.is_none() {
             return Err(ErrorCode::NOT_IN_GROUP);
         }
-        let inviter_name = con.name.clone();
-        let group_id = con.group_id.unwrap();
+        let inviter_name = con.player.name.clone();
+        let group_id = con.player.group_id.unwrap();
 
         let receiver_con = self.get_connection(*self.get_name_addr(receiver_name)?)?;
         let receiver_addr = receiver_con.addr;

@@ -3,7 +3,6 @@ mod command;
 pub mod error;
 mod group;
 mod handlers;
-mod player;
 pub mod protocol;
 pub mod state;
 
