@@ -83,7 +83,7 @@ pub async fn run(addr: String, port: String) -> Result<(), Box<dyn std::error::E
                                 Err(_) => break,
                             }
                             let request = parse_command(line.as_str()); // DEV TEST
-                            // let request = Message::parse(line); // PROD
+                            // let request = Message::parse(line)?; // PROD
                             if let Message::Command { name, .. } = &request {
                                 if name.to_uppercase() == "QUIT" {
                                     break;
