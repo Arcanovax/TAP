@@ -27,19 +27,18 @@ pub fn talk_to(player_name: SocketAddr, target: Vec<String>, world: &SharedServe
                 } else {
                     return Message::Response {
                         error: ErrorCode::NPC_NOT_FOUND,
-                        data: Some(serde_json::to_string("No character by that name").unwrap()),
+                        data: Some(String::from("No character by that name")),
                     };
                 };
             }
             Message::Response {
                 error: ErrorCode::PLAYER_NOT_FOUND,
-                data: Some(serde_json::to_string("There is no one by that name here").unwrap()),
+                data: Some(String::from("There is no one by that name here")),
             }
         }
         Err(msg) => Message::Response {
             error: ErrorCode::PLAYER_NOT_FOUND,
-            data: Some(serde_json::to_string(msg).unwrap()),
+            data: Some(String::from(msg)),
         },
     }
 }
-

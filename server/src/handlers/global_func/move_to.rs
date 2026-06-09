@@ -42,18 +42,18 @@ pub fn move_to(world: &SharedServer, player_addr: SocketAddr, dest: Vec<String>)
                 }
                 return Message::Response {
                     error: ErrorCode::NO_EXIT,
-                    data: Some(serde_json::to_string("No gateway on that direction.").unwrap()),
+                    data: Some(String::from("No gateway on that direction.")),
                 };
             } else {
                 Message::Response {
                     error: ErrorCode::ROOM_NOT_FOUND,
-                    data: Some(serde_json::to_string("You're nowhere. I can't find you.").unwrap()),
+                    data: Some(String::from("You're nowhere. I can't find you.")),
                 }
             }
         }
         Err(msg) => Message::Response {
             error: ErrorCode::PLAYER_NOT_FOUND,
-            data: Some(serde_json::to_string(msg).unwrap()),
+            data: Some(String::from(msg)),
         },
     }
 }
