@@ -20,6 +20,7 @@ pub(super) fn group_request(
         "LEAVE" => group_leave_request(server_info, peer_addr),
         "INVITE" => group_invite_request(args, server_info, peer_addr),
         "JOIN" => group_join_request(server_info, peer_addr),
+        "LIST" => group_list_request(server_info, peer_addr),
         _ => Message::Response {
             error: ErrorCode::INVALID_ARGS,
             data: None,
@@ -87,5 +88,18 @@ fn group_join_request(server_info: &SharedServer, peer_addr: SocketAddr) -> Mess
     Message::Response {
         error: err,
         data: None,
+    }
+}
+
+fn group_list_request(server_info: &SharedServer, peer_addr: SocketAddr) -> Message {
+    match server_info.lock().unwrap().try_get_group_list(peer_addr) {
+        Ok(list) => Message::Response {
+            error: ErrorCode::SUCCESS,
+            data: Some(serde_json::to_string(&list).unwrap()),
+        },
+        Err(code) => Message::Response {
+            error: code,
+            data: None,
+        },
     }
 }

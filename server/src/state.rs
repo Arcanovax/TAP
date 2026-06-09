@@ -260,4 +260,21 @@ impl ServerInfo {
             Err(code) => Err(code),
         }
     }
+
+    pub fn try_get_group_list(&self, peer_addr: SocketAddr) -> Result<Vec<String>, ErrorCode> {
+        let con = self.get_connection(peer_addr)?;
+        if con.player.group_id.is_none() {
+            return Err(ErrorCode::NOT_IN_GROUP);
+        }
+        let mut group_members = Vec::new();
+        for addr in &self
+            .groups
+            .get(&con.player.group_id.unwrap())
+            .unwrap()
+            .players
+        {
+            group_members.push(self.get_connection(*addr)?.player.name.clone());
+        }
+        Ok(group_members)
+    }
 }
