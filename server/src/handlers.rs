@@ -7,4 +7,5 @@ pub mod group;
 pub mod handle_request;
 pub mod look;
 pub mod status;
+pub mod take;
 pub mod who;

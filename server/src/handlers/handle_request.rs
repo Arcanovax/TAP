@@ -13,6 +13,7 @@ use crate::{
         group::group_request,
         look::look_request,
         status::status_request,
+        take::take_request,
         who::who_request,
     },
     protocol::Message,
@@ -40,6 +41,7 @@ pub fn handle_request(
             Some(Command::ATTACK) => fight(peer_addr, args, server_info),
             Some(Command::LOOK) => look_request(server_info, peer_addr),
             Some(Command::DROP) => drop_request(server_info, peer_addr, args),
+            Some(Command::TAKE) => take_request(server_info, peer_addr, args),
             _ => Message::Response {
                 error: ErrorCode::INVALID_COMMAND,
                 data: None,

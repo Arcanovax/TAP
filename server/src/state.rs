@@ -325,4 +325,27 @@ impl ServerInfo {
             .push(String::from(item));
         Ok(String::from(item))
     }
+
+    pub fn try_take_item(
+        &mut self,
+        peer_addr: SocketAddr,
+        item: &str,
+    ) -> Result<String, ErrorCode> {
+        if !self.connections.contains_key(&peer_addr) {
+            return Err(ErrorCode::PLAYER_NOT_FOUND);
+        }
+        let con = self.connections.get_mut(&peer_addr).unwrap();
+        let room = match self.world.rooms.get_mut(&con.player.location) {
+            Some(room) => room,
+            None => return Err(ErrorCode::ROOM_NOT_FOUND),
+        };
+        for (i, value) in room.items.iter().enumerate() {
+            if item == value {
+                room.items.remove(i);
+                *con.player.inventory.entry(item.to_string()).or_insert(0) += 1;
+                return Ok(String::from(item));
+            }
+        }
+        Err(ErrorCode::ITEM_NOT_FOUND)
+    }
 }
