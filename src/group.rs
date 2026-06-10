@@ -53,10 +53,11 @@ fn input_text(x: f32,y: f32,game: &mut Game, mouse: (f32, f32)) -> bool{
     let input_hovered = input_rect.contains(Vec2::new(mouse.0, mouse.1));
 
     let input_bg = if input_hovered { Color::new(0.2, 0.2, 0.2, 1.0) } else { Color::new(0.1, 0.1, 0.1, 1.0) };
-	if input_hovered {
+	if input_hovered && is_mouse_button_pressed(MouseButton::Left)  {
+		game.focus = InputFocus::GroupMenu;
 		game.group.chat_is_active = true;
 	}
-	else{
+	else if !input_hovered {
 		game.group.chat_is_active = false;
 	}
     draw_rectangle(input_rect.x, input_rect.y, input_rect.w, input_rect.h, input_bg);
@@ -143,8 +144,8 @@ pub fn handle_group(game: &mut Game) {
         }
     }
 	else{
-		game.focus = InputFocus::GroupMenu;
-		if is_key_pressed(KeyCode::F) {
+
+		if is_key_pressed(KeyCode::F) && game.group.chat_is_active == false{
 			game.group.is_active = false;
 			game.focus = InputFocus::Game;
 		}

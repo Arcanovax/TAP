@@ -46,7 +46,7 @@ fn get_menu_rect() -> Rect {
 
 
 
-pub fn update_menu(game: &mut Game) {
+pub fn handle_menu(game: &mut Game) {
 	let menu: &mut Menu = &mut game.menu;
     if is_key_pressed(KeyCode::Escape) && game.focus == InputFocus::Game{
         if !menu.is_active {

@@ -162,6 +162,5 @@ pub fn handle_chat(game: &mut Game) {
 	}
 	else if is_key_pressed(KeyCode::Enter) && game.focus == InputFocus::Game {
         game.chat.is_active = true;
-
 	}
 }

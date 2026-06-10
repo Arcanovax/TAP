@@ -8,9 +8,7 @@ mod group;
 
 
 use rooms::get_rooms;
-use chat::update_chat;
 use chat::Chat;
-use chat::draw_chat;
 use menu::*;
 use inventory::*;
 use std::sync::mpsc;
@@ -389,11 +387,11 @@ async fn main() {
 		if game.focus == InputFocus::Game {
 			while get_char_pressed().is_some() {}
 		}
-		if is_key_pressed(KeyCode::C) &&  game.focus == InputFocus::Game{
+		if is_key_pressed(KeyCode::C) && game.focus == InputFocus::Game{
             break;
         }
 
-		update_menu(&mut game);
+		
 		update_inv(&mut game);
 
 		// if is_key_pressed(KeyCode::F) && game.focus == InputFocus::Game {
@@ -404,12 +402,13 @@ async fn main() {
 		// 	game.chat.is_active = true;
 		// }
 
-
-		draw_menu(&mut game);
+        handle_menu(&mut game);
+		
 		draw_inv(&mut game);
 		handle_chat(&mut game);
 		handle_group(&mut game);
-
+        draw_menu(&mut game);
+        
         next_frame().await
     }}
 
