@@ -3,7 +3,7 @@ use crate::{
     game::World,
     group::Group,
     protocol::{EventType, Message},
-    structures::{fight::Fight, player::Player, room::Room},
+    structures::{fight::Fight, player::Player, quest::Quest, room::Room},
 };
 use std::{
     collections::HashMap,
@@ -352,5 +352,25 @@ impl ServerInfo {
             }
         }
         Err(ErrorCode::ITEM_NOT_FOUND)
+    }
+
+    pub fn try_accept_quest(
+        &mut self,
+        peer_addr: SocketAddr,
+        npc_name: &str,
+    ) -> Result<&Quest, ErrorCode> {
+        let quest = match self.world.npcs.get(npc_name) {
+            Some(npc) => &npc.quest,
+            None => return Err(ErrorCode::NPC_NOT_FOUND),
+        };
+        if let None = quest {
+            return Err(ErrorCode::NO_QUEST_AVAILABLE);
+        }
+        let quest = match self.world.quests.get(&quest.clone().unwrap()) {
+            Some(quest) => quest,
+            None => return Err(ErrorCode::NO_QUEST_AVAILABLE),
+        };
+        //Check si le joueur a le droit de prendre la quete ici
+        Ok(quest)
     }
 }

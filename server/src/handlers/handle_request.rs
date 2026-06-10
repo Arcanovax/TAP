@@ -1,4 +1,7 @@
-use crate::state::{SharedServer, Tx};
+use crate::{
+    handlers::quest::quest_request,
+    state::{SharedServer, Tx},
+};
 use std::net::SocketAddr;
 
 use crate::{
@@ -44,6 +47,7 @@ pub fn handle_request(
             Some(Command::DROP) => drop_request(server_info, peer_addr, args),
             Some(Command::TAKE) => take_request(server_info, peer_addr, args),
             Some(Command::INVENTORY) => inventory_request(server_info, peer_addr),
+            Some(Command::QUEST) => quest_request(args, server_info, peer_addr),
             _ => Message::Response {
                 error: ErrorCode::INVALID_COMMAND,
                 data: None,

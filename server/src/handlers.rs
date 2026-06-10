@@ -7,6 +7,7 @@ pub mod group;
 pub mod handle_request;
 pub mod inventory;
 pub mod look;
+pub mod quest;
 pub mod status;
 pub mod take;
 pub mod who;
