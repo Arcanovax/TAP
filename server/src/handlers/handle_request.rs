@@ -10,6 +10,7 @@ use crate::{
         fight_func::fight::fight,
         global_func::{move_to::move_to, talk_to::talk_to},
         group::group_request,
+        look::look_request,
         status::status_request,
         who::who_request,
     },
@@ -36,6 +37,7 @@ pub fn handle_request(
             Some(Command::MOVE) => move_to(server_info, peer_addr, args),
             Some(Command::TALK) => talk_to(peer_addr, args, server_info),
             Some(Command::ATTACK) => fight(peer_addr, args, server_info),
+            Some(Command::LOOK) => look_request(server_info, peer_addr),
             _ => Message::Response {
                 error: ErrorCode::INVALID_COMMAND,
                 data: None,

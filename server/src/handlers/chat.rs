@@ -1,5 +1,4 @@
 use crate::error::ErrorCode;
-use crate::handlers::global_func::get_player;
 use crate::protocol::{ChatScope, EventType, Message};
 use crate::state::SharedServer;
 use std::net::SocketAddr;
@@ -39,6 +38,15 @@ pub(super) fn chat_request(
     let receivers = match scope.to_uppercase().as_str() {
         "GLOBAL" => binding.get_global_receivers(peer_addr),
         "GROUP" => match binding.get_group_receivers(peer_addr) {
+            Ok(receivers) => receivers,
+            Err(code) => {
+                return Message::Response {
+                    error: code,
+                    data: None,
+                };
+            }
+        },
+        "ROOM" => match binding.get_room_receivers(peer_addr) {
             Ok(receivers) => receivers,
             Err(code) => {
                 return Message::Response {

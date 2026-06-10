@@ -3,7 +3,7 @@ use crate::{
     game::World,
     group::Group,
     protocol::{EventType, Message},
-    structures::{fight::Fight, player::Player},
+    structures::{fight::Fight, player::Player, room::Room},
 };
 use std::{
     collections::HashMap,
@@ -112,6 +112,17 @@ impl ServerInfo {
             .filter_map(|addr| self.connections.get(addr))
             .filter(|con| con.addr != peer_addr)
             .collect();
+        Ok(receivers)
+    }
+
+    pub fn get_room_receivers(&self, peer_addr: SocketAddr) -> Result<Vec<&Connection>, ErrorCode> {
+        let room = &self.get_player(peer_addr)?.location;
+        let mut receivers: Vec<&Connection> = Vec::new();
+        for (_, con) in &self.connections {
+            if con.addr != peer_addr && con.player.location == room.to_string() {
+                receivers.push(con);
+            }
+        }
         Ok(receivers)
     }
 
@@ -276,5 +287,15 @@ impl ServerInfo {
             group_members.push(self.get_connection(*addr)?.player.name.clone());
         }
         Ok(group_members)
+    }
+
+    pub fn get_player_room(&self, peer_addr: SocketAddr) -> Result<&Room, ErrorCode> {
+        let room_name = &self.get_player(peer_addr)?.location;
+
+        let room = match self.world.rooms.get(room_name) {
+            Some(room) => room,
+            None => return Err(ErrorCode::PLAYER_NOT_FOUND),
+        };
+        Ok(room)
     }
 }
