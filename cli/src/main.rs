@@ -1,6 +1,7 @@
 mod structures;
 mod enums;
 
+use std::io::Error;
 use std::sync::mpsc;
 use tokio::io::{AsyncReadExt, AsyncWriteExt};
 use tokio::net::TcpStream;
@@ -32,7 +33,7 @@ async fn network_task(tx: mpsc::Sender<String>, mut rx: tokio::sync::mpsc::Recei
     let _ = tokio::join!(read_task, write_task);
 }
 #[tokio::main]
-async fn main() {
+async fn main() -> Result<(), Error> {
 
 	let (tx_to_game, rx_from_serv) = mpsc::channel::<String>();
 	let (tx_to_serv, rx_from_game) = tokio::sync::mpsc::channel::<String>(32);
@@ -44,7 +45,10 @@ async fn main() {
 	
 	let mut terminal = ratatui::init();
 	let mut world: World = World::new(tx_to_serv, rx_from_serv);
-	world.run(&mut terminal);
+	let result = world.run(&mut terminal);
+	ratatui::restore();
+	result
+
 	
 
 	// let mut world
