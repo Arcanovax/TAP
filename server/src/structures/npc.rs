@@ -6,15 +6,19 @@ pub struct NPC {
     pub name: String,
     pub dialogue: Vec<String>,
     pub kind: NPCKind,
+    pub quest: Option<String>,
 }
-
 
 impl NPC {
     pub fn references(&self) -> Vec<&str> {
-        match &self.kind {
+        let mut refs = match &self.kind {
             NPCKind::Enemy { loot, .. } => loot.iter().map(String::as_str).collect(),
             NPCKind::Merchant { inventory, .. } => inventory.iter().map(String::as_str).collect(),
             _ => Vec::new(),
+        };
+        if let Some(quest) = &self.quest {
+            refs.push(quest.as_str());
         }
+        refs
     }
 }

@@ -1,0 +1,5 @@
+quest:
+  test:
+    name: "Test"
+    description: "Test quest"
+    reward: "une orange"

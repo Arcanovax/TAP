@@ -2,7 +2,6 @@ use std::str::FromStr;
 
 use crate::error::ErrorCode;
 use serde::{Deserialize, Serialize};
-use uuid::Uuid;
 
 #[derive(Serialize, Deserialize, PartialEq, Eq, Clone)]
 pub enum ChatScope {

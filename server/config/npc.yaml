@@ -1,5 +1,6 @@
 import:
   - "items.yaml"
+  - "quests.yaml"
 
 npc:
   city_gard:
@@ -8,6 +9,7 @@ npc:
       - "Stay safe, traveler."
       - "The roads can be dangerous."
     kind: Citizen
+    quest: "quest.test"
 
   bar_owner:
     name: "Grossbarrix"
