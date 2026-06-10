@@ -11,6 +11,7 @@ use crate::{
         fight_func::fight::fight,
         global_func::{move_to::move_to, talk_to::talk_to},
         group::group_request,
+        inventory::inventory_request,
         look::look_request,
         status::status_request,
         take::take_request,
@@ -42,6 +43,7 @@ pub fn handle_request(
             Some(Command::LOOK) => look_request(server_info, peer_addr),
             Some(Command::DROP) => drop_request(server_info, peer_addr, args),
             Some(Command::TAKE) => take_request(server_info, peer_addr, args),
+            Some(Command::INVENTORY) => inventory_request(server_info, peer_addr),
             _ => Message::Response {
                 error: ErrorCode::INVALID_COMMAND,
                 data: None,

@@ -11,6 +11,7 @@ pub enum Command {
     LOOK,
     DROP,
     TAKE,
+    INVENTORY,
 }
 
 impl Command {
@@ -28,6 +29,7 @@ impl Command {
             "LOOK" => Some(Command::LOOK),
             "DROP" => Some(Command::DROP),
             "TAKE" => Some(Command::TAKE),
+            "INVENTORY" => Some(Command::INVENTORY),
             _ => None,
         }
     }
