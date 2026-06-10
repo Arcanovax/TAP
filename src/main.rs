@@ -1,12 +1,15 @@
-pub mod structures;
-pub mod enums;
+use mini_redis::{Result, client};
 
+// pub mod structures;
+// pub mod enums;
 
-fn main() {
-	for i in 0..10 {
-    let area = Rect::new(0, i, frame.area().width, 1);
-    frame.render_widget(Paragraph::new("Hello world!"), area);
-}
-	println!("Hello, world!");
+#[tokio::main]
+async fn main() -> Result<()> {
+	let mut client = client::connect("127.0.0.1:6380").await?;
+	client.set("hello", "world".into()).await?;
+	let result = client.get("hello").await?;
+	println!("got value from the server; result={:?}", result.unwrap());
+
+    Ok(())
 
 }
