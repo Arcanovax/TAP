@@ -4,13 +4,15 @@ use uuid::Uuid;
 
 pub struct Group {
     pub id: Uuid,
+    pub name: String,
     pub players: Vec<SocketAddr>,
 }
 
 impl Group {
-    pub fn new() -> Self {
+    pub fn new(name: &str) -> Self {
         Group {
             id: Uuid::new_v4(),
+            name: String::from(name),
             players: Vec::new(),
         }
     }

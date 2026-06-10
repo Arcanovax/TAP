@@ -32,7 +32,7 @@ pub enum EventType {
     },
     INVITE {
         sender: String,
-        group_id: Uuid,
+        group_name: String,
     },
 }
 

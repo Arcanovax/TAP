@@ -130,8 +130,8 @@ impl ServerInfo {
         self.connections.contains_key(&peer_addr)
     }
 
-    fn create_new_group(&mut self) -> Uuid {
-        let group = Group::new();
+    fn create_new_group(&mut self, name: &str) -> Uuid {
+        let group = Group::new(name);
         let group_id = group.id.clone();
         self.groups.insert(group.id, group);
         group_id
@@ -171,7 +171,7 @@ impl ServerInfo {
         }
 
         let name = con.player.name.clone();
-        let group_id = self.create_new_group();
+        let group_id = self.create_new_group((name.clone() + "'s group").as_str());
         info!("{} created group({})", name, group_id);
         self.try_add_player_to_group(peer_addr, group_id)
     }
@@ -243,6 +243,7 @@ impl ServerInfo {
         }
         let inviter_name = con.player.name.clone();
         let group_id = con.player.group_id.unwrap();
+        let group_name = &self.groups.get(&group_id).unwrap().name;
 
         let receiver_con = self.get_connection(*self.get_name_addr(receiver_name)?)?;
         let receiver_addr = receiver_con.addr;
@@ -253,7 +254,7 @@ impl ServerInfo {
         self.invitations.insert(receiver_addr, group_id);
         let _ = receiver_tx.send(Message::Event(EventType::INVITE {
             sender: inviter_name,
-            group_id: group_id,
+            group_name: String::from(group_name),
         }));
         Ok(())
     }
