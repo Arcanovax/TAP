@@ -8,7 +8,9 @@ pub struct Chat {
     pub is_active: bool,
 	prev: i32,
     channel: i32,
-    pub all_messages: Vec<String>
+    pub global_messages: Vec<String>,
+	pub room_messages: Vec<String>,
+	pub group_messages: Vec<String>,
 }
 
 
@@ -20,7 +22,9 @@ impl Chat {
             is_active: false,
 			prev: 0,
             channel: 0,
-            all_messages: Vec::new()
+            global_messages: Vec::new(),
+			room_messages: Vec::new(),
+			group_messages: Vec::new()
         }
     }
 }
@@ -50,16 +54,17 @@ pub fn update_chat(game: &mut Game) {
 
 	if is_key_pressed(KeyCode::Enter) {
 		if !chat.current_input.trim().is_empty() {
-			chat.all_messages.push(chat.current_input.clone());
 			chat.sended_messages.push(chat.current_input.clone());
 			if chat.current_input.starts_with("/"){
-				let rq: String = format!("{}\n",&chat.current_input[1..].to_string());
+				let rq: String = format!("{}\n",&chat.current_input.clone()[1..].to_string());
 				println!("{}", rq);
 				game.tx_to_serv.try_send(rq).ok();
 			}
 			else{
 				let rq: String = format!("CHAT {} {}\n", CHANNELS[chat.channel as usize],chat.current_input);
 				game.tx_to_serv.try_send(rq).ok();
+				let text: String = format!("[{}] {}\n",game.player.name, chat.current_input);
+				game.pending_action = PendingAction::SendChat(CHANNELS[chat.channel as usize].to_string(), text);
 			}
 
 			chat.current_input.clear();
@@ -119,11 +124,18 @@ pub fn draw_chat(chat:&mut Chat) {
     let line_height = 25.0;
 
     let max_visible_messages = 5;
-    let visible_messages = chat.all_messages.iter().rev().take(max_visible_messages);
 
-    for (i, msg) in visible_messages.enumerate() {
-        draw_text(msg, 20.0, bottom_y - 80.0 - (i as f32 * line_height), 32.0, WHITE);
-    }
+
+	let messages = match chat.channel {
+    0 => &chat.room_messages,
+    1 => &chat.global_messages,
+    _ => &chat.group_messages,
+	};
+
+	let visible_messages = messages.iter().rev().take(max_visible_messages);
+	for (i, msg) in visible_messages.enumerate() {
+		draw_text(msg, 20.0, bottom_y - 90.0 - (i as f32 * line_height), 32.0, WHITE);
+	}
 
 
     if chat.is_active {

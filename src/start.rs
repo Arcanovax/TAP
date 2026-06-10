@@ -57,7 +57,9 @@ fn draw_name_input(x: f32, y: f32,game: &mut Game, mouse: (f32, f32)){
         game.player.name.pop();
     }
 	if is_key_pressed(KeyCode::Enter) && !game.player.name.is_empty(){
-		game.init_end = true;
+		let msg: String = format!("connect {}\n", game.player.name);
+		game.tx_to_serv.try_send(msg).ok();
+		game.pending_action = crate::PendingAction::Auth
 	}
 
     while let Some(character) = get_char_pressed() {
@@ -113,7 +115,9 @@ pub fn handle_starter(game: &mut Game){
     draw_text("Continue", btn_valid.x+ 6.0, btn_valid.y + 18.0, 30.0, WHITE);
 
     if valid_hovered && (is_mouse_button_pressed(MouseButton::Left)) && !game.player.name.is_empty(){
-        game.init_end = true;
+        let msg: String = format!("connect {}\n", game.player.name);
+		game.tx_to_serv.try_send(msg).ok();
+		game.pending_action = crate::PendingAction::Auth
     }
 
 }

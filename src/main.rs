@@ -19,6 +19,43 @@ use group::*;
 
 use crate::chat::handle_chat;
 
+use serde::Deserialize;
+
+
+#[derive(Deserialize, Debug)]
+struct ServerEvent {
+    #[serde(rename = "type")]
+    event_type: String,
+
+    #[serde(rename = "INVITE")]
+    invite: Option<InviteData>,
+	#[serde(rename = "CHAT")]
+    chat: Option<ChatData>,
+}
+
+#[derive(Deserialize, Debug)]
+struct InviteData {
+    sender: String,
+    group_name: String,
+}
+
+#[derive(Deserialize, Debug)]
+struct ChatData {
+	body: String,
+    sender: String,
+    scope: String,
+}
+
+#[derive(Debug, Clone)]
+pub enum PendingAction {
+    None,
+    GroupList,
+	Auth,
+	GroupCreate(String),
+	GroupJoin(String),
+	SendChat(String, String)
+}
+
 
 
 fn player_handler(player: &mut Player, map: &[[i32; 25]; 15], tile_size: f32, sprite_width: f32, sprite_height: f32) {
@@ -170,9 +207,10 @@ struct Game {
     pub skins: Vec<Skin>,
     pub room_name: String,
 	pub tx_to_serv: tokio::sync::mpsc::Sender<String>,
-    pub init_end: bool,
+    pub is_auth: bool,
     pub rx_from_serv: std::sync::mpsc::Receiver<String>,
-	pub group: Group
+	pub group: Group,
+	pub pending_action: PendingAction,
 }
 
 impl Game {
@@ -260,8 +298,9 @@ async fn main() {
         room_name: "place".to_string(),
 		tx_to_serv: tx_to_serv,
         rx_from_serv: rx_from_serv,
-        init_end: false,
-		group: Group::new()
+        is_auth: false,
+		group: Group::new(),
+		pending_action: PendingAction::None
     };
 
 
@@ -286,27 +325,92 @@ async fn main() {
 
     let mut camera = Camera2D::default();
 
-    loop {
-        if !game.init_end{
-            handle_starter(&mut game);
-            next_frame().await
-        }
-        else {
-            break;
-        }
-    }
-    println!("Trying to connect {}", game.player.name);
-    let msg: String = format!("connect {}\n", game.player.name);
-    game.tx_to_serv.try_send(msg).ok();
+
 
     loop {
-
-
-
-        while let Ok(msg) = game.rx_from_serv.try_recv() {
+		while let Ok(msg) = game.rx_from_serv.try_recv() {
             println!("GET: {}", msg);
-            game.chat.all_messages.push(msg);
+			if let Ok(evenement) = serde_json::from_str::<ServerEvent>(&msg) {
+				if evenement.event_type == "Event" {
+					if let Some(invite) = evenement.invite {
+						game.group.invitation = Some(Invitation{sender: invite.sender, group_name: invite.group_name})
+					}
+					if let Some(msg) = evenement.chat {
+						let channel = match msg.scope.as_str(){
+						"ROOM" => &mut game.chat.room_messages,
+						"GLOBAL" => &mut game.chat.global_messages,
+						"GROUP" => &mut game.chat.group_messages,
+						_ => continue
+						};
+						let text: String = format!("[{}]{}\n",msg.sender,msg.body);
+						channel.push(text);
+					}
+       			}
+				else if evenement.event_type == "Response"{
+					match game.pending_action {
+					PendingAction::GroupList => {
+
+						if msg.contains("SUCCESS") {
+							game.group.in_group = true;
+						} else if msg.contains("NOT_IN_GROUP") {
+							game.group.in_group = false;
+						}
+					}
+					PendingAction::Auth => {
+						if msg.contains("SUCCESS") {
+							game.is_auth = true
+						} else if msg.contains("NAME_IN_USE") {
+							println!("already use")
+						}
+					}
+					PendingAction::GroupCreate(name) => {
+						if msg.contains("SUCCESS") {
+							game.group.in_group = true;
+							game.group.name = name;
+						} else{
+							println!("Failed group create");
+						}
+					}
+					PendingAction::GroupJoin(name) => {
+						if msg.contains("SUCCESS") {
+							game.group.in_group = true;
+							game.group.name = name;
+						} else{
+							println!("Failed join");
+						}
+					}
+					PendingAction::SendChat(channel, text) => {
+						if msg.contains("SUCCESS") {
+							let channel = match channel.as_str(){
+							"Room" => &mut game.chat.room_messages,
+							"Global" => &mut game.chat.global_messages,
+							"Group" => &mut game.chat.group_messages,
+							_ => {
+									game.pending_action = PendingAction::None;
+									continue;
+								}
+							};
+							channel.push(text);
+						} else{
+							println!("Failed send msg");
+						}
+					}
+					_ => {}
+				}
+    			game.pending_action = PendingAction::None;
+				}
+    		}
         }
+
+		if !game.is_auth{
+					handle_starter(&mut game);
+					next_frame().await
+				}
+		else {
+
+
+
+
 
 
         let map: &rooms::Room = rooms.get(&game.room_name).unwrap();
@@ -391,7 +495,7 @@ async fn main() {
             break;
         }
 
-		
+
 		update_inv(&mut game);
 
 		// if is_key_pressed(KeyCode::F) && game.focus == InputFocus::Game {
@@ -403,12 +507,13 @@ async fn main() {
 		// }
 
         handle_menu(&mut game);
-		
+
 		draw_inv(&mut game);
 		handle_chat(&mut game);
 		handle_group(&mut game);
         draw_menu(&mut game);
-        
+
         next_frame().await
     }}
+}
 
