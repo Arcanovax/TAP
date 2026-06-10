@@ -9,6 +9,7 @@ pub enum Command {
     TALK,
     ATTACK,
     LOOK,
+    DROP,
 }
 
 impl Command {
@@ -24,6 +25,7 @@ impl Command {
             "TALK" => Some(Command::TALK),
             "ATTACK" => Some(Command::ATTACK),
             "LOOK" => Some(Command::LOOK),
+            "DROP" => Some(Command::DROP),
             _ => None,
         }
     }

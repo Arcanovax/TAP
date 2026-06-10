@@ -7,6 +7,7 @@ use crate::{
     handlers::{
         chat::chat_request,
         connect::connect_request,
+        drop::drop_request,
         fight_func::fight::fight,
         global_func::{move_to::move_to, talk_to::talk_to},
         group::group_request,
@@ -38,6 +39,7 @@ pub fn handle_request(
             Some(Command::TALK) => talk_to(peer_addr, args, server_info),
             Some(Command::ATTACK) => fight(peer_addr, args, server_info),
             Some(Command::LOOK) => look_request(server_info, peer_addr),
+            Some(Command::DROP) => drop_request(server_info, peer_addr, args),
             _ => Message::Response {
                 error: ErrorCode::INVALID_COMMAND,
                 data: None,

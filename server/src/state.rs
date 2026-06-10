@@ -298,4 +298,31 @@ impl ServerInfo {
         };
         Ok(room)
     }
+
+    pub fn try_drop_item(
+        &mut self,
+        peer_addr: SocketAddr,
+        item: &str,
+    ) -> Result<String, ErrorCode> {
+        if !self.connections.contains_key(&peer_addr) {
+            return Err(ErrorCode::PLAYER_NOT_FOUND);
+        }
+        let con = self.connections.get_mut(&peer_addr).unwrap();
+        match con.player.inventory.get_mut(item) {
+            Some(count) => {
+                *count -= 1;
+                if *count == 0 {
+                    con.player.inventory.remove(item);
+                }
+            }
+            None => return Err(ErrorCode::ITEM_NOT_IN_INVENTORY),
+        }
+        self.world
+            .rooms
+            .get_mut(&con.player.location)
+            .unwrap()
+            .items
+            .push(String::from(item));
+        Ok(String::from(item))
+    }
 }
