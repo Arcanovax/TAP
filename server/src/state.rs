@@ -161,7 +161,11 @@ impl ServerInfo {
         Ok(())
     }
 
-    pub fn try_create_group(&mut self, peer_addr: SocketAddr) -> Result<(), ErrorCode> {
+    pub fn try_create_group(
+        &mut self,
+        peer_addr: SocketAddr,
+        group_name: &str,
+    ) -> Result<(), ErrorCode> {
         let con = self
             .connections
             .get(&peer_addr)
@@ -171,8 +175,8 @@ impl ServerInfo {
         }
 
         let name = con.player.name.clone();
-        let group_id = self.create_new_group((name.clone() + "'s group").as_str());
-        info!("{} created group({})", name, group_id);
+        let group_id = self.create_new_group(group_name);
+        info!("{} created group({}:{})", name, group_name, group_id);
         self.try_add_player_to_group(peer_addr, group_id)
     }
 

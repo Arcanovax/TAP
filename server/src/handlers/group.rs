@@ -16,7 +16,7 @@ pub(super) fn group_request(
     }
 
     match args[0].to_uppercase().as_str() {
-        "CREATE" => group_create_request(server_info, peer_addr),
+        "CREATE" => group_create_request(server_info, peer_addr, args),
         "LEAVE" => group_leave_request(server_info, peer_addr),
         "INVITE" => group_invite_request(args, server_info, peer_addr),
         "JOIN" => group_join_request(server_info, peer_addr),
@@ -28,8 +28,30 @@ pub(super) fn group_request(
     }
 }
 
-fn group_create_request(server_info: &SharedServer, peer_addr: SocketAddr) -> Message {
-    let err = match server_info.lock().unwrap().try_create_group(peer_addr) {
+fn group_create_request(
+    server_info: &SharedServer,
+    peer_addr: SocketAddr,
+    args: Vec<String>,
+) -> Message {
+    let group_name: String;
+    if args.len() <= 1 {
+        group_name = match server_info.lock().unwrap().get_player(peer_addr) {
+            Ok(player) => player.name.clone() + "'s group",
+            Err(code) => {
+                return Message::Response {
+                    error: code,
+                    data: None,
+                };
+            }
+        };
+    } else {
+        group_name = args[1..].join(" ");
+    }
+    let err = match server_info
+        .lock()
+        .unwrap()
+        .try_create_group(peer_addr, group_name.as_str())
+    {
         Ok(()) => ErrorCode::SUCCESS,
         Err(code) => code,
     };
