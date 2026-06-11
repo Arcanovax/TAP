@@ -226,7 +226,7 @@ impl Game {
     }
 }
 async fn network_task(tx: mpsc::Sender<String>, mut rx: tokio::sync::mpsc::Receiver<String>) {
-    let stream = TcpStream::connect("127.0.0.1:8080").await.unwrap();
+    let stream = TcpStream::connect("z1r8p2:8080").await.unwrap();
     let (mut reader, mut writer) = stream.into_split();
 
 
@@ -496,7 +496,7 @@ async fn main() {
         }
 
 
-		update_inv(&mut game);
+		
 
 		// if is_key_pressed(KeyCode::F) && game.focus == InputFocus::Game {
 		// 	game.group.is_active = true;
@@ -508,7 +508,7 @@ async fn main() {
 
         handle_menu(&mut game);
 
-		draw_inv(&mut game);
+		handle_inv(&mut game);
 		handle_chat(&mut game);
 		handle_group(&mut game);
         draw_menu(&mut game);

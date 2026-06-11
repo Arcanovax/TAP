@@ -1,5 +1,5 @@
 use macroquad::prelude::*;
-use crate::Game;
+use crate::*;
 
 const INV_SIZE: Vec2 = vec2(400.0, 400.0);
 
@@ -65,15 +65,9 @@ impl Inventory {
 
 
 pub fn update_inv(game: &mut Game) {
-	if is_key_pressed(KeyCode::E){
-        if !game.player.inventory.is_active {
-            game.player.inventory.is_active = true;
-        }
-		else
-        {
-			game.player.inventory.is_active = false;
-        }
-    }
+	if game.player.inventory.is_active {
+
+	}
 	return;
 }
 
@@ -88,4 +82,19 @@ pub fn draw_inv(game: &mut Game) {
 
 
     }
+}
+
+pub fn handle_inv(game: &mut Game) {
+	draw_inv(game);
+	update_inv(game);
+	if is_key_pressed(KeyCode::E) && game.focus == InputFocus::Game{
+        if !game.player.inventory.is_active {
+            game.player.inventory.is_active = true;
+        }
+		else
+        {
+			game.player.inventory.is_active = false;
+        }
+    }
+
 }
