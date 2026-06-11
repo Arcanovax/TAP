@@ -1,4 +1,5 @@
 use macroquad::prelude::*;
+use macroquad::telemetry::frame;
 mod rooms;
 mod chat;
 mod menu;
@@ -80,7 +81,7 @@ pub enum Exit {
     West { toward: String },
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum PendingAction {
     None,
     GroupList,
@@ -176,6 +177,14 @@ pub enum Direction {
 
 
 fn handle_move(game: &mut Game){
+	if game.pending_action != PendingAction::None {
+        return;
+    }
+
+    if game.player.new_spawn != Direction::None {
+        return;
+    }
+
 	if game.player.x >= 390.0{
 		game.tx_to_serv.try_send("MOVE East\n".to_string()).ok();
 		game.pending_action = PendingAction::Move(Direction::West);
@@ -489,18 +498,21 @@ async fn main() {
 						}
 					}
 					PendingAction::Move(new_spawn) => {
-						if msg.contains("SUCCESS") {
+						if msg.contains("SUCCESS") && game.player.new_spawn == Direction::None{
 							if let Some(data) = server_event.data{
 								println!("{}", data)}
+
 								game.player.new_spawn = new_spawn;
 								game.map_id = String::new();
 						} else{
 							println!("Failed MOVE");
 						}
 					}
-					_ => {}
+					_ => {
+						game.pending_action = PendingAction::None;
+					}
 				}
-    			game.pending_action = PendingAction::None;
+    				game.pending_action = PendingAction::None;
 				}
     		}
         }
@@ -508,10 +520,11 @@ async fn main() {
 		if !game.is_auth{
 					handle_starter(&mut game);
 					next_frame().await
+
 				}
 		else {
 
-		if game.map_id.is_empty(){
+		if game.map_id.is_empty() && game.pending_action == PendingAction::None {
 			game.tx_to_serv.try_send("STATUS\n".to_string()).ok();
 			game.pending_action = PendingAction::Status;
 		}
@@ -522,9 +535,9 @@ async fn main() {
 		let map = match rooms.get(&game.map_id) {
 			Some(room_data) => room_data,
 			None => {
-				println!("Error: {} doesn t exist", game.map_id);
-				return;
+				continue;
 			}
+
 		};
 
 		if game.player.new_spawn != Direction::None{
@@ -532,6 +545,8 @@ async fn main() {
 			game.player.x = spawn.x;
 			game.player.y = spawn.y;
 			game.player.new_spawn = Direction::None;
+			game.tx_to_serv.try_send("LOOK\n".to_string()).ok();
+			game.pending_action = PendingAction::Look;
 
 		}
 		let floor: Texture2D = map.first_layer.clone();
@@ -542,14 +557,7 @@ async fn main() {
 		}
 		floor.set_filter(FilterMode::Nearest);
 
-
-
-
-
         clear_background(BLACK);
-
-
-
 
 		camera_handler(&mut camera, tile_size);
 
@@ -610,9 +618,7 @@ async fn main() {
 
 
 		set_default_camera();
-		if let Some(map_data) = game.map_data.clone() {
-        	draw_text(map_data.name, 5.0, 30.0, 60.0, WHITE);
-		}
+
 		if game.focus == InputFocus::Game {
 			while get_char_pressed().is_some() {}
 		}
@@ -637,6 +643,10 @@ async fn main() {
 		handle_chat(&mut game);
 		handle_group(&mut game);
         draw_menu(&mut game);
+		if let Some(map_data) = game.map_data.clone() {
+        	draw_text(map_data.name, 5.0, 30.0, 60.0, WHITE);
+		}
+
 		}
         next_frame().await
     }}
