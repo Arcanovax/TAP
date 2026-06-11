@@ -2,9 +2,9 @@ use std::collections::HashMap;
 
 use macroquad::prelude::*;
 
+#[derive(Clone)]
 pub struct Room {
     pub id: String,
-    pub name: String,
     pub colliders: [[i32; 25]; 15],
     pub first_layer: Texture2D,
     pub second_layer: Option<Texture2D>,
@@ -14,8 +14,7 @@ pub async fn get_rooms() -> HashMap<String, Room> {
     let mut rooms = HashMap::new();
 
 	let farm = Room {
-			id: "farm".to_string(),
-			name: "The farm".to_string(),
+			id: "room.farm".to_string(),
 			colliders: [
 				[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,1],
 				[1,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0,1],
@@ -39,8 +38,7 @@ pub async fn get_rooms() -> HashMap<String, Room> {
     rooms.insert(farm.id.clone(), farm);
 
 	let mine = Room {
-        id: "mine".to_string(),
-        name: "The mine".to_string(),
+        id: "room.mine".to_string(),
         colliders: [
             [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,1],
             [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
@@ -64,8 +62,7 @@ pub async fn get_rooms() -> HashMap<String, Room> {
     rooms.insert(mine.id.clone(), mine);
 
 	let place = Room {
-        id: "place".to_string(),
-        name: "The Place".to_string(),
+        id: "room.city_square".to_string(),
         colliders: [
             [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,1],
             [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
@@ -89,8 +86,7 @@ pub async fn get_rooms() -> HashMap<String, Room> {
     rooms.insert(place.id.clone(), place);
 
 	let tower: Room = Room {
-        id: "tower".to_string(),
-        name: "The Tower".to_string(),
+        id: "room.forest".to_string(),
         colliders: [
 			[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,1],
 			[1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
@@ -114,8 +110,7 @@ pub async fn get_rooms() -> HashMap<String, Room> {
     rooms.insert(tower.id.clone(), tower);
 
 	let beach: Room = Room {
-        id: "beach".to_string(),
-        name: "The Beach".to_string(),
+        id: "room.beach".to_string(),
         colliders: [
 			[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,1,1,1,1,0,1],
 			[1,1,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0,0,1,0,0,0,1],
@@ -139,8 +134,7 @@ pub async fn get_rooms() -> HashMap<String, Room> {
     rooms.insert(beach.id.clone(), beach);
 
 	let beach: Room = Room {
-        id: "beach".to_string(),
-        name: "The Beach".to_string(),
+        id: "room.beach".to_string(),
         colliders: [
 			[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,1,1,1,1,0,1],
 			[1,1,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0,0,1,0,0,0,1],
@@ -164,8 +158,7 @@ pub async fn get_rooms() -> HashMap<String, Room> {
     rooms.insert(beach.id.clone(), beach);
 
 	let market: Room = Room {
-        id: "market".to_string(),
-        name: "The Market".to_string(),
+        id: "room.market".to_string(),
         colliders: [
 			[1,1,1,1,1,1,1,1,1,0,0,0,0,1,1,1,1,1,1,1,1,1,1,0,1],
 			[1,0,0,0,0,0,0,0,1,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1],
@@ -189,8 +182,7 @@ pub async fn get_rooms() -> HashMap<String, Room> {
     rooms.insert(market.id.clone(), market);
 
 	let saloon: Room = Room {
-        id: "saloon".to_string(),
-        name: "The Saloon".to_string(),
+        id: "room.tavern".to_string(),
         colliders: [
 			[1,1,1,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,1],
 			[1,0,1,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
@@ -215,8 +207,7 @@ pub async fn get_rooms() -> HashMap<String, Room> {
 
 
 	let parc: Room = Room {
-        id: "parc".to_string(),
-        name: "The Parc".to_string(),
+        id: "room.parc".to_string(),
         colliders: [
 			[1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,1,1,1,1,1,1,1,1,0,1],
 			[1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,1],
@@ -240,8 +231,7 @@ pub async fn get_rooms() -> HashMap<String, Room> {
     rooms.insert(parc.id.clone(), parc);
 
 	let forge: Room = Room {
-        id: "forge".to_string(),
-        name: "The Forge".to_string(),
+        id: "room.blacksmith's_shop".to_string(),
         colliders: [
 			[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,1,1,1,1,0,1],
 			[1,0,0,0,0,0,1,0,0,0,1,1,1,1,1,1,0,0,0,0,1,1,1,1,1],
@@ -266,8 +256,7 @@ pub async fn get_rooms() -> HashMap<String, Room> {
 
 
 	let montain: Room = Room {
-        id: "montain".to_string(),
-        name: "The Montain".to_string(),
+        id: "room.quarry".to_string(),
         colliders: [
 			[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,1],
 			[1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],

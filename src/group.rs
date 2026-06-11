@@ -138,8 +138,17 @@
 			let text: String = format!("{}'s Group", game.group.name);
 			let text_dimensions = measure_text(&text, None,30, 1.0);
 			let text_x = rect.x + (rect.w - text_dimensions.width) / 2.0;
-
 			draw_text(&text, text_x, rect.y + 30.0, 30.0, WHITE);
+
+			if game.group.list.is_empty(){
+				game.tx_to_serv.try_send("GROUP LIST\n".to_string()).ok();
+				game.pending_action = PendingAction::GroupList;
+			}
+			else {
+				let group_list: String = format!("{}", game.group.list);
+				draw_text(&group_list, text_x, rect.y + 60.0, 30.0, WHITE);
+			}
+
 		}
 	}
 
@@ -163,6 +172,8 @@
 			draw_icon(game, mouse);
 			if is_key_pressed(KeyCode::F) && game.focus == InputFocus::Game {
 				game.group.is_active = true;
+				game.tx_to_serv.try_send("GROUP LIST\n".to_string()).ok();
+				game.pending_action = PendingAction::GroupList;
 			}
 		}
 		else{

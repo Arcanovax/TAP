@@ -5,9 +5,10 @@ mod menu;
 mod inventory;
 mod start;
 mod group;
+use std::collections::HashMap;
 
 
-use rooms::get_rooms;
+use rooms::*;
 use chat::Chat;
 use menu::*;
 use inventory::*;
@@ -31,6 +32,8 @@ struct ServerEvent {
     invite: Option<InviteData>,
 	#[serde(rename = "CHAT")]
     chat: Option<ChatData>,
+    data: Option<String>
+
 }
 
 #[derive(Deserialize, Debug)]
@@ -39,11 +42,42 @@ struct InviteData {
     group_name: String,
 }
 
+
 #[derive(Deserialize, Debug)]
 struct ChatData {
 	body: String,
     sender: String,
     scope: String,
+}
+
+#[derive(Deserialize, Debug, Clone)]
+pub struct MapData {
+    pub name: String,
+    pub exits: Vec<Exit>,
+    pub description: String,
+    pub npc: Vec<String>,
+    pub items: Vec<String>,
+	pub players: Vec<String>,
+}
+
+#[derive(Deserialize, Debug, Clone)]
+pub struct StatusData {
+    pub name: String,
+    pub hp: usize,
+    pub max_hp: usize,
+    pub location: String,
+    pub status: String,
+	pub inventory: HashMap<String, u32>,
+	pub available_quests: Vec<String>,
+	pub group_id: Option<String>
+}
+
+#[derive(Deserialize, Debug, Clone)]
+pub enum Exit {
+    North { toward: String },
+    South { toward: String },
+    East { toward: String },
+    West { toward: String },
 }
 
 #[derive(Debug, Clone)]
@@ -53,7 +87,9 @@ pub enum PendingAction {
 	Auth,
 	GroupCreate(String),
 	GroupJoin(String),
-	SendChat(String, String)
+	SendChat(String, String),
+	Look,
+	Status
 }
 
 
@@ -205,12 +241,13 @@ struct Game {
     pub player: Player,
     pub chat: Chat,
     pub skins: Vec<Skin>,
-    pub room_name: String,
+    pub map_id: String,
 	pub tx_to_serv: tokio::sync::mpsc::Sender<String>,
     pub is_auth: bool,
     pub rx_from_serv: std::sync::mpsc::Receiver<String>,
 	pub group: Group,
 	pub pending_action: PendingAction,
+	pub map_data: Option<MapData>,
 }
 
 impl Game {
@@ -295,12 +332,13 @@ async fn main() {
             name:"".to_string()
         },
         skins: Vec::new(),
-        room_name: "place".to_string(),
+        map_id: String::new(),
 		tx_to_serv: tx_to_serv,
         rx_from_serv: rx_from_serv,
         is_auth: false,
 		group: Group::new(),
-		pending_action: PendingAction::None
+		pending_action: PendingAction::None,
+		map_data: None
     };
 
 
@@ -330,12 +368,12 @@ async fn main() {
     loop {
 		while let Ok(msg) = game.rx_from_serv.try_recv() {
             println!("GET: {}", msg);
-			if let Ok(evenement) = serde_json::from_str::<ServerEvent>(&msg) {
-				if evenement.event_type == "Event" {
-					if let Some(invite) = evenement.invite {
+			if let Ok(server_event) = serde_json::from_str::<ServerEvent>(&msg) {
+				if server_event.event_type == "Event" {
+					if let Some(invite) = server_event.invite {
 						game.group.invitation = Some(Invitation{sender: invite.sender, group_name: invite.group_name})
 					}
-					if let Some(msg) = evenement.chat {
+					if let Some(msg) = server_event.chat {
 						let channel = match msg.scope.as_str(){
 						"ROOM" => &mut game.chat.room_messages,
 						"GLOBAL" => &mut game.chat.global_messages,
@@ -346,12 +384,13 @@ async fn main() {
 						channel.push(text);
 					}
        			}
-				else if evenement.event_type == "Response"{
+				else if server_event.event_type == "Response"{
 					match game.pending_action {
 					PendingAction::GroupList => {
 
-						if msg.contains("SUCCESS") {
-							game.group.in_group = true;
+						if msg.contains("SUCCESS"){
+							if let Some(data) = server_event.data{
+								game.group.list = data}
 						} else if msg.contains("NOT_IN_GROUP") {
 							game.group.in_group = false;
 						}
@@ -395,6 +434,32 @@ async fn main() {
 							println!("Failed send msg");
 						}
 					}
+					PendingAction::Look => {
+						if let Some(data_str) = &server_event.data {
+							match serde_json::from_str::<MapData>(data_str) {
+								Ok(parsed_map_data) => {
+									game.map_data = Some(parsed_map_data);
+								}
+								Err(e) => {
+								eprintln!("LOOK error: {}", e);
+								}
+							}
+
+						}
+					}
+					PendingAction::Status => {
+						if let Some(data_str) = &server_event.data {
+							match serde_json::from_str::<StatusData>(data_str) {
+								Ok(parsed_map_data) => {
+									game.map_id = parsed_map_data.location;
+								}
+								Err(e) => {
+								eprintln!("STATUS error: {}", e);
+								}
+							}
+
+						}
+					}
 					_ => {}
 				}
     			game.pending_action = PendingAction::None;
@@ -408,20 +473,24 @@ async fn main() {
 				}
 		else {
 
+		if game.map_id.is_empty(){
+			game.tx_to_serv.try_send("STATUS\n".to_string()).ok();
+			game.pending_action = PendingAction::Status;
+		}
+		else {
+		
+		let map: &rooms::Room = rooms.get(&game.map_id).unwrap();
+		let floor: Texture2D = map.first_layer.clone();
+		let builds: Option<Texture2D> = map.second_layer.clone();
+		let map_obstacles = map.colliders;
+		if let Some(builds_texture) = builds.as_ref() {
+		builds_texture.set_filter(FilterMode::Nearest);
+		}
+		floor.set_filter(FilterMode::Nearest);
 
 
 
 
-
-        let map: &rooms::Room = rooms.get(&game.room_name).unwrap();
-        let floor: Texture2D = map.first_layer.clone();
-        let builds: Option<Texture2D> = map.second_layer.clone();
-        let map_obstacles = map.colliders;
-
-        if let Some(builds_texture) = builds.as_ref() {
-            builds_texture.set_filter(FilterMode::Nearest);
-        }
-        floor.set_filter(FilterMode::Nearest);
 
         clear_background(BLACK);
 
@@ -486,8 +555,9 @@ async fn main() {
 
 
 		set_default_camera();
-        draw_text(map.name.clone(), 5.0, 30.0, 60.0, WHITE);
-
+		if let Some(map_data) = game.map_data.clone() {
+        	draw_text(map_data.name, 5.0, 30.0, 60.0, WHITE);
+		}
 		if game.focus == InputFocus::Game {
 			while get_char_pressed().is_some() {}
 		}
@@ -496,7 +566,7 @@ async fn main() {
         }
 
 
-		
+
 
 		// if is_key_pressed(KeyCode::F) && game.focus == InputFocus::Game {
 		// 	game.group.is_active = true;
@@ -512,7 +582,7 @@ async fn main() {
 		handle_chat(&mut game);
 		handle_group(&mut game);
         draw_menu(&mut game);
-
+		}
         next_frame().await
     }}
 }
