@@ -17,7 +17,7 @@ use tokio::sync::mpsc::Sender;
 use tui_big_text::{BigText, PixelSize};
 
 use crate::{
-	draw_functions::login::{self, login_draw}, enums::states::States, structures::{popup::Popup, room::Room}
+	draw_functions::{login::{self, login_draw}, wait_server::draw_wait}, enums::states::States, structures::{popup::Popup, room::Room}
 };
 
 pub struct World {
@@ -42,7 +42,7 @@ impl World {
 			counter: 0,
 			click: false,
 			input: "".to_string(),
-			state: States::Login,
+			state: States::ServerWait,
 			tx_to_serv: tx_to_serv,
 			rx_from_serv: rx_from_serv
 		}
@@ -50,14 +50,17 @@ impl World {
 
 	pub fn run(&mut self, terminal: &mut DefaultTerminal) -> io::Result<()> {
 		while !self.quit {
+			self.process_network();
 			terminal.draw(|frame| self.draw(frame))?;
 			self.handle_events()?;
 		}
 		Ok(())
 	}
 	pub fn draw(&mut self, frame:&mut Frame) {
-		if self.state == States::Login {
-			login_draw(self, frame);
+		match self.state {
+			States::ServerWait => draw_wait(frame),
+			States::Login => login_draw(self, frame),
+			_ => {}
 		}
 	}
 
@@ -85,5 +88,13 @@ impl World {
 			}
 		}
 		Ok(())
+	}
+
+	pub fn process_network(&mut self) {
+		while let Ok(msg) = self.rx_from_serv.try_recv() {
+			if self.state == States::ServerWait && msg.contains("OK hello proto") {
+				self.state = States::Login;
+			}
+		}
 	}
 }
