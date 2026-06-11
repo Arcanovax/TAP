@@ -1,14 +1,15 @@
 mod structures;
+mod draw_functions;
+mod global_functions;
 mod enums;
 
-use std::io::Error;
+use std::io::{Error, stdout};
 use std::sync::mpsc;
+use ratatui::crossterm::event::{DisableMouseCapture, EnableMouseCapture};
+use ratatui::crossterm::execute;
 use tokio::io::{AsyncReadExt, AsyncWriteExt};
 use tokio::net::TcpStream;
-
 use crate::structures::world::World;
-
-
 
 async fn network_task(tx: mpsc::Sender<String>, mut rx: tokio::sync::mpsc::Receiver<String>) {
     let stream = TcpStream::connect("127.0.0.1:8080").await.unwrap();
@@ -44,13 +45,11 @@ async fn main() -> Result<(), Error> {
 		});
 	
 	let mut terminal = ratatui::init();
+    execute!(stdout(), EnableMouseCapture)?;
 	let mut world: World = World::new(tx_to_serv, rx_from_serv);
-	let result = world.run(&mut terminal);
+    let result = world.run(&mut terminal);
+    execute!(stdout(), DisableMouseCapture)?;
 	ratatui::restore();
 	result
-
-	
-
-	// let mut world
 }
 
