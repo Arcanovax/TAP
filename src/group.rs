@@ -107,7 +107,7 @@
 
 
 		if !game.group.in_group {
-			let btn: Rect = Rect::new(rect.x,rect.y, 100.0, 20.0);
+			let btn: Rect = Rect::new(rect.x+(rect.w/2.0-(50.0)),rect.y+10.0, 100.0, 40.0);
 			let hovered = btn.contains(Vec2::new(mouse.0, mouse.1));
 			let bg = if hovered { Color::new(0.3, 0.3, 0.3, 0.75) }
 			else { Color::new(0.10, 0.10, 0.10, 0.75) };
@@ -145,8 +145,21 @@
 				game.pending_action = PendingAction::GroupList;
 			}
 			else {
-				let group_list: String = format!("{}", game.group.list);
-				draw_text(&group_list, text_x, rect.y + 60.0, 30.0, WHITE);
+				match serde_json::from_str::<Vec<String>>(&game.group.list.to_string()) {
+					Ok(players) => {
+						for (i, player) in players.iter().enumerate() {
+							draw_text(
+							player,
+								text_x,
+								rect.y + 60.0 + i as f32 * 35.0,
+								30.0,
+							WHITE,
+								);
+						}	
+					}
+					Err(e) => {println!("{}", e)}
+					}
+				
 			}
 
 		}

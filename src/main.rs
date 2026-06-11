@@ -299,7 +299,7 @@ impl Game {
     }
 }
 async fn network_task(tx: mpsc::Sender<String>, mut rx: tokio::sync::mpsc::Receiver<String>) {
-    let stream = TcpStream::connect("z1r8p2:8080").await.unwrap();
+    let stream = TcpStream::connect("127.0.0.1:8080").await.unwrap();
     let (mut reader, mut writer) = stream.into_split();
 
 
