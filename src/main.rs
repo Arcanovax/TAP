@@ -89,7 +89,8 @@ pub enum PendingAction {
 	GroupJoin(String),
 	SendChat(String, String),
 	Look,
-	Status
+	Status,
+	Move(Direction)
 }
 
 
@@ -162,10 +163,35 @@ fn player_handler(player: &mut Player, map: &[[i32; 25]; 15], tile_size: f32, sp
 			player.y += add_y;
 		}
 	}
+}
+
+#[derive(Clone, Debug, PartialEq, Hash, Eq)]
+pub enum Direction {
+	None,
+    North,
+    South,
+    East,
+    West,
+}
 
 
-
-
+fn handle_move(game: &mut Game){
+	if game.player.x >= 390.0{
+		game.tx_to_serv.try_send("MOVE East\n".to_string()).ok();
+		game.pending_action = PendingAction::Move(Direction::West);
+	}
+	if game.player.x <= 0.0{
+		game.tx_to_serv.try_send("MOVE West\n".to_string()).ok();
+		game.pending_action = PendingAction::Move(Direction::East);
+	}
+	if game.player.y >= 200.0{
+		game.tx_to_serv.try_send("MOVE South\n".to_string()).ok();
+		game.pending_action = PendingAction::Move(Direction::North);
+	}
+	if game.player.y <= -10.0{
+		game.tx_to_serv.try_send("MOVE North\n".to_string()).ok();
+		game.pending_action = PendingAction::Move(Direction::South);
+	}
 }
 
 fn camera_handler(camera: &mut Camera2D, tile_size: f32) {
@@ -190,7 +216,8 @@ struct Player {
 	speed: f32,
     spritesheet_index: usize,
 	inventory: Inventory,
-    name: String
+    name: String,
+	new_spawn:Direction,
 }
 
 fn rect_collides_map(rect: Rect, map: &[[i32; 25]; 15], tile_size: f32) -> bool {
@@ -321,15 +348,16 @@ async fn main() {
         chat: Chat::new(),
         menu: Menu::new(),
         player: Player {
-            x: 150.0,
-            y: 150.0,
+            x: 200.0,
+            y: 130.0,
             line: 0,
             row: 0,
             is_mooving: false,
-            speed: 0.8,
+            speed: 1.8,
             spritesheet_index: 0,
 			inventory: Inventory::new(),
-            name:"".to_string()
+            name:"".to_string(),
+			new_spawn: Direction::None
         },
         skins: Vec::new(),
         map_id: String::new(),
@@ -460,6 +488,16 @@ async fn main() {
 
 						}
 					}
+					PendingAction::Move(new_spawn) => {
+						if msg.contains("SUCCESS") {
+							if let Some(data) = server_event.data{
+								println!("{}", data)}
+								game.player.new_spawn = new_spawn;
+								game.map_id = String::new();
+						} else{
+							println!("Failed MOVE");
+						}
+					}
 					_ => {}
 				}
     			game.pending_action = PendingAction::None;
@@ -478,8 +516,24 @@ async fn main() {
 			game.pending_action = PendingAction::Status;
 		}
 		else {
-		
-		let map: &rooms::Room = rooms.get(&game.map_id).unwrap();
+
+
+
+		let map = match rooms.get(&game.map_id) {
+			Some(room_data) => room_data,
+			None => {
+				println!("Error: {} doesn t exist", game.map_id);
+				return;
+			}
+		};
+
+		if game.player.new_spawn != Direction::None{
+			let spawn: Vec2 = map.spawns[&game.player.new_spawn];
+			game.player.x = spawn.x;
+			game.player.y = spawn.y;
+			game.player.new_spawn = Direction::None;
+
+		}
 		let floor: Texture2D = map.first_layer.clone();
 		let builds: Option<Texture2D> = map.second_layer.clone();
 		let map_obstacles = map.colliders;
@@ -501,6 +555,7 @@ async fn main() {
 
 		if game.focus == InputFocus::Game{
 			player_handler(&mut game.player, &map_obstacles, tile_size, sprite_width, sprite_height);
+			handle_move(&mut game);
 		}
 
         let current_skin = &game.skins[game.player.spritesheet_index as usize];
