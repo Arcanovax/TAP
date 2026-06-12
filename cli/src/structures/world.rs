@@ -1,4 +1,11 @@
-use std::{fs::OpenOptions, io, sync::mpsc::{Receiver, TryRecvError}};
+use std::{
+	fs::OpenOptions,
+	io,
+	sync::mpsc::{
+		Receiver,
+		TryRecvError
+	}
+};
 use ratatui::{
 	DefaultTerminal,
 	Frame,
@@ -6,18 +13,42 @@ use ratatui::{
 		self, Event::self, KeyCode, MouseButton, MouseEventKind
 	},
 };
-use std::io::Write;
 use tokio::sync::mpsc::Sender;
+use std::io::Write;
 
+// use serde::Deserialize;
 use crate::{
-	draw_functions::{login::login_draw, wait_server::draw_wait}, enums::states::States, structures::room::Room
+	draw_functions::{
+		login::login_draw,
+		rooms::draw_room,
+		wait_server::draw_wait
+	},
+	enums::{
+		actions::PendingAction,
+		states::States
+	},
+	global_functions::response_handling::response_handling,
+	structures::{
+		player::Player,
+		room::Room,
+		server_event::ServerEvent
+	}
 };
 
+// #[derive(Deserialize, Debug)]
+// struct LoginResponse {
+// player: Player,
+// room: Room
+// }
+
 pub struct World {
-	pub room: Option<Room>,
+	pub room: Room,
+	pub player: Player,
 	pub quit: bool,
 	pub message: String,
+	pub action: PendingAction,
 	pub counter: u32,
+	pub error: bool,
 	pub click: bool,
 	pub input: String,
 	pub state: States,
@@ -29,10 +60,13 @@ impl World {
 
 	pub fn new(tx_to_serv: Sender<String>, rx_from_serv: Receiver<String>) -> Self {
 		Self {
-			room: None,
+			room: Room::new(),
+			player: Player::new(),
 			quit: false,
 			message: String::from(""),
+			action: PendingAction::None,
 			counter: 0,
+			error: false,
 			click: false,
 			input: "".to_string(),
 			state: States::ServerWait,
@@ -53,6 +87,11 @@ impl World {
 		match self.state {
 			States::ServerWait => draw_wait(frame),
 			States::Login => login_draw(self, frame),
+			States::InGame => {
+				if let Ok(mut file) = OpenOptions::new().create(true).append(true).open("debug_draw.txt") {
+					let _ = writeln!(file, "RECU (State {:?}) : {:#?}", self.state, self.player.name);}
+				draw_room(self, frame);
+			},
 			_ => {}
 		}
 	}
@@ -70,6 +109,7 @@ impl World {
 							KeyCode::Backspace => { self.input.pop(); },
 							KeyCode::Enter => {
 								let _ = self.tx_to_serv.try_send(format!("CONNECT {}\n", self.input));
+								self.action = PendingAction::Auth;
 							}
 							_ => {}
 						}
@@ -78,6 +118,7 @@ impl World {
 				Event::Mouse(event) => {
 					if event.kind == MouseEventKind::Down(MouseButton::Left) {
 						self.click = !self.click;
+						self.error = false;
 					}
 				}
 				_ => {}
@@ -90,19 +131,15 @@ impl World {
 		loop {
 			match self.rx_from_serv.try_recv() {
 				Ok(msg) => {
-					//Debug
-					if let Ok(mut file) = OpenOptions::new().create(true).append(true).open("debug_network.txt") {
-						let _ = writeln!(file, "RECU (State {:?}) : {:?}", self.state, msg);
+					if self.state == States::ServerWait {
+						if msg.contains("OK hello proto") {self.state = States::Login};
 					}
-					match self.state {
-						States::ServerWait => {
-							if msg.contains("OK hello proto") {self.state = States::Login};
-						},
-						States::Login => {
-							self.input.clear();
-							self.input = msg.trim().to_string();
-						},
-						_ => {}
+					if let Ok(server_event) = serde_json::from_str::<ServerEvent>(&msg) {
+						if server_event.event_type == "Response" {
+							response_handling(self, &msg, &server_event);
+							if let Ok(mut file) = OpenOptions::new().create(true).append(true).open("debug_network.txt") {
+								let _ = writeln!(file, "RECU (State {:?}) : {:#?}", self.state, self.room);}
+						}
 					}
 				}
 				Err(TryRecvError::Empty) => break,
