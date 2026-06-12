@@ -164,7 +164,7 @@ pub fn handle_group(game: &mut Game) {
 		}
 	}
 	else{
-		if is_key_pressed(KeyCode::F) && game.group.chat_is_active == false{
+		if is_key_pressed(KeyCode::F) && game.focus == InputFocus::Game {
 			game.group.is_active = false;
 			game.focus = InputFocus::Game;
 		}
