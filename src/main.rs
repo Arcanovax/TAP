@@ -1,14 +1,14 @@
-use macroquad::prelude::*;
-use macroquad::telemetry::frame;
+mod utils;
 mod rooms;
 mod chat;
 mod menu;
 mod inventory;
 mod start;
 mod group;
+
+use utils::*;
 use std::collections::HashMap;
-
-
+use macroquad::prelude::*;
 use rooms::*;
 use chat::Chat;
 use menu::*;
@@ -18,9 +18,7 @@ use tokio::io::{AsyncReadExt, AsyncWriteExt};
 use tokio::net::TcpStream;
 use start::*;
 use group::*;
-
 use crate::chat::handle_chat;
-
 use serde::Deserialize;
 
 
@@ -88,6 +86,7 @@ pub enum PendingAction {
 	Auth,
 	GroupCreate(String),
 	GroupJoin(String),
+	GroupInvite(String),
 	SendChat(String, String),
 	Look,
 	Status,
@@ -453,6 +452,16 @@ async fn main() {
 							game.group.name = name;
 						} else{
 							println!("Failed join");
+						}
+					}
+					PendingAction::GroupInvite(name) => {
+						if msg.contains("SUCCESS") {
+							let rp: String = format!("{} invited", name);
+							game.group.invite_state = (rp, GREEN);
+
+						} else{
+							let rp: String = format!("{} is't online", name);
+							game.group.invite_state = (rp, RED);
 						}
 					}
 					PendingAction::SendChat(channel, text) => {
