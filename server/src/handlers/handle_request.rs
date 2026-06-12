@@ -2,7 +2,7 @@ use crate::{
     handlers::quest::quest_request,
     protocol::EventType,
     state::{SharedServer, Tx},
-    structures::quest::Goal,
+    structures::quest::{Goal, Quest},
 };
 use std::net::SocketAddr;
 use tokio::sync::mpsc::UnboundedSender;
@@ -127,15 +127,15 @@ fn update_quests(
                 player.quests_in_progress.remove(id);
             }
         } else {
-            send_quest_update_event(&quest.name, quest.goals[new_step].clone(), tx);
+            send_quest_update_event(quest.clone(), new_step, tx);
         }
     }
 }
 
-fn send_quest_update_event(quest_name: &str, goal: Goal, tx: UnboundedSender<Message>) {
+fn send_quest_update_event(quest: Quest, step: usize, tx: UnboundedSender<Message>) {
     let _ = tx.send(Message::Event(EventType::QUEST_UPDATE {
-        quest_name: quest_name.to_string(),
-        goal,
+        quest_name: quest.name,
+        goal: quest.goals[step].clone(),
     }));
 }
 
