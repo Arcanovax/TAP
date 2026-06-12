@@ -61,7 +61,7 @@ pub fn get_button(rect: Rect,text: &str, font_size: u16, mouse: (f32, f32)) -> b
 }
 
 
-pub fn input_text(input_rect: Rect,field: &mut String, mouse: (f32, f32)) -> bool{
+pub fn input_text(input_rect: Rect,field: &mut String,is_active: bool, mouse: (f32, f32)) -> bool{
 		let input_hovered = input_rect.contains(Vec2::new(mouse.0, mouse.1));
 		let input_bg = if input_hovered { Color::new(0.2, 0.2, 0.2, 1.0) } else { Color::new(0.1, 0.1, 0.1, 1.0) };
 
@@ -83,7 +83,7 @@ pub fn input_text(input_rect: Rect,field: &mut String, mouse: (f32, f32)) -> boo
 		if get_time() % 1.0 < 0.5 {
 			display_name.push('_');
 		}
-		if field.is_empty(){
+		if field.is_empty() && !is_active{
 			draw_text("Type...", input_rect.x + 10.0, input_rect.y + 28.0, 25.0, DARKGRAY);
 		} else {
 			draw_text(&display_name, input_rect.x + 10.0, input_rect.y + 28.0, 25.0, YELLOW);
