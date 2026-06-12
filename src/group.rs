@@ -116,7 +116,7 @@ pub fn draw_group(game: &mut Game){
 			game.group.chat_is_active = false;
 			game.focus = InputFocus::Game;
 		}
-		if is_key_pressed(KeyCode::Enter) {
+		if is_key_pressed(KeyCode::Enter) && game.focus == InputFocus::GroupMenu{
 			send_group_invite(game);
 			game.focus = InputFocus::Game;
 		}
@@ -149,15 +149,6 @@ pub fn draw_icon(game: &mut Game, mouse: (f32, f32)){
 	if get_button(icon, "GR", 30, YELLOW, mouse){
 		game.group.is_active = true
 	}
-
-	let hovered = icon.contains(Vec2::new(mouse.0, mouse.1));
-	let bg = if hovered { Color::new(0.3, 0.3, 0.3, 0.75) }
-	else { Color::new(0.10, 0.10, 0.10, 0.75) };
-	draw_rectangle(icon.x, icon.y, icon.w, icon.h, bg);
-	draw_text("GR", icon.x+ 6.0, icon.y + 22.5, 30.0, WHITE);
-	if hovered && is_mouse_button_pressed(MouseButton::Left) {
-		game.group.is_active = true
-	}
 }
 
 pub fn handle_group(game: &mut Game) {
@@ -166,8 +157,10 @@ pub fn handle_group(game: &mut Game) {
 		draw_icon(game, mouse);
 		if is_key_pressed(KeyCode::F) && game.focus == InputFocus::Game {
 			game.group.is_active = true;
-			game.tx_to_serv.try_send("GROUP LIST\n".to_string()).ok();
-			game.pending_action = PendingAction::GroupList;
+			if !game.group.list.is_empty(){
+				game.tx_to_serv.try_send("GROUP LIST\n".to_string()).ok();
+				game.pending_action = PendingAction::GroupList;
+			}
 		}
 	}
 	else{
