@@ -1,7 +1,7 @@
 
 use crate::*;
 const RECT_MENU: Vec2 = vec2(250.0, 300.0);
-const RECT_ICON: Vec2 = vec2(40.0, 40.0);
+const RECT_ICON: Vec2 = vec2(70.0, 40.0);
 
 
 
@@ -146,7 +146,7 @@ pub fn draw_icon(game: &mut Game, mouse: (f32, f32)){
 	let mut icon: Rect = get_rect_bottom(RECT_ICON, screen_width());
 	icon.x -= 10.0;
 	icon.y -= 10.0;
-	if get_button(icon, "GR", 30, YELLOW, mouse){
+	if get_button(icon, "Group", 30, YELLOW, mouse){
 		game.group.is_active = true
 	}
 }
@@ -164,7 +164,6 @@ pub fn handle_group(game: &mut Game) {
 		}
 	}
 	else{
-
 		if is_key_pressed(KeyCode::F) && game.group.chat_is_active == false{
 			game.group.is_active = false;
 			game.focus = InputFocus::Game;
