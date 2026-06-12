@@ -143,7 +143,14 @@ pub fn draw_chat(chat:&mut Chat) {
 		}
         draw_rectangle(15.0, bottom_y - 15.0, 600.0, -40.0, Color::new(0.0, 0.0, 0.0, 0.5));
         let display_text = format!("Chat: {}_", chat.current_input);
-        draw_text(&display_text, 20.0, bottom_y - 25.0, 35.0, YELLOW);
+
+		let max_chars = 38; 
+        let chars: Vec<char> = display_text.chars().collect();
+        let lines: Vec<&[char]> = chars.chunks(max_chars).collect();
+		let line_str: String = lines[lines.len()-1].iter().collect();
+		let y_pos = bottom_y - 25.0;
+		draw_text(&line_str, 20.0, y_pos, 35.0, YELLOW);
+
         chat.channel =  draw_chat_selection(15.0, bottom_y - 85.0, chat.channel,mouse);
 
     } else {
