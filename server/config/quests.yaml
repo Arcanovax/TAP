@@ -9,6 +9,6 @@ quest:
     goals:
       - Collect:
           item: "item.ale"
-          amount: 2
-      - Talk:
-          dialog: "npc.city_gard.dialog.default"
+          amount: 1
+      # - Talk:
+      #     dialog: "npc.city_gard.dialog.default"

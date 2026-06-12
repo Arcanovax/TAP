@@ -1,17 +1,28 @@
 use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Deserialize, Serialize, PartialEq)]
+use crate::command::Command;
+
+#[derive(Debug, Deserialize, Serialize, PartialEq, Eq, Clone)]
 pub enum Goal {
-    Collect { item: String, amount: u16 },
+    Collect { item: String, amount: u32 },
     Talk { dialog: String },
 }
 
-#[derive(Debug, Deserialize, Serialize, PartialEq)]
+impl Goal {
+    pub fn command(&self) -> Command {
+        match self {
+            Goal::Collect { .. } => Command::TAKE,
+            Goal::Talk { .. } => Command::TALK,
+        }
+    }
+}
+
+#[derive(Debug, Deserialize, Serialize, PartialEq, Eq, Clone)]
 pub struct Quest {
-    name: String,
-    description: String,
-    reward: String,
-    goals: Vec<Goal>,
+    pub name: String,
+    pub description: String,
+    pub reward: String,
+    pub goals: Vec<Goal>,
 }
 
 impl Quest {

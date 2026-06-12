@@ -21,7 +21,7 @@ use crate::{
     },
 };
 
-pub fn fight(peer_addr: SocketAddr, enn_name: Vec<String>, world: &SharedServer) -> Message {
+pub fn fight(peer_addr: SocketAddr, enn_name: &Vec<String>, world: &SharedServer) -> Message {
     if enn_name.len() != 1 {
         return Message::Response {
             error: ErrorCode::INVALID_ARGS,
@@ -152,4 +152,3 @@ pub fn fight(peer_addr: SocketAddr, enn_name: Vec<String>, world: &SharedServer)
         },
     }
 }
-

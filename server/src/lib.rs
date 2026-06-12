@@ -48,7 +48,6 @@ pub async fn run(addr: String, port: String) -> Result<(), Box<dyn std::error::E
         .init();
 
     let world = load(Path::new("config.yaml"))?;
-    println!("{:?}", world.quests);
     let server_info: SharedServer = Arc::new(Mutex::new(ServerInfo::new(world)));
     let listener = TcpListener::bind(format!("{}:{}", addr, port)).await?;
 

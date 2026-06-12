@@ -4,7 +4,7 @@ use crate::state::SharedServer;
 use std::net::SocketAddr;
 
 pub(super) fn group_request(
-    args: Vec<String>,
+    args: &Vec<String>,
     server_info: &SharedServer,
     peer_addr: SocketAddr,
 ) -> Message {
@@ -31,7 +31,7 @@ pub(super) fn group_request(
 fn group_create_request(
     server_info: &SharedServer,
     peer_addr: SocketAddr,
-    args: Vec<String>,
+    args: &Vec<String>,
 ) -> Message {
     let group_name: String;
     if args.len() <= 1 {
@@ -75,7 +75,7 @@ fn group_leave_request(server_info: &SharedServer, peer_addr: SocketAddr) -> Mes
 }
 
 fn group_invite_request(
-    args: Vec<String>,
+    args: &Vec<String>,
     server_info: &SharedServer,
     peer_addr: SocketAddr,
 ) -> Message {

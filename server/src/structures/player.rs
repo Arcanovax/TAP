@@ -16,7 +16,7 @@ pub struct Player {
     pub available_quests: Vec<String>,
     pub group_id: Option<Uuid>,
     pub finished_quest: HashSet<String>,
-    pub quests_in_progress: HashMap<String, u32>,
+    pub quests_in_progress: HashMap<String, usize>,
 }
 
 impl Player {

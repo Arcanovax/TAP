@@ -4,7 +4,7 @@ use std::net::SocketAddr;
 pub fn drop_request(
     server_info: &SharedServer,
     peer_addr: SocketAddr,
-    args: Vec<String>,
+    args: &Vec<String>,
 ) -> Message {
     let mut binding = server_info.lock().unwrap();
     if !binding.is_connected(peer_addr) {
@@ -20,7 +20,7 @@ pub fn drop_request(
         };
     }
     let mut dropped: Vec<String> = Vec::new();
-    for item in &args {
+    for item in args {
         if let Ok(item) = binding.try_drop_item(peer_addr, item) {
             dropped.push(item);
         }

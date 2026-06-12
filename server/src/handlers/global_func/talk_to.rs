@@ -7,7 +7,7 @@ use crate::{
     state::SharedServer,
 };
 
-pub fn talk_to(_player_name: SocketAddr, _target: Vec<String>, _world: &SharedServer) -> Message {
+pub fn talk_to(_player_name: SocketAddr, _target: &Vec<String>, _world: &SharedServer) -> Message {
     // if target.len() != 1 {
     //     return Message::Response {
     //         error: ErrorCode::INVALID_ARGS,

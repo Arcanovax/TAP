@@ -5,7 +5,7 @@ use std::net::SocketAddr;
 use tracing::info;
 
 pub(super) fn connect_request(
-    args: Vec<String>,
+    args: &Vec<String>,
     server_info: &SharedServer,
     peer_addr: SocketAddr,
     tx: &Tx,

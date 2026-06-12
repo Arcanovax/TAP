@@ -1,6 +1,6 @@
 use std::str::FromStr;
 
-use crate::error::ErrorCode;
+use crate::{error::ErrorCode, structures::quest::Goal};
 use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize, PartialEq, Eq, Clone)]
@@ -22,6 +22,7 @@ impl FromStr for ChatScope {
     }
 }
 
+#[allow(non_camel_case_types)]
 #[derive(Serialize, Deserialize, PartialEq, Eq)]
 pub enum EventType {
     CHAT {
@@ -32,6 +33,13 @@ pub enum EventType {
     INVITE {
         sender: String,
         group_name: String,
+    },
+    QUEST_UPDATE {
+        quest_name: String,
+        goal: Goal,
+    },
+    QUEST_FINISH {
+        quest_name: String,
     },
 }
 

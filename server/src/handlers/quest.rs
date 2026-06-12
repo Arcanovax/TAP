@@ -2,7 +2,7 @@ use crate::{error::ErrorCode, protocol::Message, state::SharedServer};
 use std::net::SocketAddr;
 
 pub(super) fn quest_request(
-    args: Vec<String>,
+    args: &Vec<String>,
     server_info: &SharedServer,
     peer_addr: SocketAddr,
 ) -> Message {

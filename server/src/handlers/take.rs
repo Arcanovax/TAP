@@ -4,7 +4,7 @@ use std::net::SocketAddr;
 pub fn take_request(
     server_info: &SharedServer,
     peer_addr: SocketAddr,
-    args: Vec<String>,
+    args: &Vec<String>,
 ) -> Message {
     let mut binding = server_info.lock().unwrap();
     if !binding.is_connected(peer_addr) {
@@ -21,7 +21,7 @@ pub fn take_request(
     }
 
     let mut taken: Vec<String> = Vec::new();
-    for item in &args {
+    for item in args {
         if let Ok(item) = binding.try_take_item(peer_addr, item) {
             taken.push(item);
         }
