@@ -5,17 +5,19 @@ import:
 npc:
   city_gard:
     name: "Haltlarix"
-    dialogue:
-      - "Stay safe, traveler."
-      - "The roads can be dangerous."
+    dialog:
+      default:
+        - "Stay safe, traveler."
+        - "The roads can be dangerous."
     kind: Citizen
     quest: "quest.test"
 
   bar_owner:
     name: "Grossbarrix"
-    dialogue:
-      - "Stay safe, traveler."
-      - "The roads can be dangerous."
+    dialog:
+      default:
+        - "Stay safe, traveler."
+        - "The roads can be dangerous."
     kind:
       Merchant:
         gold: 45
@@ -26,72 +28,82 @@ npc:
 
   client_1:
     name: "Nésousix"
-    dialogue:
-      - "Stay safe, traveler."
-      - "The roads can be dangerous."
+    dialog:
+      default:
+        - "Stay safe, traveler."
+        - "The roads can be dangerous."
     kind: Citizen
 
   client_2:
     name: "Spacix"
-    dialogue:
-      - "Stay safe, traveler."
-      - "The roads can be dangerous."
+    dialog:
+      default:
+        - "Stay safe, traveler."
+        - "The roads can be dangerous."
     kind: Citizen
 
   citizen_3:
     name: "Alavavix"
-    dialogue:
-      - "Stay safe, traveler."
-      - "The roads can be dangerous."
+    dialog:
+      default:
+        - "Stay safe, traveler."
+        - "The roads can be dangerous."
     kind: Citizen
 
   citizen_4:
     name: "Cinematix"
-    dialogue:
-      - "Stay safe, traveler."
-      - "The roads can be dangerous."
+    dialog:
+      default:
+        - "Stay safe, traveler."
+        - "The roads can be dangerous."
     kind: Citizen
 
   citizen_5:
     name: "Iwanttobreakfrix"
-    dialogue:
-      - "Stay safe, traveler."
-      - "The roads can be dangerous."
+    dialog:
+      default:
+        - "Stay safe, traveler."
+        - "The roads can be dangerous."
     kind: Citizen
 
   citizen_6:
     name: "Soirénetflix"
-    dialogue:
-      - "Stay safe, traveler."
-      - "The roads can be dangerous."
+    dialog:
+      default:
+        - "Stay safe, traveler."
+        - "The roads can be dangerous."
     kind: Citizen
 
   dealer:
     name: "Donnetonfrix"
-    dialogue:
-      - "Stay safe, traveler."
-      - "The roads can be dangerous."
+    dialog:
+      default:
+        - "Stay safe, traveler."
+        - "The roads can be dangerous."
     kind: Citizen
 
   farmer:
     name: "Sanpesticix"
-    dialogue:
-      - "Stay safe, traveler."
-      - "The roads can be dangerous."
+    dialog:
+      default:
+        - "Stay safe, traveler."
+        - "The roads can be dangerous."
     kind: Citizen
 
   cow:
     name: "Bigtastix"
-    dialogue:
-      - "Stay safe, traveler."
-      - "The roads can be dangerous."
+    dialog:
+      default:
+        - "Stay safe, traveler."
+        - "The roads can be dangerous."
     kind: Citizen
 
   seller:
     name: "Oncassléprix"
-    dialogue:
-      - "Stay safe, traveler."
-      - "The roads can be dangerous."
+    dialog:
+      default:
+        - "Stay safe, traveler."
+        - "The roads can be dangerous."
     kind:
       Merchant:
         gold: 45
@@ -101,23 +113,26 @@ npc:
 
   old_man:
     name: "Enigmatix"
-    dialogue:
-      - "Stay safe, traveler."
-      - "The roads can be dangerous."
+    dialog:
+      default:
+        - "Stay safe, traveler."
+        - "The roads can be dangerous."
     kind: Citizen
 
   bookseller:
     name: "Damducédéix"
-    dialogue:
-      - "Stay safe, traveler."
-      - "The roads can be dangerous."
+    dialog:
+      default:
+        - "Stay safe, traveler."
+        - "The roads can be dangerous."
     kind: Citizen
 
   blacksmith:
     name: "Métallurgix"
-    dialogue:
-      - "Stay safe, traveler."
-      - "The roads can be dangerous."
+    dialog:
+      default:
+        - "Stay safe, traveler."
+        - "The roads can be dangerous."
     kind:
       Merchant:
         gold: 45
@@ -128,9 +143,10 @@ npc:
 
   goblins:
     name: "Sansabrix"
-    dialogue:
-      - "Stay safe, traveler."
-      - "The roads can be dangerous."
+    dialog:
+      default:
+        - "Stay safe, traveler."
+        - "The roads can be dangerous."
     kind:
       Enemy:
         hp: 2000

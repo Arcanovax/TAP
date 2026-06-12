@@ -1,5 +1,6 @@
 import:
   - "items.yaml"
+  - "npc.yaml"
 quest:
   test:
     name: "Test"
@@ -9,5 +10,5 @@ quest:
       - Collect:
           item: "item.ale"
           amount: 2
-      # - Talk:
-      #     dialog: "npc.dialog.test"
+      - Talk:
+          dialog: "npc.city_gard.dialog.default"

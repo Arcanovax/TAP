@@ -74,7 +74,6 @@ impl Loader {
         }
         for (name, npc) in parsed.npc {
             let id = format!("npc.{}", name);
-            self.world.npcs.insert(id.clone(), npc);
             if let Some(file_a) = self.definer.insert(id.clone(), path.clone()) {
                 return Err(ConfigError::Conflict {
                     id,
@@ -82,6 +81,19 @@ impl Loader {
                     file_b: path,
                 });
             };
+            for (d, _) in &npc.dialog {
+                if let Some(file_a) = self
+                    .definer
+                    .insert(id.clone() + ".dialog." + d, path.clone())
+                {
+                    return Err(ConfigError::Conflict {
+                        id,
+                        file_a,
+                        file_b: path,
+                    });
+                }
+            }
+            self.world.npcs.insert(id.clone(), npc);
         }
         for (name, room) in parsed.room {
             let id = format!("room.{}", name);
