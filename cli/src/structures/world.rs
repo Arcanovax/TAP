@@ -1,23 +1,16 @@
-use std::{io, sync::mpsc::{Receiver, TryRecvError}};
-// use crate::structures::popup::Popup;
+use std::{fs::OpenOptions, io, sync::mpsc::{Receiver, TryRecvError}};
 use ratatui::{
 	DefaultTerminal,
 	Frame,
 	crossterm::event::{
-		self, Event::{self, Mouse}, KeyCode, MouseButton, MouseEvent, MouseEventKind
-	}, layout::{
-		Constraint::{self, Length, Percentage},
-		Direction::Vertical,
-		Layout
-	}, prelude::Stylize, style::{Color, Style}, text::{Line, Text}, widgets::{
-		Block, BorderType, Borders, Paragraph, Wrap
-	}
+		self, Event::self, KeyCode, MouseButton, MouseEventKind
+	},
 };
+use std::io::Write;
 use tokio::sync::mpsc::Sender;
-use tui_big_text::{BigText, PixelSize};
 
 use crate::{
-	draw_functions::{login::{self, login_draw}, wait_server::draw_wait}, enums::states::States, structures::{popup::Popup, room::Room}
+	draw_functions::{login::login_draw, wait_server::draw_wait}, enums::states::States, structures::room::Room
 };
 
 pub struct World {
@@ -75,6 +68,9 @@ impl World {
 								if self.input.len() < 20 {self.input.push(c);}
 							},
 							KeyCode::Backspace => { self.input.pop(); },
+							KeyCode::Enter => {
+								let _ = self.tx_to_serv.try_send(format!("CONNECT {}\n", self.input));
+							}
 							_ => {}
 						}
 					}
@@ -94,8 +90,19 @@ impl World {
 		loop {
 			match self.rx_from_serv.try_recv() {
 				Ok(msg) => {
-					if self.state == States::ServerWait && msg.contains("OK hello proto") {
-						self.state = States::Login;
+					//Debug
+					if let Ok(mut file) = OpenOptions::new().create(true).append(true).open("debug_network.txt") {
+						let _ = writeln!(file, "RECU (State {:?}) : {:?}", self.state, msg);
+					}
+					match self.state {
+						States::ServerWait => {
+							if msg.contains("OK hello proto") {self.state = States::Login};
+						},
+						States::Login => {
+							self.input.clear();
+							self.input = msg.trim().to_string();
+						},
+						_ => {}
 					}
 				}
 				Err(TryRecvError::Empty) => break,
