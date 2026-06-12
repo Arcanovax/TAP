@@ -1,4 +1,4 @@
-use std::{io, sync::mpsc::Receiver};
+use std::{io, sync::mpsc::{Receiver, TryRecvError}};
 // use crate::structures::popup::Popup;
 use ratatui::{
 	DefaultTerminal,
@@ -68,9 +68,9 @@ impl World {
 		if event::poll(std::time::Duration::from_millis(16))? {
 			match event::read()? {
 				Event::Key(key) => {
+					if key.code == KeyCode::Esc { self.quit = true };
 					if self.state == States::Login {
 						match key.code {
-							KeyCode::Esc => self.quit = true,
 							KeyCode::Char(c) => {
 								if self.input.len() < 20 {self.input.push(c);}
 							},
@@ -91,9 +91,19 @@ impl World {
 	}
 
 	pub fn process_network(&mut self) {
-		while let Ok(msg) = self.rx_from_serv.try_recv() {
-			if self.state == States::ServerWait && msg.contains("OK hello proto") {
-				self.state = States::Login;
+		loop {
+			match self.rx_from_serv.try_recv() {
+				Ok(msg) => {
+					if self.state == States::ServerWait && msg.contains("OK hello proto") {
+						self.state = States::Login;
+					}
+				}
+				Err(TryRecvError::Empty) => break,
+				Err(TryRecvError::Disconnected) => {
+					self.quit = true;
+					self.state = States::ServerError("Server not found".to_string());
+					break;
+				}
 			}
 		}
 	}
