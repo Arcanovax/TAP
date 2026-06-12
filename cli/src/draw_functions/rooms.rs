@@ -1,12 +1,10 @@
 use ratatui::{
 	Frame, layout::{
-		Constraint::Percentage,
-		Direction::
+		Constraint::{Length, Percentage}, Direction::
 		{
 			Horizontal,
 			Vertical
-		},
-		Layout
+		}, HorizontalAlignment::Center, Layout
 	},
 	prelude::Stylize,
 	style::{
@@ -15,13 +13,13 @@ use ratatui::{
 	},
 	text::{
 		Line,
-		Span
+		Span, Text
 	},
 	widgets::{
-		Block,
-		Gauge
+		Block, Gauge, Paragraph
 	}
 };
+use tui_box_text::BoxChar;
 use tui_widgets::big_text::{BigText, PixelSize};
 
 use crate::structures::world::World;
@@ -38,11 +36,11 @@ pub fn draw_room(world: &mut World, frame: &mut Frame) {
 	let left_layout = Layout::default()
     .direction(Vertical)
     .constraints(vec![
-        Percentage(5),
-        Percentage(5),
-        Percentage(5),
+        Length(2),
+        Percentage(7),
+        // Percentage(5),
         Percentage(40),
-        Percentage(35),
+        Percentage(33),
         Percentage(10)
     ])
     .split(layout[0]);
@@ -50,7 +48,7 @@ pub fn draw_room(world: &mut World, frame: &mut Frame) {
 	let right_layout = Layout::default()
     .direction(Vertical)
     .constraints(vec![
-        Percentage(10),
+        Length(2),
         Percentage(20),
         Percentage(40),
         Percentage(30)
@@ -65,25 +63,61 @@ pub fn draw_room(world: &mut World, frame: &mut Frame) {
     ])
     .split(right_layout[2]);
 
-	let username = BigText::builder()
-    .pixel_size(PixelSize::Sextant)
-    .style(Style::new().yellow())
-    .lines(vec![
-        world.player.name.as_str().green().into()
-    ])
-    .centered()
-    .build();
+	// let username = BigText::builder()
+    // .pixel_size(PixelSize::Octant)
+    // .style(Style::new().yellow())
+    // .lines(vec![
+    //     world.player.name.as_str().green().into()
+    // ])
+    // .centered()
+    // .build();
+
+	let mut lines = vec![
+		Line::from(Span::styled(world.player.name.as_str(), Style::default().fg(Color::Green).bold())),
+	];
+	lines.push(Line::from(vec![
+    Span::styled("Gold: ", Style::default().fg(Color::Yellow)),
+    Span::raw(world.player.inventory.get("item.gold").unwrap_or(&0).to_string()),
+	]));
+
+	let id: Paragraph = Paragraph::new(Text::from(Text::from(lines))).centered();
+
+	lines = vec![
+		Line::from(Span::raw("You've just entered in:")),
+		Line::from(Span::styled(world.room.name.as_str(), Style::default().fg(Color::Green).bold()))
+	];
+
+	let city_name: Paragraph = Paragraph::new(Text::from(Text::from(lines))).centered();
+
+	let gauge_color = if world.player.hp < 30 {
+		Color::Red
+	} else if world.player.hp < 50 {
+		Color::Yellow
+	} else {
+		Color::Green
+	};
 
 	let hp_bar = Gauge::default()
-	.block(Block::bordered().title(format!("{}/{}HP", world.player.hp, world.player.max_hp)))
-	.gauge_style(Style::new().black().on_red().italic())
+	.block(Block::new().title(format!("{}/{}HP", world.player.hp, world.player.max_hp))
+	.title_alignment(Center))
+	.gauge_style(Style::new().fg(gauge_color).on_blue().italic())
 	.percent(world.player.hp as u16);
 
-	let gold = Line::from(vec![
-		Span::styled("Gold: ", Style::default().fg(Color::Yellow)),
-		Span::styled(world.player.inventory.get("item.gold").unwrap_or(&0).to_string(), Style::default().fg(Color::Yellow)),
-	]);
-	frame.render_widget(username, left_layout[0]);
+	// let city_name = BigText::builder()
+    // .pixel_size(PixelSize::Octant)
+    // .style(Style::new().green())
+    // .lines(vec![
+    //     world.room.name.as_str().green().into()
+    // ])
+    // .centered()
+    // .build();
+
+	// let gold = Line::from(vec![
+	// 	Span::styled("Gold: ", Style::default().fg(Color::Yellow)),
+	// 	Span::styled(world.player.inventory.get("item.gold").unwrap_or(&0).to_string(), Style::default().fg(Color::Yellow)),
+	// ]);
+	frame.render_widget(id, left_layout[0]);
 	frame.render_widget(hp_bar, left_layout[1]);
-	frame.render_widget(gold, left_layout[2]);
+	frame.render_widget(city_name, right_layout[0]);
+	// frame.render_widget(gold, left_layout[2]);
 }

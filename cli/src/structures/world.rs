@@ -10,11 +10,11 @@ use ratatui::{
 	DefaultTerminal,
 	Frame,
 	crossterm::event::{
-		self, Event::self, KeyCode, MouseButton, MouseEventKind
+		self, Event, KeyCode, MouseButton, MouseEventKind
 	},
 };
 use tokio::sync::mpsc::Sender;
-use std::io::Write;
+// use std::io::Write;
 
 // use serde::Deserialize;
 use crate::{
@@ -88,8 +88,8 @@ impl World {
 			States::ServerWait => draw_wait(frame),
 			States::Login => login_draw(self, frame),
 			States::InGame => {
-				if let Ok(mut file) = OpenOptions::new().create(true).append(true).open("debug_draw.txt") {
-					let _ = writeln!(file, "RECU (State {:?}) : {:#?}", self.state, self.player.name);}
+				// if let Ok(mut file) = OpenOptions::new().create(true).append(true).open("debug_draw.txt") {
+				// 	let _ = writeln!(file, "RECU (State {:?}) : {:#?}", self.state, self.player.name);}
 				draw_room(self, frame);
 			},
 			_ => {}
@@ -137,8 +137,8 @@ impl World {
 					if let Ok(server_event) = serde_json::from_str::<ServerEvent>(&msg) {
 						if server_event.event_type == "Response" {
 							response_handling(self, &msg, &server_event);
-							if let Ok(mut file) = OpenOptions::new().create(true).append(true).open("debug_network.txt") {
-								let _ = writeln!(file, "RECU (State {:?}) : {:#?}", self.state, self.room);}
+							// if let Ok(mut file) = OpenOptions::new().create(true).append(true).open("debug_network.txt") {
+							// 	let _ = writeln!(file, "RECU (State {:?}) : {:#?}", self.state, self.room);}
 						}
 					}
 				}
