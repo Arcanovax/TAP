@@ -31,20 +31,21 @@ impl Chat {
 
 
 fn draw_chat_selection(x: f32, y: f32,selected: i32, mouse: (f32, f32)) -> i32 {
-    let mouse_pos = Vec2::new(mouse.0, mouse.1);
 	let mut selected_channel = selected;
 
     for i in 0..CHANNELS.len(){
-            let btn = Rect::new(x+(i as f32)*100.0, y, 100.0, 30.0);
-            let hovered = btn.contains(mouse_pos);
-            let bg = if i as i32 == selected { Color::new(0.3, 0.3, 0.3, 0.75) }
-			else { Color::new(0.10, 0.10, 0.10, 0.75) };
-            draw_rectangle(btn.x, btn.y, btn.w, btn.h, bg);
-            draw_text(CHANNELS[i], btn.x+ 6.0, btn.y + 22.5, 30.0, WHITE);
-			if hovered && is_mouse_button_pressed(MouseButton::Left) {
+		let btn = Rect::new(x+(i as f32)*100.0, y, 100.0, 30.0);
+		if i as i32 == selected {
+			if get_button(btn, CHANNELS[i], 30,Color::new(1.0, 1.0, 1.0, 1.0) , mouse){
 				selected_channel = i as i32;
-        	}
-        }
+			}
+		}
+		else{
+			if get_button(btn, CHANNELS[i], 30,Color::new(0.7, 0.7, 0.7, 1.0) , mouse){
+				selected_channel = i as i32;
+			}
+		}
+	}
     return selected_channel;
 }
 
@@ -133,21 +134,22 @@ pub fn draw_chat(chat:&mut Chat) {
 	};
 
 	let visible_messages = messages.iter().rev().take(max_visible_messages);
-	for (i, msg) in visible_messages.enumerate() {
-		draw_text(msg, 20.0, bottom_y - 90.0 - (i as f32 * line_height), 32.0, WHITE);
-	}
+
 
 
     if chat.is_active {
-
+		for (i, msg) in visible_messages.enumerate() {
+			draw_text(msg, 20.0, bottom_y - 100.0 - (i as f32 * line_height), 32.0, WHITE);
+		}
         draw_rectangle(15.0, bottom_y - 15.0, 600.0, -40.0, Color::new(0.0, 0.0, 0.0, 0.5));
-
         let display_text = format!("Chat: {}_", chat.current_input);
         draw_text(&display_text, 20.0, bottom_y - 25.0, 35.0, YELLOW);
-
         chat.channel =  draw_chat_selection(15.0, bottom_y - 85.0, chat.channel,mouse);
 
     } else {
+		for (i, msg) in visible_messages.enumerate() {
+			draw_text(msg, 20.0, bottom_y - 65.0 - (i as f32 * line_height), 32.0, WHITE);
+		}
 		draw_rectangle(15.0, bottom_y - 15.0, 600.0, -40.0, Color::new(0.0, 0.0, 0.0, 0.3));
 		if chat.current_input.trim().is_empty(){
 			draw_text("Press [Enter]", 20.0, bottom_y - 25.0, 35.0, WHITE);
@@ -156,8 +158,6 @@ pub fn draw_chat(chat:&mut Chat) {
 			let text = format!("Chat: {}_", chat.current_input.clone());
 			draw_text(text, 20.0, bottom_y - 25.0, 35.0, WHITE);
 		}
-
-
     }
 }
 
