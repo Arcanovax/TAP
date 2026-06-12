@@ -158,6 +158,13 @@ impl ServerInfo {
             .players
             .push(con.addr);
         info!("{} added to group({})", con.player.name, group_id);
+        let player_name = con.player.name.clone();
+        let receivers = self.get_group_receivers(peer_addr).unwrap();
+        for c in receivers {
+            let _ = c.tx.send(Message::Event(EventType::GROUP_JOIN {
+                player_name: player_name.clone(),
+            }));
+        }
         Ok(())
     }
 
@@ -188,7 +195,7 @@ impl ServerInfo {
         self.invitations.retain(|_, gid| *gid != group_id);
     }
 
-    fn delete_group(&mut self, group_id: Uuid) {
+    fn try_delete_group(&mut self, group_id: Uuid) {
         let group = self.groups.get(&group_id).ok_or(()).unwrap();
         if group.get_group_size() == 0 {
             self.groups.remove(&group_id);
@@ -203,6 +210,14 @@ impl ServerInfo {
             return Err(ErrorCode::NOT_IN_GROUP);
         }
 
+        let player_name = con.player.name.clone();
+        let receivers = self.get_group_receivers(peer_addr).unwrap();
+        for c in receivers {
+            let _ = c.tx.send(Message::Event(EventType::GROUP_LEAVE {
+                player_name: player_name.clone(),
+            }));
+        }
+
         let con = self.connections.get_mut(&peer_addr).unwrap();
         let group_id = con.player.group_id.unwrap();
         self.groups
@@ -210,9 +225,9 @@ impl ServerInfo {
             .unwrap()
             .players
             .retain(|&addr| addr != con.addr);
-        con.player.group_id = None;
         info!("{} leaved group({})", con.player.name, group_id);
-        self.delete_group(group_id);
+        con.player.group_id = None;
+        self.try_delete_group(group_id);
         Ok(())
     }
 

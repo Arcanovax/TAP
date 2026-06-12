@@ -41,6 +41,12 @@ pub enum EventType {
     QUEST_FINISH {
         quest_name: String,
     },
+    GROUP_LEAVE {
+        player_name: String,
+    },
+    GROUP_JOIN {
+        player_name: String,
+    },
 }
 
 #[derive(Serialize, Deserialize)]
