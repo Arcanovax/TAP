@@ -124,7 +124,7 @@ pub fn draw_chat(chat:&mut Chat) {
     let bottom_y = screen_height();
     let line_height = 25.0;
 
-    let max_visible_messages = 5;
+    
 
 
 	let messages = match chat.channel {
@@ -133,29 +133,43 @@ pub fn draw_chat(chat:&mut Chat) {
     _ => &chat.group_messages,
 	};
 
-	let visible_messages = messages.iter().rev().take(max_visible_messages);
+	let max_visible_lines = 10;
+	let max_chars_per_line = 38;
+	
+	let mut visible_msg_in_lines: Vec<String> = Vec::new();
 
+    for msg in messages.iter().rev() {
+        let chars: Vec<char> = msg.chars().collect();
+        let chunks: Vec<&[char]> = chars.chunks(max_chars_per_line).collect();
+        for chunk in chunks.iter().rev() {
+            visible_msg_in_lines.push(chunk.iter().collect());
+            if visible_msg_in_lines.len() >= max_visible_lines {
+                break;
+            }
+        }
+        if visible_msg_in_lines.len() >= max_visible_lines {
+            break;
+        }
+    }
 
 
     if chat.is_active {
-		for (i, msg) in visible_messages.enumerate() {
-			draw_text(msg, 20.0, bottom_y - 100.0 - (i as f32 * line_height), 32.0, WHITE);
+		for (i, line) in visible_msg_in_lines.iter().enumerate() {
+			draw_text(line, 20.0, bottom_y - 100.0 - (i as f32 * line_height), 32.0, WHITE);
 		}
+		chat.channel =  draw_chat_selection(15.0, bottom_y - 85.0, chat.channel,mouse);
         draw_rectangle(15.0, bottom_y - 15.0, 600.0, -40.0, Color::new(0.0, 0.0, 0.0, 0.5));
         let display_text = format!("Chat: {}_", chat.current_input);
 
-		let max_chars = 38; 
         let chars: Vec<char> = display_text.chars().collect();
-        let lines: Vec<&[char]> = chars.chunks(max_chars).collect();
+        let lines: Vec<&[char]> = chars.chunks(max_chars_per_line).collect();
 		let line_str: String = lines[lines.len()-1].iter().collect();
 		let y_pos = bottom_y - 25.0;
 		draw_text(&line_str, 20.0, y_pos, 35.0, YELLOW);
 
-        chat.channel =  draw_chat_selection(15.0, bottom_y - 85.0, chat.channel,mouse);
-
     } else {
-		for (i, msg) in visible_messages.enumerate() {
-			draw_text(msg, 20.0, bottom_y - 65.0 - (i as f32 * line_height), 32.0, WHITE);
+		for (i, line) in visible_msg_in_lines.iter().enumerate()  {
+			draw_text(line, 20.0, bottom_y - 65.0 - (i as f32 * line_height), 32.0, WHITE);
 		}
 		draw_rectangle(15.0, bottom_y - 15.0, 600.0, -40.0, Color::new(0.0, 0.0, 0.0, 0.3));
 		if chat.current_input.trim().is_empty(){
