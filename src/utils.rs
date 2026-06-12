@@ -42,7 +42,7 @@ pub fn draw_text_center_top(rect: Rect,text: &str, font_size: u16, y: f32){
 }
 
 
-pub fn get_button(rect: Rect,text: &str, font_size: u16, mouse: (f32, f32)) -> bool {
+pub fn get_button(rect: Rect,text: &str, font_size: u16, color: Color, mouse: (f32, f32)) -> bool {
 		let button: Rect = rect;
 		let hovered = button.contains(Vec2::new(mouse.0, mouse.1));
 		let bg = if hovered { Color::new(0.3, 0.3, 0.3, 0.75) }
@@ -53,7 +53,7 @@ pub fn get_button(rect: Rect,text: &str, font_size: u16, mouse: (f32, f32)) -> b
             	button.y + (button.h + text_size.height) / 2.0  - font_size as f32 * 0.1
         	);
 		draw_rectangle(button.x, button.y, button.w, button.h, bg);
-		draw_text(text, text_pos.x, text_pos.y, font_size as f32, WHITE);
+		draw_text(text, text_pos.x, text_pos.y, font_size as f32, color);
 		if hovered && is_mouse_button_pressed(MouseButton::Left) {
 			return true;
 		}

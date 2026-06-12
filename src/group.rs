@@ -19,8 +19,15 @@ pub struct Group {
 	pub invitation: Option<Invitation>,
 	pub name: String,
 	pub list: String,
-	pub invite_state: (String,Color)
+	pub invite_info: Option<InviteInfo>
 }
+
+pub struct InviteInfo{
+	pub state: String,
+	pub time: f64,
+	pub color: Color,
+}
+
 
 impl Group {
 	pub fn new() -> Self {
@@ -32,7 +39,7 @@ impl Group {
 			invitation: None,
 			name: String::new(),
 			list: String::new(),
-			invite_state: (String::new(),Color::default())
+			invite_info: None
 			}
 	}
 }
@@ -55,7 +62,7 @@ pub fn draw_group(game: &mut Game){
 
 	if !game.group.in_group {
 		let btn: Rect = Rect::new(rect.x+(rect.w/2.0-(100.0)),rect.y+10.0, 200.0, 40.0);
-		if get_button(btn, "Create group", 30, mouse) {
+		if get_button(btn, "Create group", 30, WHITE,mouse) {
 			game.tx_to_serv.try_send("GROUP CREATE\n".to_string()).ok();
 			game.pending_action = PendingAction::GroupCreate(game.player.name.clone());
 		}
@@ -69,12 +76,12 @@ pub fn draw_group(game: &mut Game){
 			let space: f32 = 15.0;
 			let join_btn: Rect = Rect::new(invit_rect.x + space,invit_rect.y + 50.0, btn_weight, 20.0);
 			let deny_btn: Rect = Rect::new(invit_rect.x + invit_rect.w - btn_weight - space ,invit_rect.y + 50.0, btn_weight, 20.0);
-			if get_button(join_btn, "Join", 20, mouse) {
+			if get_button(join_btn, "Join", 20,GREEN, mouse) {
 				let rq: String = format!("GROUP JOIN {}\n",invitation.sender);
 				game.tx_to_serv.try_send(rq).ok();
 				game.pending_action = PendingAction::GroupJoin(invitation.sender.clone());
 			}
-			if get_button(deny_btn, "Deny", 20, mouse) {
+			if get_button(deny_btn, "Deny", 20, RED, mouse) {
 				game.group.invitation = None;
 			}
 		}
@@ -114,10 +121,23 @@ pub fn draw_group(game: &mut Game){
 			game.focus = InputFocus::Game;
 		}
 		let invite_btn: Rect = Rect::new(input_rect.x + input_rect.w,input_rect.y, 70.0, 35.0);
-		if get_button(invite_btn, "Invite", 25, mouse) && !game.group.typed.is_empty(){
-			send_group_invite(game);
+		if let Some(info) = game.group.invite_info.as_ref() {
+			if get_time() - info.time > 3.0 {
+        		game.group.invite_info = None;
+			}
+			else {
+				let color = info.color;
+				let state = info.state.clone();
+				if get_button(invite_btn, "Invite", 25, color,mouse) && !game.group.typed.is_empty(){
+					send_group_invite(game);}
+				draw_text(state, input_rect.x, input_rect.y+input_rect.h+15.0, 25.0, WHITE);}
 		}
-		draw_text(game.group.invite_state.0.clone(), input_rect.x, input_rect.y+input_rect.h+15.0, 25.0, game.group.invite_state.1);
+		else{
+			if get_button(invite_btn, "Invite", 25, WHITE,mouse) && !game.group.typed.is_empty(){
+				send_group_invite(game);}
+		}
+
+
 
 	}
 }
@@ -126,6 +146,10 @@ pub fn draw_icon(game: &mut Game, mouse: (f32, f32)){
 	let mut icon: Rect = get_rect_bottom(RECT_ICON, screen_width());
 	icon.x -= 10.0;
 	icon.y -= 10.0;
+	if get_button(icon, "GR", 30, YELLOW, mouse){
+		game.group.is_active = true
+	}
+
 	let hovered = icon.contains(Vec2::new(mouse.0, mouse.1));
 	let bg = if hovered { Color::new(0.3, 0.3, 0.3, 0.75) }
 	else { Color::new(0.10, 0.10, 0.10, 0.75) };

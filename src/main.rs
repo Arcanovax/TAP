@@ -457,11 +457,18 @@ async fn main() {
 					PendingAction::GroupInvite(name) => {
 						if msg.contains("SUCCESS") {
 							let rp: String = format!("{} invited", name);
-							game.group.invite_state = (rp, GREEN);
-
+							game.group.invite_info = Some(InviteInfo{
+								state: rp,
+								color: GREEN,
+								time: get_time()
+							});
 						} else{
-							let rp: String = format!("{} is't online", name);
-							game.group.invite_state = (rp, RED);
+							let rp: String = format!("{} is offline", name);
+							game.group.invite_info = Some(InviteInfo{
+								state: rp,
+								color: RED,
+								time: get_time()
+							});
 						}
 					}
 					PendingAction::SendChat(channel, text) => {
