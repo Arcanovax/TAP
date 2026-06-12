@@ -31,7 +31,8 @@ struct ServerEvent {
     invite: Option<InviteData>,
 	#[serde(rename = "CHAT")]
     chat: Option<ChatData>,
-    data: Option<String>
+    data: Option<String>,
+	error: Option<String>
 
 }
 
@@ -472,8 +473,7 @@ async fn main() {
 						}
 					}
 					PendingAction::SendChat(channel, text) => {
-						if msg.contains("SUCCESS") {
-							let channel = match channel.as_str(){
+						let channel = match channel.as_str(){
 							"Room" => &mut game.chat.room_messages,
 							"Global" => &mut game.chat.global_messages,
 							"Group" => &mut game.chat.group_messages,
@@ -482,9 +482,13 @@ async fn main() {
 									continue;
 								}
 							};
+						if msg.contains("SUCCESS") {
 							channel.push(text);
 						} else{
-							println!("Failed send msg");
+							if let Some(error) = server_event.error{
+								let rp: String = format!("[Error] {}", error);
+								channel.push(rp);
+							}
 						}
 					}
 					PendingAction::Look => {
