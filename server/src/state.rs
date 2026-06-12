@@ -3,7 +3,7 @@ use crate::{
     game::World,
     group::Group,
     protocol::{EventType, Message},
-    structures::{fight::Fight, player::Player},
+    structures::{fight::Fight, player::Player, quest::Quest, room::Room},
 };
 use std::{
     collections::HashMap,
@@ -115,12 +115,23 @@ impl ServerInfo {
         Ok(receivers)
     }
 
+    pub fn get_room_receivers(&self, peer_addr: SocketAddr) -> Result<Vec<&Connection>, ErrorCode> {
+        let room = &self.get_player(peer_addr)?.location;
+        let mut receivers: Vec<&Connection> = Vec::new();
+        for (_, con) in &self.connections {
+            if con.addr != peer_addr && con.player.location == room.to_string() {
+                receivers.push(con);
+            }
+        }
+        Ok(receivers)
+    }
+
     pub fn is_connected(&mut self, peer_addr: SocketAddr) -> bool {
         self.connections.contains_key(&peer_addr)
     }
 
-    fn create_new_group(&mut self) -> Uuid {
-        let group = Group::new();
+    fn create_new_group(&mut self, name: &str) -> Uuid {
+        let group = Group::new(name);
         let group_id = group.id.clone();
         self.groups.insert(group.id, group);
         group_id
@@ -150,7 +161,11 @@ impl ServerInfo {
         Ok(())
     }
 
-    pub fn try_create_group(&mut self, peer_addr: SocketAddr) -> Result<(), ErrorCode> {
+    pub fn try_create_group(
+        &mut self,
+        peer_addr: SocketAddr,
+        group_name: &str,
+    ) -> Result<(), ErrorCode> {
         let con = self
             .connections
             .get(&peer_addr)
@@ -160,8 +175,8 @@ impl ServerInfo {
         }
 
         let name = con.player.name.clone();
-        let group_id = self.create_new_group();
-        info!("{} created group({})", name, group_id);
+        let group_id = self.create_new_group(group_name);
+        info!("{} created group({}:{})", name, group_name, group_id);
         self.try_add_player_to_group(peer_addr, group_id)
     }
 
@@ -232,6 +247,7 @@ impl ServerInfo {
         }
         let inviter_name = con.player.name.clone();
         let group_id = con.player.group_id.unwrap();
+        let group_name = &self.groups.get(&group_id).unwrap().name;
 
         let receiver_con = self.get_connection(*self.get_name_addr(receiver_name)?)?;
         let receiver_addr = receiver_con.addr;
@@ -242,7 +258,7 @@ impl ServerInfo {
         self.invitations.insert(receiver_addr, group_id);
         let _ = receiver_tx.send(Message::Event(EventType::INVITE {
             sender: inviter_name,
-            group_id: group_id,
+            group_name: String::from(group_name),
         }));
         Ok(())
     }
@@ -276,5 +292,85 @@ impl ServerInfo {
             group_members.push(self.get_connection(*addr)?.player.name.clone());
         }
         Ok(group_members)
+    }
+
+    pub fn get_player_room(&self, peer_addr: SocketAddr) -> Result<&Room, ErrorCode> {
+        let room_name = &self.get_player(peer_addr)?.location;
+
+        let room = match self.world.rooms.get(room_name) {
+            Some(room) => room,
+            None => return Err(ErrorCode::PLAYER_NOT_FOUND),
+        };
+        Ok(room)
+    }
+
+    pub fn try_drop_item(
+        &mut self,
+        peer_addr: SocketAddr,
+        item: &str,
+    ) -> Result<String, ErrorCode> {
+        if !self.connections.contains_key(&peer_addr) {
+            return Err(ErrorCode::PLAYER_NOT_FOUND);
+        }
+        let con = self.connections.get_mut(&peer_addr).unwrap();
+        match con.player.inventory.get_mut(item) {
+            Some(count) => {
+                *count -= 1;
+                if *count == 0 {
+                    con.player.inventory.remove(item);
+                }
+            }
+            None => return Err(ErrorCode::ITEM_NOT_IN_INVENTORY),
+        }
+        self.world
+            .rooms
+            .get_mut(&con.player.location)
+            .unwrap()
+            .items
+            .push(String::from(item));
+        Ok(String::from(item))
+    }
+
+    pub fn try_take_item(
+        &mut self,
+        peer_addr: SocketAddr,
+        item: &str,
+    ) -> Result<String, ErrorCode> {
+        if !self.connections.contains_key(&peer_addr) {
+            return Err(ErrorCode::PLAYER_NOT_FOUND);
+        }
+        let con = self.connections.get_mut(&peer_addr).unwrap();
+        let room = match self.world.rooms.get_mut(&con.player.location) {
+            Some(room) => room,
+            None => return Err(ErrorCode::ROOM_NOT_FOUND),
+        };
+        for (i, value) in room.items.iter().enumerate() {
+            if item == value {
+                room.items.remove(i);
+                *con.player.inventory.entry(item.to_string()).or_insert(0) += 1;
+                return Ok(String::from(item));
+            }
+        }
+        Err(ErrorCode::ITEM_NOT_FOUND)
+    }
+
+    pub fn try_accept_quest(
+        &mut self,
+        peer_addr: SocketAddr,
+        npc_name: &str,
+    ) -> Result<&Quest, ErrorCode> {
+        let quest = match self.world.npcs.get(npc_name) {
+            Some(npc) => &npc.quest,
+            None => return Err(ErrorCode::NPC_NOT_FOUND),
+        };
+        if let None = quest {
+            return Err(ErrorCode::NO_QUEST_AVAILABLE);
+        }
+        let quest = match self.world.quests.get(&quest.clone().unwrap()) {
+            Some(quest) => quest,
+            None => return Err(ErrorCode::NO_QUEST_AVAILABLE),
+        };
+        //Check si le joueur a le droit de prendre la quete ici
+        Ok(quest)
     }
 }

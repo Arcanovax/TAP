@@ -5,9 +5,14 @@ pub enum Command {
     CHAT,
     GROUP,
     STATUS,
-	MOVE,
-	TALK,
-	ATTACK
+    MOVE,
+    TALK,
+    ATTACK,
+    LOOK,
+    DROP,
+    TAKE,
+    INVENTORY,
+    QUEST,
 }
 
 impl Command {
@@ -22,6 +27,11 @@ impl Command {
             "MOVE" => Some(Command::MOVE),
             "TALK" => Some(Command::TALK),
             "ATTACK" => Some(Command::ATTACK),
+            "LOOK" => Some(Command::LOOK),
+            "DROP" => Some(Command::DROP),
+            "TAKE" => Some(Command::TAKE),
+            "INVENTORY" => Some(Command::INVENTORY),
+            "QUEST" => Some(Command::QUEST),
             _ => None,
         }
     }

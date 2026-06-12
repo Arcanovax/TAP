@@ -1,8 +1,8 @@
-#[derive(Debug)]
+use serde::{Deserialize, Serialize};
+
+#[derive(Debug, Deserialize, Serialize, PartialEq)]
 pub struct Quest {
-	quest_id: String,
-	description: String,
-	reward: String,
-	progress: String,
-	status: String
+    name: String,
+    description: String,
+    reward: String,
 }

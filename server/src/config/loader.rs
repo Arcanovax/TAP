@@ -1,7 +1,7 @@
 use crate::{
     config::ConfigError,
     game::World,
-    structures::{item::Item, npc::NPC, room::Room},
+    structures::{item::Item, npc::NPC, quest::Quest, room::Room},
 };
 use serde::Deserialize;
 use std::{
@@ -19,6 +19,8 @@ struct ConfigFile {
     item: HashMap<String, Item>,
     #[serde(default)]
     room: HashMap<String, Room>,
+    #[serde(default)]
+    quest: HashMap<String, Quest>,
 }
 
 #[derive(Debug)]
@@ -95,6 +97,17 @@ impl Loader {
         for (name, item) in parsed.item {
             let id = format!("item.{}", name);
             self.world.items.insert(id.clone(), item);
+            if let Some(file_a) = self.definer.insert(id.clone(), path.clone()) {
+                return Err(ConfigError::Conflict {
+                    id,
+                    file_a,
+                    file_b: path,
+                });
+            };
+        }
+        for (name, quest) in parsed.quest {
+            let id = format!("quest.{}", name);
+            self.world.quests.insert(id.clone(), quest);
             if let Some(file_a) = self.definer.insert(id.clone(), path.clone()) {
                 return Err(ConfigError::Conflict {
                     id,
