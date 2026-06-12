@@ -136,6 +136,14 @@ impl Loader {
                 })?;
             }
         }
+        for (id, quest) in &self.world.quests {
+            for r in quest.references() {
+                self.definer.get(r).ok_or(ConfigError::DanglingRef {
+                    from_id: id.clone(),
+                    missing_ref: r.to_string(),
+                })?;
+            }
+        }
         Ok(())
     }
 
@@ -178,6 +186,22 @@ impl Loader {
             let visibles = self.get_visible_file(&f);
 
             for r in npc.references() {
+                let g = &self.definer[r];
+
+                if !visibles.contains(g) {
+                    return Err(ConfigError::ScopeViolation {
+                        from_id: id.to_string(),
+                        ref_id: r.to_string(),
+                        defined_in: g.to_path_buf(),
+                    });
+                }
+            }
+        }
+        for (id, quest) in &self.world.quests {
+            let f = &self.definer[id];
+            let visibles = self.get_visible_file(&f);
+
+            for r in quest.references() {
                 let g = &self.definer[r];
 
                 if !visibles.contains(g) {

@@ -1,5 +1,13 @@
+import:
+  - "items.yaml"
 quest:
   test:
     name: "Test"
     description: "Test quest"
     reward: "une orange"
+    goals:
+      - Collect:
+          item: "item.ale"
+          amount: 2
+      # - Talk:
+      #     dialog: "npc.dialog.test"

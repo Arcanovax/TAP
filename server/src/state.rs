@@ -228,6 +228,21 @@ impl ServerInfo {
         Ok(con)
     }
 
+    pub fn get_player_mut(&mut self, peer_addr: SocketAddr) -> Result<&mut Player, ErrorCode> {
+        Ok(&mut self.get_connection_mut(peer_addr)?.player)
+    }
+
+    pub fn get_connection_mut(
+        &mut self,
+        peer_addr: SocketAddr,
+    ) -> Result<&mut Connection, ErrorCode> {
+        let con = self
+            .connections
+            .get_mut(&peer_addr)
+            .ok_or(ErrorCode::INVALID_COMMAND)?;
+        Ok(con)
+    }
+
     fn get_name_addr(&self, name: String) -> Result<&SocketAddr, ErrorCode> {
         let addr = self
             .name_to_addr
@@ -359,18 +374,22 @@ impl ServerInfo {
         peer_addr: SocketAddr,
         npc_name: &str,
     ) -> Result<&Quest, ErrorCode> {
-        let quest = match self.world.npcs.get(npc_name) {
-            Some(npc) => &npc.quest,
+        let npc = match self.world.npcs.get(npc_name) {
+            Some(npc) => npc,
             None => return Err(ErrorCode::NPC_NOT_FOUND),
         };
-        if let None = quest {
+        if let None = npc.quest {
             return Err(ErrorCode::NO_QUEST_AVAILABLE);
         }
-        let quest = match self.world.quests.get(&quest.clone().unwrap()) {
-            Some(quest) => quest,
-            None => return Err(ErrorCode::NO_QUEST_AVAILABLE),
-        };
-        //Check si le joueur a le droit de prendre la quete ici
+        let quest_ref = npc.quest.clone().unwrap();
+        let player = self.get_player_mut(peer_addr)?;
+        if player.finished_quest.contains(&quest_ref)
+            || player.quests_in_progress.contains_key(&quest_ref)
+        {
+            return Err(ErrorCode::NO_QUEST_AVAILABLE);
+        }
+        player.quests_in_progress.insert(quest_ref.clone(), 0);
+        let quest = self.world.quests.get(&quest_ref).unwrap();
         Ok(quest)
     }
 }
