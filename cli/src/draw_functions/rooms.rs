@@ -1,7 +1,6 @@
-use lipsum::lipsum;
 use ratatui::{
 	Frame, layout::{
-		Constraint::{Length, Percentage}, Direction::
+		Alignment, Constraint::{Fill, Length, Percentage}, Direction::
 		{
 			Horizontal,
 			Vertical
@@ -9,18 +8,18 @@ use ratatui::{
 	},
 	style::{
 		Color,
-		Style
+		Style, Stylize
 	},
 	text::{
 		Line,
 		Span, Text
 	},
 	widgets::{
-		Block, Gauge, Paragraph, Scrollbar, ScrollbarOrientation, Wrap
+		Block, Gauge, List, ListItem, ListState, Paragraph, Wrap
 	}
 };
 
-use crate::{global_functions::draw_scrollbars::draw_scrollbars, structures::world::World};
+use crate::{global_functions::draw_scrollbars::draw_scrollbars, structures::{chat, world::World}};
 
 pub fn draw_room(world: &mut World, frame: &mut Frame) {
 
@@ -30,6 +29,7 @@ pub fn draw_room(world: &mut World, frame: &mut Frame) {
         Percentage(50),
         Percentage(50),
     ])
+	.spacing(1)
     .split(frame.area());
 
 	let left_layout = Layout::default()
@@ -53,7 +53,7 @@ pub fn draw_room(world: &mut World, frame: &mut Frame) {
     ])
     .split(layout[1]);
 
-	let list_layout = Layout::default()
+	let lists_layout = Layout::default()
     .direction(Horizontal)
     .constraints(vec![
         Percentage(50),
@@ -61,7 +61,27 @@ pub fn draw_room(world: &mut World, frame: &mut Frame) {
     ])
     .split(right_layout[2]);
 
-	draw_scrollbars(frame, &left_layout, &right_layout, world);
+	let npcs_layout = Layout::default()
+    .direction(Vertical)
+    .constraints(vec![
+        Length(1),
+        Fill(1)
+    ])
+    .split(lists_layout[0]);
+
+	let items_layout = Layout::default()
+    .direction(Vertical)
+    .constraints(vec![
+        Length(1),
+        Fill(1)
+    ])
+    .split(lists_layout[1]);
+
+	let mut chat_area = left_layout[2];
+    let mut output_area = left_layout[3];
+    let mut descr_area = right_layout[1];
+
+	draw_scrollbars(frame, &mut chat_area, &mut descr_area, &mut output_area, world);
 
 	let mut lines = vec![
 		Line::from(Span::styled(world.player.name.as_str(), Style::default().fg(Color::Green).bold())),
@@ -92,6 +112,28 @@ pub fn draw_room(world: &mut World, frame: &mut Frame) {
 		Color::Green
 	};
 
+	let npcs_title = Line::from(Span::from("You can talk to :")
+	.bold())
+	.centered()
+	.style(Color::Green);
+
+	let items_title = Line::from(Span::from("You can take :")
+	.bold())
+	.centered()
+	.style(Color::Green);
+
+	let mut npc_list_state = ListState::default();
+	let npc_items: Vec<ListItem> = world.room.npc.iter()
+		.map(|npc| ListItem::new(Line::from(npc.as_str()).alignment(Alignment::Center)))
+		.collect();
+	let npc_list = List::new(npc_items);
+
+	let mut items_list_state = ListState::default();
+	let item_items: Vec<ListItem> = world.room.items.iter()
+		.map(|item| ListItem::new(Line::from(item.as_str()).alignment(Alignment::Center)))
+		.collect();
+	let items_list = List::new(item_items);
+
 	let hp_bar = Gauge::default()
 	.block(Block::new().title(format!("{}/{}HP", world.player.hp, world.player.max_hp))
 	.title_alignment(Center))
@@ -101,6 +143,10 @@ pub fn draw_room(world: &mut World, frame: &mut Frame) {
 	frame.render_widget(id, left_layout[0]);
 	frame.render_widget(hp_bar, left_layout[1]);
 	frame.render_widget(city_name, right_layout[0]);
-	frame.render_widget(city_description, right_layout[1]);
+	frame.render_widget(city_description, descr_area);
+	frame.render_widget(npcs_title, npcs_layout[0]);
+	frame.render_widget(items_title, items_layout[0]);
+	frame.render_stateful_widget(npc_list, npcs_layout[1], &mut npc_list_state);
+	frame.render_stateful_widget(items_list, items_layout[1], &mut items_list_state);
 	
 }

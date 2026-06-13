@@ -1,5 +1,4 @@
 use std::{
-	fs::OpenOptions,
 	io,
 	sync::mpsc::{
 		Receiver,
@@ -24,8 +23,7 @@ use crate::{
 		wait_server::draw_wait
 	},
 	enums::{
-		actions::PendingAction,
-		states::States
+		actions::PendingAction, focus::Focus, states::States
 	},
 	global_functions::response_handling::response_handling,
 	structures::{
@@ -117,8 +115,33 @@ impl World {
 						}
 					} else if self.state == States::InGame {
 						match key.code {
-							KeyCode::Down => self.room.descr_scroll_pos =  self.room.descr_scroll_pos.saturating_add(1),
-							KeyCode::Up => self.room.descr_scroll_pos =  self.room.descr_scroll_pos.saturating_sub(1),
+							KeyCode::Down => {
+								match self.room.focus {
+									Focus::CHAT => self.room.chat_scroll_pos =  self.room.chat_scroll_pos.saturating_add(1),
+									Focus::DESCR => self.room.descr_scroll_pos =  self.room.descr_scroll_pos.saturating_add(1),
+									Focus::OUTPUT => self.room.output_scroll_pos =  self.room.output_scroll_pos.saturating_add(1),
+									Focus::NONE => {}
+								}
+								}
+							KeyCode::Up => {
+								match self.room.focus {
+									Focus::CHAT => self.room.chat_scroll_pos =  self.room.chat_scroll_pos.saturating_sub(1),
+									Focus::DESCR => self.room.descr_scroll_pos =  self.room.descr_scroll_pos.saturating_sub(1),
+									Focus::OUTPUT => self.room.output_scroll_pos =  self.room.output_scroll_pos.saturating_sub(1),
+									Focus::NONE => {}
+								}
+							}
+							KeyCode::Tab => {
+								if !self.room.available_focus.is_empty() {
+									let current_index = self.room.available_focus
+									.iter()
+									.position(|f|f == &self.room.focus)
+									.unwrap_or(0);
+									
+									let next_index = (current_index + 1) % self.room.available_focus.len();
+									self.room.focus = self.room.available_focus[next_index].clone();
+								}
+							}
 							_ => {}
 						}
 					}
