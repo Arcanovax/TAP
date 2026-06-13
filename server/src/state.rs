@@ -329,7 +329,7 @@ impl ServerInfo {
 
         let room = match self.world.rooms.get(room_name) {
             Some(room) => room,
-            None => return Err(ErrorCode::PLAYER_NOT_FOUND),
+            None => return Err(ErrorCode::ROOM_NOT_FOUND),
         };
         Ok(room)
     }
