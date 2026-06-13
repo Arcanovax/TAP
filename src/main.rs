@@ -32,7 +32,9 @@ struct ServerEvent {
     #[serde(rename = "INVITE")]
     invite: Option<InviteData>,
 	#[serde(rename = "GROUP_JOIN")]
-    join: Option<GroupJoin>,
+    join: Option<GroupEvent>,
+	#[serde(rename = "GROUP_LEAVE")]
+    leave: Option<GroupEvent>,
 	#[serde(rename = "CHAT")]
     chat: Option<ChatData>,
     data: Option<String>,
@@ -47,7 +49,7 @@ struct InviteData {
 }
 
 #[derive(Deserialize, Debug)]
-struct GroupJoin {
+struct GroupEvent {
 	player_name: String,
 }
 
@@ -296,6 +298,9 @@ async fn main() {
 					}
 					if let Some(new) = server_event.join {
 						game.group.grouplist.push(new.player_name);
+					}
+					if let Some(leaver) = server_event.leave {
+						game.group.grouplist.retain(|x| x != &leaver.player_name);
 					}
 					if let Some(msg) = server_event.chat {
 						let channel = match msg.scope.as_str(){
