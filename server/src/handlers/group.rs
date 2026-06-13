@@ -47,31 +47,20 @@ fn group_create_request(
     } else {
         group_name = args[1..].join(" ");
     }
-    let err = match server_info
+
+    server_info
         .lock()
         .unwrap()
         .try_create_group(peer_addr, group_name.as_str())
-    {
-        Ok(()) => ErrorCode::SUCCESS,
-        Err(code) => code,
-    };
-
-    Message::Response {
-        error: err,
-        data: None,
-    }
+        .into()
 }
 
 fn group_leave_request(server_info: &SharedServer, peer_addr: SocketAddr) -> Message {
-    let err = match server_info.lock().unwrap().try_leave_group(peer_addr) {
-        Ok(()) => ErrorCode::SUCCESS,
-        Err(code) => code,
-    };
-
-    Message::Response {
-        error: err,
-        data: None,
-    }
+    server_info
+        .lock()
+        .unwrap()
+        .try_leave_group(peer_addr)
+        .into()
 }
 
 fn group_invite_request(
@@ -86,42 +75,74 @@ fn group_invite_request(
         };
     }
 
-    let err = match server_info
+    server_info
         .lock()
         .unwrap()
         .try_invite_group(args[1].clone(), peer_addr)
-    {
-        Ok(()) => ErrorCode::SUCCESS,
-        Err(code) => code,
-    };
-
-    Message::Response {
-        error: err,
-        data: None,
-    }
+        .into()
 }
 
 fn group_join_request(server_info: &SharedServer, peer_addr: SocketAddr) -> Message {
-    let err = match server_info.lock().unwrap().try_join_group(peer_addr) {
-        Ok(()) => ErrorCode::SUCCESS,
-        Err(code) => code,
-    };
-
-    Message::Response {
-        error: err,
-        data: None,
-    }
+    server_info.lock().unwrap().try_join_group(peer_addr).into()
 }
 
 fn group_list_request(server_info: &SharedServer, peer_addr: SocketAddr) -> Message {
-    match server_info.lock().unwrap().try_get_group_list(peer_addr) {
-        Ok(list) => Message::Response {
-            error: ErrorCode::SUCCESS,
-            data: Some(serde_json::to_string(&list).unwrap()),
-        },
-        Err(code) => Message::Response {
-            error: code,
-            data: None,
-        },
+    server_info
+        .lock()
+        .unwrap()
+        .try_get_group_list(peer_addr)
+        .map(|list| serde_json::to_string(&list).unwrap())
+        .into()
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::test_utils::{addr, connect, err, test_server};
+
+    // GROUP CREATE TESTS
+
+    #[test]
+    fn group_create_without_connected_return_invalid_command() {
+        let server = test_server();
+        let addr = addr(10101);
+        let result = group_create_request(&server, addr, &vec![]);
+        assert_eq!(result, err(ErrorCode::INVALID_COMMAND));
+    }
+
+    #[test]
+    fn group_create_with_connected_return_success() {
+        let server = test_server();
+        let addr = addr(10101);
+        connect(&server, addr, "test_user");
+        let result = group_create_request(&server, addr, &vec![]);
+        assert_eq!(result, err(ErrorCode::SUCCESS));
+    }
+
+    #[test]
+    fn group_create_with_group_return_already_in_group() {
+        let server = test_server();
+        let addr = addr(10101);
+        connect(&server, addr, "test_user");
+        group_create_request(&server, addr, &vec![]);
+        let result = group_create_request(&server, addr, &vec![]);
+        assert_eq!(result, err(ErrorCode::ALREADY_IN_GROUP));
+    }
+
+    #[test]
+    fn group_create_with_args_return_success() {
+        let server = test_server();
+        let addr = addr(10101);
+        connect(&server, addr, "test_user");
+        let result = group_create_request(
+            &server,
+            addr,
+            &vec![
+                "test".to_string(),
+                "custom".to_string(),
+                "group".to_string(),
+            ],
+        );
+        assert_eq!(result, err(ErrorCode::SUCCESS));
     }
 }

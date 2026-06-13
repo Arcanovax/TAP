@@ -3,7 +3,7 @@ use std::str::FromStr;
 use crate::{error::ErrorCode, structures::quest::Goal};
 use serde::{Deserialize, Serialize};
 
-#[derive(Serialize, Deserialize, PartialEq, Eq, Clone)]
+#[derive(Serialize, Deserialize, PartialEq, Eq, Clone, Debug)]
 pub enum ChatScope {
     GLOBAL,
     GROUP,
@@ -23,7 +23,7 @@ impl FromStr for ChatScope {
 }
 
 #[allow(non_camel_case_types)]
-#[derive(Serialize, Deserialize, PartialEq, Eq)]
+#[derive(Serialize, Deserialize, Debug, PartialEq, Eq)]
 pub enum EventType {
     CHAT {
         body: String,
@@ -49,7 +49,7 @@ pub enum EventType {
     },
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Debug, PartialEq, Eq)]
 #[serde(tag = "type")]
 pub enum Message {
     Command {
@@ -70,5 +70,63 @@ impl Message {
 
     pub fn to_str(&self) -> String {
         serde_json::to_string(self).unwrap_or_default() + "\n"
+    }
+}
+
+impl From<Result<(), ErrorCode>> for Message {
+    fn from(result: Result<(), ErrorCode>) -> Self {
+        let code = result.err().unwrap_or(ErrorCode::SUCCESS);
+        Message::Response {
+            error: code,
+            data: None,
+        }
+    }
+}
+
+impl From<Result<String, ErrorCode>> for Message {
+    fn from(result: Result<String, ErrorCode>) -> Self {
+        match result {
+            Ok(data) => {
+                return Message::Response {
+                    error: ErrorCode::SUCCESS,
+                    data: Some(data),
+                };
+            }
+            Err(code) => {
+                return Message::Response {
+                    error: code,
+                    data: None,
+                };
+            }
+        }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn from_ok_unit_gives_succes_without_data() {
+        let msg: Message = Ok::<(), ErrorCode>(()).into();
+        assert_eq!(
+            msg,
+            Message::Response {
+                error: ErrorCode::SUCCESS,
+                data: None
+            }
+        )
+    }
+
+    #[test]
+    fn from_ok_unit_gives_succes_with_data() {
+        let msg: Message = Ok::<String, ErrorCode>(String::from("Hello Test")).into();
+        assert_eq!(
+            msg,
+            Message::Response {
+                error: ErrorCode::SUCCESS,
+                data: Some(String::from("Hello Test"))
+            }
+        )
     }
 }
