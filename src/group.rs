@@ -18,9 +18,10 @@ pub struct Group {
 	pub chat_is_active: bool,
 	pub invitation: Option<Invitation>,
 	pub name: String,
-	pub list: String,
+	pub grouplist: Vec<String>,
 	pub invite_info: Option<InviteInfo>
 }
+
 
 pub struct InviteInfo{
 	pub state: String,
@@ -38,7 +39,7 @@ impl Group {
 			chat_is_active: false,
 			invitation: None,
 			name: String::new(),
-			list: String::new(),
+			grouplist: Vec::new(),
 			invite_info: None
 			}
 	}
@@ -90,20 +91,17 @@ pub fn draw_group(game: &mut Game){
 		let text: String = format!("{}'s Group", game.group.name);
 		draw_text_center_top(rect, &text, 30, 20.0);
 
-		if game.group.list.is_empty(){
+		if game.group.grouplist.is_empty(){
 			game.tx_to_serv.try_send("GROUP LIST\n".to_string()).ok();
 			game.pending_action = PendingAction::GroupList;
 		}
 		else {
-			match serde_json::from_str::<Vec<String>>(&game.group.list.to_string()) {
-				Ok(players) => {
-					for (i, player) in players.iter().enumerate() {
-						draw_text(player,rect.x,rect.y + 60.0 + i as f32 * 35.0,40.0,WHITE,);
-					}
-				}
-				Err(e) => {println!("{}", e)}
-				}
+			for (i,player) in game.group.grouplist.iter().enumerate(){
+					draw_text(player,rect.x,rect.y + 60.0 + i as f32 * 35.0,40.0,WHITE,);
+			}
 		}
+
+
 		let input_rect: Rect = Rect::new(rect.x+(rect.w/2.0-(120.0)),rect.y + rect.h - 100.0, 150.0, 35.0);
 
 		draw_text("Invite a player:", input_rect.x, input_rect.y-2.5, 20.0, WHITE);
@@ -157,10 +155,10 @@ pub fn handle_group(game: &mut Game) {
 		draw_icon(game, mouse);
 		if is_key_pressed(KeyCode::F) && game.focus == InputFocus::Game {
 			game.group.is_active = true;
-			if !game.group.list.is_empty(){
-				game.tx_to_serv.try_send("GROUP LIST\n".to_string()).ok();
-				game.pending_action = PendingAction::GroupList;
-			}
+			// if !game.group.list.is_empty(){
+			// 	game.tx_to_serv.try_send("GROUP LIST\n".to_string()).ok();
+			// 	game.pending_action = PendingAction::GroupList;
+			// }
 		}
 	}
 	else{

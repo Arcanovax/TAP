@@ -9,7 +9,6 @@ mod player;
 
 use player::*;
 use utils::*;
-use core::error;
 use std::collections::HashMap;
 use macroquad::prelude::*;
 use rooms::*;
@@ -32,6 +31,8 @@ struct ServerEvent {
 
     #[serde(rename = "INVITE")]
     invite: Option<InviteData>,
+	#[serde(rename = "GROUP_JOIN")]
+    join: Option<GroupJoin>,
 	#[serde(rename = "CHAT")]
     chat: Option<ChatData>,
     data: Option<String>,
@@ -45,6 +46,10 @@ struct InviteData {
     group_name: String,
 }
 
+#[derive(Deserialize, Debug)]
+struct GroupJoin {
+	player_name: String,
+}
 
 #[derive(Deserialize, Debug)]
 struct ChatData {
@@ -289,6 +294,9 @@ async fn main() {
 					if let Some(invite) = server_event.invite {
 						game.group.invitation = Some(Invitation{sender: invite.sender, group_name: invite.group_name})
 					}
+					if let Some(new) = server_event.join {
+						game.group.grouplist.push(new.player_name);
+					}
 					if let Some(msg) = server_event.chat {
 						let channel = match msg.scope.as_str(){
 						"ROOM" => &mut game.chat.room_messages,
@@ -303,12 +311,20 @@ async fn main() {
 				else if server_event.event_type == "Response"{
 					match game.pending_action {
 					PendingAction::GroupList => {
-
 						if msg.contains("SUCCESS"){
-							if let Some(data) = server_event.data{
-								game.group.list = data}
-						} else if msg.contains("NOT_IN_GROUP") {
-							game.group.in_group = false;
+							if let Some(data) = server_event.data {
+								match serde_json::from_str::<Vec<String>>(&data) {
+									Ok(players) => {
+										game.group.grouplist = players;
+									}
+									Err(e) => {
+										println!("Error JSON: {}", e);
+									}
+								}
+							}
+							else if msg.contains("NOT_IN_GROUP") {
+								game.group.in_group = false;
+							}
 						}
 					}
 					PendingAction::Auth => {
