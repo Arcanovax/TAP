@@ -1,5 +1,9 @@
 use macroquad::prelude::*;
 const CHANNELS: [&str; 3] = ["Room", "Global", "Group"];
+const ALLOWED_COMMANDS: &[&str] = &[
+    "/LOOK",
+    "/WHO",
+];
 use crate::*;
 
 pub struct Chat {
@@ -51,27 +55,26 @@ fn draw_chat_selection(x: f32, y: f32,selected: i32, mouse: (f32, f32)) -> i32 {
 
 
 pub fn update_chat(game: &mut Game) {
-    let chat = &mut game.chat;
+
 
 	if is_key_pressed(KeyCode::Enter) {
-		if !chat.current_input.trim().is_empty() {
-			chat.sended_messages.push(chat.current_input.clone());
-			if chat.current_input.starts_with("/"){
-				let rq: String = format!("{}\n",&chat.current_input.clone()[1..].to_string());
-				println!("{}", rq);
-				game.tx_to_serv.try_send(rq).ok();
+		if !game.chat.current_input.trim().is_empty() {
+			game.chat.sended_messages.push(game.chat.current_input.clone());
+			if game.chat.current_input.starts_with("/"){
+				handle_direct_command(game);
 			}
 			else{
-				let rq: String = format!("CHAT {} {}\n", CHANNELS[chat.channel as usize],chat.current_input);
+				let rq: String = format!("CHAT {} {}\n", CHANNELS[game.chat.channel as usize],game.chat.current_input);
 				game.tx_to_serv.try_send(rq).ok();
-				let text: String = format!("[{}] {}\n",game.player.name, chat.current_input);
-				game.pending_action = PendingAction::SendChat(CHANNELS[chat.channel as usize].to_string(), text);
+				let text: String = format!("[{}] {}\n",game.player.name, game.chat.current_input);
+				game.pending_action = PendingAction::SendChat(CHANNELS[game.chat.channel as usize].to_string(), text);
 			}
 
-			chat.current_input.clear();
-			chat.prev = 0;
+			game.chat.current_input.clear();
+			game.chat.prev = 0;
 		}
 	}
+	let chat = &mut game.chat;
 	if is_key_pressed(KeyCode::Escape) {
 		chat.is_active = false;
 		game.focus = InputFocus::Game;
@@ -197,3 +200,16 @@ pub fn handle_chat(game: &mut Game) {
         game.chat.is_active = true;
 	}
 }
+
+fn handle_direct_command(game: &mut Game){
+	let rq: String = format!("{}\n",game.chat.current_input.clone()[1..].to_string());
+	let cmd: String = format!("[{}] {}\n",game.player.name, game.chat.current_input);
+	if !ALLOWED_COMMANDS.contains(&game.chat.current_input.to_ascii_uppercase().as_str()) {
+		game.tx_to_serv.try_send("\n".to_string()).ok();
+    }
+	else{
+		game.tx_to_serv.try_send(rq.clone()).ok();
+	}
+	game.pending_action = PendingAction::Command(CHANNELS[game.chat.channel as usize].to_string(), cmd);
+}
+

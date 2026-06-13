@@ -9,6 +9,7 @@ mod player;
 
 use player::*;
 use utils::*;
+use core::error;
 use std::collections::HashMap;
 use macroquad::prelude::*;
 use rooms::*;
@@ -92,8 +93,10 @@ pub enum PendingAction {
 	GroupInvite(String),
 	SendChat(String, String),
 	Look,
+	Command(String, String),
 	Status,
-	Move(Spawn)
+	Move(Spawn),
+
 }
 
 
@@ -367,6 +370,30 @@ async fn main() {
 							}
 						}
 					}
+					PendingAction::Command(channel, cmd) => {
+						let channel = match channel.as_str(){
+							"Room" => &mut game.chat.room_messages,
+							"Global" => &mut game.chat.global_messages,
+							"Group" => &mut game.chat.group_messages,
+							_ => {
+									game.pending_action = PendingAction::None;
+									continue;
+								}
+							};
+						channel.push(cmd);
+						if msg.contains("SUCCESS") {
+							if let Some(data) = server_event.data{
+									let rp: String = format!("[Server] {}", data);
+									channel.push(rp);
+								}
+							}
+						else {
+							if let Some(error) = server_event.error{
+									let rp: String = format!("[Server] {}", error);
+									channel.push(rp);
+								}
+							}
+						}
 					PendingAction::Look => {
 						if let Some(data_str) = &server_event.data {
 							match serde_json::from_str::<MapData>(data_str) {
