@@ -521,17 +521,6 @@ async fn main() {
             break;
         }
 
-
-
-
-		// if is_key_pressed(KeyCode::F) && game.focus == InputFocus::Game {
-		// 	game.group.is_active = true;
-    	// }
-
-		// if is_key_pressed(KeyCode::Enter) && game.focus == InputFocus::Game {
-		// 	game.chat.is_active = true;
-		// }
-
         handle_menu(&mut game);
 
 		handle_inv(&mut game);

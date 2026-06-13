@@ -124,7 +124,7 @@ pub fn draw_chat(chat:&mut Chat) {
     let bottom_y = screen_height();
     let line_height = 25.0;
 
-    
+
 
 
 	let messages = match chat.channel {
@@ -135,7 +135,7 @@ pub fn draw_chat(chat:&mut Chat) {
 
 	let max_visible_lines = 10;
 	let max_chars_per_line = 38;
-	
+
 	let mut visible_msg_in_lines: Vec<String> = Vec::new();
 
     for msg in messages.iter().rev() {

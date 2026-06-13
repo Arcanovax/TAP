@@ -1,4 +1,4 @@
-use macroquad::{miniquad::window::request_quit, prelude::*, ui::widgets::Label};
+use macroquad::prelude::*;
 
 pub fn get_rect_bottom(size: Vec2, x: f32) -> Rect {
 		let max_y = screen_height();
@@ -73,7 +73,6 @@ pub fn input_text(input_rect: Rect,field: &mut String,is_active: bool, mouse: (f
 		}
 
 		while let Some(character) = get_char_pressed() {
-			println!("{}", character.clone());
 			if character.is_ascii_graphic() || character == ' ' {
 				field.push(character);
 			}
