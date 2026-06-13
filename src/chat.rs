@@ -3,6 +3,8 @@ const CHANNELS: [&str; 3] = ["Room", "Global", "Group"];
 const ALLOWED_COMMANDS: &[&str] = &[
     "/LOOK",
     "/WHO",
+	"/STATUS",
+	"/QUESTS"
 ];
 use crate::*;
 
