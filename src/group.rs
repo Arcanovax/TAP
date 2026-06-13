@@ -70,6 +70,10 @@ pub fn draw_group(game: &mut Game){
 			game.focus = InputFocus::GroupMenu;
 			game.group.chat_is_active = true;
 		}
+		else if !input_hovered && is_mouse_button_pressed(MouseButton::Left) {
+			game.group.chat_is_active = false;
+			game.focus = InputFocus::Game;
+		}
 		let btn: Rect = Rect::new(rect.x+(rect.w/2.0-(100.0)),rect.y+80.0, 200.0, 30.0);
 		if get_button(btn, "Create group", 20, WHITE,mouse) {
 			let rq: String = format!("GROUP CREATE {}\n",game.group.typed);
