@@ -96,8 +96,9 @@ pub enum PendingAction {
     GroupList,
 	Auth,
 	GroupCreate(String),
-	GroupJoin(String),
+	GroupJoin(String, String),
 	GroupInvite(String),
+	GroupLeave,
 	SendChat(String, String),
 	Look,
 	Command(String, String),
@@ -339,20 +340,40 @@ async fn main() {
 							println!("already use")
 						}
 					}
-					PendingAction::GroupCreate(name) => {
+					PendingAction::GroupCreate(group_name) => {
 						if msg.contains("SUCCESS") {
 							game.group.in_group = true;
-							game.group.name = name;
-						} else{
+							if group_name.is_empty(){
+								let name: String = format!("{}'s Group ",game.player.name.clone());
+								game.group.name = name;}
+							else{
+								let name: String = format!("Group {}",group_name);
+								game.group.name = name;
+							}
+						}
+						else{
 							println!("Failed group create");
 						}
 					}
-					PendingAction::GroupJoin(name) => {
+					PendingAction::GroupJoin(sender, group_name) => {
 						if msg.contains("SUCCESS") {
 							game.group.in_group = true;
-							game.group.name = name;
+							if sender == group_name{
+								let name: String = format!("{}'s Group ",sender);
+								game.group.name = name;}
+							else{
+								let name: String = format!("{}",group_name);
+								game.group.name = name;
+							}
 						} else{
 							println!("Failed join");
+						}
+					}
+					PendingAction::GroupLeave => {
+						if msg.contains("SUCCESS") {
+							game.group.in_group = false;
+							game.group.name = String::new();
+							game.group.grouplist = Vec::new();
 						}
 					}
 					PendingAction::GroupInvite(name) => {

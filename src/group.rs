@@ -74,14 +74,7 @@ pub fn draw_group(game: &mut Game){
 		if get_button(btn, "Create group", 20, WHITE,mouse) {
 			let rq: String = format!("GROUP CREATE {}\n",game.group.typed);
 			game.tx_to_serv.try_send(rq).ok();
-			if game.group.typed.is_empty(){
-				let group_name: String = format!("{}'s Group",game.player.name.clone());
-				game.pending_action = PendingAction::GroupCreate(group_name);
-			}
-			else{
-				let group_name: String = format!("Group {}",game.group.typed.clone());
-				game.pending_action = PendingAction::GroupCreate(group_name);
-			}
+			game.pending_action = PendingAction::GroupCreate(game.group.typed.clone());
 			game.group.typed = String::new();
 		}
 
@@ -97,7 +90,8 @@ pub fn draw_group(game: &mut Game){
 			if get_button(join_btn, "Join", 20,GREEN, mouse) {
 				let rq: String = format!("GROUP JOIN {}\n",invitation.group_name);
 				game.tx_to_serv.try_send(rq).ok();
-				game.pending_action = PendingAction::GroupJoin(invitation.sender.clone());
+				game.pending_action = PendingAction::GroupJoin(invitation.sender.clone(), invitation.group_name.clone());
+				game.group.invitation = None;
 			}
 			if get_button(deny_btn, "Deny", 20, RED, mouse) {
 				game.group.invitation = None;
@@ -105,6 +99,7 @@ pub fn draw_group(game: &mut Game){
 		}
 	}
 	else {
+
 		draw_text_center_top(rect, &game.group.name, 35, 20.0);
 
 		if game.group.grouplist.is_empty(){
@@ -150,9 +145,12 @@ pub fn draw_group(game: &mut Game){
 			if get_button(invite_btn, "Invite", 25, WHITE,mouse) && !game.group.typed.is_empty(){
 				send_group_invite(game);}
 		}
-
-
-
+		let leave_btn: Rect = Rect::new(rect.x+(rect.w/2.0-(120.0)),rect.y + rect.h - 40.0, 150.0, 35.0);
+		if get_button(leave_btn, "Leave group", 20, WHITE,mouse) {
+			game.tx_to_serv.try_send("GROUP LEAVE\n".to_string()).ok();
+			game.pending_action = PendingAction::GroupLeave;
+			game.group.typed = String::new();
+		}
 	}
 }
 
@@ -171,10 +169,6 @@ pub fn handle_group(game: &mut Game) {
 		draw_icon(game, mouse);
 		if is_key_pressed(KeyCode::F) && game.focus == InputFocus::Game {
 			game.group.is_active = true;
-			// if !game.group.list.is_empty(){
-			// 	game.tx_to_serv.try_send("GROUP LIST\n".to_string()).ok();
-			// 	game.pending_action = PendingAction::GroupList;
-			// }
 		}
 	}
 	else{
