@@ -91,12 +91,14 @@ pub enum PendingAction {
 	SendChat(String, String),
 	Look,
 	Status,
-	Move(Direction)
+	Move(Spawn)
 }
 
 
 
-fn player_handler(player: &mut Player, map: &[[i32; 25]; 15], tile_size: f32, sprite_width: f32, sprite_height: f32) {
+fn player_handler(game: &mut Game, map: &[[i32; 25]; 15], tile_size: f32, sprite_width: f32, sprite_height: f32) {
+	let player = &mut game.player;
+
 	let mut direction = Vec2::ZERO;
 	let animation_speed: f64 = 0.15;
 	let mut add_x: f32 = 0.0;
@@ -164,10 +166,17 @@ fn player_handler(player: &mut Player, map: &[[i32; 25]; 15], tile_size: f32, sp
 			player.y += add_y;
 		}
 	}
+	let current_rect = Rect::new(
+			player.x + hitbox_offset_x,
+			player.y + hitbox_offset_y,
+			hitbox_w,
+			hitbox_h);
+	let current_tile: i32 = get_current_tile(current_rect, map, tile_size);
+	handle_move(game, current_tile);
 }
 
 #[derive(Clone, Debug, PartialEq, Hash, Eq)]
-pub enum Direction {
+pub enum Spawn {
 	None,
     North,
     South,
@@ -176,31 +185,50 @@ pub enum Direction {
 }
 
 
-fn handle_move(game: &mut Game){
+fn handle_move(game: &mut Game, current_tile: i32){
 	if game.pending_action != PendingAction::None {
         return;
     }
 
-    if game.player.new_spawn != Direction::None {
+    if game.player.new_spawn != Spawn::None {
         return;
     }
 
 	if game.player.x >= 390.0{
 		game.tx_to_serv.try_send("MOVE East\n".to_string()).ok();
-		game.pending_action = PendingAction::Move(Direction::West);
+		game.pending_action = PendingAction::Move(Spawn::West);
 	}
 	if game.player.x <= 0.0{
 		game.tx_to_serv.try_send("MOVE West\n".to_string()).ok();
-		game.pending_action = PendingAction::Move(Direction::East);
+		game.pending_action = PendingAction::Move(Spawn::East);
 	}
 	if game.player.y >= 200.0{
 		game.tx_to_serv.try_send("MOVE South\n".to_string()).ok();
-		game.pending_action = PendingAction::Move(Direction::North);
+		game.pending_action = PendingAction::Move(Spawn::North);
 	}
-	if game.player.y <= -10.0{
+	if game.player.y <= -10.0 || current_tile == 2{
 		game.tx_to_serv.try_send("MOVE North\n".to_string()).ok();
-		game.pending_action = PendingAction::Move(Direction::South);
+		game.pending_action = PendingAction::Move(Spawn::South);
 	}
+}
+
+fn get_current_tile(rect: Rect, map: &[[i32; 25]; 15], tile_size: f32) -> i32 {
+	let origin = vec2(0.0, 0.0);
+    let local_rect = Rect::new(rect.x - origin.x, rect.y - origin.y, rect.w, rect.h);
+    let left = (local_rect.x / tile_size).floor() as i32;
+    let right = ((local_rect.x + local_rect.w - 0.001) / tile_size).floor() as i32;
+    let top = (local_rect.y / tile_size).floor() as i32;
+    let bottom = ((local_rect.y + local_rect.h - 0.001) / tile_size).floor() as i32;
+
+    for ty in top..=bottom {
+        for tx in left..=right {
+            if ty < 0 || tx < 0 || ty as usize >= map.len() || tx as usize >= map[0].len() {
+                continue;
+            }
+            return map[ty as usize][tx as usize]
+        }
+    }
+	return 0;
 }
 
 fn camera_handler(camera: &mut Camera2D, tile_size: f32) {
@@ -226,8 +254,10 @@ struct Player {
     spritesheet_index: usize,
 	inventory: Inventory,
     name: String,
-	new_spawn:Direction,
+	new_spawn:Spawn,
 }
+
+
 
 fn rect_collides_map(rect: Rect, map: &[[i32; 25]; 15], tile_size: f32) -> bool {
 	let origin = vec2(0.0, 0.0);
@@ -258,7 +288,6 @@ fn rect_collides_map(rect: Rect, map: &[[i32; 25]; 15], tile_size: f32) -> bool 
             }
         }
     }
-
     false
 }
 
@@ -327,8 +356,6 @@ fn config() -> Conf {
         window_title: "TAP".to_owned(),
         window_width: 1280,
         window_height: 720,
-		// window_resizable: false,
-
 		fullscreen: false,
         ..Default::default()
     }
@@ -366,7 +393,7 @@ async fn main() {
             spritesheet_index: 0,
 			inventory: Inventory::new(),
             name:"".to_string(),
-			new_spawn: Direction::None
+			new_spawn: Spawn::None
         },
         skins: Vec::new(),
         map_id: String::new(),
@@ -518,7 +545,7 @@ async fn main() {
 						}
 					}
 					PendingAction::Move(new_spawn) => {
-						if msg.contains("SUCCESS") && game.player.new_spawn == Direction::None{
+						if msg.contains("SUCCESS") && game.player.new_spawn == Spawn::None{
 							if let Some(data) = server_event.data{
 								println!("{}", data)}
 
@@ -560,11 +587,11 @@ async fn main() {
 
 		};
 
-		if game.player.new_spawn != Direction::None{
+		if game.player.new_spawn != Spawn::None{
 			let spawn: Vec2 = map.spawns[&game.player.new_spawn];
 			game.player.x = spawn.x;
 			game.player.y = spawn.y;
-			game.player.new_spawn = Direction::None;
+			game.player.new_spawn = Spawn::None;
 			game.tx_to_serv.try_send("LOOK\n".to_string()).ok();
 			game.pending_action = PendingAction::Look;
 
@@ -582,8 +609,7 @@ async fn main() {
 		camera_handler(&mut camera, tile_size);
 
 		if game.focus == InputFocus::Game{
-			player_handler(&mut game.player, &map_obstacles, tile_size, sprite_width, sprite_height);
-			handle_move(&mut game);
+			player_handler(&mut game, &map_obstacles, tile_size, sprite_width, sprite_height);
 		}
 
         let current_skin = &game.skins[game.player.spritesheet_index as usize];
