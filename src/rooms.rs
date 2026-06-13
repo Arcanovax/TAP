@@ -2,7 +2,7 @@ use std::collections::HashMap;
 
 use macroquad::prelude::*;
 
-use crate::Spawn::{self, North};
+use crate::Spawn;
 
 #[derive(Clone)]
 pub struct Room {
