@@ -64,7 +64,7 @@ pub fn login_draw(world: &mut World, frame:&mut Frame) {
 
         let popup_area = frame.area().centered(
             Percentage(50),
-        Length(estimate_height(frame, &popup.content.to_string())));
+        Length(estimate_height(frame.area(), &popup.content.to_string())));
         frame.render_widget(popup, popup_area);
     }
 
@@ -76,7 +76,7 @@ pub fn login_draw(world: &mut World, frame:&mut Frame) {
 
         let popup_area = frame.area().centered(
             Percentage(50),
-        Length(estimate_height(frame, &popup.content.to_string())));
+        Length(estimate_height(frame.area(), &popup.content.to_string())));
         frame.render_widget(popup, popup_area);
     }
 }

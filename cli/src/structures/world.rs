@@ -29,9 +29,7 @@ use crate::{
 	},
 	global_functions::response_handling::response_handling,
 	structures::{
-		player::Player,
-		room::Room,
-		server_event::ServerEvent
+		chat::Chat, player::Player, room::Room, server_event::ServerEvent
 	}
 };
 
@@ -46,6 +44,8 @@ pub struct World {
 	pub player: Player,
 	pub quit: bool,
 	pub message: String,
+	pub chat: Chat,
+	pub output: String,
 	pub action: PendingAction,
 	pub counter: u32,
 	pub error: bool,
@@ -64,6 +64,8 @@ impl World {
 			player: Player::new(),
 			quit: false,
 			message: String::from(""),
+			chat: Chat::new(),
+			output: String::from(""),
 			action: PendingAction::None,
 			counter: 0,
 			error: false,
@@ -111,6 +113,12 @@ impl World {
 								let _ = self.tx_to_serv.try_send(format!("CONNECT {}\n", self.input));
 								self.action = PendingAction::Auth;
 							}
+							_ => {}
+						}
+					} else if self.state == States::InGame {
+						match key.code {
+							KeyCode::Down => self.room.descr_scroll_pos =  self.room.descr_scroll_pos.saturating_add(1),
+							KeyCode::Up => self.room.descr_scroll_pos =  self.room.descr_scroll_pos.saturating_sub(1),
 							_ => {}
 						}
 					}

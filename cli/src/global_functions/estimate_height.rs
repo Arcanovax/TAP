@@ -1,8 +1,8 @@
-use ratatui::Frame;
+use ratatui::{Frame, layout::Rect};
 
-pub fn estimate_height(frame: &mut Frame, content: &str) -> u16 {
+pub fn estimate_height(frame: Rect, content: &str) -> u16 {
 
-    let popup_width = (frame.area().width * 50) / 100;
+    let popup_width = (frame.width * 50) / 100;
 
     let text_width = popup_width.saturating_sub(2).max(1);
 
