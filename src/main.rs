@@ -6,8 +6,10 @@ mod inventory;
 mod start;
 mod group;
 mod player;
+mod items;
 
 use player::*;
+use items::*;
 use utils::*;
 use std::collections::HashMap;
 use macroquad::prelude::*;
@@ -268,7 +270,7 @@ async fn main() {
 
 
 	let rooms: std::collections::HashMap<String, rooms::Room> = get_rooms().await;
-
+	let items: std::collections::HashMap<String, items::Item> = get_items().await;
 
     let skin_data: Vec<(&str, &str)> = vec![
         ("assets/skins/alex.png", "Alex"),
@@ -592,7 +594,7 @@ async fn main() {
 
         handle_menu(&mut game);
 
-		handle_inv(&mut game);
+		handle_inv(&mut game, items.clone());
 		handle_chat(&mut game);
 		handle_group(&mut game);
         draw_menu(&mut game);

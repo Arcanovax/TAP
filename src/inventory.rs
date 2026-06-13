@@ -1,7 +1,8 @@
 use macroquad::prelude::*;
 use crate::*;
 
-const INV_SIZE: Vec2 = vec2(400.0, 400.0);
+const INV_SIZE: Vec2 = vec2(400.0, 300.0);
+const OTHER_SIZE: Vec2 = vec2(400.0, 300.0);
 
 pub struct Inventory {
     pub data: [[&'static str; 4]; 3],
@@ -80,11 +81,10 @@ pub fn draw_inv(game: &mut Game) {
 		let rect: Rect = get_inv_rect();
         draw_rectangle(rect.x, rect.y, rect.w, rect.h, Color::new(0.0, 0.0, 0.0, 0.5));
 
-
     }
 }
 
-pub fn handle_inv(game: &mut Game) {
+pub fn handle_inv(game: &mut Game, items:HashMap<String, Item>) {
 	draw_inv(game);
 	update_inv(game);
 	if is_key_pressed(KeyCode::E) && game.focus == InputFocus::Game{
