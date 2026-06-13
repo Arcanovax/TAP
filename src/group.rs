@@ -62,15 +62,32 @@ pub fn draw_group(game: &mut Game){
 
 
 	if !game.group.in_group {
-		let btn: Rect = Rect::new(rect.x+(rect.w/2.0-(100.0)),rect.y+10.0, 200.0, 40.0);
-		if get_button(btn, "Create group", 30, WHITE,mouse) {
-			game.tx_to_serv.try_send("GROUP CREATE\n".to_string()).ok();
-			game.pending_action = PendingAction::GroupCreate(game.player.name.clone());
+		let input_group_name: Rect = Rect::new(rect.x+(rect.w/2.0-(100.0)),rect.y+30.0, 200.0, 40.0);
+
+		draw_text("Group name:", input_group_name.x, input_group_name.y-2.5, 25.0, WHITE);
+		let input_hovered: bool = input_text(input_group_name, &mut game.group.typed,game.focus == InputFocus::GroupMenu,  mouse);
+		if input_hovered && is_mouse_button_pressed(MouseButton::Left)  {
+			game.focus = InputFocus::GroupMenu;
+			game.group.chat_is_active = true;
+		}
+		let btn: Rect = Rect::new(rect.x+(rect.w/2.0-(100.0)),rect.y+80.0, 200.0, 30.0);
+		if get_button(btn, "Create group", 20, WHITE,mouse) {
+			let rq: String = format!("GROUP CREATE {}\n",game.group.typed);
+			game.tx_to_serv.try_send(rq).ok();
+			if game.group.typed.is_empty(){
+				let group_name: String = format!("{}'s Group",game.player.name.clone());
+				game.pending_action = PendingAction::GroupCreate(group_name);
+			}
+			else{
+				let group_name: String = format!("Group {}",game.group.typed.clone());
+				game.pending_action = PendingAction::GroupCreate(group_name);
+			}
+			game.group.typed = String::new();
 		}
 
 
 		if let Some(invitation) = game.group.invitation.as_ref(){
-			let invit_rect: Rect = Rect::new(rect.x ,rect.y+ 60.0, rect.w, 60.0);
+			let invit_rect: Rect = Rect::new(rect.x ,rect.y+ 100.0, rect.w, 60.0);
 			let text: String = format!("{} invate you in {}",invitation.sender, invitation.group_name);
 			draw_text_center(invit_rect, &text, 18);
 			let btn_weight = 100.0;
@@ -78,7 +95,7 @@ pub fn draw_group(game: &mut Game){
 			let join_btn: Rect = Rect::new(invit_rect.x + space,invit_rect.y + 50.0, btn_weight, 20.0);
 			let deny_btn: Rect = Rect::new(invit_rect.x + invit_rect.w - btn_weight - space ,invit_rect.y + 50.0, btn_weight, 20.0);
 			if get_button(join_btn, "Join", 20,GREEN, mouse) {
-				let rq: String = format!("GROUP JOIN {}\n",invitation.sender);
+				let rq: String = format!("GROUP JOIN {}\n",invitation.group_name);
 				game.tx_to_serv.try_send(rq).ok();
 				game.pending_action = PendingAction::GroupJoin(invitation.sender.clone());
 			}
@@ -88,8 +105,7 @@ pub fn draw_group(game: &mut Game){
 		}
 	}
 	else {
-		let text: String = format!("{}'s Group", game.group.name);
-		draw_text_center_top(rect, &text, 30, 20.0);
+		draw_text_center_top(rect, &game.group.name, 35, 20.0);
 
 		if game.group.grouplist.is_empty(){
 			game.tx_to_serv.try_send("GROUP LIST\n".to_string()).ok();
@@ -97,7 +113,7 @@ pub fn draw_group(game: &mut Game){
 		}
 		else {
 			for (i,player) in game.group.grouplist.iter().enumerate(){
-					draw_text(player,rect.x,rect.y + 60.0 + i as f32 * 35.0,40.0,WHITE,);
+					draw_text(player,rect.x,rect.y + 65.0 + i as f32 * 35.0,30.0,WHITE,);
 			}
 		}
 
