@@ -1,7 +1,7 @@
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 
 use crate::structures::enums::state::State;
 
@@ -15,6 +15,8 @@ pub struct Player {
     pub inventory: HashMap<String, u32>,
     pub available_quests: Vec<String>,
     pub group_id: Option<Uuid>,
+    pub finished_quest: HashSet<String>,
+    pub quests_in_progress: HashMap<String, usize>,
 }
 
 impl Player {
@@ -28,6 +30,8 @@ impl Player {
             inventory: HashMap::new(),
             available_quests: Vec::new(),
             group_id: None,
+            finished_quest: HashSet::new(),
+            quests_in_progress: HashMap::new(),
         }
     }
 }

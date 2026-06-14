@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, PartialEq, Eq)]
 #[allow(non_camel_case_types)]
 pub enum ErrorCode {
     NAME_IN_USE,
@@ -11,9 +11,9 @@ pub enum ErrorCode {
     ITEM_NOT_IN_INVENTORY,
     NPC_NOT_FOUND,
     NPC_NOT_HOSTILE,
-	ROOM_NOT_FOUND,
-	PLAYER_NOT_FOUND,
-	DEFEATED_ENEMY,
+    ROOM_NOT_FOUND,
+    PLAYER_NOT_FOUND,
+    DEFEATED_ENEMY,
     NO_QUEST_AVAILABLE,
     CONNECTION_FAILED,
     SEND_FAILED,
@@ -31,9 +31,9 @@ impl ErrorCode {
             ErrorCode::NOT_IN_GROUP => 401,
             ErrorCode::ALREADY_IN_GROUP => 402,
             ErrorCode::ITEM_NOT_FOUND
-			| ErrorCode::PLAYER_NOT_FOUND
-			| ErrorCode::ROOM_NOT_FOUND
-			| ErrorCode::DEFEATED_ENEMY
+            | ErrorCode::PLAYER_NOT_FOUND
+            | ErrorCode::ROOM_NOT_FOUND
+            | ErrorCode::DEFEATED_ENEMY
             | ErrorCode::ITEM_NOT_IN_INVENTORY
             | ErrorCode::NPC_NOT_FOUND => 404,
             ErrorCode::NPC_NOT_HOSTILE => 405,

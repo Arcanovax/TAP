@@ -1,5 +1,15 @@
+import:
+  - "items.yaml"
+  - "npc.yaml"
+
 quest:
   test:
     name: "Test"
     description: "Test quest"
     reward: "une orange"
+    goals:
+      - Collect:
+          item: "item.ale"
+          amount: 1
+      - Talk:
+          dialog: "npc.city_gard.dialog.default"

@@ -158,6 +158,13 @@ impl ServerInfo {
             .players
             .push(con.addr);
         info!("{} added to group({})", con.player.name, group_id);
+        let player_name = con.player.name.clone();
+        let receivers = self.get_group_receivers(peer_addr).unwrap();
+        for c in receivers {
+            let _ = c.tx.send(Message::Event(EventType::GROUP_JOIN {
+                player_name: player_name.clone(),
+            }));
+        }
         Ok(())
     }
 
@@ -188,7 +195,7 @@ impl ServerInfo {
         self.invitations.retain(|_, gid| *gid != group_id);
     }
 
-    fn delete_group(&mut self, group_id: Uuid) {
+    fn try_delete_group(&mut self, group_id: Uuid) {
         let group = self.groups.get(&group_id).ok_or(()).unwrap();
         if group.get_group_size() == 0 {
             self.groups.remove(&group_id);
@@ -203,6 +210,14 @@ impl ServerInfo {
             return Err(ErrorCode::NOT_IN_GROUP);
         }
 
+        let player_name = con.player.name.clone();
+        let receivers = self.get_group_receivers(peer_addr).unwrap();
+        for c in receivers {
+            let _ = c.tx.send(Message::Event(EventType::GROUP_LEAVE {
+                player_name: player_name.clone(),
+            }));
+        }
+
         let con = self.connections.get_mut(&peer_addr).unwrap();
         let group_id = con.player.group_id.unwrap();
         self.groups
@@ -210,9 +225,9 @@ impl ServerInfo {
             .unwrap()
             .players
             .retain(|&addr| addr != con.addr);
-        con.player.group_id = None;
         info!("{} leaved group({})", con.player.name, group_id);
-        self.delete_group(group_id);
+        con.player.group_id = None;
+        self.try_delete_group(group_id);
         Ok(())
     }
 
@@ -224,6 +239,21 @@ impl ServerInfo {
         let con = self
             .connections
             .get(&peer_addr)
+            .ok_or(ErrorCode::INVALID_COMMAND)?;
+        Ok(con)
+    }
+
+    pub fn get_player_mut(&mut self, peer_addr: SocketAddr) -> Result<&mut Player, ErrorCode> {
+        Ok(&mut self.get_connection_mut(peer_addr)?.player)
+    }
+
+    pub fn get_connection_mut(
+        &mut self,
+        peer_addr: SocketAddr,
+    ) -> Result<&mut Connection, ErrorCode> {
+        let con = self
+            .connections
+            .get_mut(&peer_addr)
             .ok_or(ErrorCode::INVALID_COMMAND)?;
         Ok(con)
     }
@@ -299,7 +329,7 @@ impl ServerInfo {
 
         let room = match self.world.rooms.get(room_name) {
             Some(room) => room,
-            None => return Err(ErrorCode::PLAYER_NOT_FOUND),
+            None => return Err(ErrorCode::ROOM_NOT_FOUND),
         };
         Ok(room)
     }
@@ -359,18 +389,22 @@ impl ServerInfo {
         peer_addr: SocketAddr,
         npc_name: &str,
     ) -> Result<&Quest, ErrorCode> {
-        let quest = match self.world.npcs.get(npc_name) {
-            Some(npc) => &npc.quest,
+        let npc = match self.world.npcs.get(npc_name) {
+            Some(npc) => npc,
             None => return Err(ErrorCode::NPC_NOT_FOUND),
         };
-        if let None = quest {
+        if let None = npc.quest {
             return Err(ErrorCode::NO_QUEST_AVAILABLE);
         }
-        let quest = match self.world.quests.get(&quest.clone().unwrap()) {
-            Some(quest) => quest,
-            None => return Err(ErrorCode::NO_QUEST_AVAILABLE),
-        };
-        //Check si le joueur a le droit de prendre la quete ici
+        let quest_ref = npc.quest.clone().unwrap();
+        let player = self.get_player_mut(peer_addr)?;
+        if player.finished_quest.contains(&quest_ref)
+            || player.quests_in_progress.contains_key(&quest_ref)
+        {
+            return Err(ErrorCode::NO_QUEST_AVAILABLE);
+        }
+        player.quests_in_progress.insert(quest_ref.clone(), 0);
+        let quest = self.world.quests.get(&quest_ref).unwrap();
         Ok(quest)
     }
 }

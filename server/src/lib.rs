@@ -18,6 +18,8 @@ mod handlers;
 pub mod protocol;
 mod state;
 mod structures;
+#[cfg(test)]
+mod test_utils;
 
 fn parse_command(line: &str) -> Message {
     let mut parts = line.split_whitespace();

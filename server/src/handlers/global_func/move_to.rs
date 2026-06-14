@@ -5,7 +5,7 @@ use crate::{
     state::SharedServer, structures::enums::exits::Exit,
 };
 
-pub fn move_to(world: &SharedServer, player_addr: SocketAddr, dest: Vec<String>) -> Message {
+pub fn move_to(world: &SharedServer, player_addr: SocketAddr, dest: &Vec<String>) -> Message {
     if dest.len() != 1 {
         return Message::Response {
             error: ErrorCode::INVALID_ARGS,
