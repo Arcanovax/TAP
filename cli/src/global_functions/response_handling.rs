@@ -30,7 +30,8 @@ pub fn response_handling(world: &mut World, msg: &str, server: &ServerEvent) {
 				},
 				PendingAction::Move => {
 					if msg.contains("SUCCESS") {
-						
+					let _ = world.tx_to_serv.try_send(String::from("LOOK\n"));
+					world.action = PendingAction::Look;
 					}
 				}
 				_ => {}

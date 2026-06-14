@@ -1,10 +1,10 @@
 use std::{
-	io,
-	sync::mpsc::{
+	io, sync::mpsc::{
 		Receiver,
 		TryRecvError
 	}
 };
+
 use ratatui::{
 	DefaultTerminal,
 	Frame,
@@ -13,9 +13,7 @@ use ratatui::{
 	},
 };
 use tokio::sync::mpsc::Sender;
-// use std::io::Write;
 
-// use serde::Deserialize;
 use crate::{
 	draw_functions::{
 		login::login_draw,
@@ -30,12 +28,6 @@ use crate::{
 		chat::Chat, player::Player, room::Room, server_event::ServerEvent
 	}
 };
-
-// #[derive(Deserialize, Debug)]
-// struct LoginResponse {
-// player: Player,
-// room: Room
-// }
 
 pub struct World<'a> {
 	pub room: Room<'a>,
@@ -155,10 +147,12 @@ impl World<'_>{
 									match self.room.focus {
 										Focus::COMMAND => {
 											let command = self.room.text_area.lines().join("");
-											let split_command: Vec<String> = command.split(" ").map(|s|s.to_lowercase()).collect();
-											if ["talk", "drop", "take", "look", "move"].contains(&split_command[0].as_str()) {
-												let _ = self.tx_to_serv.try_send(command);
-												find_action(split_command[0].as_str(), self);
+											let split_command: Vec<&str> = command.split(" ").collect();
+											if ["TALK", "DROP", "TAKE", "LOOK", "MOVE"].contains(&split_command[0].to_uppercase().as_str()) {
+												let _ = self.tx_to_serv.try_send(split_command.join(" ") + "\n");
+												// if let Ok(mut file) = OpenOptions::new().create(true).append(true).open("debug_draw.txt") {
+												// 	let _ = writeln!(file, "RECU (State {:?}) : {:#?}", self.state, split_command.join(" "));}
+												find_action(split_command[0], self);
 											} else {
 												self.output += "Unknown command.";
 											}
@@ -187,14 +181,20 @@ impl World<'_>{
 		loop {
 			match self.rx_from_serv.try_recv() {
 				Ok(msg) => {
+					// if let Ok(mut file) = OpenOptions::new().create(true).append(true).open("debug_network.txt") {
+					// 			let _ = writeln!(file, "all (State {:?}) : {:#?}", self.state, msg);}
 					if self.state == States::ServerWait {
 						if msg.contains("OK hello proto") {self.state = States::Login};
-					}
-					if let Ok(server_event) = serde_json::from_str::<ServerEvent>(&msg) {
-						if server_event.event_type == "Response" {
-							response_handling(self, &msg, &server_event);
+					} else {
+						if let Ok(server_event) = serde_json::from_str::<ServerEvent>(&msg) {
 							// if let Ok(mut file) = OpenOptions::new().create(true).append(true).open("debug_network.txt") {
-							// 	let _ = writeln!(file, "RECU (State {:?}) : {:#?}", self.state, self.room);}
+							// 	let _ = writeln!(file, "ok (State {:?}) : {:#?}", self.state, server_event);}
+							if server_event.event_type == "Response" {
+								response_handling(self, &msg, &server_event);
+							}
+						}else {
+							// if let Ok(mut file) = OpenOptions::new().create(true).append(true).open("debug_network.txt") {
+							// 	let _ = writeln!(file, "Pas ok (State {:?}) : {:#?}", self.state, msg);}
 						}
 					}
 				}
