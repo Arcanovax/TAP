@@ -175,6 +175,7 @@ struct Game {
 	pub group: Group,
 	pub pending_action: PendingAction,
 	pub map_data: Option<MapData>,
+	pub items:HashMap<String, Item>
 }
 
 impl Game {
@@ -264,13 +265,14 @@ async fn main() {
         is_auth: false,
 		group: Group::new(),
 		pending_action: PendingAction::None,
-		map_data: None
+		map_data: None,
+		items: get_items().await
     };
 
 
 
 	let rooms: std::collections::HashMap<String, rooms::Room> = get_rooms().await;
-	let items: std::collections::HashMap<String, items::Item> = get_items().await;
+	
 
     let skin_data: Vec<(&str, &str)> = vec![
         ("assets/skins/alex.png", "Alex"),
@@ -507,6 +509,11 @@ async fn main() {
 
 		};
 
+		if game.map_data.is_none(){
+			game.tx_to_serv.try_send("LOOK\n".to_string()).ok();
+			game.pending_action = PendingAction::Look;
+		}
+
 		if game.player.new_spawn != Spawn::None{
 			let spawn: Vec2 = map.spawns[&game.player.new_spawn];
 			game.player.x = spawn.x;
@@ -594,7 +601,7 @@ async fn main() {
 
         handle_menu(&mut game);
 
-		handle_inv(&mut game, items.clone());
+		handle_inv(&mut game);
 		handle_chat(&mut game);
 		handle_group(&mut game);
         draw_menu(&mut game);
