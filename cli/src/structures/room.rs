@@ -1,14 +1,15 @@
+use ratatui::widgets::ListState;
+use ratatui_textarea::TextArea;
 use serde::Deserialize;
 
 use crate::{enums::{exits::Exits, focus::Focus}};
 
 #[derive(Deserialize, Debug)]
-pub struct Room {
+pub struct Room<'a> {
     pub name: String,
     pub exits: Vec<Exits>,
     pub description: String,
     pub npc: Vec<String>,
-    pub items: Vec<String>,
 
 	#[serde(skip)]
 	pub focus: Focus,
@@ -20,9 +21,17 @@ pub struct Room {
 	pub output_scroll_pos: u16,
 	#[serde(skip)]
 	pub descr_scroll_pos: u16,
+	#[serde(skip)]
+	pub npc_list_state: ListState,
+	#[serde(skip)]
+	pub inventory_list_state: ListState,
+	#[serde(skip)]
+	pub exits_list_state: ListState,
+	#[serde(skip)]
+	pub text_area: TextArea<'a>,
 }
 
-impl Room {
+impl Room<'_> {
 	pub fn new() -> Self {
 		Room {
 			name: String::from(""),
@@ -34,7 +43,10 @@ impl Room {
 			chat_scroll_pos: 0,
 			output_scroll_pos: 0,
 			descr_scroll_pos: 0,
-			items: Vec::new()
+			npc_list_state: ListState::default(),
+			inventory_list_state: ListState::default(),
+			exits_list_state: ListState::default(),
+			text_area: TextArea::default()
 		}
 	}
 }

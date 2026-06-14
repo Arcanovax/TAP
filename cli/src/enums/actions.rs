@@ -3,6 +3,9 @@
 pub enum PendingAction {
     None,
     GroupList,
+    Talk,
+    Drop,
+    Take,
 	Auth,
 	GroupCreate(String),
 	GroupJoin(String),

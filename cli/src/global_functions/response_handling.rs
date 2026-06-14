@@ -26,7 +26,13 @@ pub fn response_handling(world: &mut World, msg: &str, server: &ServerEvent) {
 			match world.action {
 				PendingAction::Look => {
 					world.room = serde_json::from_str(&server.data.clone().unwrap()).unwrap();
+					world.action = PendingAction::None;
 				},
+				PendingAction::Move => {
+					if msg.contains("SUCCESS") {
+						
+					}
+				}
 				_ => {}
 			}
 		}

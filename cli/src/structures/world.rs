@@ -25,7 +25,7 @@ use crate::{
 	enums::{
 		actions::PendingAction, focus::Focus, states::States
 	},
-	global_functions::response_handling::response_handling,
+	global_functions::{find_action::find_action, response_handling::response_handling},
 	structures::{
 		chat::Chat, player::Player, room::Room, server_event::ServerEvent
 	}
@@ -37,8 +37,8 @@ use crate::{
 // room: Room
 // }
 
-pub struct World {
-	pub room: Room,
+pub struct World<'a> {
+	pub room: Room<'a>,
 	pub player: Player,
 	pub quit: bool,
 	pub message: String,
@@ -54,7 +54,7 @@ pub struct World {
 	pub rx_from_serv: std::sync::mpsc::Receiver<String>
 }
 
-impl World {
+impl World<'_>{
 
 	pub fn new(tx_to_serv: Sender<String>, rx_from_serv: Receiver<String>) -> Self {
 		Self {
@@ -114,35 +114,60 @@ impl World {
 							_ => {}
 						}
 					} else if self.state == States::InGame {
-						match key.code {
-							KeyCode::Down => {
-								match self.room.focus {
-									Focus::CHAT => self.room.chat_scroll_pos =  self.room.chat_scroll_pos.saturating_add(1),
-									Focus::DESCR => self.room.descr_scroll_pos =  self.room.descr_scroll_pos.saturating_add(1),
-									Focus::OUTPUT => self.room.output_scroll_pos =  self.room.output_scroll_pos.saturating_add(1),
-									Focus::NONE => {}
+						if self.room.focus == Focus::COMMAND && key.code != KeyCode::Tab && key.code != KeyCode::Enter{
+								self.room.text_area.input(key);
+						} else {
+							match key.code {
+								KeyCode::Down => {
+									match self.room.focus {
+										Focus::CHAT => self.room.chat_scroll_pos =  self.room.chat_scroll_pos.saturating_add(1),
+										Focus::DESCR => self.room.descr_scroll_pos =  self.room.descr_scroll_pos.saturating_add(1),
+										Focus::OUTPUT => self.room.output_scroll_pos =  self.room.output_scroll_pos.saturating_add(1),
+										_ => {}
+									}
+									}
+								KeyCode::Up => {
+									match self.room.focus {
+										Focus::CHAT => self.room.chat_scroll_pos =  self.room.chat_scroll_pos.saturating_sub(1),
+										Focus::DESCR => self.room.descr_scroll_pos =  self.room.descr_scroll_pos.saturating_sub(1),
+										Focus::OUTPUT => self.room.output_scroll_pos =  self.room.output_scroll_pos.saturating_sub(1),
+										_ => {}
+									}
 								}
+								KeyCode::Tab => {
+									if !self.room.available_focus.is_empty() {
+										let current_index = self.room.available_focus
+										.iter()
+										.position(|f|f == &self.room.focus)
+										.unwrap_or(0);
+										
+										let next_index = (current_index + 1) % self.room.available_focus.len();
+										self.room.focus = self.room.available_focus[next_index].clone();
+										match self.room.focus {
+											Focus::EXITS => self.room.exits_list_state.select_first(),
+											Focus::INVENTORY => self.room.inventory_list_state.select_first(),
+											Focus::NPC => self.room.npc_list_state.select_first(),
+											_ => {}
+										}
+									}
 								}
-							KeyCode::Up => {
-								match self.room.focus {
-									Focus::CHAT => self.room.chat_scroll_pos =  self.room.chat_scroll_pos.saturating_sub(1),
-									Focus::DESCR => self.room.descr_scroll_pos =  self.room.descr_scroll_pos.saturating_sub(1),
-									Focus::OUTPUT => self.room.output_scroll_pos =  self.room.output_scroll_pos.saturating_sub(1),
-									Focus::NONE => {}
+								KeyCode::Enter => {
+									match self.room.focus {
+										Focus::COMMAND => {
+											let command = self.room.text_area.lines().join("");
+											let split_command: Vec<String> = command.split(" ").map(|s|s.to_lowercase()).collect();
+											if ["talk", "drop", "take", "look", "move"].contains(&split_command[0].as_str()) {
+												let _ = self.tx_to_serv.try_send(command);
+												find_action(split_command[0].as_str(), self);
+											} else {
+												self.output += "Unknown command.";
+											}
+										}
+										_ => {}
+									}
 								}
+								_ => {}
 							}
-							KeyCode::Tab => {
-								if !self.room.available_focus.is_empty() {
-									let current_index = self.room.available_focus
-									.iter()
-									.position(|f|f == &self.room.focus)
-									.unwrap_or(0);
-									
-									let next_index = (current_index + 1) % self.room.available_focus.len();
-									self.room.focus = self.room.available_focus[next_index].clone();
-								}
-							}
-							_ => {}
 						}
 					}
 				},

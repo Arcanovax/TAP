@@ -18,19 +18,11 @@ use ratatui::{
 		Block, Borders, Gauge, List, ListItem, ListState, Paragraph, TitlePosition, Wrap
 	}
 };
+use ratatui_textarea::TextArea;
 
-use crate::{enums::exits::Exits, global_functions::{draw_scrollbars::draw_scrollbars, estimate_height::estimate_height}, structures::world::World};
+use crate::{enums::{exits::Exits, focus::Focus}, global_functions::{draw_scrollbars::draw_scrollbars, estimate_height::estimate_height}, structures::world::World};
 
 pub fn draw_room(world: &mut World, frame: &mut Frame) {
-
-	// let layout = Layout::default()
-    // .direction(Horizontal)
-    // .constraints(vec![
-    //     Percentage(50),
-    //     Percentage(50),
-    // ])
-	// // .spacing(1)
-    // .split(frame.area());
 
 	let main_layout = Layout::default()
     .direction(Vertical)
@@ -99,8 +91,11 @@ pub fn draw_room(world: &mut World, frame: &mut Frame) {
 	.wrap(Wrap { trim: true })
 	.block(
 		Block::bordered()
+		.border_style(if world.room.focus == Focus::DESCR {Color::LightBlue} else {Color::White})
 		.title(world.room.name.as_str())
 		.title_style(Color::Green)
+		.bold()
+
 	.title_alignment(Alignment::Center))
 	.scroll((world.room.descr_scroll_pos, 0));
 
@@ -112,23 +107,31 @@ pub fn draw_room(world: &mut World, frame: &mut Frame) {
 		Color::Green
 	};
 
-	let mut npc_list_state = ListState::default();
-	let npc_items: Vec<ListItem> = world.room.npc.iter()
+	let mut npc_items: Vec<ListItem> = vec![ListItem::new(Line::from("Nobody").alignment(Alignment::Center))];
+
+	if world.room.npc.len() > 0 {
+		npc_items = world.room.npc.iter()
 		.map(|npc| ListItem::new(Line::from(npc.as_str()).alignment(Alignment::Center)))
 		.collect();
+	}
+
 	let npc_list = List::new(npc_items)
-	.block(Block::bordered()
+	.block(
+		Block::bordered()
+		.border_style(if world.room.focus == Focus::NPC {Color::LightBlue} else {Color::White})
 	.title("You can talk to:")
 	.title_alignment(Alignment::Center)
 	.title_style(Color::Green)
 	.bold());
 
-	let mut items_list_state = ListState::default();
-	let item_items: Vec<ListItem> = world.room.items.iter()
-		.map(|item| ListItem::new(Line::from(item.as_str()).alignment(Alignment::Center)))
+	let inventory_items: Vec<ListItem> = world.player.inventory.iter()
+		.map(|item| ListItem::new(Line::from(format!("{} x{}", item.0.trim_start_matches("item."), item.1)).alignment(Alignment::Center)))
 		.collect();
-	let items_list = List::new(item_items)
-	.block(Block::bordered()
+
+	let items_list = List::new(inventory_items)
+	.block(
+		Block::bordered()
+		.border_style(if world.room.focus == Focus::INVENTORY {Color::LightBlue} else {Color::White})
 	.title("You can take:")
 	.title_alignment(Alignment::Center)
 	.title_style(Color::Green)
@@ -155,7 +158,9 @@ pub fn draw_room(world: &mut World, frame: &mut Frame) {
 	.collect();
 
 	let exits_list = List::new(exits_items)
-	.block(Block::bordered()
+	.block(
+		Block::bordered()
+		.border_style(if world.room.focus == Focus::EXITS {Color::LightBlue} else {Color::White})
 	.title("You can move to:")
 	.title_alignment(Alignment::Center)
 	.title_style(Color::Green)
@@ -165,12 +170,14 @@ pub fn draw_room(world: &mut World, frame: &mut Frame) {
 
 	let chat = Block::new()
 	.borders(Borders::ALL)
+	.border_style(if world.room.focus == Focus::CHAT {Color::LightBlue} else {Color::White})
 	.title("Chat")
 	.title_alignment(Alignment::Center)
 	.title_style(Color::Green);
 
 	let output = Block::new()
 	.borders(Borders::ALL)
+	.border_style(if world.room.focus == Focus::OUTPUT {Color::LightBlue} else {Color::White})
 	.title("Output")
 	.title_alignment(Alignment::Center)
 	.title_style(Color::Green);
@@ -181,14 +188,22 @@ pub fn draw_room(world: &mut World, frame: &mut Frame) {
 	.title_alignment(Alignment::Center)
 	.title_style(Color::Green);
 
+	world.room.text_area.set_block(
+		Block::bordered()
+		.title("You can write your command here:")
+		.title_alignment(Alignment::Center)
+		.title_style(Color::Green)
+		.bold()
+		.border_style(if world.room.focus == Focus::COMMAND {Color::LightBlue} else {Color::White}));
+
 	frame.render_widget(id, left_layout[0]);
 	frame.render_widget(hp_bar, left_layout[1]);
 	frame.render_widget(city_name, descr_area);
 	frame.render_widget(exits_list, right_layout[2]);
 	frame.render_widget(chat, left_layout[2]);
 	frame.render_widget(output, left_layout[3]);
-	frame.render_widget(command, main_layout[1]);
-	frame.render_stateful_widget(npc_list, lists_layout[0], &mut npc_list_state);
-	frame.render_stateful_widget(items_list, lists_layout[1], &mut items_list_state);
+	frame.render_widget(&world.room.text_area, main_layout[1]);
+	frame.render_stateful_widget(npc_list, lists_layout[0], &mut world.room.npc_list_state);
+	frame.render_stateful_widget(items_list, lists_layout[1], &mut world.room.inventory_list_state);
 	
 }

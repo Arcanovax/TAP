@@ -4,6 +4,10 @@ use serde::Deserialize;
 pub enum Focus {
     #[default]
     CHAT,
+	COMMAND,
+	NPC,
+	INVENTORY,
+	EXITS,
     DESCR,
     OUTPUT,
     NONE
