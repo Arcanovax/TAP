@@ -33,6 +33,13 @@ impl ServerInfo {
             return Err(ErrorCode::INVALID_COMMAND);
         }
         let name = con.unwrap().player.name.clone();
+        if let Ok(receivers) = self.get_room_receivers(peer_addr) {
+            for con in receivers {
+                let _ = con.tx.send(Message::Event(EventType::ROOM_LEAVE {
+                    player_name: name.clone(),
+                }));
+            }
+        }
         self.connections.remove(&peer_addr);
         self.name_to_addr.remove(&name);
         self.cleanup_player_invitation(peer_addr);
