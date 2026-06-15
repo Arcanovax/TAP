@@ -21,11 +21,11 @@ use crate::{
 		wait_server::draw_wait
 	},
 	enums::{
-		actions::PendingAction, focus::Focus, states::States
+		actions::PendingAction, channels::Channels, focus::Focus, states::States
 	},
 	global_functions::{find_action::find_action, response_handling::response_handling},
 	structures::{
-		chat::Chat, player::Player, room::Room, server_event::ServerEvent
+		chat::Chat, group::{Group, Invitation}, player::Player, room::Room, server_event::ServerEvent
 	}
 };
 
@@ -37,6 +37,7 @@ pub struct World<'a> {
 	pub chat: Chat,
 	pub output: String,
 	pub action: PendingAction,
+	pub group: Group,
 	pub counter: u32,
 	pub error: bool,
 	pub click: bool,
@@ -58,6 +59,7 @@ impl World<'_>{
 			output: String::from(""),
 			action: PendingAction::None,
 			counter: 0,
+			group: Group::new(),
 			error: false,
 			click: false,
 			input: "".to_string(),
@@ -112,7 +114,11 @@ impl World<'_>{
 							match key.code {
 								KeyCode::Down => {
 									match self.room.focus {
-										Focus::CHAT => self.room.chat_scroll_pos =  self.room.chat_scroll_pos.saturating_add(1),
+										Focus::CHAT => {
+											if self.chat.scroll_bar {
+												self.room.chat_scroll_pos =  self.room.chat_scroll_pos.saturating_add(1);
+											}
+										},
 										Focus::DESCR => self.room.descr_scroll_pos =  self.room.descr_scroll_pos.saturating_add(1),
 										Focus::OUTPUT => self.room.output_scroll_pos =  self.room.output_scroll_pos.saturating_add(1),
 										_ => {}
@@ -120,9 +126,37 @@ impl World<'_>{
 									}
 								KeyCode::Up => {
 									match self.room.focus {
-										Focus::CHAT => self.room.chat_scroll_pos =  self.room.chat_scroll_pos.saturating_sub(1),
+										Focus::CHAT => {
+											if self.chat.scroll_bar {
+												self.room.chat_scroll_pos =  self.room.chat_scroll_pos.saturating_sub(1);
+											}
+										},
 										Focus::DESCR => self.room.descr_scroll_pos =  self.room.descr_scroll_pos.saturating_sub(1),
 										Focus::OUTPUT => self.room.output_scroll_pos =  self.room.output_scroll_pos.saturating_sub(1),
+										_ => {}
+									}
+								}
+								KeyCode::Left => {
+									match self.room.focus {
+										Focus::CHAT => {
+											self.chat.channel = match self.chat.channel {
+												Channels::GLOBAL => Channels::GROUP,
+												Channels::GROUP => Channels::ROOM,
+												Channels::ROOM => Channels::GLOBAL
+											}
+										},
+										_ => {}
+									}
+								}
+								KeyCode::Right => {
+									match self.room.focus {
+										Focus::CHAT => {
+											self.chat.channel = match self.chat.channel {
+												Channels::GLOBAL => Channels::ROOM,
+												Channels::GROUP => Channels::GLOBAL,
+												Channels::ROOM => Channels::GROUP
+											}
+										},
 										_ => {}
 									}
 								}
@@ -148,11 +182,17 @@ impl World<'_>{
 										Focus::COMMAND => {
 											let command = self.room.text_area.lines().join("");
 											let split_command: Vec<&str> = command.split(" ").collect();
-											if ["TALK", "DROP", "TAKE", "LOOK", "MOVE"].contains(&split_command[0].to_uppercase().as_str()) {
+											if ["TALK", "DROP", "TAKE", "LOOK", "MOVE", "WHO", "CHAT", "GROUP", "STATUS", "ATTACK", "INVENTORY", "QUEST"].contains(&split_command[0].to_uppercase().as_str()) {
 												let _ = self.tx_to_serv.try_send(split_command.join(" ") + "\n");
 												// if let Ok(mut file) = OpenOptions::new().create(true).append(true).open("debug_draw.txt") {
 												// 	let _ = writeln!(file, "RECU (State {:?}) : {:#?}", self.state, split_command.join(" "));}
-												find_action(split_command[0], self);
+												if ["GROUP"].contains(&split_command[0].to_uppercase().as_str()){
+													find_action(&split_command[..2].join(" "), self, Some(split_command[2..].join(" ")));
+												} else if ["CHAT"].contains(&split_command[0].to_uppercase().as_str()) {
+													find_action(split_command[0], self, Some(split_command[1..].join(" ")));
+												} else {
+													find_action(split_command[0], self, None);
+												}
 											} else {
 												self.output += "Unknown command.";
 											}
@@ -191,6 +231,27 @@ impl World<'_>{
 							// 	let _ = writeln!(file, "ok (State {:?}) : {:#?}", self.state, server_event);}
 							if server_event.event_type == "Response" {
 								response_handling(self, &msg, &server_event);
+							}
+							if server_event.event_type == "Event" {
+								if let Some(invite) = server_event.invite {
+									self.group.invitation = Some(Invitation{sender: invite.sender, group_name: invite.group_name})
+								}
+								if let Some(new) = server_event.join {
+									self.group.grouplist.push(new);
+								}
+								if let Some(leaver) = server_event.leave {
+									self.group.grouplist.retain(|x| x != &leaver);
+								}
+								if let Some(msg) = server_event.chat {
+									let channel = match msg.scope.as_str(){
+									"ROOM" => &mut self.chat.room_messages,
+									"GLOBAL" => &mut self.chat.global_messages,
+									"GROUP" => &mut self.chat.group_messages,
+									_ => continue
+									};
+									let text: String = format!("[{}]{}\n",msg.sender,msg.body);
+									channel.push_back(text);
+								}
 							}
 						}else {
 							// if let Ok(mut file) = OpenOptions::new().create(true).append(true).open("debug_network.txt") {

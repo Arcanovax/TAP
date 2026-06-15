@@ -7,3 +7,4 @@ pub mod chat_data;
 pub mod invite_data;
 pub mod scrollbar;
 pub mod chat;
+pub mod group;

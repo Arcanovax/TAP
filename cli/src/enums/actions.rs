@@ -1,3 +1,5 @@
+use crate::enums::channels::Channels;
+
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum PendingAction {
@@ -9,8 +11,14 @@ pub enum PendingAction {
 	Auth,
 	GroupCreate(String),
 	GroupJoin(String),
-	SendChat(String, String),
+	GroupLeave(String),
+	GroupInvite(String),
+	SendChat(Channels, String),
 	Look,
 	Status,
-	Move
+	Move,
+	Who,
+	Attack,
+	Inventory,
+	Quest
 }

@@ -4,7 +4,7 @@ use ratatui::{
 		{
 			Horizontal,
 			Vertical
-		}, HorizontalAlignment::Center, Layout
+		}, HorizontalAlignment::Center, Layout, Spacing::Overlap
 	},
 	style::{
 		Color,
@@ -15,12 +15,11 @@ use ratatui::{
 		Span, Text
 	},
 	widgets::{
-		Block, Borders, Gauge, List, ListItem, ListState, Paragraph, TitlePosition, Wrap
+		Block, Borders, Gauge, List, ListItem, Paragraph, Wrap
 	}
 };
-use ratatui_textarea::TextArea;
 
-use crate::{enums::{exits::Exits, focus::Focus}, global_functions::{draw_scrollbars::draw_scrollbars, estimate_height::estimate_height}, structures::world::World};
+use crate::{enums::{channels::Channels, exits::Exits, focus::Focus}, global_functions::draw_scrollbars::draw_scrollbars, structures::world::World};
 
 pub fn draw_room(world: &mut World, frame: &mut Frame) {
 
@@ -49,6 +48,17 @@ pub fn draw_room(world: &mut World, frame: &mut Frame) {
         Percentage(35)
     ])
     .split(layout[0]);
+
+	let chat_space = Layout::default()
+	.direction(Vertical)
+	.spacing(Overlap(1))
+	.constraints(vec![Length(3), Fill(1)])
+	.split(left_layout[2]);
+
+	let channels = Layout::default()
+	.direction(Horizontal)
+	.constraints(vec![Fill(1), Fill(1), Fill(1)])
+	.split(chat_space[0]);
 
 	let right_layout = Layout::default()
     .direction(Vertical)
@@ -175,6 +185,35 @@ pub fn draw_room(world: &mut World, frame: &mut Frame) {
 	.title_alignment(Alignment::Center)
 	.title_style(Color::Green);
 
+
+	// let borders_channels = Block::new()
+	// 	.borders(Borders::ALL)
+	// 	.border_style(if world.room.focus == Focus::CHANNELS {Color::LightBlue} else {Color::White});
+
+	let global_channel= Paragraph::new("Global")
+	.fg(if world.chat.channel == Channels::GLOBAL { Color::LightBlue } else { Color::White })
+    .block(
+        Block::new()
+            .borders(Borders::ALL)
+			// .border_style(if world.chat.channel == Channels::GLOBAL { Color::LightBlue } else { Color::Black })
+    );
+
+	let room_channel = Paragraph::new("Room")
+	.fg(if world.chat.channel == Channels::ROOM { Color::LightBlue } else { Color::White })
+	.block(
+		Block::new()
+		.borders(Borders::ALL)
+		// .border_style(if world.chat.channel == Channels::ROOM { Color::LightBlue } else { Color::White })
+	);
+
+	let group_channel = Paragraph::new("Group")
+	.fg(if world.chat.channel == Channels::GROUP { Color::LightBlue } else { Color::White })
+	.block(
+		Block::new()
+		.borders(Borders::ALL)
+		// .border_style(if world.chat.channel == Channels::GROUP { Color::LightBlue } else { Color::Black })
+	);
+
 	let output = Block::new()
 	.borders(Borders::ALL)
 	.border_style(if world.room.focus == Focus::OUTPUT {Color::LightBlue} else {Color::White})
@@ -200,7 +239,11 @@ pub fn draw_room(world: &mut World, frame: &mut Frame) {
 	frame.render_widget(hp_bar, left_layout[1]);
 	frame.render_widget(city_name, descr_area);
 	frame.render_widget(exits_list, right_layout[2]);
+	frame.render_widget(global_channel, channels[0]);
+	frame.render_widget(room_channel,  channels[1]);
+	frame.render_widget(group_channel, channels[2]);
 	frame.render_widget(chat, left_layout[2]);
+	// frame.render_widget(borders_channels, chat_space[0]);
 	frame.render_widget(output, left_layout[3]);
 	frame.render_widget(&world.room.text_area, main_layout[1]);
 	frame.render_stateful_widget(npc_list, lists_layout[0], &mut world.room.npc_list_state);

@@ -9,7 +9,13 @@ pub struct ServerEvent {
 
     #[serde(rename = "INVITE")]
     pub invite: Option<InviteData>,
+	#[serde(rename = "GROUP_JOIN")]
+    pub join: Option<String>,
+	#[serde(rename = "GROUP_LEAVE")]
+    pub leave: Option<String>,
 	#[serde(rename = "CHAT")]
     pub chat: Option<ChatData>,
-    pub data: Option<String>
+    pub data: Option<String>,
+	pub error: Option<String>
+
 }
