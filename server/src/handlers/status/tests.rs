@@ -1,5 +1,8 @@
 use super::*;
-use crate::test_utils::{addr, assert_success_contains, connect, err, test_server};
+use crate::{
+    error::ErrorCode,
+    test_utils::{addr, assert_success_contains, connect, err, test_server},
+};
 
 #[test]
 fn status_without_connection_returns_invalid_command() {

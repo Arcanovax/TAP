@@ -1,5 +1,8 @@
 use super::*;
-use crate::test_utils::{addr, connect, err, ok_data, test_server};
+use crate::{
+    error::ErrorCode,
+    test_utils::{addr, connect, err, ok_data, test_server},
+};
 
 #[test]
 fn inventory_without_connection_returns_invalid_command() {
