@@ -678,25 +678,23 @@ async fn main() {
 				set_default_camera();
 				draw_text(player_name, screen_pos.x, screen_pos.y, 20.0, WHITE);
 				camera_handler(&mut camera, tile_size);
-				}}
+				}
+			}
+			let npc_places: Vec<Vec2> = find_npc_spawns(&map.colliders, tile_size);
 
+			for (i,npc_id) in map_data.npc.iter().enumerate(){
+				if npc_places.len() >= i{
+					continue;
+				}
+				println!("{}", npc_id);
+			}
+				
 		}
 
-			// let npc_places: Vec<Vec2> = find_npc_spawns(&map.colliders, tile_size);
 
-			// for npc in npc_places.iter(){
-			// 	let texture_param = DrawTextureParams {
-			// 		dest_size: Some(vec2(60.0, 60.0)),
-			// 		..Default::default()
-			// 	};
-			// 	draw_texture_ex(
-			// 		 &load_texture("assets/items/ale.png").await.unwrap(),
-			// 		npc.x,
-			// 		npc.y,
-			// 		WHITE,
-			// 		texture_param.clone()
-			// 	);
-			// }
+	
+
+			
 
 
 
