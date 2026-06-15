@@ -38,7 +38,8 @@ pub async fn get_rooms() -> HashMap<String, Room> {
 			first_layer: load_texture("assets/map/farm/layer1.png").await.unwrap(),
 			second_layer: Some(load_texture("assets/map/farm/layer2.png").await.unwrap()),
 			spawns: HashMap::from([
-            	(Spawn::East, vec2(380.0, 150.0))
+            	(Spawn::East, vec2(380.0, 150.0)),
+				(Spawn::Center, vec2(300.0, 150.0)),
 			]),
 		};
     rooms.insert(farm.id.clone(), farm);
@@ -66,6 +67,7 @@ pub async fn get_rooms() -> HashMap<String, Room> {
         second_layer: Some(load_texture("assets/map/mine/layer2.png").await.unwrap()),
 		spawns: HashMap::from([
 				(Spawn::South, vec2(200.0, 190.0)),
+				(Spawn::Center, vec2(200.0, 130.0)),
 		]),
     };
     rooms.insert(mine.id.clone(), mine);
@@ -124,6 +126,7 @@ pub async fn get_rooms() -> HashMap<String, Room> {
         second_layer: Some(load_texture("assets/map/tower/layer2.png").await.unwrap()),
 		spawns: HashMap::from([
             	(Spawn::West, vec2(10.0, 90.0)),
+				(Spawn::Center, vec2(200.0, 130.0)),
 		]),
 	};
     rooms.insert(tower.id.clone(), tower);
@@ -151,6 +154,7 @@ pub async fn get_rooms() -> HashMap<String, Room> {
         second_layer: None,
 		spawns: HashMap::from([
             	(Spawn::North, vec2(270.0, 0.0)),
+				(Spawn::Center, vec2(200.0, 90.0)),
 		]),
 	};
     rooms.insert(beach.id.clone(), beach);
@@ -181,6 +185,7 @@ pub async fn get_rooms() -> HashMap<String, Room> {
             	(Spawn::North, vec2(180.0, 0.0)),
 				(Spawn::East, vec2(380.0, 50.0)),
 				(Spawn::South, vec2(220.0, 190.0)),
+				(Spawn::Center, vec2(200.0, 90.0)),
 		]),
 	};
     rooms.insert(market.id.clone(), market);
@@ -208,6 +213,7 @@ pub async fn get_rooms() -> HashMap<String, Room> {
         second_layer: None,
 		spawns: HashMap::from([
 				(Spawn::South, vec2(240.0, 190.0)),
+				(Spawn::Center, vec2(200.0, 130.0)),
 		]),
 	};
     rooms.insert(saloon.id.clone(), saloon);
@@ -237,6 +243,7 @@ pub async fn get_rooms() -> HashMap<String, Room> {
 		spawns: HashMap::from([
             	(Spawn::North, vec2(190.0, 0.0)),
 				(Spawn::West, vec2(10.0, 120.0)),
+				(Spawn::Center, vec2(200.0, 130.0)),
 		]),
 	};
     rooms.insert(parc.id.clone(), parc);
@@ -267,6 +274,7 @@ pub async fn get_rooms() -> HashMap<String, Room> {
 				(Spawn::East, vec2(380.0, 70.0)),
 				(Spawn::South, vec2(200.0, 190.0)),
 				(Spawn::North, vec2(280.0, 0.0)),
+				(Spawn::Center, vec2(200.0, 130.0)),
 		]),
 	};
     rooms.insert(forge.id.clone(), forge);
@@ -296,6 +304,7 @@ pub async fn get_rooms() -> HashMap<String, Room> {
 		spawns: HashMap::from([
   			(Spawn::South, vec2(200.0, 200.0)),
 			(Spawn::North, vec2(240.0, 70.0)),
+			(Spawn::Center, vec2(200.0, 130.0)),
 		]),
 	};
     rooms.insert(montain.id.clone(), montain);

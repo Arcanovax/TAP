@@ -40,6 +40,10 @@ struct ServerEvent {
     join: Option<GroupEvent>,
 	#[serde(rename = "GROUP_LEAVE")]
     leave: Option<GroupEvent>,
+	#[serde(rename = "ROOM_LEAVE")]
+	room_leave: Option<PlayersEvent>,
+	#[serde(rename = "ROOM_JOIN")]
+	room_join: Option<PlayersEvent>,
 	#[serde(rename = "CHAT")]
     chat: Option<ChatData>,
     data: Option<String>,
@@ -51,6 +55,11 @@ struct ServerEvent {
 struct InviteData {
     sender: String,
     group_name: String,
+}
+
+#[derive(Deserialize, Debug)]
+struct PlayersEvent {
+	player_name: String,
 }
 
 #[derive(Deserialize, Debug)]
@@ -330,6 +339,19 @@ async fn main() {
 					}
 					if let Some(leaver) = server_event.leave {
 						game.group.grouplist.retain(|x| x != &leaver.player_name);
+					}
+					if let Some(leave) = server_event.room_leave {
+						if let Some(ref mut map_data) = game.map_data{
+							if leave.player_name != game.player.name{
+								map_data.players.retain(|x| x != &leave.player_name);
+							}
+						}
+					}
+					if let Some(join) = server_event.room_join {
+						if let Some(ref mut map_data) = game.map_data{
+							map_data.players.push(join.player_name);
+							game.map_data = None
+						}
 					}
 					if let Some(msg) = server_event.chat {
 						let channel = match msg.scope.as_str(){
@@ -644,7 +666,7 @@ async fn main() {
 				if player_name.as_ref() == game.player.name{
 					continue;
 				}
-				let coords: &Vec2 = map.spawns.get(&Spawn::Center).unwrap();
+				if let Some(coords) = map.spawns.get(&Spawn::Center) {
 				draw_texture_ex(
 					&current_skin.texture,
 					coords.x,
@@ -656,7 +678,7 @@ async fn main() {
 				set_default_camera();
 				draw_text(player_name, screen_pos.x, screen_pos.y, 20.0, WHITE);
 				camera_handler(&mut camera, tile_size);
-				}
+				}}
 
 		}
 
