@@ -106,7 +106,8 @@ pub enum PendingAction {
 	Command(String, String),
 	Status,
 	Move(Spawn),
-
+	Take,
+	Drop
 }
 
 
@@ -272,7 +273,7 @@ async fn main() {
 
 
 	let rooms: std::collections::HashMap<String, rooms::Room> = get_rooms().await;
-	
+
 
     let skin_data: Vec<(&str, &str)> = vec![
         ("assets/skins/alex.png", "Alex"),
@@ -476,6 +477,50 @@ async fn main() {
 						} else{
 							println!("Failed MOVE");
 						}
+					}
+					PendingAction::Take => {
+						if let Some(data) = server_event.data{
+							if !data.is_empty(){
+								match serde_json::from_str::<Vec<String>>(&data) {
+									Ok(items) => {
+										if let Some(ref mut map_data) = game.map_data {
+											for item_id in &items {
+												map_data.items.retain(|x| x != item_id);
+												println!("Take {}", item_id);
+												game.player.inventory.data.insert(item_id.to_string(), 1);
+											}
+										}
+									}
+									Err(e) => {
+										println!("Error JSON: {}", e);
+									}
+								}
+
+							}
+						}
+
+					}
+					PendingAction::Drop => {
+						if let Some(data) = server_event.data{
+							if !data.is_empty(){
+								match serde_json::from_str::<Vec<String>>(&data) {
+									Ok(items) => {
+										if let Some(ref mut map_data) = game.map_data {
+											for item_id in &items {
+												game.player.inventory.data.remove(item_id);
+												println!("Drop {}", item_id);
+												map_data.items.push(item_id.to_string());
+											}
+										}
+									}
+									Err(e) => {
+										println!("Error JSON: {}", e);
+									}
+								}
+
+							}
+						}
+
 					}
 					_ => {
 						game.pending_action = PendingAction::None;

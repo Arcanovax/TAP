@@ -3,7 +3,7 @@ use std::collections::HashMap;
 use macroquad::prelude::*;
 
 
-#[derive(Clone)]
+#[derive(Clone, PartialEq)]
 pub struct Item {
     pub id: String,
 	pub name: String,
