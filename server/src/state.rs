@@ -3,7 +3,7 @@ use crate::{
     game::World,
     group::Group,
     protocol::{EventType, Message},
-    structures::{fight::Fight, player::Player, quest::Quest, room::Room},
+    structures::{fight::Fight, player::Player, room::Room},
 };
 use std::{
     collections::HashMap,
