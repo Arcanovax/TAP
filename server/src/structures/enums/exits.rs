@@ -1,4 +1,6 @@
+use crate::error::ErrorCode;
 use serde::{Deserialize, Serialize};
+use std::str::FromStr;
 
 #[derive(Debug, PartialEq, Serialize, Deserialize)]
 pub enum Exit {
@@ -8,3 +10,23 @@ pub enum Exit {
     West { toward: String },
 }
 
+impl FromStr for Exit {
+    type Err = ErrorCode;
+    fn from_str(s: &str) -> Result<Self, ErrorCode> {
+        match s.to_uppercase().as_str() {
+            "NORTH" => Ok(Self::North {
+                toward: String::new(),
+            }),
+            "SOUTH" => Ok(Self::South {
+                toward: String::new(),
+            }),
+            "EAST" => Ok(Self::East {
+                toward: String::new(),
+            }),
+            "WEST" => Ok(Self::West {
+                toward: String::new(),
+            }),
+            _ => Err(ErrorCode::INVALID_ARGS),
+        }
+    }
+}

@@ -13,7 +13,7 @@ use crate::{
     protocol::Message,
     state::{ServerInfo, SharedServer, Tx},
     structures::{
-        enums::{item_kind::ItemKind, npc_kind::NPCKind},
+        enums::{exits::Exit, item_kind::ItemKind, npc_kind::NPCKind},
         item::Item,
         npc::NPC,
         quest::{Goal, Quest},
@@ -124,6 +124,8 @@ pub(crate) fn response_error(msg: &Message) -> &ErrorCode {
 
 /// Un `World` peuplé pour les handlers qui dépendent du monde.
 /// - room `room.city_square` (= location par défaut d'un joueur) avec `guard`, `goblin`, `sword`
+///   et une sortie Nord vers `room.market`
+/// - room `room.market` (sortie Sud retour vers `room.city_square`)
 /// - npc `guard` (Citizen, porteur de `quest.fetch`), `goblin` (Enemy non vaincu), `villager` (Citizen sans quête)
 /// - item `sword`, quête `quest.fetch`
 pub(crate) fn test_world() -> World {
@@ -133,10 +135,25 @@ pub(crate) fn test_world() -> World {
         "room.city_square".to_string(),
         Room {
             name: "room.city_square".to_string(),
-            exits: Vec::new(),
+            exits: vec![Exit::North {
+                toward: "room.market".to_string(),
+            }],
             description: "The city square".to_string(),
             npc: vec!["guard".to_string(), "goblin".to_string()],
             items: vec!["sword".to_string()],
+        },
+    );
+
+    world.rooms.insert(
+        "room.market".to_string(),
+        Room {
+            name: "room.market".to_string(),
+            exits: vec![Exit::South {
+                toward: "room.city_square".to_string(),
+            }],
+            description: "The market".to_string(),
+            npc: Vec::new(),
+            items: Vec::new(),
         },
     );
 
