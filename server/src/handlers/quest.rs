@@ -19,25 +19,11 @@ pub(super) fn quest_request(
         };
     }
 
-    // Il faut accepter la quete ici
-    match server_info
+    server_info
         .lock()
         .unwrap()
         .try_accept_quest(peer_addr, &args[0])
-    {
-        Ok(quest) => {
-            return Message::Response {
-                error: ErrorCode::SUCCESS,
-                data: Some(serde_json::to_string(quest).unwrap()),
-            };
-        }
-        Err(code) => {
-            return Message::Response {
-                error: code,
-                data: None,
-            };
-        }
-    }
+        .into()
 }
 
 #[cfg(test)]

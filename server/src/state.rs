@@ -388,7 +388,7 @@ impl ServerInfo {
         &mut self,
         peer_addr: SocketAddr,
         npc_name: &str,
-    ) -> Result<&Quest, ErrorCode> {
+    ) -> Result<String, ErrorCode> {
         let npc = match self.world.npcs.get(npc_name) {
             Some(npc) => npc,
             None => return Err(ErrorCode::NPC_NOT_FOUND),
@@ -405,6 +405,6 @@ impl ServerInfo {
         }
         player.quests_in_progress.insert(quest_ref.clone(), 0);
         let quest = self.world.quests.get(&quest_ref).unwrap();
-        Ok(quest)
+        Ok(serde_json::to_string(quest).unwrap())
     }
 }

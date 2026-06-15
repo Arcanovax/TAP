@@ -16,23 +16,12 @@ pub(super) fn connect_request(
             data: None,
         };
     }
-    match server_info
+    //info!("{} is connected", args[0]);
+    server_info
         .lock()
         .unwrap()
         .try_add_player(args[0].to_string(), peer_addr, tx)
-    {
-        Ok(()) => {
-            info!("{} is connected", args[0]);
-            return Message::Response {
-                error: ErrorCode::SUCCESS,
-                data: None,
-            };
-        }
-        Err(code) => Message::Response {
-            error: code,
-            data: None,
-        },
-    }
+        .into()
 }
 
 #[cfg(test)]
