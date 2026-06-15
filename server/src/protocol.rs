@@ -47,6 +47,12 @@ pub enum EventType {
     GROUP_JOIN {
         player_name: String,
     },
+    ROOM_LEAVE {
+        player_name: String,
+    },
+    ROOM_JOIN {
+        player_name: String,
+    },
 }
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Eq)]
