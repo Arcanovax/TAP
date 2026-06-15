@@ -7,11 +7,14 @@ mod start;
 mod group;
 mod player;
 mod items;
+mod npc;
 
 use player::*;
 use items::*;
 use utils::*;
+use npc::*;
 use std::collections::HashMap;
+use std::fmt::Alignment::Center;
 use macroquad::prelude::*;
 use rooms::*;
 use chat::Chat;
@@ -120,6 +123,7 @@ pub enum Spawn {
     South,
     East,
     West,
+	Center
 }
 
 
@@ -137,6 +141,25 @@ fn camera_handler(camera: &mut Camera2D, tile_size: f32) {
 	camera.zoom = vec2(scale * 2.0 / screen_width(), scale * 2.0 / screen_height());
 
 	set_camera(camera);
+}
+
+fn world_to_screen_pos(world_pos: Vec2) -> Vec2 {
+    let map_w = 25.0 * 16.0;
+    let map_h = 14.0 * 16.0;
+
+    let scale_x = screen_width() / map_w;
+    let scale_y = screen_height() / map_h;
+    let scale = scale_x.min(scale_y);
+
+    let rendered_w = map_w * scale;
+    let rendered_h = map_h * scale;
+    let offset_x = (screen_width() - rendered_w) / 2.0;
+    let offset_y = (screen_height() - rendered_h) / 2.0;
+
+    return vec2(
+        offset_x + world_pos.x * scale,
+        offset_y + world_pos.y * scale,
+    )
 }
 struct Player {
     x: f32,
@@ -248,8 +271,8 @@ async fn main() {
         chat: Chat::new(),
         menu: Menu::new(),
         player: Player {
-            x: 200.0,
-            y: 130.0,
+            x: 0.0,
+            y: 0.0,
             line: 0,
             row: 0,
             is_mooving: false,
@@ -257,7 +280,7 @@ async fn main() {
             spritesheet_index: 0,
 			inventory: Inventory::new(),
             name:"".to_string(),
-			new_spawn: Spawn::None
+			new_spawn: Spawn::Center
         },
         skins: Vec::new(),
         map_id: String::new(),
@@ -315,7 +338,7 @@ async fn main() {
 						"GROUP" => &mut game.chat.group_messages,
 						_ => continue
 						};
-						let text: String = format!("[{}]{}\n",msg.sender,msg.body);
+						let text: String = format!("[{}] {}\n",msg.sender,msg.body);
 						channel.push(text);
 					}
        			}
@@ -610,6 +633,50 @@ async fn main() {
             map_params,
         );
 
+		if let Some(map_data) = game.map_data.clone() {
+			let cut_sheet = DrawTextureParams {
+				source: Some(Rect::new(0.0, 0.0, sprite_width, sprite_height - 1.0)),
+				dest_size: Some(vec2(sprite_width, sprite_height - 1.0)),
+				..Default::default()
+			};
+        	draw_text(map_data.name, 5.0, 30.0, 0.0, WHITE);
+			for player_name in map_data.players.iter(){
+				if player_name.as_ref() == game.player.name{
+					continue;
+				}
+				let coords: &Vec2 = map.spawns.get(&Spawn::Center).unwrap();
+				draw_texture_ex(
+					&current_skin.texture,
+					coords.x,
+					coords.y,
+					WHITE,
+					cut_sheet.clone());
+
+				let screen_pos = world_to_screen_pos(*coords);
+				set_default_camera();
+				draw_text(player_name, screen_pos.x, screen_pos.y, 20.0, WHITE);
+				camera_handler(&mut camera, tile_size);
+				}
+
+		}
+
+			// let npc_places: Vec<Vec2> = find_npc_spawns(&map.colliders, tile_size);
+
+			// for npc in npc_places.iter(){
+			// 	let texture_param = DrawTextureParams {
+			// 		dest_size: Some(vec2(60.0, 60.0)),
+			// 		..Default::default()
+			// 	};
+			// 	draw_texture_ex(
+			// 		 &load_texture("assets/items/ale.png").await.unwrap(),
+			// 		npc.x,
+			// 		npc.y,
+			// 		WHITE,
+			// 		texture_param.clone()
+			// 	);
+			// }
+
+
 
 
         draw_texture_ex(
@@ -635,6 +702,9 @@ async fn main() {
         }
 
 
+
+
+
 		set_default_camera();
 
 		if game.focus == InputFocus::Game {
@@ -650,9 +720,7 @@ async fn main() {
 		handle_chat(&mut game);
 		handle_group(&mut game);
         draw_menu(&mut game);
-		if let Some(map_data) = game.map_data.clone() {
-        	draw_text(map_data.name, 5.0, 30.0, 60.0, WHITE);
-		}
+
 
 		}
         next_frame().await
