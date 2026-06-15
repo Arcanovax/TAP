@@ -41,6 +41,15 @@ pub fn draw_text_center_top(rect: Rect,text: &str, font_size: u16, y: f32){
 	draw_text(text, text_pos.x, text_pos.y, font_size as f32, WHITE);
 }
 
+pub fn draw_text_bottom(rect: Rect,text: &str, font_size: u16, x: f32){
+	let text_size = measure_text(text, None, font_size, 1.0);
+	let text_pos = Vec2::new(
+            	rect.x + x,
+            	rect.y + rect.h - text_size.height* 0.2,
+        	);
+	draw_text(text, text_pos.x, text_pos.y, font_size as f32, WHITE);
+}
+
 
 pub fn get_button(rect: Rect,text: &str, font_size: u16, color: Color, mouse: (f32, f32)) -> bool {
 		let button: Rect = rect;
