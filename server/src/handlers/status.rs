@@ -10,6 +10,6 @@ pub(super) fn status_request(server_info: &SharedServer, peer_addr: SocketAddr) 
         .lock()
         .unwrap()
         .get_player(peer_addr)
-        .map(|player| serde_json::to_string(&player).unwrap())
+        .map(|player| serde_json::to_value(&player).unwrap())
         .into()
 }

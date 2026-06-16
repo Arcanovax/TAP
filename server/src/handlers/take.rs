@@ -31,6 +31,6 @@ pub fn take_request(
     }
     Message::Response {
         error: ErrorCode::SUCCESS,
-        data: Some(serde_json::to_string(&taken).unwrap()),
+        data: Some(serde_json::to_value(&taken).unwrap()),
     }
 }

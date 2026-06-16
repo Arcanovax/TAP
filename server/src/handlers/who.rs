@@ -9,11 +9,7 @@ pub(super) fn who_request(server_info: &SharedServer) -> Message {
     Message::Response {
         error: ErrorCode::SUCCESS,
         data: Some(
-            server_info
-                .lock()
-                .unwrap()
-                .get_number_of_players()
-                .to_string(),
+            serde_json::to_value(server_info.lock().unwrap().get_number_of_players()).unwrap(),
         ),
     }
 }

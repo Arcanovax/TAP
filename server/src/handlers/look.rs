@@ -1,8 +1,6 @@
 use crate::{
-    error::ErrorCode::SUCCESS,
-    protocol::Message,
-    state::SharedServer,
-    structures::{enums::exits::Exit, room::Room},
+    error::ErrorCode::SUCCESS, protocol::Message, state::SharedServer,
+    structures::enums::exits::Exit,
 };
 use serde::Serialize;
 use std::net::SocketAddr;
@@ -20,7 +18,6 @@ struct RoomView<'a> {
 
 #[derive(Serialize)]
 struct LookView<'a> {
-    // #[serde(flatten)]
     room: RoomView<'a>,
     players: Vec<String>,
     npcs: &'a Vec<String>,
@@ -76,6 +73,6 @@ pub fn look_request(server_info: &SharedServer, peer_addr: SocketAddr) -> Messag
     };
     Message::Response {
         error: SUCCESS,
-        data: Some(serde_json::to_string(&view).unwrap()),
+        data: Some(serde_json::to_value(&view).unwrap()),
     }
 }

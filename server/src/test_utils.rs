@@ -92,7 +92,7 @@ pub(crate) fn group_with(
 pub(crate) fn ok_data(data: &str) -> Message {
     Message::Response {
         error: ErrorCode::SUCCESS,
-        data: Some(data.to_string()),
+        data: Some(serde_json::from_str(data).expect("ok_data: littéral JSON invalide")),
     }
 }
 
@@ -108,7 +108,10 @@ pub(crate) fn assert_success_contains(msg: &Message, needle: &str) {
         Message::Response {
             error: ErrorCode::SUCCESS,
             data: Some(d),
-        } => assert!(d.contains(needle), "data {d:?} does not contain {needle:?}"),
+        } => assert!(
+            d.to_string().contains(needle),
+            "data {d:?} does not contain {needle:?}"
+        ),
         other => panic!("expected SUCCESS with data containing {needle:?}, got {other:?}"),
     }
 }

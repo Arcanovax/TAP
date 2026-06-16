@@ -2,6 +2,7 @@ use std::str::FromStr;
 
 use crate::{error::ErrorCode, structures::quest::Goal};
 use serde::{Deserialize, Serialize};
+use serde_json::Value;
 
 #[derive(Serialize, Deserialize, PartialEq, Eq, Clone, Debug)]
 pub enum ChatScope {
@@ -64,7 +65,7 @@ pub enum Message {
     },
     Response {
         error: ErrorCode,
-        data: Option<String>,
+        data: Option<serde_json::Value>,
     },
     Event(EventType),
 }
@@ -89,8 +90,8 @@ impl From<Result<(), ErrorCode>> for Message {
     }
 }
 
-impl From<Result<String, ErrorCode>> for Message {
-    fn from(result: Result<String, ErrorCode>) -> Self {
+impl From<Result<Value, ErrorCode>> for Message {
+    fn from(result: Result<Value, ErrorCode>) -> Self {
         match result {
             Ok(data) => {
                 return Message::Response {
@@ -126,12 +127,12 @@ mod tests {
 
     #[test]
     fn from_ok_unit_gives_succes_with_data() {
-        let msg: Message = Ok::<String, ErrorCode>(String::from("Hello Test")).into();
+        let msg: Message = Ok::<Value, ErrorCode>(Value::String("Hello Test".to_string())).into();
         assert_eq!(
             msg,
             Message::Response {
                 error: ErrorCode::SUCCESS,
-                data: Some(String::from("Hello Test"))
+                data: Some(Value::String("Hello Test".to_string()))
             }
         )
     }

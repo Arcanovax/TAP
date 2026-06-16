@@ -80,6 +80,6 @@ pub fn move_request(server: &SharedServer, peer_addr: SocketAddr, dest: &Vec<Str
 
     Message::Response {
         error: ErrorCode::SUCCESS,
-        data: Some(json!({ "room": target }).to_string()),
+        data: Some(json!({ "room": target })),
     }
 }
