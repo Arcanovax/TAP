@@ -405,7 +405,9 @@ async fn main() {
 					}
 					if let Some(take) = server_event.take {
 						if let Some(ref mut map_data) = game.map_data {
-							map_data.items.retain(|x: &String| x != &take.item);
+							if let Some(pos) = map_data.items.iter().position(|x| x == &take.item) {
+								map_data.items.remove(pos);
+							}
 						}
 					}
 					if let Some(drop) = server_event.drop {
@@ -618,12 +620,13 @@ async fn main() {
 
 								match serde_json::from_str::<Value>(&data_str) {
 									Ok(json) => {
-										let taken = json["taken"].as_str().unwrap_or("");
+										let taken: String = json["taken"].as_str().unwrap_or("").to_string();
 										if let Some(ref mut map_data) = game.map_data {
-											map_data.items.retain(|x: &String| x != &taken);
-											println!("Take {}", taken);
-											game.player.inventory.data.insert(taken.to_string(), 1);
-
+											if let Some(pos) = map_data.items.iter().position(|x| x == &taken) {
+												map_data.items.remove(pos);
+											}
+											let current_count = game.player.inventory.data.get(&taken).copied().unwrap_or(0);
+											game.player.inventory.data.insert(taken, current_count + 1);
 										}
 									}
 									Err(e) => {
@@ -641,12 +644,19 @@ async fn main() {
 							if !data_str.is_empty(){
 								match serde_json::from_str::<Value>(&data_str) {
 									Ok(json) => {
-										let dropped = json["dropped"].as_str().unwrap_or("");
+										let dropped: String = json["dropped"].as_str().unwrap_or("").to_string();
 										if let Some(ref mut map_data) = game.map_data {
-											game.player.inventory.data.remove(dropped);
-											println!("Drop {}", dropped);
-											map_data.items.push(dropped.to_string());
-
+											let current_count = game.player.inventory.data.get(&dropped).copied().unwrap_or(0);
+											if current_count > 0 {
+												let new_count = current_count - 1;
+												if new_count <= 0 {
+													game.player.inventory.data.remove(&dropped);
+												} else {											
+													game.player.inventory.data.insert(dropped.clone(), new_count);
+												}
+											}
+											
+											map_data.items.push(dropped);
 										}
 									}
 									Err(e) => {
