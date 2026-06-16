@@ -68,3 +68,35 @@ fn connect_notifies_arrival_room_join() {
         })
     );
 }
+
+#[test]
+fn connect_broadcasts_player_count_to_others() {
+    let server = populated_server();
+    let mut alice_rx = connect(&server, addr(1), "alice");
+    let (tx, _rx) = tx_rx();
+    connect_request(&vec!["bob".to_string()], &server, addr(2), &tx);
+
+    // alice reçoit ROOM_JOIN puis PLAYERS : on vérifie la présence de l'event PLAYERS
+    let events: Vec<_> = std::iter::from_fn(|| alice_rx.try_recv().ok()).collect();
+    assert!(
+        events.contains(&Message::Event(EventType::PLAYERS { players: 2 })),
+        "alice devrait recevoir PLAYERS {{ players: 2 }}, reçu: {events:?}"
+    );
+}
+
+#[test]
+fn connect_does_not_send_player_count_to_self() {
+    let server = test_server();
+    connect(&server, addr(1), "alice");
+    let (tx, mut bob_rx) = tx_rx();
+    connect_request(&vec!["bob".to_string()], &server, addr(2), &tx);
+
+    // le joueur qui se connecte est exclu des global receivers
+    let events: Vec<_> = std::iter::from_fn(|| bob_rx.try_recv().ok()).collect();
+    assert!(
+        !events
+            .iter()
+            .any(|e| matches!(e, Message::Event(EventType::PLAYERS { .. }))),
+        "bob ne devrait pas recevoir son propre event PLAYERS, reçu: {events:?}"
+    );
+}

@@ -25,7 +25,11 @@ pub fn take_request(
         };
     }
 
-    match binding.try_take_item(peer_addr, &args.join(" ")) {
+    let mut item = args.join(" ");
+    if let Some(reference) = binding.world.name_to_ref.get(&item.to_lowercase()) {
+        item = reference.clone();
+    }
+    match binding.try_take_item(peer_addr, &item) {
         Ok(item) => Message::Response {
             error: ErrorCode::SUCCESS,
             data: Some(json!({ "taken": item })),
