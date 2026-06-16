@@ -74,6 +74,9 @@ impl Loader {
         }
         for (name, npc) in parsed.npc {
             let id = format!("npc.{}", name);
+            self.world
+                .name_to_ref
+                .insert(npc.name.to_lowercase().clone(), id.clone());
             if let Some(file_a) = self.definer.insert(id.clone(), path.clone()) {
                 return Err(ConfigError::Conflict {
                     id,
