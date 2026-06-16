@@ -1,3 +1,5 @@
+use serde_json::json;
+
 use crate::{error::ErrorCode, protocol::Message, state::SharedServer};
 use std::net::SocketAddr;
 
@@ -23,14 +25,14 @@ pub fn take_request(
         };
     }
 
-    let mut taken: Vec<String> = Vec::new();
-    for item in args {
-        if let Ok(item) = binding.try_take_item(peer_addr, item) {
-            taken.push(item);
-        }
-    }
-    Message::Response {
-        error: ErrorCode::SUCCESS,
-        data: Some(serde_json::to_value(&taken).unwrap()),
+    match binding.try_take_item(peer_addr, &args.join(" ")) {
+        Ok(item) => Message::Response {
+            error: ErrorCode::SUCCESS,
+            data: Some(json!({ "taken": item })),
+        },
+        Err(code) => Message::Response {
+            error: code,
+            data: None,
+        },
     }
 }

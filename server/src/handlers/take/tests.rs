@@ -21,7 +21,7 @@ fn take_existing_item_moves_it_to_inventory() {
     let server = populated_server();
     connect(&server, addr(1), "alice");
     let result = take_request(&server, addr(1), &vec!["sword".to_string()]);
-    assert_eq!(result, ok_data(r#"["sword"]"#));
+    assert_eq!(result, ok_data(r#"{"taken":"sword"}"#));
     // l'item est bien passé dans l'inventaire
     let guard = server.lock().unwrap();
     let player = guard.get_player(addr(1)).unwrap();
@@ -29,9 +29,9 @@ fn take_existing_item_moves_it_to_inventory() {
 }
 
 #[test]
-fn take_unknown_item_returns_empty_success() {
+fn take_unknown_item_returns_item_not_found() {
     let server = populated_server();
     connect(&server, addr(1), "alice");
     let result = take_request(&server, addr(1), &vec!["shield".to_string()]);
-    assert_eq!(result, ok_data("[]"));
+    assert_eq!(result, err(ErrorCode::ITEM_NOT_FOUND));
 }
