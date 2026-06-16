@@ -1,7 +1,7 @@
 use super::*;
 use crate::{
     error::ErrorCode,
-    test_utils::{addr, assert_success_contains, connect, err, test_server},
+    test_utils::{addr, connect, err, ok_data, test_server},
 };
 
 #[test]
@@ -18,5 +18,8 @@ fn status_connected_returns_player_data() {
     let server = test_server();
     connect(&server, addr(1), "alice");
     let result = status_request(&server, addr(1));
-    assert_success_contains(&result, "\"name\":\"alice\"");
+    assert_eq!(
+        result,
+        ok_data(r#"{"hp":100,"max_hp":100,"status":"Idle"}"#)
+    );
 }
