@@ -1,5 +1,8 @@
 use crate::{
-    error::ErrorCode::SUCCESS, protocol::Message, state::SharedServer, structures::room::Room,
+    error::ErrorCode::SUCCESS,
+    protocol::Message,
+    state::SharedServer,
+    structures::{enums::exits::Exit, room::Room},
 };
 use serde::Serialize;
 use std::net::SocketAddr;
@@ -8,11 +11,20 @@ use std::net::SocketAddr;
 mod tests;
 
 #[derive(Serialize)]
+struct RoomView<'a> {
+    id: &'a String,
+    name: &'a String,
+    description: &'a String,
+    exits: &'a [Exit],
+}
+
+#[derive(Serialize)]
 struct LookView<'a> {
-    room_id: &'a String,
-    #[serde(flatten)]
-    room: &'a Room,
+    // #[serde(flatten)]
+    room: RoomView<'a>,
     players: Vec<String>,
+    npcs: &'a Vec<String>,
+    items: &'a Vec<String>,
 }
 
 pub fn look_request(server_info: &SharedServer, peer_addr: SocketAddr) -> Message {
@@ -52,9 +64,15 @@ pub fn look_request(server_info: &SharedServer, peer_addr: SocketAddr) -> Messag
         .collect();
     players.push(player_name);
     let view = LookView {
-        room_id,
-        room,
+        room: RoomView {
+            id: room_id,
+            name: &room.name,
+            description: &room.description,
+            exits: &room.exits,
+        },
         players,
+        npcs: &room.npc,
+        items: &room.items,
     };
     Message::Response {
         error: SUCCESS,
