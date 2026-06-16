@@ -54,6 +54,9 @@ pub enum EventType {
     ROOM_JOIN {
         player_name: String,
     },
+    PLAYERS {
+        players: usize,
+    },
 }
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Eq)]

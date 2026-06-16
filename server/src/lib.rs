@@ -38,6 +38,7 @@ fn cleanup_tcp_connection(server_info: &SharedServer, peer_addr: SocketAddr) {
         Ok(name) => info!("{} disconnected", name),
         Err(_) => {}
     }
+    server_info.lock().unwrap().send_players_event(peer_addr);
     info!("TCP connection closed");
 }
 
