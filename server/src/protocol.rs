@@ -57,6 +57,14 @@ pub enum EventType {
     PLAYERS {
         players: usize,
     },
+    TAKE {
+        player_name: String,
+        item: String,
+    },
+    DROP {
+        player_name: String,
+        item: String,
+    },
 }
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Eq)]

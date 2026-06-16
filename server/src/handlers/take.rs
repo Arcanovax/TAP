@@ -1,6 +1,10 @@
 use serde_json::json;
 
-use crate::{error::ErrorCode, protocol::Message, state::SharedServer};
+use crate::{
+    error::ErrorCode,
+    protocol::{EventType, Message},
+    state::SharedServer,
+};
 use std::net::SocketAddr;
 
 #[cfg(test)]
@@ -30,10 +34,20 @@ pub fn take_request(
         item = reference.clone();
     }
     match binding.try_take_item(peer_addr, &item) {
-        Ok(item) => Message::Response {
-            error: ErrorCode::SUCCESS,
-            data: Some(json!({ "taken": item })),
-        },
+        Ok(item) => {
+            let receivers = binding.get_room_receivers(peer_addr).unwrap();
+            let player = binding.get_player(peer_addr).unwrap();
+            for con in receivers {
+                let _ = con.tx.send(Message::Event(EventType::TAKE {
+                    player_name: player.name.clone(),
+                    item: item.clone(),
+                }));
+            }
+            Message::Response {
+                error: ErrorCode::SUCCESS,
+                data: Some(json!({ "taken": item })),
+            }
+        }
         Err(code) => Message::Response {
             error: code,
             data: None,
