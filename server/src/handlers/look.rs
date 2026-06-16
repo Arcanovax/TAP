@@ -9,6 +9,7 @@ mod tests;
 
 #[derive(Serialize)]
 struct LookView<'a> {
+    room_id: &'a String,
     #[serde(flatten)]
     room: &'a Room,
     players: Vec<String>,
@@ -16,8 +17,8 @@ struct LookView<'a> {
 
 pub fn look_request(server_info: &SharedServer, peer_addr: SocketAddr) -> Message {
     let binding = server_info.lock().unwrap();
-    let player_name = match binding.get_player(peer_addr) {
-        Ok(player) => player.name.clone(),
+    let player = match binding.get_player(peer_addr) {
+        Ok(player) => player,
         Err(code) => {
             return Message::Response {
                 error: code,
@@ -25,6 +26,8 @@ pub fn look_request(server_info: &SharedServer, peer_addr: SocketAddr) -> Messag
             };
         }
     };
+    let player_name = player.name.clone();
+    let room_id = &player.location;
     let room = match binding.get_player_room(peer_addr) {
         Ok(room) => room,
         Err(code) => {
@@ -48,7 +51,11 @@ pub fn look_request(server_info: &SharedServer, peer_addr: SocketAddr) -> Messag
         .map(|con| con.player.name.clone())
         .collect();
     players.push(player_name);
-    let view = LookView { room, players };
+    let view = LookView {
+        room_id,
+        room,
+        players,
+    };
     Message::Response {
         error: SUCCESS,
         data: Some(serde_json::to_string(&view).unwrap()),
