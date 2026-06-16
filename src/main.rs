@@ -9,6 +9,7 @@ mod player;
 mod items;
 mod npc;
 
+use macroquad::texture::FilterMode::Nearest;
 use player::*;
 use items::*;
 
@@ -351,6 +352,7 @@ async fn main() {
 
 
 	let rooms: std::collections::HashMap<String, rooms::Room> = get_rooms().await;
+	let npcs: std::collections::HashMap<String, npc::Npc> = get_npcs().await;
 
 
     let skin_data: Vec<(&str, &str)> = vec![
@@ -780,16 +782,29 @@ async fn main() {
 					draw_text(player_name, screen_pos.x, screen_pos.y, 20.0, WHITE);
 					camera_handler(&mut camera, tile_size);
 					}
-
-					let npc_places: Vec<Vec2> = find_npc_spawns(&map.colliders, tile_size);
-
-					for (i,npc_id) in map_data.npcs.iter().enumerate(){
-						if npc_places.len() >= i{
-							continue;
-						}
-						// println!("{}", npc_id);
+				}
+				let npc_places: Vec<Vec2> = find_npc_spawns(&map.colliders, tile_size);
+				let texture_param = DrawTextureParams {
+					dest_size: Some(vec2(tile_size, tile_size*2.0)),
+					..Default::default()
+				};
+				
+				for npc_id in map_data.npcs.iter(){
+					if let Some(place) = npc_places.clone().pop() {
+						let npc: Npc = get_npc_from_id(npcs.clone(), npc_id);
+						let npc_texture: Texture2D = npc.texture;
+						draw_texture_ex(
+						&npc_texture,
+						place.x, place.y,
+						WHITE,
+						texture_param.clone()
+						);
+						npc_texture.set_filter(FilterMode::Nearest);
+					} else {
+						break;
 					}
 				}
+				
 
 				let cut_sheet = DrawTextureParams {
 					source: Some(Rect::new(source_x, source_y + 1.0, sprite_width, sprite_height - 1.0)),
