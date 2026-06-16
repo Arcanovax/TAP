@@ -86,14 +86,14 @@ pub async fn run(addr: String, port: String) -> Result<(), Box<dyn std::error::E
                             }
                             let request = parse_command(line.as_str()); // DEV TEST
                             // let request = Message::parse(line)?; // PROD
+                            let response = handle_request(&request, &server_info_copy, peer_addr, &tx);
+                            let _ = write_half.write_all(response.to_str().as_bytes()).await;
+                            line.clear();
                             if let Message::Command { name, .. } = &request {
                                 if name.to_uppercase() == "QUIT" {
                                     break;
                                 }
                             }
-                            let response = handle_request(request, &server_info_copy, peer_addr, &tx);
-                            let _ = write_half.write_all(response.to_str().as_bytes()).await;
-                            line.clear();
                         }
                         Some(event) = rx.recv() => {
                             let _ = write_half.write_all(event.to_str().as_bytes()).await;

@@ -20,7 +20,7 @@ use crate::{
 };
 
 pub fn handle_request(
-    request: Message,
+    request: &Message,
     server_info: &SharedServer,
     peer_addr: SocketAddr,
     tx: &Tx,
@@ -30,7 +30,7 @@ pub fn handle_request(
             Some(Command::CONNECT) => connect_request(args, server_info, peer_addr, tx),
             Some(Command::QUIT) => Message::Response {
                 error: ErrorCode::SUCCESS,
-                data: None,
+                data: Some(serde_json::to_value("OK bye").unwrap()),
             },
             Some(Command::WHO) => who_request(server_info),
             Some(Command::CHAT) => chat_request(args, server_info, peer_addr),
