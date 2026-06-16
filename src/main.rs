@@ -11,6 +11,7 @@ mod npc;
 
 use player::*;
 use items::*;
+use serde_json::error::Category::Data;
 use utils::*;
 use npc::*;
 use std::collections::HashMap;
@@ -44,9 +45,11 @@ struct ServerEvent {
 	room_leave: Option<PlayersEvent>,
 	#[serde(rename = "ROOM_JOIN")]
 	room_join: Option<PlayersEvent>,
+	#[serde(rename = "PLAYERS")]
+	players: Option<Players>,
 	#[serde(rename = "CHAT")]
     chat: Option<ChatData>,
-    data: Option<String>,
+    data: Option<serde_json::Value>,
 	error: Option<String>
 
 }
@@ -63,6 +66,12 @@ struct PlayersEvent {
 }
 
 #[derive(Deserialize, Debug)]
+struct Players {
+	players: i32,
+}
+
+
+#[derive(Deserialize, Debug)]
 struct GroupEvent {
 	player_name: String,
 }
@@ -74,26 +83,39 @@ struct ChatData {
     scope: String,
 }
 
-#[derive(Deserialize, Debug, Clone)]
-pub struct MapData {
-    pub name: String,
-    pub exits: Vec<Exit>,
-    pub description: String,
-    pub npc: Vec<String>,
-    pub items: Vec<String>,
-	pub players: Vec<String>,
+#[derive(Deserialize, Debug)]
+struct MoveData {
+	room: String,
 }
+
+
+
+
+#[derive(Deserialize, Debug, Clone)]
+pub struct LookData {
+    pub room: RoomData,
+	pub players: Vec<String>,
+	pub items: Vec<String>,
+    pub npcs: Vec<String>,
+}
+
+
+#[derive(Deserialize, Debug, Clone)]
+pub struct RoomData {
+    pub id: String,
+    pub name: String,
+	pub description: String,
+    pub exits: Vec<Exit>,
+
+}
+
+
 
 #[derive(Deserialize, Debug, Clone)]
 pub struct StatusData {
-    pub name: String,
-    pub hp: usize,
-    pub max_hp: usize,
-    pub location: String,
+    pub hp: i32,
+    pub max_hp: i32,
     pub status: String,
-	pub inventory: HashMap<String, u32>,
-	pub available_quests: Vec<String>,
-	pub group_id: Option<String>
 }
 
 #[derive(Deserialize, Debug, Clone)]
@@ -119,7 +141,8 @@ pub enum PendingAction {
 	Status,
 	Move(Spawn),
 	Take,
-	Drop
+	Drop,
+	Who
 }
 
 
@@ -181,6 +204,8 @@ struct Player {
 	inventory: Inventory,
     name: String,
 	new_spawn:Spawn,
+	hp: i32,
+	max_hp: i32,
 }
 
 
@@ -201,14 +226,14 @@ struct Game {
     pub player: Player,
     pub chat: Chat,
     pub skins: Vec<Skin>,
-    pub map_id: String,
 	pub tx_to_serv: tokio::sync::mpsc::Sender<String>,
     pub is_auth: bool,
     pub rx_from_serv: std::sync::mpsc::Receiver<String>,
 	pub group: Group,
 	pub pending_action: PendingAction,
-	pub map_data: Option<MapData>,
-	pub items:HashMap<String, Item>
+	pub map_data: Option<LookData>,
+	pub items:HashMap<String, Item>,
+	pub nb_players: i32
 }
 
 impl Game {
@@ -228,12 +253,21 @@ async fn network_task(tx: mpsc::Sender<String>, mut rx: tokio::sync::mpsc::Recei
     let (mut reader, mut writer) = stream.into_split();
 
 
-    let read_task = tokio::spawn(async move {
+	let read_task = tokio::spawn(async move {
         let mut buf = [0u8; 1024];
+        let mut accumulator = String::new();
         loop {
             let n = reader.read(&mut buf).await.unwrap();
             if n == 0 { break; }
-            tx.send(String::from_utf8_lossy(&buf[..n]).to_string()).ok();
+            accumulator.push_str(&String::from_utf8_lossy(&buf[..n]));
+
+            while let Some(pos) = accumulator.find('\n') {
+                let line = accumulator[..pos].trim().to_string();
+                if !line.is_empty() {
+                    tx.send(line).ok();
+                }
+                accumulator = accumulator[pos + 1..].to_string();
+            }
         }
     });
 
@@ -289,17 +323,19 @@ async fn main() {
             spritesheet_index: 0,
 			inventory: Inventory::new(),
             name:"".to_string(),
-			new_spawn: Spawn::Center
+			new_spawn: Spawn::Center,
+			hp: 0,
+			max_hp: 0
         },
         skins: Vec::new(),
-        map_id: String::new(),
 		tx_to_serv: tx_to_serv,
         rx_from_serv: rx_from_serv,
         is_auth: false,
 		group: Group::new(),
 		pending_action: PendingAction::None,
 		map_data: None,
-		items: get_items().await
+		items: get_items().await,
+		nb_players:0
     };
 
 
@@ -328,7 +364,8 @@ async fn main() {
 
     loop {
 		while let Ok(msg) = game.rx_from_serv.try_recv() {
-            println!("GET: {}", msg);
+			println!("Send: {:?}", game.pending_action);
+            println!("GET: {} //", msg);
 			if let Ok(server_event) = serde_json::from_str::<ServerEvent>(&msg) {
 				if server_event.event_type == "Event" {
 					if let Some(invite) = server_event.invite {
@@ -353,13 +390,16 @@ async fn main() {
 							game.map_data = None
 						}
 					}
+					if let Some(players) = server_event.players {
+						game.nb_players = players.players;
+					}
 					if let Some(msg) = server_event.chat {
 						let channel = match msg.scope.as_str(){
-						"ROOM" => &mut game.chat.room_messages,
-						"GLOBAL" => &mut game.chat.global_messages,
-						"GROUP" => &mut game.chat.group_messages,
-						_ => continue
-						};
+							"ROOM" => &mut game.chat.room_messages,
+							"GLOBAL" => &mut game.chat.global_messages,
+							"GROUP" => &mut game.chat.group_messages,
+							_ => continue
+							};
 						let text: String = format!("[{}] {}\n",msg.sender,msg.body);
 						channel.push(text);
 					}
@@ -368,8 +408,9 @@ async fn main() {
 					match game.pending_action {
 					PendingAction::GroupList => {
 						if msg.contains("SUCCESS"){
-							if let Some(data) = server_event.data {
-								match serde_json::from_str::<Vec<String>>(&data) {
+							if let Some(data_val) = server_event.data {
+								let data_str = data_val.to_string();
+								match serde_json::from_str::<Vec<String>>(&data_str) {
 									Ok(players) => {
 										game.group.grouplist = players;
 									}
@@ -385,7 +426,7 @@ async fn main() {
 					}
 					PendingAction::Auth => {
 						if msg.contains("SUCCESS") {
-							game.is_auth = true
+							game.is_auth = true;
 						} else if msg.contains("NAME_IN_USE") {
 							println!("already use")
 						}
@@ -487,8 +528,9 @@ async fn main() {
 							}
 						}
 					PendingAction::Look => {
-						if let Some(data_str) = &server_event.data {
-							match serde_json::from_str::<MapData>(data_str) {
+						if let Some(data_val) = &server_event.data {
+							let data_str = data_val.to_string();
+							match serde_json::from_str::<LookData>(&data_str) {
 								Ok(parsed_map_data) => {
 									game.map_data = Some(parsed_map_data);
 								}
@@ -500,10 +542,26 @@ async fn main() {
 						}
 					}
 					PendingAction::Status => {
-						if let Some(data_str) = &server_event.data {
-							match serde_json::from_str::<StatusData>(data_str) {
+						if let Some(data_val) = &server_event.data {
+							let data_str = data_val.to_string();
+							match serde_json::from_str::<StatusData>(&data_str) {
 								Ok(parsed_map_data) => {
-									game.map_id = parsed_map_data.location;
+									game.player.hp = parsed_map_data.hp;
+									game.player.max_hp = parsed_map_data.max_hp;
+								}
+								Err(e) => {
+								eprintln!("STATUS error: {}", e);
+								}
+							}
+
+						}
+					}
+					PendingAction::Who => {
+						if let Some(data_val) = &server_event.data {
+							let data_str = data_val.to_string();
+							match serde_json::from_str::<Players>(&data_str) {
+								Ok(players) => {
+									game.nb_players =players.players;
 								}
 								Err(e) => {
 								eprintln!("STATUS error: {}", e);
@@ -513,20 +571,31 @@ async fn main() {
 						}
 					}
 					PendingAction::Move(new_spawn) => {
-						if msg.contains("SUCCESS") && game.player.new_spawn == Spawn::None{
-							if let Some(data) = server_event.data{
-								println!("{}", data)}
 
-								game.player.new_spawn = new_spawn;
-								game.map_id = String::new();
-						} else{
-							println!("Failed MOVE");
+						if msg.contains("SUCCESS") && game.player.new_spawn == Spawn::None{
+							if let Some(data_val) = server_event.data{
+								let data_str = data_val.to_string();
+								match serde_json::from_str::<MoveData>(&data_str) {
+									Ok(parsed_map_data) => {
+										game.player.new_spawn = new_spawn;
+										if let Some(ref mut mapdata) = game.map_data{
+
+											mapdata.room.id = parsed_map_data.room;
+										}
+									}
+									Err(e) => {
+										eprintln!("MOVE error: {}", e);
+									}
+								}
+							}
 						}
 					}
+
 					PendingAction::Take => {
-						if let Some(data) = server_event.data{
-							if !data.is_empty(){
-								match serde_json::from_str::<Vec<String>>(&data) {
+						if let Some(data_val) = server_event.data{
+							let data_str = data_val.to_string();
+							if !data_str.is_empty(){
+								match serde_json::from_str::<Vec<String>>(&data_str) {
 									Ok(items) => {
 										if let Some(ref mut map_data) = game.map_data {
 											for item_id in &items {
@@ -546,9 +615,10 @@ async fn main() {
 
 					}
 					PendingAction::Drop => {
-						if let Some(data) = server_event.data{
-							if !data.is_empty(){
-								match serde_json::from_str::<Vec<String>>(&data) {
+						if let Some(data_val) = server_event.data{
+							let data_str = data_val.to_string();
+							if !data_str.is_empty(){
+								match serde_json::from_str::<Vec<String>>(&data_str) {
 									Ok(items) => {
 										if let Some(ref mut map_data) = game.map_data {
 											for item_id in &items {
@@ -562,188 +632,186 @@ async fn main() {
 										println!("Error JSON: {}", e);
 									}
 								}
-
 							}
 						}
-
 					}
 					_ => {
 						game.pending_action = PendingAction::None;
 					}
-				}
+					}
     				game.pending_action = PendingAction::None;
+
 				}
-    		}
-        }
+
+			}
+
+		}
 
 		if !game.is_auth{
 					handle_starter(&mut game);
 					next_frame().await
-
 				}
 		else {
+			if game.nb_players == 0 && game.pending_action == PendingAction::None{
+				game.tx_to_serv.try_send("WHO \n".to_string()).ok();
+				game.pending_action = PendingAction::Who;
+			}
+			else{
 
-		if game.map_id.is_empty() && game.pending_action == PendingAction::None {
-			game.tx_to_serv.try_send("STATUS\n".to_string()).ok();
-			game.pending_action = PendingAction::Status;
-		}
-		else {
-
-
-
-		let map = match rooms.get(&game.map_id) {
-			Some(room_data) => room_data,
-			None => {
-				continue;
+			if game.map_data.is_none() && game.pending_action == PendingAction::None {
+				game.tx_to_serv.try_send("LOOK \n".to_string()).ok();
+				game.pending_action = PendingAction::Look;
 			}
 
-		};
+			if let Some(map_data) = game.map_data.clone() {
+				let map = match rooms.get(&map_data.room.id) {
+					Some(room_data) => room_data,
+					None => {
+						continue;
+					}
 
-		if game.map_data.is_none(){
-			game.tx_to_serv.try_send("LOOK\n".to_string()).ok();
-			game.pending_action = PendingAction::Look;
-		}
+				};
 
-		if game.player.new_spawn != Spawn::None{
-			let spawn: Vec2 = map.spawns[&game.player.new_spawn];
-			game.player.x = spawn.x;
-			game.player.y = spawn.y;
-			game.player.new_spawn = Spawn::None;
-			game.tx_to_serv.try_send("LOOK\n".to_string()).ok();
-			game.pending_action = PendingAction::Look;
-
-		}
-		let floor: Texture2D = map.first_layer.clone();
-		let builds: Option<Texture2D> = map.second_layer.clone();
-		let map_obstacles = map.colliders;
-		if let Some(builds_texture) = builds.as_ref() {
-		builds_texture.set_filter(FilterMode::Nearest);
-		}
-		floor.set_filter(FilterMode::Nearest);
-
-        clear_background(BLACK);
-
-		camera_handler(&mut camera, tile_size);
-
-		if game.focus == InputFocus::Game{
-			player_handler(&mut game, &map_obstacles, tile_size, sprite_width, sprite_height);
-		}
-
-        let current_skin = &game.skins[game.player.spritesheet_index as usize];
-        let source_x: f32 = game.player.row as f32 * sprite_width;
-        let source_y: f32 = game.player.line as f32 * sprite_height;
-
-
-        let cut_sheet = DrawTextureParams {
-            source: Some(Rect::new(source_x, source_y + 1.0, sprite_width, sprite_height - 1.0)),
-            dest_size: Some(vec2(sprite_width, sprite_height - 1.0)),
-            ..Default::default()
-        };
-
-        let map_params = DrawTextureParams {
-            dest_size: Some(vec2(floor.width(), floor.height())),
-            ..Default::default()
-        };
-
-
-
-        draw_texture_ex(
-            &floor,
-        	0.0,
-            0.0,
-            WHITE,
-            map_params,
-        );
-
-		if let Some(map_data) = game.map_data.clone() {
-			let cut_sheet = DrawTextureParams {
-				source: Some(Rect::new(0.0, 0.0, sprite_width, sprite_height - 1.0)),
-				dest_size: Some(vec2(sprite_width, sprite_height - 1.0)),
-				..Default::default()
-			};
-        	draw_text(map_data.name, 5.0, 30.0, 0.0, WHITE);
-			for player_name in map_data.players.iter(){
-				if player_name.as_ref() == game.player.name{
-					continue;
+				if game.player.new_spawn != Spawn::None && game.player.new_spawn != Spawn::Center{
+					let spawn: Vec2 = map.spawns[&game.player.new_spawn];
+					game.player.x = spawn.x;
+					game.player.y = spawn.y;
+					game.player.new_spawn = Spawn::None;
+					game.tx_to_serv.try_send("LOOK\n".to_string()).ok();
+            		game.pending_action = PendingAction::Look;
 				}
-				if let Some(coords) = map.spawns.get(&Spawn::Center) {
-				draw_texture_ex(
-					&current_skin.texture,
-					coords.x,
-					coords.y,
-					WHITE,
-					cut_sheet.clone());
+				else if game.player.new_spawn != Spawn::None{
+					let spawn: Vec2 = map.spawns[&game.player.new_spawn];
+					game.player.x = spawn.x;
+					game.player.y = spawn.y;
+					game.player.new_spawn = Spawn::None;
+				}
 
-				let screen_pos = world_to_screen_pos(*coords);
-				set_default_camera();
-				draw_text(player_name, screen_pos.x, screen_pos.y, 20.0, WHITE);
+
+				let floor: Texture2D = map.first_layer.clone();
+				let builds: Option<Texture2D> = map.second_layer.clone();
+				let map_obstacles = map.colliders;
+				if let Some(builds_texture) = builds.as_ref() {
+					builds_texture.set_filter(FilterMode::Nearest);
+				}
+				floor.set_filter(FilterMode::Nearest);
+
+				clear_background(BLACK);
+
 				camera_handler(&mut camera, tile_size);
+
+				if game.focus == InputFocus::Game{
+					player_handler(&mut game, &map_obstacles, tile_size, sprite_width, sprite_height);
 				}
-			}
-			let npc_places: Vec<Vec2> = find_npc_spawns(&map.colliders, tile_size);
 
-			for (i,npc_id) in map_data.npc.iter().enumerate(){
-				if npc_places.len() >= i{
-					continue;
+				let current_skin_texture = game.skins[game.player.spritesheet_index as usize].texture.clone();
+				let source_x: f32 = game.player.row as f32 * sprite_width;
+				let source_y: f32 = game.player.line as f32 * sprite_height;
+
+
+
+
+				let map_params = DrawTextureParams {
+					dest_size: Some(vec2(floor.width(), floor.height())),
+					..Default::default()
+				};
+
+
+
+				draw_texture_ex(
+					&floor,
+					0.0,
+					0.0,
+					WHITE,
+					map_params,
+				);
+
+
+				for player_name in map_data.players.iter(){
+					let cut_sheet = DrawTextureParams {
+					source: Some(Rect::new(0.0, 0.0, sprite_width, sprite_height - 1.0)),
+					dest_size: Some(vec2(sprite_width, sprite_height - 1.0)),
+					..Default::default()
+					};
+					if player_name.as_ref() == game.player.name{
+						continue;
+					}
+					if let Some(coords) = map.spawns.get(&Spawn::Center) {
+					draw_texture_ex(
+						&current_skin_texture,
+						coords.x,
+						coords.y,
+						WHITE,
+						cut_sheet.clone());
+
+					let screen_pos = world_to_screen_pos(*coords);
+					set_default_camera();
+					draw_text(player_name, screen_pos.x, screen_pos.y, 20.0, WHITE);
+					camera_handler(&mut camera, tile_size);
+					}
+
+					let npc_places: Vec<Vec2> = find_npc_spawns(&map.colliders, tile_size);
+
+					for (i,npc_id) in map_data.npcs.iter().enumerate(){
+						if npc_places.len() >= i{
+							continue;
+						}
+						// println!("{}", npc_id);
+					}
 				}
-				println!("{}", npc_id);
+
+				let cut_sheet = DrawTextureParams {
+					source: Some(Rect::new(source_x, source_y + 1.0, sprite_width, sprite_height - 1.0)),
+					dest_size: Some(vec2(sprite_width, sprite_height - 1.0)),
+					..Default::default()
+				};
+				draw_texture_ex(
+					&current_skin_texture,
+					game.player.x.round(), game.player.y.round(),
+					WHITE,
+					cut_sheet
+				);
+
+				if let Some(builds_texture) = builds.as_ref() {
+					let builds_params = DrawTextureParams {
+						dest_size: Some(vec2(builds_texture.width(), builds_texture.height())),
+						..Default::default()
+					};
+
+					draw_texture_ex(
+						builds_texture,
+						0.0,
+						0.0,
+						WHITE,
+						builds_params,
+					);
+				}
+
+				set_default_camera();
+
+
+				let text_player = format!("Total players: {}",game.nb_players.clone());
+				draw_text(map_data.room.name.clone(), 5.0, 30.0, 60.0, WHITE);
+				draw_text(text_player, 5.0, 70.0, 60.0, WHITE);
+
+				if game.focus == InputFocus::Game {
+					while get_char_pressed().is_some() {}
+				}
+				if is_key_pressed(KeyCode::C) && game.focus == InputFocus::Game{
+					break;
+				}
+
+				handle_menu(&mut game);
+
+				handle_inv(&mut game);
+				handle_chat(&mut game);
+				handle_group(&mut game);
+				draw_menu(&mut game);
 			}
-				
 		}
-
-
-	
-
-			
-
-
-
-
-        draw_texture_ex(
-            &current_skin.texture,
-			game.player.x.round(), game.player.y.round(),
-            WHITE,
-            cut_sheet
-        );
-
-        if let Some(builds_texture) = builds.as_ref() {
-            let builds_params = DrawTextureParams {
-                dest_size: Some(vec2(builds_texture.width(), builds_texture.height())),
-                ..Default::default()
-            };
-
-            draw_texture_ex(
-                builds_texture,
-                0.0,
-                0.0,
-                WHITE,
-                builds_params,
-            );
-        }
-
-
-
-
-
-		set_default_camera();
-
-		if game.focus == InputFocus::Game {
-			while get_char_pressed().is_some() {}
+		next_frame().await
 		}
-		if is_key_pressed(KeyCode::C) && game.focus == InputFocus::Game{
-            break;
-        }
-
-        handle_menu(&mut game);
-
-		handle_inv(&mut game);
-		handle_chat(&mut game);
-		handle_group(&mut game);
-        draw_menu(&mut game);
-
-
-		}
-        next_frame().await
-    }}
+    }
 }
+
 
