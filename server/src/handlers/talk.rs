@@ -5,18 +5,20 @@ use crate::{
     // handlers::global_func::{get_player::get_player_mut, is_he_there::is_he_there},
     protocol::Message,
     state::SharedServer,
+    structures::{enums::game_event::GameEvent, handler_outcome::HandlerOutcome},
 };
 
 pub fn talk_request(
     peer_addr: SocketAddr,
     args: &Vec<String>,
     server_info: &SharedServer,
-) -> Message {
+) -> HandlerOutcome {
     if args.len() == 0 {
         return Message::Response {
             error: ErrorCode::INVALID_ARGS,
             data: None,
-        };
+        }
+        .into();
     }
     let binding = server_info.lock().unwrap();
     let player = match binding.get_player(peer_addr) {
@@ -25,7 +27,8 @@ pub fn talk_request(
             return Message::Response {
                 error: code,
                 data: None,
-            };
+            }
+            .into();
         }
     };
 
@@ -39,32 +42,41 @@ pub fn talk_request(
             return Message::Response {
                 error: ErrorCode::NPC_NOT_FOUND,
                 data: None,
-            };
+            }
+            .into();
         }
     };
 
-    let dialogs: Vec<String> = {
-        let step_dialog = match &npc.quest {
-            Some(quest_ref) => player
-                .quests_in_progress
-                .get(quest_ref)
-                .and_then(|step| npc.dialog.get(&step.to_string())),
-            None => None,
-        };
+    let step_entry = match &npc.quest {
+        Some(quest_ref) => player
+            .quests_in_progress
+            .get(quest_ref)
+            .map(|step| step.to_string())
+            .and_then(|key| npc.dialog.get(&key).map(|d| (key, d))),
+        None => None,
+    };
 
-        match step_dialog.or_else(|| npc.dialog.get("default")) {
-            Some(dialogs) => dialogs.to_vec(),
+    let (dialog_id, dialogs): (String, Vec<String>) = match step_entry {
+        Some((key, d)) => (key, d.to_vec()),
+        None => match npc.dialog.get("default") {
+            Some(d) => ("default".to_string(), d.to_vec()),
             None => {
                 return Message::Response {
                     error: ErrorCode::NO_DIALOG,
                     data: None,
-                };
+                }
+                .into();
             }
-        }
+        },
     };
 
-    Message::Response {
-        error: ErrorCode::SUCCESS,
-        data: Some(serde_json::to_value(dialogs).unwrap()),
+    HandlerOutcome {
+        message: Message::Response {
+            error: ErrorCode::SUCCESS,
+            data: Some(serde_json::to_value(dialogs).unwrap()),
+        },
+        event: Some(GameEvent::Talked {
+            dialog: format!("{npc_ref}.dialog.{dialog_id}"),
+        }),
     }
 }
