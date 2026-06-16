@@ -11,11 +11,12 @@ mod npc;
 
 use player::*;
 use items::*;
-use serde_json::error::Category::Data;
+
+use serde_json::Value;
 use utils::*;
 use npc::*;
 use std::collections::HashMap;
-use std::fmt::Alignment::Center;
+
 use macroquad::prelude::*;
 use rooms::*;
 use chat::Chat;
@@ -47,6 +48,12 @@ struct ServerEvent {
 	room_join: Option<PlayersEvent>,
 	#[serde(rename = "PLAYERS")]
 	players: Option<Players>,
+
+	#[serde(rename = "TAKE")]
+    take: Option<ItemEvent>,
+	#[serde(rename = "DROP")]
+    drop: Option<ItemEvent>,
+
 	#[serde(rename = "CHAT")]
     chat: Option<ChatData>,
     data: Option<serde_json::Value>,
@@ -70,6 +77,11 @@ struct Players {
 	players: i32,
 }
 
+#[derive(Deserialize, Debug)]
+struct ItemEvent {
+	player_name: String,
+	item: String
+}
 
 #[derive(Deserialize, Debug)]
 struct GroupEvent {
@@ -87,8 +99,6 @@ struct ChatData {
 struct MoveData {
 	room: String,
 }
-
-
 
 
 #[derive(Deserialize, Debug, Clone)]
@@ -393,6 +403,16 @@ async fn main() {
 					if let Some(players) = server_event.players {
 						game.nb_players = players.players;
 					}
+					if let Some(take) = server_event.take {
+						if let Some(ref mut map_data) = game.map_data {
+							map_data.items.retain(|x: &String| x != &take.item);
+						}
+					}
+					if let Some(drop) = server_event.drop {
+						if let Some(ref mut map_data) = game.map_data {
+							map_data.items.push(drop.item);
+						}
+					}
 					if let Some(msg) = server_event.chat {
 						let channel = match msg.scope.as_str(){
 							"ROOM" => &mut game.chat.room_messages,
@@ -595,14 +615,15 @@ async fn main() {
 						if let Some(data_val) = server_event.data{
 							let data_str = data_val.to_string();
 							if !data_str.is_empty(){
-								match serde_json::from_str::<Vec<String>>(&data_str) {
-									Ok(items) => {
+
+								match serde_json::from_str::<Value>(&data_str) {
+									Ok(json) => {
+										let taken = json["taken"].as_str().unwrap_or("");
 										if let Some(ref mut map_data) = game.map_data {
-											for item_id in &items {
-												map_data.items.retain(|x| x != item_id);
-												println!("Take {}", item_id);
-												game.player.inventory.data.insert(item_id.to_string(), 1);
-											}
+											map_data.items.retain(|x: &String| x != &taken);
+											println!("Take {}", taken);
+											game.player.inventory.data.insert(taken.to_string(), 1);
+
 										}
 									}
 									Err(e) => {
@@ -618,14 +639,14 @@ async fn main() {
 						if let Some(data_val) = server_event.data{
 							let data_str = data_val.to_string();
 							if !data_str.is_empty(){
-								match serde_json::from_str::<Vec<String>>(&data_str) {
-									Ok(items) => {
+								match serde_json::from_str::<Value>(&data_str) {
+									Ok(json) => {
+										let dropped = json["dropped"].as_str().unwrap_or("");
 										if let Some(ref mut map_data) = game.map_data {
-											for item_id in &items {
-												game.player.inventory.data.remove(item_id);
-												println!("Drop {}", item_id);
-												map_data.items.push(item_id.to_string());
-											}
+											game.player.inventory.data.remove(dropped);
+											println!("Drop {}", dropped);
+											map_data.items.push(dropped.to_string());
+
 										}
 									}
 									Err(e) => {
