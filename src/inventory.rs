@@ -60,14 +60,6 @@ impl Inventory {
     }
 }
 
-pub fn get_item_from_id(game: &mut Game, item_id:  &String) -> Item{
-	let id: &str = item_id.strip_prefix("item.").unwrap();
-	if let Some(item) = game.items.get(id) {
-		return item.clone();
-	}
-	return Item { id: String::new(), name: String::new(), texture: Texture2D::empty(), price: 0, kind: ItemKind::Miscellaneous };
-}
-
 fn draw_item_info(rect: Rect, item: &Item){
 	let text_size = measure_text(item.name.clone(), None, 25, 1.0);
 	let width = text_size.width.max(ITEM_INFO.x) + 10.0;
@@ -80,29 +72,27 @@ fn draw_item_info(rect: Rect, item: &Item){
 	draw_text(item_type, item_rect.x+ 5.0, item_rect.y + 70.0, 20.0, WHITE);
 }
 
-fn get_item_slot_floor(slot_rect: Rect, game: &mut Game, item_id: &String, mouse: (f32, f32)){
+fn get_item_slot_floor(slot_rect: Rect, game: &mut Game, item: &Item, mouse: (f32, f32)){
     draw_rectangle(slot_rect.x, slot_rect.y, slot_rect.w, slot_rect.h, GRAY);
     let hovered = slot_rect.contains(Vec2::new(mouse.0, mouse.1));
-    let item = get_item_from_id(game, item_id);
 
-	draw_item_center(slot_rect, &item);
+	draw_item_center(slot_rect, item);
 
 	if hovered{
-		draw_item_info(slot_rect, &item);
+		draw_item_info(slot_rect, item);
 	}
 	if hovered && is_mouse_button_pressed(MouseButton::Left) && game.pending_action == PendingAction::None{
-		let rq: String = format!("TAKE {}\n",item_id);
+		let rq: String = format!("TAKE {}\n",item.id);
 		game.tx_to_serv.try_send(rq).ok();
 		game.pending_action = PendingAction::Take;
 	}
 }
 
 
-fn get_item_slot_inv(slot_rect: Rect, game: &mut Game, item_id: &String, amount: &i32 , mouse: (f32, f32)){
+fn get_item_slot_inv(slot_rect: Rect, game: &mut Game, item: &Item, amount: &i32 , mouse: (f32, f32)){
 
     draw_rectangle(slot_rect.x, slot_rect.y, slot_rect.w, slot_rect.h, GRAY);
     let hovered = slot_rect.contains(Vec2::new(mouse.0, mouse.1));
-    let item = get_item_from_id(game, item_id);
 
 	draw_item_center(slot_rect, &item);
 	let amount_str: &str = &format!("{}", amount).to_string();
@@ -112,7 +102,7 @@ fn get_item_slot_inv(slot_rect: Rect, game: &mut Game, item_id: &String, amount:
 		draw_item_info(slot_rect, &item);
 	}
 	if hovered && is_mouse_button_pressed(MouseButton::Left) && game.pending_action == PendingAction::None{
-		let rq: String = format!("DROP {}\n",item_id);
+		let rq: String = format!("DROP {}\n",item.id);
 		game.tx_to_serv.try_send(rq).ok();
 		game.pending_action = PendingAction::Drop;
 	}
@@ -154,7 +144,11 @@ pub fn draw_inv(game: &mut Game) {
         draw_rectangle(inv_rect.x, inv_rect.y, inv_rect.w, inv_rect.h, Color::new(0.0, 0.0, 0.0, 0.5));
 		for (i, (item_id, amount)) in game.player.inventory.data.clone().iter().enumerate(){
 			let item_rect = Rect::new(inv_rect.x, inv_rect.y+ SLOT_SIZE * (i as f32), SLOT_SIZE, SLOT_SIZE);
-			get_item_slot_inv(item_rect, game, item_id, amount, mouse);
+			let item: Option<Item> = game.loaded_items.get(item_id).cloned();
+			if let Some(item) = item {
+				get_item_slot_inv(item_rect, game, &item, amount, mouse);
+			}
+
 		}
 
 
@@ -165,7 +159,10 @@ pub fn draw_inv(game: &mut Game) {
         if let Some(mapdata) = game.map_data.clone(){
             for (i, item_id) in mapdata.items.iter().enumerate(){
                 let item_rect = Rect::new(flr_item_rect.x, flr_item_rect.y+ SLOT_SIZE * (i as f32), SLOT_SIZE, SLOT_SIZE);
-                get_item_slot_floor(item_rect, game, item_id, mouse);
+				let item: Option<Item> = game.loaded_items.get(item_id).cloned();
+				if let Some(item) = item {
+                get_item_slot_floor(item_rect, game, &item, mouse);
+			}
             }
         }
     }

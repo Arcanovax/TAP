@@ -17,6 +17,7 @@ use serde_json::Value;
 use utils::*;
 use npc::*;
 use std::collections::HashMap;
+use std::iter;
 
 use macroquad::prelude::*;
 use rooms::*;
@@ -62,11 +63,16 @@ struct ServerEvent {
 
 }
 
+
 #[derive(Deserialize, Debug)]
-struct InviteData {
-    sender: String,
-    group_name: String,
+struct ItemData {
+    kind: ItemKind,
+    name: String,
+	price: i32
 }
+
+
+
 
 #[derive(Deserialize, Debug)]
 struct PlayersEvent {
@@ -99,6 +105,12 @@ struct ChatData {
 #[derive(Deserialize, Debug)]
 struct MoveData {
 	room: String,
+}
+
+#[derive(Deserialize, Debug)]
+struct InviteData {
+    sender: String,
+    group_name: String,
 }
 
 
@@ -153,7 +165,8 @@ pub enum PendingAction {
 	Move(Spawn),
 	Take,
 	Drop,
-	Who
+	Who,
+	Items
 }
 
 
@@ -243,7 +256,7 @@ struct Game {
 	pub group: Group,
 	pub pending_action: PendingAction,
 	pub map_data: Option<LookData>,
-	pub items:HashMap<String, Item>,
+	pub loaded_items:HashMap<String, Item>,
 	pub nb_players: i32
 }
 
@@ -345,7 +358,7 @@ async fn main() {
 		group: Group::new(),
 		pending_action: PendingAction::None,
 		map_data: None,
-		items: get_items().await,
+		loaded_items: HashMap::new(),
 		nb_players:0
     };
 
@@ -565,6 +578,30 @@ async fn main() {
 
 						}
 					}
+					PendingAction::Items => {
+						if let Some(data_val) = &server_event.data {
+							let data_str = data_val.to_string();
+							match serde_json::from_str::<HashMap<String, ItemData>>(&data_str) {
+								Ok(items_data) => {
+									for (item_id, item_data) in items_data{
+										let texture: Texture2D = get_item_texture(&item_id).await;
+										let item = Item{
+											id: item_id.clone(),
+											name: item_data.name,
+											texture: texture,
+											price: item_data.price,
+											kind: item_data.kind
+										};
+										game.loaded_items.insert(item_id, item);
+									}
+								}
+								Err(e) => {
+								eprintln!("LOOK error: {}", e);
+								}
+							}
+
+						}
+					}
 					PendingAction::Status => {
 						if let Some(data_val) = &server_event.data {
 							let data_str = data_val.to_string();
@@ -653,11 +690,11 @@ async fn main() {
 												let new_count = current_count - 1;
 												if new_count <= 0 {
 													game.player.inventory.data.remove(&dropped);
-												} else {											
+												} else {
 													game.player.inventory.data.insert(dropped.clone(), new_count);
 												}
 											}
-											
+
 											map_data.items.push(dropped);
 										}
 									}
@@ -696,6 +733,19 @@ async fn main() {
 				game.pending_action = PendingAction::Look;
 			}
 
+			else if game.loaded_items.is_empty() && game.pending_action == PendingAction::None{
+				game.tx_to_serv.try_send("ITEMS \n".to_string()).ok();
+				game.pending_action = PendingAction::Items;
+			}
+
+
+			else{
+
+			if game.map_data.is_none() && game.pending_action == PendingAction::None {
+				game.tx_to_serv.try_send("LOOK \n".to_string()).ok();
+				game.pending_action = PendingAction::Look;
+			}
+
 			if let Some(map_data) = game.map_data.clone() {
 				let map = match rooms.get(&map_data.room.id) {
 					Some(room_data) => room_data,
@@ -705,6 +755,8 @@ async fn main() {
 
 				};
 
+
+
 				if game.player.new_spawn != Spawn::None && game.player.new_spawn != Spawn::Center{
 					let spawn: Vec2 = map.spawns[&game.player.new_spawn];
 					game.player.x = spawn.x;
@@ -713,6 +765,8 @@ async fn main() {
 					game.tx_to_serv.try_send("LOOK\n".to_string()).ok();
             		game.pending_action = PendingAction::Look;
 				}
+
+
 				else if game.player.new_spawn != Spawn::None{
 					let spawn: Vec2 = map.spawns[&game.player.new_spawn];
 					game.player.x = spawn.x;
@@ -783,28 +837,43 @@ async fn main() {
 					camera_handler(&mut camera, tile_size);
 					}
 				}
-				let npc_places: Vec<Vec2> = find_npc_spawns(&map.colliders, tile_size);
+
+
+				let npc_slots: Vec<Vec2> = find_npc_spawns(&map.colliders, tile_size);
 				let texture_param = DrawTextureParams {
-					dest_size: Some(vec2(tile_size, tile_size*2.0)),
+					dest_size: Some(vec2(tile_size, tile_size * 2.0)),
 					..Default::default()
 				};
-				
-				for npc_id in map_data.npcs.iter(){
-					if let Some(place) = npc_places.clone().pop() {
+
+
+
+				let activation_distance = 20.0;
+				let mut active_npc: Option<(Vec2, String)> = None;
+
+				for npc_id in map_data.npcs.iter() {
+					if let Some(place) = npc_slots.clone().pop() {
 						let npc: Npc = get_npc_from_id(npcs.clone(), npc_id);
 						let npc_texture: Texture2D = npc.texture;
+
+						let distance = place.distance(vec2(game.player.x, game.player.y));
+						if distance < activation_distance {
+							active_npc = Some((place, npc_id.clone()));
+						}
+
 						draw_texture_ex(
-						&npc_texture,
-						place.x, place.y,
-						WHITE,
-						texture_param.clone()
+							&npc_texture,
+							place.x,
+							place.y,
+							WHITE,
+							texture_param.clone()
 						);
+
 						npc_texture.set_filter(FilterMode::Nearest);
 					} else {
 						break;
 					}
 				}
-				
+
 
 				let cut_sheet = DrawTextureParams {
 					source: Some(Rect::new(source_x, source_y + 1.0, sprite_width, sprite_height - 1.0)),
@@ -817,6 +886,11 @@ async fn main() {
 					WHITE,
 					cut_sheet
 				);
+
+				if let Some((place, npc_id)) = active_npc {
+					draw_flat_triangle(place.x + 8.0, place.y);
+					draw_rectangle(place.x + 16.0, place.y, 40.0, 25.0, YELLOW);
+				}
 
 				if let Some(builds_texture) = builds.as_ref() {
 					let builds_params = DrawTextureParams {
@@ -854,7 +928,7 @@ async fn main() {
 				handle_group(&mut game);
 				draw_menu(&mut game);
 			}
-		}
+		}}
 		next_frame().await
 		}
     }

@@ -98,3 +98,26 @@ pub fn input_text(input_rect: Rect,field: &mut String,is_active: bool, mouse: (f
 		}
 		return input_hovered;
 	}
+
+
+pub fn draw_flat_triangle(x: f32, y: f32){
+	let triangle_width = 5.0;
+	let triangle_height = 3.0;
+	let bottom_point = vec2(
+		x,
+		y
+	);
+
+	let top_left_point = vec2(
+		bottom_point.x - (triangle_width / 2.0),
+		bottom_point.y - triangle_height
+	);
+
+	let top_right_point = vec2(
+		bottom_point.x + (triangle_width / 2.0),
+		bottom_point.y - triangle_height
+	);
+
+	draw_triangle(top_left_point, top_right_point, bottom_point, WHITE);
+	draw_triangle_lines(top_left_point, top_right_point, bottom_point, 0.5, BLACK);
+}
