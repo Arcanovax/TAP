@@ -71,6 +71,12 @@ struct ItemData {
 	price: i32
 }
 
+#[derive(Deserialize, Debug)]
+struct NpcData {
+	name: String,
+	kind: NPCKind,
+	has_quest: bool
+}
 
 
 
@@ -166,7 +172,8 @@ pub enum PendingAction {
 	Take,
 	Drop,
 	Who,
-	Items
+	Items,
+	Npcs
 }
 
 
@@ -257,6 +264,7 @@ struct Game {
 	pub pending_action: PendingAction,
 	pub map_data: Option<LookData>,
 	pub loaded_items:HashMap<String, Item>,
+	pub loaded_npcs: HashMap<String,Npc>,
 	pub nb_players: i32
 }
 
@@ -359,14 +367,13 @@ async fn main() {
 		pending_action: PendingAction::None,
 		map_data: None,
 		loaded_items: HashMap::new(),
-		nb_players:0
+		loaded_npcs: HashMap::new(),
+		nb_players: 0
     };
 
 
 
 	let rooms: std::collections::HashMap<String, rooms::Room> = get_rooms().await;
-	let npcs: std::collections::HashMap<String, npc::Npc> = get_npcs().await;
-
 
     let skin_data: Vec<(&str, &str)> = vec![
         ("assets/skins/alex.png", "Alex"),
@@ -602,6 +609,31 @@ async fn main() {
 
 						}
 					}
+					PendingAction::Npcs => {
+						if let Some(data_val) = &server_event.data {
+							let data_str = data_val.to_string();
+							match serde_json::from_str::<HashMap<String, NpcData>>(&data_str) {
+								Ok(npcs_data) => {
+									for (npc_id , npc_data) in npcs_data{
+										let texture: Texture2D = get_npc_texture(&npc_id).await;
+										let npc = Npc{
+											id: npc_id.clone(),
+											texture: texture,
+											name: npc_data.name,
+											kind: npc_data.kind,
+											has_quest: npc_data.has_quest
+
+										};
+										game.loaded_npcs.insert(npc_id, npc);
+									}
+								}
+								Err(e) => {
+								eprintln!("npcxs error: {}", e);
+								}
+							}
+
+						}
+					}
 					PendingAction::Status => {
 						if let Some(data_val) = &server_event.data {
 							let data_str = data_val.to_string();
@@ -738,6 +770,10 @@ async fn main() {
 				game.pending_action = PendingAction::Items;
 			}
 
+			else if game.loaded_npcs.is_empty() && game.pending_action == PendingAction::None{
+				game.tx_to_serv.try_send("NPCS \n".to_string()).ok();
+				game.pending_action = PendingAction::Npcs;
+			}
 
 			else{
 
@@ -852,23 +888,26 @@ async fn main() {
 
 				for npc_id in map_data.npcs.iter() {
 					if let Some(place) = npc_slots.clone().pop() {
-						let npc: Npc = get_npc_from_id(npcs.clone(), npc_id);
-						let npc_texture: Texture2D = npc.texture;
+						let npc: Option<Npc> = game.loaded_npcs.get(npc_id).cloned();
+						if let Some(npc) = npc {
+							let npc_texture: Texture2D = npc.texture;
 
-						let distance = place.distance(vec2(game.player.x, game.player.y));
-						if distance < activation_distance {
-							active_npc = Some((place, npc_id.clone()));
+							let distance = place.distance(vec2(game.player.x, game.player.y));
+							if distance < activation_distance {
+								active_npc = Some((place, npc_id.clone()));
+							}
+
+							draw_texture_ex(
+								&npc_texture,
+								place.x,
+								place.y,
+								WHITE,
+								texture_param.clone()
+							);
+
+							npc_texture.set_filter(FilterMode::Nearest);
 						}
 
-						draw_texture_ex(
-							&npc_texture,
-							place.x,
-							place.y,
-							WHITE,
-							texture_param.clone()
-						);
-
-						npc_texture.set_filter(FilterMode::Nearest);
 					} else {
 						break;
 					}

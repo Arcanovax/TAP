@@ -1,33 +1,54 @@
-use std::collections::HashMap;
 use crate::*;
 use macroquad::prelude::*;
 
+#[derive(Deserialize, Clone, PartialEq, Debug)]
+pub enum NPCKind {
+    Merchant, // Retrait des champs pour correspondre à la string JSON "Merchant"
+    Citizen,
+    Enemy {
+        hp: u32,
+        max_hp: u32,
+        defeated: bool,
+        // 'damages' et 'loot' sont retirés car absents du JSON.
+        // (Alternative : utilisez Option<u32> ou #[serde(default)])
+    },
+}
+
+
+// #[derive(Clone, PartialEq, Debug, Deserialize)]
+// pub enum NPCKind {
+// 	Merchant {
+// 		inventory: Vec<String>,
+// 		gold: u32
+// 	},
+// 	Enemy {
+// 		hp: u32,
+// 		max_hp: u32,
+// 		damages: u32,
+// 		loot: Vec<String>,
+// 		defeated: bool
+// 	},
+// 	Citizen
+// }
 
 #[derive(Clone, PartialEq)]
 pub struct Npc {
-    id: String,
+    pub id: String,
     pub texture: Texture2D,
-}
-
-pub fn get_npc_from_id(npcs: HashMap<String, Npc>, npc_id:  &String) -> Npc{
-	let id: &str = npc_id.strip_prefix("npc.").unwrap();
-	if let Some(npc) = npcs.get(id) {
-		return npc.clone();
-	}
-	return Npc { id: String::new(), texture: Texture2D::empty()}
+	pub name: String,
+	pub kind: NPCKind,
+	pub has_quest: bool
 }
 
 
 
-pub async fn get_npcs() -> HashMap<String, Npc> {
-    let mut npcs: HashMap<String, Npc> = HashMap::new();
-
-	let guard = Npc {
-        texture: load_texture("assets/npc/city_gard.png").await.unwrap(),
-        id: "city_gard".to_string(),
+pub async fn get_npc_texture(item_id: &str) -> Texture2D {
+    let path = match item_id {
+        "npc.city_gard" => "assets/npc/city_gard.png",
+        _ => return Texture2D::empty(),
     };
-    npcs.insert(guard.id.clone(), guard);
-    return npcs;
+
+    load_texture(path).await.unwrap()
 }
 
 pub fn find_npc_spawns(colliders: &[[i32; 25]; 15], tile_size: f32) -> Vec<Vec2> {
