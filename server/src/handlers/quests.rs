@@ -1,6 +1,7 @@
 use crate::{protocol::Message, state::SharedServer, structures::enums::error::ErrorCode};
 use serde::Serialize;
 use std::net::SocketAddr;
+use tracing::info;
 
 #[cfg(test)]
 mod tests;
@@ -50,6 +51,8 @@ pub fn quests_request(server_info: &SharedServer, peer_addr: SocketAddr) -> Mess
             status: Status::Completed,
         });
     }
+
+    info!("Get quest list");
 
     Message::Response {
         error: ErrorCode::SUCCESS,

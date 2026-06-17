@@ -5,6 +5,7 @@ use crate::{
 };
 use serde::Serialize;
 use std::net::SocketAddr;
+use tracing::info;
 
 #[cfg(test)]
 mod tests;
@@ -72,6 +73,7 @@ pub fn look_request(server_info: &SharedServer, peer_addr: SocketAddr) -> Messag
         npcs: &room.npc,
         items: &room.items,
     };
+    info!("Get room info");
     Message::Response {
         error: ErrorCode::SUCCESS,
         data: Some(serde_json::to_value(&view).unwrap()),

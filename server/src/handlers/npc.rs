@@ -7,6 +7,7 @@ use crate::{
     },
 };
 use serde::Serialize;
+use tracing::info;
 
 #[cfg(test)]
 mod tests;
@@ -72,6 +73,8 @@ pub(super) fn npc_request(server_info: &SharedServer, args: &Vec<String>) -> Mes
         }
     };
 
+    info!("Get {} info", npc_ref);
+
     Message::Response {
         error: ErrorCode::SUCCESS,
         data: Some(serde_json::to_value::<NPCView>(npc.into()).unwrap()),
@@ -85,6 +88,8 @@ pub(super) fn npcs_request(server_info: &SharedServer) -> Message {
     for (_, npc) in &binding.world.npcs {
         npcs.push(npc.into());
     }
+
+    info!("Get all npcs info");
 
     Message::Response {
         error: ErrorCode::SUCCESS,

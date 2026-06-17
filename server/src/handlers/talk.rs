@@ -1,5 +1,7 @@
 use std::net::SocketAddr;
 
+use tracing::info;
+
 use crate::{
     protocol::Message,
     state::SharedServer,
@@ -78,6 +80,8 @@ pub fn talk_request(
             }
         },
     };
+
+    info!("{} talked", npc_ref);
 
     HandlerOutcome {
         message: Message::Response {

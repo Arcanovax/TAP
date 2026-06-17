@@ -1,3 +1,5 @@
+use tracing::info;
+
 use crate::protocol::{EventType, Message};
 use crate::state::{SharedServer, Tx};
 use crate::structures::enums::error::ErrorCode;
@@ -34,5 +36,6 @@ pub(super) fn connect_request(
         }
         server_info.lock().unwrap().send_players_event(peer_addr);
     }
+    info!("{} connected", name);
     res.into()
 }

@@ -1,3 +1,5 @@
+use tracing::info;
+
 use crate::{protocol::Message, state::SharedServer, structures::enums::error::ErrorCode};
 use std::net::SocketAddr;
 
@@ -35,5 +37,9 @@ pub(super) fn quest_request(
         }
         .into();
     }
-    binding.try_accept_quest(peer_addr, &npc_ref).into()
+    let res = binding.try_accept_quest(peer_addr, &npc_ref);
+    if let Ok(_) = &res {
+        info!("Accepted {} quest", npc_ref);
+    };
+    res.into()
 }
