@@ -26,3 +26,10 @@ pub(super) fn item_request(server_info: &SharedServer, args: &Vec<String>) -> Me
         data: Some(serde_json::to_value(item).unwrap()),
     }
 }
+
+pub(super) fn items_request(server_info: &SharedServer) -> Message {
+    Message::Response {
+        error: ErrorCode::SUCCESS,
+        data: Some(serde_json::to_value(&server_info.lock().unwrap().world.items).unwrap()),
+    }
+}

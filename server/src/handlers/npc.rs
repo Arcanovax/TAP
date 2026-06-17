@@ -77,3 +77,17 @@ pub(super) fn npc_request(server_info: &SharedServer, args: &Vec<String>) -> Mes
         data: Some(serde_json::to_value::<NPCView>(npc.into()).unwrap()),
     }
 }
+
+pub(super) fn npcs_request(server_info: &SharedServer) -> Message {
+    let binding = server_info.lock().unwrap();
+    let mut npcs: Vec<NPCView> = Vec::new();
+
+    for (_, npc) in &binding.world.npcs {
+        npcs.push(npc.into());
+    }
+
+    Message::Response {
+        error: ErrorCode::SUCCESS,
+        data: Some(serde_json::to_value(npcs).unwrap()),
+    }
+}

@@ -1,6 +1,9 @@
 use crate::{
     handlers::{
-        item::item_request, npc::npc_request, quest::quest_request, quests::quests_request,
+        item::{item_request, items_request},
+        npc::{npc_request, npcs_request},
+        quest::quest_request,
+        quests::quests_request,
     },
     state::{SharedServer, Tx},
     structures::{
@@ -47,7 +50,9 @@ pub fn handle_request(
             Some(Command::INVENTORY) => inventory_request(server_info, peer_addr).into(),
             Some(Command::QUEST) => quest_request(args, server_info, peer_addr).into(),
             Some(Command::NPC) => npc_request(server_info, args).into(),
+            Some(Command::NPCS) => npcs_request(server_info).into(),
             Some(Command::ITEM) => item_request(server_info, args).into(),
+            Some(Command::ITEMS) => items_request(server_info).into(),
             Some(Command::QUESTS) => quests_request(server_info, peer_addr).into(),
             _ => Message::Response {
                 error: ErrorCode::INVALID_COMMAND,
