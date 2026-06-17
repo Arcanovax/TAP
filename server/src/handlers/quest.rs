@@ -15,16 +15,17 @@ pub(super) fn quest_request(
             data: None,
         };
     }
-    if args.len() != 1 {
+    if args.len() == 0 {
         return Message::Response {
             error: ErrorCode::INVALID_ARGS,
             data: None,
         };
     }
 
-    server_info
-        .lock()
-        .unwrap()
-        .try_accept_quest(peer_addr, &args[0])
-        .into()
+    let mut binding = server_info.lock().unwrap();
+    let mut npc_ref = args.join(" ");
+    if let Some(reference) = binding.world.name_to_ref.get(&npc_ref.to_lowercase()) {
+        npc_ref = reference.clone();
+    }
+    binding.try_accept_quest(peer_addr, &npc_ref).into()
 }
