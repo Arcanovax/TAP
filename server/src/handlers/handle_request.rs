@@ -3,7 +3,7 @@ use crate::{
     state::{SharedServer, Tx},
     structures::handler_outcome::HandlerOutcome,
 };
-use std::net::SocketAddr;
+use std::{fs::OpenOptions, net::SocketAddr, io::Write};
 
 use crate::{
     command::Command,

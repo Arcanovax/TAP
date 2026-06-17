@@ -32,7 +32,7 @@ pub fn draw_scrollbars(frame: &mut Frame, chat_area: &mut Rect, descr_area: &mut
         let list: Vec<(&mut Rect, String, u16, bool, Focus)> = vec![
         (chat_area, chat_messages, world.room.chat_scroll_pos, world.room.focus == Focus::CHAT, Focus::CHAT),
         (output_area, world.output.to_string(), world.room.output_scroll_pos, world.room.focus == Focus::OUTPUT, Focus::OUTPUT),
-        (descr_area, world.room.description.to_string(), world.room.descr_scroll_pos, world.room.focus == Focus::DESCR, Focus::DESCR)
+        (descr_area, world.room.room_view.description.to_string(), world.room.descr_scroll_pos, world.room.focus == Focus::DESCR, Focus::DESCR)
         ];
 
         for (rec, message, pos, foc_bool, foc) in list {

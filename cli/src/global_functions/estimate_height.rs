@@ -1,4 +1,4 @@
-use ratatui::{Frame, layout::Rect};
+use ratatui::{layout::Rect};
 
 pub fn estimate_height(frame: Rect, content: &str) -> u16 {
 

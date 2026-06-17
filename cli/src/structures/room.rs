@@ -2,14 +2,19 @@ use ratatui::widgets::ListState;
 use ratatui_textarea::TextArea;
 use serde::Deserialize;
 
-use crate::{enums::{exits::Exits, focus::Focus}};
+use crate::{enums::{focus::Focus}, structures::room_view::RoomView};
 
 #[derive(Deserialize, Debug)]
 pub struct Room<'a> {
-    pub name: String,
-    pub exits: Vec<Exits>,
-    pub description: String,
-    pub npc: Vec<String>,
+	#[serde(rename = "room")]
+	pub room_view: RoomView,
+	// pub id: String,
+    // pub name: String,
+    // pub exits: Vec<Exits>,
+    // pub description: String,
+    pub npcs: Vec<String>,
+    pub items: Vec<String>,
+    pub players: Vec<String>,
 
 	#[serde(skip)]
 	pub focus: Focus,
@@ -34,10 +39,14 @@ pub struct Room<'a> {
 impl Room<'_> {
 	pub fn new() -> Self {
 		Room {
-			name: String::from(""),
-			exits: Vec::new(),
-			description: String::from(""),
-			npc: Vec::new(),
+			// id: String::from(""),
+			// name: String::from(""),
+			// exits: Vec::new(),
+			// description: String::from(""),
+			room_view: RoomView::new(),
+			npcs: Vec::new(),
+			items: Vec::new(),
+			players: Vec::new(),
 			focus: Focus::NONE,
 			available_focus: Vec::new(),
 			chat_scroll_pos: 0,

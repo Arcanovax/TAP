@@ -1,4 +1,5 @@
 use serde::Deserialize;
+use serde_json::Value;
 
 use crate::structures::{chat_data::ChatData, invite_data::InviteData};
 
@@ -15,7 +16,7 @@ pub struct ServerEvent {
     pub leave: Option<String>,
 	#[serde(rename = "CHAT")]
     pub chat: Option<ChatData>,
-    pub data: Option<String>,
+    pub data: Option<Value>,
 	pub error: Option<String>
 
 }

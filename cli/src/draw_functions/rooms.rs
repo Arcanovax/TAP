@@ -96,13 +96,13 @@ pub fn draw_room(world: &mut World, frame: &mut Frame) {
 	.centered()
 	.block(Block::new().borders(Borders::TOP | Borders::LEFT | Borders::RIGHT));
 
-	let city_name: Paragraph = Paragraph::new(Text::from(Text::from(world.room.description.as_str())))
+	let city_name: Paragraph = Paragraph::new(Text::from(Text::from(world.room.room_view.description.as_str())))
 	.centered()
 	.wrap(Wrap { trim: true })
 	.block(
 		Block::bordered()
 		.border_style(if world.room.focus == Focus::DESCR {Color::LightBlue} else {Color::White})
-		.title(world.room.name.as_str())
+		.title(world.room.room_view.name.as_str())
 		.title_style(Color::Green)
 		.bold()
 
@@ -119,8 +119,8 @@ pub fn draw_room(world: &mut World, frame: &mut Frame) {
 
 	let mut npc_items: Vec<ListItem> = vec![ListItem::new(Line::from("Nobody").alignment(Alignment::Center))];
 
-	if world.room.npc.len() > 0 {
-		npc_items = world.room.npc.iter()
+	if world.room.npcs.len() > 0 {
+		npc_items = world.room.npcs.iter()
 		.map(|npc| ListItem::new(Line::from(npc.as_str()).alignment(Alignment::Center)))
 		.collect();
 	}
@@ -156,7 +156,7 @@ pub fn draw_room(world: &mut World, frame: &mut Frame) {
 	.gauge_style(Style::new().fg(gauge_color).on_blue().italic())
 	.percent(world.player.hp as u16);
 
-	let exits_items: Vec<ListItem> = world.room.exits.iter()
+	let exits_items: Vec<ListItem> = world.room.room_view.exits.iter()
 	.map(|exit| {
 		match exit {
 			Exits::East { toward } => ListItem::new(Line::from("East => ".to_string() + toward).alignment(Alignment::Center)),

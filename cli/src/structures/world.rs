@@ -1,5 +1,6 @@
 use std::{
-	io, sync::mpsc::{
+	io::Write,
+	fs::OpenOptions, io, sync::mpsc::{
 		Receiver,
 		TryRecvError
 	}
@@ -227,8 +228,8 @@ impl World<'_>{
 						if msg.contains("OK hello proto") {self.state = States::Login};
 					} else {
 						if let Ok(server_event) = serde_json::from_str::<ServerEvent>(&msg) {
-							// if let Ok(mut file) = OpenOptions::new().create(true).append(true).open("debug_network.txt") {
-							// 	let _ = writeln!(file, "ok (State {:?}) : {:#?}", self.state, server_event);}
+							if let Ok(mut file) = OpenOptions::new().create(true).append(true).open("debug_network.txt") {
+								let _ = writeln!(file, "ok (State {:?}) : {:#?}", self.state, server_event);}
 							if server_event.event_type == "Response" {
 								response_handling(self, &msg, &server_event);
 							}

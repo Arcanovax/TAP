@@ -3,12 +3,12 @@ use crate::{
     structures::enums::exits::Exit,
 };
 use serde::Serialize;
-use std::net::SocketAddr;
+use std::{fs::OpenOptions, net::SocketAddr, io::Write};
 
 #[cfg(test)]
 mod tests;
 
-#[derive(Serialize)]
+#[derive(Serialize, Debug)]
 struct RoomView<'a> {
     id: &'a String,
     name: &'a String,
@@ -16,7 +16,7 @@ struct RoomView<'a> {
     exits: &'a [Exit],
 }
 
-#[derive(Serialize)]
+#[derive(Serialize, Debug)]
 struct LookView<'a> {
     room: RoomView<'a>,
     players: Vec<String>,
@@ -56,23 +56,23 @@ pub fn look_request(server_info: &SharedServer, peer_addr: SocketAddr) -> Messag
         }
     };
     let mut players: Vec<String> = room_players
-        .iter()
-        .map(|con| con.player.name.clone())
-        .collect();
-    players.push(player_name);
-    let view = LookView {
-        room: RoomView {
-            id: room_id,
-            name: &room.name,
-            description: &room.description,
-            exits: &room.exits,
-        },
-        players,
-        npcs: &room.npc,
-        items: &room.items,
-    };
-    Message::Response {
-        error: SUCCESS,
-        data: Some(serde_json::to_value(&view).unwrap()),
-    }
+    .iter()
+    .map(|con| con.player.name.clone())
+    .collect();
+players.push(player_name);
+let view = LookView {
+    room: RoomView {
+        id: room_id,
+        name: &room.name,
+        description: &room.description,
+        exits: &room.exits,
+    },
+    players,
+    npcs: &room.npc,
+    items: &room.items,
+};
+Message::Response {
+    error: SUCCESS,
+    data: Some(serde_json::to_value(&view).unwrap()),
+}
 }
