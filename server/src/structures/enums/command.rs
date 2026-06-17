@@ -16,6 +16,8 @@ pub enum Command {
     TAKE,
     INVENTORY,
     QUEST,
+    ITEM,
+    NPC,
 }
 
 impl Command {
@@ -35,6 +37,8 @@ impl Command {
             "TAKE" => Some(Command::TAKE),
             "INVENTORY" => Some(Command::INVENTORY),
             "QUEST" => Some(Command::QUEST),
+            "ITEM" => Some(Command::ITEM),
+            "NPC" => Some(Command::NPC),
             _ => None,
         }
     }
