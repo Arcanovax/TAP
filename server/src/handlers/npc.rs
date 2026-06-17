@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 use crate::{
     protocol::Message,
     state::SharedServer,
@@ -83,10 +85,10 @@ pub(super) fn npc_request(server_info: &SharedServer, args: &Vec<String>) -> Mes
 
 pub(super) fn npcs_request(server_info: &SharedServer) -> Message {
     let binding = server_info.lock().unwrap();
-    let mut npcs: Vec<NPCView> = Vec::new();
+    let mut npcs: HashMap<String, NPCView> = HashMap::new();
 
-    for (_, npc) in &binding.world.npcs {
-        npcs.push(npc.into());
+    for (id, npc) in &binding.world.npcs {
+        npcs.insert(id.into(), npc.into());
     }
 
     info!("Get all npcs info");
