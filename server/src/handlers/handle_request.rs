@@ -1,13 +1,14 @@
 use crate::{
     handlers::quest::quest_request,
     state::{SharedServer, Tx},
-    structures::handler_outcome::HandlerOutcome,
+    structures::{
+        enums::{command::Command, error::ErrorCode},
+        handler_outcome::HandlerOutcome,
+    },
 };
 use std::net::SocketAddr;
 
 use crate::{
-    command::Command,
-    error::ErrorCode,
     handlers::{
         chat::chat_request, connect::connect_request, drop::drop_request, fight_func::fight::fight,
         group::group_request, inventory::inventory_request, look::look_request,

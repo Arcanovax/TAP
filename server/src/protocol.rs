@@ -1,6 +1,6 @@
 use std::str::FromStr;
 
-use crate::{error::ErrorCode, structures::quest::Goal};
+use crate::structures::{enums::error::ErrorCode, quest::Goal};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 

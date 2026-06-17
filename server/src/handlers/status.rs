@@ -1,8 +1,8 @@
 use serde::Serialize;
 
-use crate::error::ErrorCode;
 use crate::protocol::Message;
 use crate::state::SharedServer;
+use crate::structures::enums::error::ErrorCode;
 use crate::structures::enums::state::State;
 use std::net::SocketAddr;
 

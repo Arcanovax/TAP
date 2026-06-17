@@ -1,4 +1,4 @@
-use crate::{error::ErrorCode, protocol::Message, state::SharedServer};
+use crate::{protocol::Message, state::SharedServer, structures::enums::error::ErrorCode};
 use std::net::SocketAddr;
 
 #[cfg(test)]

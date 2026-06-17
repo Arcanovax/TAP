@@ -1,11 +1,12 @@
 use std::net::SocketAddr;
 
 use crate::{
-    error::ErrorCode,
-    // handlers::global_func::{get_player::get_player_mut, is_he_there::is_he_there},
     protocol::Message,
     state::SharedServer,
-    structures::{enums::game_event::GameEvent, handler_outcome::HandlerOutcome},
+    structures::{
+        enums::{error::ErrorCode, game_event::GameEvent},
+        handler_outcome::HandlerOutcome,
+    },
 };
 
 pub fn talk_request(

@@ -1,8 +1,7 @@
-use crate::error::ErrorCode;
 use crate::protocol::{EventType, Message};
 use crate::state::{SharedServer, Tx};
+use crate::structures::enums::error::ErrorCode;
 use std::net::SocketAddr;
-// use tracing::info;
 
 #[cfg(test)]
 mod tests;
@@ -19,7 +18,6 @@ pub(super) fn connect_request(
             data: None,
         };
     }
-    //info!("{} is connected", args[0]);
     let name = args[0].to_string();
     let res = server_info
         .lock()

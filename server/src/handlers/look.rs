@@ -1,6 +1,7 @@
 use crate::{
-    error::ErrorCode::SUCCESS, protocol::Message, state::SharedServer,
-    structures::enums::exits::Exit,
+    protocol::Message,
+    state::SharedServer,
+    structures::enums::{error::ErrorCode, exits::Exit},
 };
 use serde::Serialize;
 use std::net::SocketAddr;
@@ -72,7 +73,7 @@ pub fn look_request(server_info: &SharedServer, peer_addr: SocketAddr) -> Messag
         items: &room.items,
     };
     Message::Response {
-        error: SUCCESS,
+        error: ErrorCode::SUCCESS,
         data: Some(serde_json::to_value(&view).unwrap()),
     }
 }

@@ -1,5 +1,4 @@
 use crate::{
-    error::ErrorCode::{self},
     handlers::{
         fight_func::{
             attack::execute_attack, enemy_attack::enemy_attack, is_it_my_turn::is_it_my_turn,
@@ -12,8 +11,8 @@ use crate::{
     state::SharedServer,
     structures::{
         enums::{
-            attack_res::AttackRes, enn_att_res::EnnAttRes, npc_kind::NPCKind, state::State,
-            turn_res::TurnRes,
+            attack_res::AttackRes, enn_att_res::EnnAttRes, error::ErrorCode, npc_kind::NPCKind,
+            state::State, turn_res::TurnRes,
         },
         fight::Fight,
     },

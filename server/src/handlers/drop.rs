@@ -1,10 +1,9 @@
-use serde_json::json;
-
 use crate::{
-    error::ErrorCode,
     protocol::{EventType, Message},
     state::SharedServer,
+    structures::enums::error::ErrorCode,
 };
+use serde_json::json;
 use std::net::SocketAddr;
 
 #[cfg(test)]

@@ -1,7 +1,6 @@
 use crate::{
     config::ConfigError,
-    game::World,
-    structures::{item::Item, npc::NPC, quest::Quest, room::Room},
+    structures::{game::World, item::Item, npc::NPC, quest::Quest, room::Room},
 };
 use serde::Deserialize;
 use std::{

@@ -1,3 +1,5 @@
+use crate::structures::enums::error::ErrorCode;
+
 use super::*;
 
 impl ServerInfo {

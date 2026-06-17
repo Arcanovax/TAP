@@ -9,11 +9,7 @@ use tokio::io::{AsyncBufReadExt, AsyncWriteExt, BufReader};
 use tokio::net::TcpListener;
 use tracing::{Instrument, error, info};
 
-mod command;
 mod config;
-mod error;
-mod game;
-mod group;
 mod handlers;
 pub mod protocol;
 mod state;

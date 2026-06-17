@@ -1,10 +1,9 @@
 use serde_json::json;
 
 use crate::{
-    error::ErrorCode,
     protocol::{EventType, Message},
     state::SharedServer,
-    structures::enums::exits::Exit,
+    structures::enums::{error::ErrorCode, exits::Exit},
 };
 use std::{mem::discriminant, net::SocketAddr};
 
