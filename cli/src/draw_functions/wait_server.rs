@@ -10,6 +10,6 @@ pub fn draw_wait(frame: &mut Frame) {
 
      let popup_area = frame.area().centered(
             Percentage(50),
-        Length(estimate_height(frame.area(), &wait_popup.content.to_string())));
+        Length(estimate_height(frame.area(), &wait_popup.content.to_string(), true)));
     frame.render_widget(wait_popup, popup_area);
 }

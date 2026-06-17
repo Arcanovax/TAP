@@ -53,7 +53,7 @@ pub fn draw_room(world: &mut World, frame: &mut Frame) {
 
 	let chat_space = Layout::default()
 	.direction(Vertical)
-	.spacing(Overlap(1))
+	.margin(1)
 	.constraints(vec![Length(3), Fill(1)])
 	.split(left_layout[2]);
 
@@ -79,7 +79,7 @@ pub fn draw_room(world: &mut World, frame: &mut Frame) {
     ])
     .split(right_layout[1]);
 
-	let mut chat_area = left_layout[2];
+	let mut chat_area = chat_space[1];
     let mut output_area = left_layout[3];
     let mut descr_area = right_layout[0];
 
@@ -180,6 +180,17 @@ pub fn draw_room(world: &mut World, frame: &mut Frame) {
 
 	//Just to see them
 
+	let messages = match world.chat.channel {
+		Channels::GLOBAL => world.chat.global_messages.clone(),
+		Channels::ROOM => world.chat.room_messages.clone(),
+		Channels::GROUP => world.chat.group_messages.clone(),
+	};
+
+	let mut lines = Vec::new();
+	for mess in messages {
+		lines.push(Line::from(mess));
+	}
+
 	let chat = Block::new()
 	.borders(Borders::ALL)
 	.border_style(if world.room.focus == Focus::CHAT {Color::LightBlue} else {Color::White})
@@ -187,6 +198,9 @@ pub fn draw_room(world: &mut World, frame: &mut Frame) {
 	.title_alignment(Alignment::Center)
 	.title_style(Color::Green);
 
+	let chat_content = Paragraph::new(Text::from(lines))
+	.wrap(Wrap { trim: true })
+	.scroll((world.room.chat_scroll_pos, 0));
 
 	// let borders_channels = Block::new()
 	// 	.borders(Borders::ALL)
@@ -248,6 +262,7 @@ pub fn draw_room(world: &mut World, frame: &mut Frame) {
 	frame.render_widget(room_channel,  channels[1]);
 	frame.render_widget(group_channel, channels[2]);
 	frame.render_widget(chat, left_layout[2]);
+	frame.render_widget(chat_content, chat_area);
 	// frame.render_widget(borders_channels, chat_space[0]);
 	frame.render_widget(output, left_layout[3]);
 	frame.render_widget(&world.room.text_area, main_layout[1]);

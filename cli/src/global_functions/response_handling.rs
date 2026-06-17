@@ -27,10 +27,18 @@ pub fn response_handling(world: &mut World, msg: &str, server: &ServerEvent) {
 			// self.input = msg.to_string()
 		},
 		States::InGame => {
-			match world.action {
+			match &world.action {
 				PendingAction::Look => {
 					world.room = serde_json::from_value(server.data.clone().unwrap()).unwrap();
 					world.action = PendingAction::None;
+				},
+				PendingAction::SendChat(command, args) => {
+					match command.to_uppercase().as_str() {
+						"CHAT GLOBAL" => world.chat.global_messages.push_back(args.clone()),
+						"CHAT GROUP" => world.chat.group_messages.push_back(args.clone()),
+						"CHAT ROOM" => world.chat.room_messages.push_back(args.clone()),
+						_ => {}
+					}
 				},
 				PendingAction::Move => {
 					if msg.contains("SUCCESS") {

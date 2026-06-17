@@ -8,7 +8,7 @@ pub fn find_action(command: &str, world: &mut World, args: Option<String>) {
 		"take" => world.action = PendingAction::Take,
 		"look" => world.action = PendingAction::Look,
 		"who" => world.action = PendingAction::Who,
-		"chat" => world.action = PendingAction::SendChat(world.chat.channel.clone(), args.unwrap_or("".to_string())),
+		"chat" => world.action = PendingAction::SendChat(command.to_string().clone(), args.unwrap_or("".to_string())),
 		"group join" => world.action = PendingAction::GroupJoin(args.unwrap_or("".to_string())),
 		"group invite" => world.action = PendingAction::GroupInvite(args.unwrap_or("".to_string())),
 		"group create" => world.action = PendingAction::GroupCreate(args.unwrap_or("".to_string())),

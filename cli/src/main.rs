@@ -7,7 +7,7 @@ use std::io::{Error, stdout};
 use std::sync::mpsc;
 use ratatui::crossterm::event::{DisableMouseCapture, EnableMouseCapture};
 use ratatui::crossterm::execute;
-use tokio::io::{AsyncReadExt, AsyncWriteExt};
+use tokio::io::{AsyncBufReadExt, AsyncReadExt, AsyncWriteExt, BufReader};
 use tokio::net::TcpStream;
 use crate::enums::states::States;
 use crate::structures::world::World;
@@ -17,17 +17,22 @@ async fn network_task(tx: mpsc::Sender<String>, mut rx: tokio::sync::mpsc::Recei
 		Ok(s) => s,
 		Err(_) => return,
 	};
-    let (mut reader, mut writer) = stream.into_split();
-
+    let (half_reader, mut writer) = stream.into_split();
 
     let read_task = tokio::spawn(async move {
-        let mut buf = [0u8; 1024];
+        let mut reader = BufReader::new(half_reader);
+        let mut line = String::new();
+        // let mut buf = [0u8; 1024];
         loop {
-            match reader.read(&mut buf).await{
-				Ok(n) if n > 0 => {
-					tx.send(String::from_utf8_lossy(&buf[..n]).to_string()).ok();
+            line.clear();
+            match reader.read_line(&mut line).await{
+                Ok(0) => break,
+				Ok(_) => {
+					if tx.send(line.clone()).is_err() {
+                        break;
+                    }
 				}
-				_ => break,
+				Err(_) => break,
 			}
         }
     });

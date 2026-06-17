@@ -13,6 +13,7 @@ use ratatui::{
 		self, Event, KeyCode, MouseButton, MouseEventKind
 	},
 };
+use serde_json::Deserializer;
 use tokio::sync::mpsc::Sender;
 
 use crate::{
@@ -187,10 +188,8 @@ impl World<'_>{
 												let _ = self.tx_to_serv.try_send(split_command.join(" ") + "\n");
 												// if let Ok(mut file) = OpenOptions::new().create(true).append(true).open("debug_draw.txt") {
 												// 	let _ = writeln!(file, "RECU (State {:?}) : {:#?}", self.state, split_command.join(" "));}
-												if ["GROUP"].contains(&split_command[0].to_uppercase().as_str()){
+												if ["GROUP", "CHAT"].contains(&split_command[0].to_uppercase().as_str()){
 													find_action(&split_command[..2].join(" "), self, Some(split_command[2..].join(" ")));
-												} else if ["CHAT"].contains(&split_command[0].to_uppercase().as_str()) {
-													find_action(split_command[0], self, Some(split_command[1..].join(" ")));
 												} else {
 													find_action(split_command[0], self, None);
 												}
@@ -227,36 +226,41 @@ impl World<'_>{
 					if self.state == States::ServerWait {
 						if msg.contains("OK hello proto") {self.state = States::Login};
 					} else {
-						if let Ok(server_event) = serde_json::from_str::<ServerEvent>(&msg) {
-							// if let Ok(mut file) = OpenOptions::new().create(true).append(true).open("debug_network.txt") {
-							// 	let _ = writeln!(file, "ok (State {:?}) : {:#?}", self.state, server_event);}
-							if server_event.event_type == "Response" {
-								response_handling(self, &msg, &server_event);
+						let stream = Deserializer::from_str(&msg).into_iter::<ServerEvent>();
+						for result in stream {
+							if let Ok(server_event) = result {
+								// if let Ok(mut file) = OpenOptions::new().create(true).append(true).open("debug_network.txt") {
+								// 	let _ = writeln!(file, "ok (State {:?}) : {:#?}", self.state, server_event);}
+								if server_event.event_type == "Response" {
+									response_handling(self, &msg, &server_event);
+								}
+								if server_event.event_type == "Event" {
+									if let Some(invite) = server_event.invite {
+										self.group.invitation = Some(Invitation{sender: invite.sender, group_name: invite.group_name})
+									}
+									if let Some(new) = server_event.join {
+										self.group.grouplist.push(new);
+									}
+									if let Some(leaver) = server_event.leave {
+										self.group.grouplist.retain(|x| x != &leaver);
+									}
+									if let Some(msg) = server_event.chat {
+										let channel = match msg.scope.as_str(){
+										"ROOM" => &mut self.chat.room_messages,
+										"GLOBAL" => &mut self.chat.global_messages,
+										"GROUP" => &mut self.chat.group_messages,
+										_ => continue
+										};
+										let text: String = format!("[{}]{}",msg.sender,msg.body);
+										channel.push_back(text);
+										// if let Ok(mut file) = OpenOptions::new().create(true).append(true).open("debug_network.txt") {
+										// 	let _ = writeln!(file, "ok (State {:?}) : {:#?}", self.state, channel.);}
+									}
+								}
+							}else {
+								// if let Ok(mut file) = OpenOptions::new().create(true).append(true).open("debug_network.txt") {
+								// 	let _ = writeln!(file, "Pas ok (State {:?}) : {:#?}", self.state, msg);}
 							}
-							if server_event.event_type == "Event" {
-								if let Some(invite) = server_event.invite {
-									self.group.invitation = Some(Invitation{sender: invite.sender, group_name: invite.group_name})
-								}
-								if let Some(new) = server_event.join {
-									self.group.grouplist.push(new);
-								}
-								if let Some(leaver) = server_event.leave {
-									self.group.grouplist.retain(|x| x != &leaver);
-								}
-								if let Some(msg) = server_event.chat {
-									let channel = match msg.scope.as_str(){
-									"ROOM" => &mut self.chat.room_messages,
-									"GLOBAL" => &mut self.chat.global_messages,
-									"GROUP" => &mut self.chat.group_messages,
-									_ => continue
-									};
-									let text: String = format!("[{}]{}\n",msg.sender,msg.body);
-									channel.push_back(text);
-								}
-							}
-						}else {
-							// if let Ok(mut file) = OpenOptions::new().create(true).append(true).open("debug_network.txt") {
-							// 	let _ = writeln!(file, "Pas ok (State {:?}) : {:#?}", self.state, msg);}
 						}
 					}
 				}

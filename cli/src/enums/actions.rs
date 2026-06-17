@@ -13,7 +13,7 @@ pub enum PendingAction {
 	GroupJoin(String),
 	GroupLeave(String),
 	GroupInvite(String),
-	SendChat(Channels, String),
+	SendChat(String, String),
 	Look,
 	Status,
 	Move,
