@@ -1,5 +1,3 @@
-use serde::Serialize;
-
 use crate::{
     protocol::Message,
     state::SharedServer,
@@ -8,6 +6,7 @@ use crate::{
         npc::NPC,
     },
 };
+use serde::Serialize;
 
 #[cfg(test)]
 mod tests;
