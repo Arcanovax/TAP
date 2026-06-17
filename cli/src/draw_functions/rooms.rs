@@ -1,3 +1,5 @@
+use std::{fs::OpenOptions, io::Write};
+
 use ratatui::{
 	Frame, layout::{
 		Alignment, Constraint::{Fill, Length, Percentage}, Direction::
@@ -234,6 +236,9 @@ pub fn draw_room(world: &mut World, frame: &mut Frame) {
 		.title_style(Color::Green)
 		.bold()
 		.border_style(if world.room.focus == Focus::COMMAND {Color::LightBlue} else {Color::White}));
+
+	// if let Ok(mut file) = OpenOptions::new().create(true).append(true).open("debug_network.txt") {
+	// 			let _ = writeln!(file, "ok (State {:?}) : {:#?}", world.state, world.room.focus);}
 
 	frame.render_widget(id, left_layout[0]);
 	frame.render_widget(hp_bar, left_layout[1]);

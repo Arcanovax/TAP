@@ -1,4 +1,4 @@
-use ratatui::{Frame, layout::{Constraint::{self, Length, Percentage}, Direction::Vertical, Layout}, style::Style, widgets::{Block, Paragraph, Wrap}};
+use ratatui::{Frame, layout::{Constraint::{Length, Percentage}, Direction::Vertical, Layout}, style::Style, widgets::{Block, Paragraph, Wrap}};
 use ratatui::prelude::Stylize;
 use tui_widgets::big_text::{BigText, PixelSize};
 use crate::{global_functions::estimate_height::estimate_height, structures::{popup::Popup, world::World}};

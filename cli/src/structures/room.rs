@@ -47,7 +47,7 @@ impl Room<'_> {
 			npcs: Vec::new(),
 			items: Vec::new(),
 			players: Vec::new(),
-			focus: Focus::NONE,
+			focus: Focus::COMMAND,
 			available_focus: Vec::new(),
 			chat_scroll_pos: 0,
 			output_scroll_pos: 0,
