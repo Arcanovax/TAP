@@ -884,17 +884,18 @@ async fn main() {
 
 
 				let activation_distance = 20.0;
-				let mut active_npc: Option<(Vec2, String)> = None;
+				let mut active_npc: Option<(Vec2, Npc)> = None;
 
 				for npc_id in map_data.npcs.iter() {
 					if let Some(place) = npc_slots.clone().pop() {
 						let npc: Option<Npc> = game.loaded_npcs.get(npc_id).cloned();
 						if let Some(npc) = npc {
-							let npc_texture: Texture2D = npc.texture;
+
+							let npc_texture: Texture2D = npc.clone().texture;
 
 							let distance = place.distance(vec2(game.player.x, game.player.y));
 							if distance < activation_distance {
-								active_npc = Some((place, npc_id.clone()));
+								active_npc = Some((place, npc));
 							}
 
 							draw_texture_ex(
@@ -926,9 +927,31 @@ async fn main() {
 					cut_sheet
 				);
 
-				if let Some((place, npc_id)) = active_npc {
+				if let Some((place, npc)) = active_npc {
+
 					draw_flat_triangle(place.x + 8.0, place.y);
-					draw_rectangle(place.x + 16.0, place.y, 40.0, 25.0, YELLOW);
+
+
+					let rect: Rect = Rect::new(place.x + 18.0, place.y, 40.0, 25.0);
+					draw_rectangle(rect.x, rect.y, rect.w, rect.h, Color::new(0.0, 0.0, 0.0, 0.5));
+
+					set_default_camera();
+					let screen_pos = world_to_screen_pos(vec2(rect.x, rect.y));
+					let npc_info = format!("{}", npc.name);
+					draw_text(npc_info, screen_pos.x, screen_pos.y + 15.0, 25.0, WHITE);
+
+					let mouse = mouse_position();
+					let btn_talk: Rect = Rect::new(screen_pos.x, screen_pos.y + 25.0, 100.0, 25.0);
+
+					if get_button(btn_talk, "Talk", 25, WHITE, mouse){
+
+					}
+					if npc.has_quest{
+						let btn_quest: Rect = Rect::new(screen_pos.x, screen_pos.y + 50.0, 100.0, 25.0);
+						if get_button(btn_quest, "Quest", 25, WHITE, mouse){
+						}
+					}
+					camera_handler(&mut camera, tile_size);
 				}
 
 				if let Some(builds_texture) = builds.as_ref() {
