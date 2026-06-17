@@ -10,7 +10,7 @@ use std::net::SocketAddr;
 
 use crate::{
     handlers::{
-        chat::chat_request, connect::connect_request, drop::drop_request, fight_func::fight::fight,
+        chat::chat_request, connect::connect_request, drop::drop_request, fight::fight_request,
         group::group_request, inventory::inventory_request, look::look_request,
         movement::move_request, status::status_request, take::take_request, talk::talk_request,
         who::who_request,
@@ -38,7 +38,7 @@ pub fn handle_request(
             Some(Command::STATUS) => status_request(server_info, peer_addr).into(),
             Some(Command::MOVE) => move_request(server_info, peer_addr, args).into(),
             Some(Command::TALK) => talk_request(peer_addr, args, server_info),
-            Some(Command::ATTACK) => fight(peer_addr, args, server_info).into(),
+            Some(Command::ATTACK) => fight_request(peer_addr, args, server_info).into(),
             Some(Command::LOOK) => look_request(server_info, peer_addr).into(),
             Some(Command::DROP) => drop_request(server_info, peer_addr, args).into(),
             Some(Command::TAKE) => take_request(server_info, peer_addr, args).into(),

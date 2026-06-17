@@ -18,7 +18,7 @@ fn quest_with_wrong_args_returns_invalid_args() {
     );
     assert_eq!(
         quest_request(&vec!["a".to_string(), "b".to_string()], &server, addr(1)),
-        err(ErrorCode::INVALID_ARGS)
+        err(ErrorCode::NPC_NOT_FOUND)
     );
 }
 

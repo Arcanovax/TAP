@@ -1,5 +1,4 @@
 use super::*;
-use crate::error::ErrorCode;
 use crate::test_utils::{
     addr, assert_success_contains, connect, err, populated_server, test_server,
 };
