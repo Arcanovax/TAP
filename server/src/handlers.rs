@@ -11,6 +11,7 @@ pub mod look;
 pub mod movement;
 pub mod npc;
 pub mod quest;
+pub mod quests;
 pub mod status;
 pub mod take;
 pub mod talk;

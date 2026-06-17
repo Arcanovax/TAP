@@ -1,5 +1,7 @@
 use crate::{
-    handlers::{item::item_request, npc::npc_request, quest::quest_request},
+    handlers::{
+        item::item_request, npc::npc_request, quest::quest_request, quests::quests_request,
+    },
     state::{SharedServer, Tx},
     structures::{
         enums::{command::Command, error::ErrorCode},
@@ -46,6 +48,7 @@ pub fn handle_request(
             Some(Command::QUEST) => quest_request(args, server_info, peer_addr).into(),
             Some(Command::NPC) => npc_request(server_info, args).into(),
             Some(Command::ITEM) => item_request(server_info, args).into(),
+            Some(Command::QUESTS) => quests_request(server_info, peer_addr).into(),
             _ => Message::Response {
                 error: ErrorCode::INVALID_COMMAND,
                 data: None,
