@@ -5,48 +5,78 @@ use crate::{
     // handlers::global_func::{get_player::get_player_mut, is_he_there::is_he_there},
     protocol::Message,
     state::SharedServer,
+    structures::{enums::game_event::GameEvent, handler_outcome::HandlerOutcome},
 };
 
 pub fn talk_request(
-    _player_name: SocketAddr,
-    _target: &Vec<String>,
-    _world: &SharedServer,
-) -> Message {
-    // if target.len() != 1 {
-    //     return Message::Response {
-    //         error: ErrorCode::INVALID_ARGS,
-    //         data: None,
-    //     };
-    // }
-    // let mut pre_world_mut = world.lock().unwrap();
-    // let world_mut = &mut *pre_world_mut;
-    // match get_player_mut(&mut world_mut.connections, &player_name) {
-    //     Ok(player) => {
-    //         if let Some(loc) = world_mut.world.rooms.get(&player.location) {
-    //             if is_he_there(&target[0], loc) {
-    //                 return Message::Response {
-    //                     error: ErrorCode::SUCCESS,
-    //                     data: Some(world_mut.world.npcs[&target[0]].dialog[0].clone()),
-    //                 };
-    //             } else {
-    //                 return Message::Response {
-    //                     error: ErrorCode::NPC_NOT_FOUND,
-    //                     data: Some(serde_json::to_string("No character by that name").unwrap()),
-    //                 };
-    //             };
-    //         }
-    //         Message::Response {
-    //             error: ErrorCode::PLAYER_NOT_FOUND,
-    //             data: Some(serde_json::to_string("There is no one by that name here").unwrap()),
-    //         }
-    //     }
-    //     Err(msg) => Message::Response {
-    //         error: ErrorCode::PLAYER_NOT_FOUND,
-    //         data: Some(serde_json::to_string(msg).unwrap()),
-    //     },
-    // }
-    Message::Response {
-        error: ErrorCode::SUCCESS,
-        data: None,
+    peer_addr: SocketAddr,
+    args: &Vec<String>,
+    server_info: &SharedServer,
+) -> HandlerOutcome {
+    if args.len() == 0 {
+        return Message::Response {
+            error: ErrorCode::INVALID_ARGS,
+            data: None,
+        }
+        .into();
+    }
+    let binding = server_info.lock().unwrap();
+    let player = match binding.get_player(peer_addr) {
+        Ok(player) => player,
+        Err(code) => {
+            return Message::Response {
+                error: code,
+                data: None,
+            }
+            .into();
+        }
+    };
+
+    let mut npc_ref = args.join(" ");
+    if let Some(reference) = binding.world.name_to_ref.get(&npc_ref.to_lowercase()) {
+        npc_ref = reference.clone();
+    }
+    let npc = match binding.world.npcs.get(&npc_ref) {
+        Some(npc) => npc,
+        None => {
+            return Message::Response {
+                error: ErrorCode::NPC_NOT_FOUND,
+                data: None,
+            }
+            .into();
+        }
+    };
+
+    let step_entry = match &npc.quest {
+        Some(quest_ref) => player
+            .quests_in_progress
+            .get(quest_ref)
+            .map(|step| step.to_string())
+            .and_then(|key| npc.dialog.get(&key).map(|d| (key, d))),
+        None => None,
+    };
+
+    let (dialog_id, dialogs): (String, Vec<String>) = match step_entry {
+        Some((key, d)) => (key, d.to_vec()),
+        None => match npc.dialog.get("default") {
+            Some(d) => ("default".to_string(), d.to_vec()),
+            None => {
+                return Message::Response {
+                    error: ErrorCode::NO_DIALOG,
+                    data: None,
+                }
+                .into();
+            }
+        },
+    };
+
+    HandlerOutcome {
+        message: Message::Response {
+            error: ErrorCode::SUCCESS,
+            data: Some(serde_json::to_value(dialogs).unwrap()),
+        },
+        event: Some(GameEvent::Talked {
+            dialog: format!("{npc_ref}.dialog.{dialog_id}"),
+        }),
     }
 }

@@ -20,6 +20,7 @@ pub enum ErrorCode {
     INVALID_ARGS,
     INVALID_COMMAND,
     ALREADY_CONNECTED,
+    NO_DIALOG,
     SUCCESS,
 }
 
@@ -28,6 +29,7 @@ impl ErrorCode {
         match self {
             ErrorCode::NAME_IN_USE => 201,
             ErrorCode::NO_EXIT => 301,
+            ErrorCode::NO_DIALOG => 302,
             ErrorCode::NOT_IN_GROUP => 401,
             ErrorCode::ALREADY_IN_GROUP => 402,
             ErrorCode::ITEM_NOT_FOUND

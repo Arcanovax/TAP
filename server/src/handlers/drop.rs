@@ -1,4 +1,10 @@
-use crate::{error::ErrorCode, protocol::Message, state::SharedServer};
+use serde_json::json;
+
+use crate::{
+    error::ErrorCode,
+    protocol::{EventType, Message},
+    state::SharedServer,
+};
 use std::net::SocketAddr;
 
 #[cfg(test)]
@@ -22,14 +28,29 @@ pub fn drop_request(
             data: None,
         };
     }
-    let mut dropped: Vec<String> = Vec::new();
-    for item in args {
-        if let Ok(item) = binding.try_drop_item(peer_addr, item) {
-            dropped.push(item);
-        }
+
+    let mut item = args.join(" ");
+    if let Some(reference) = binding.world.name_to_ref.get(&item.to_lowercase()) {
+        item = reference.clone();
     }
-    Message::Response {
-        error: ErrorCode::SUCCESS,
-        data: Some(serde_json::to_string(&dropped).unwrap()),
+    match binding.try_drop_item(peer_addr, &item) {
+        Ok(item) => {
+            let receivers = binding.get_room_receivers(peer_addr).unwrap();
+            let player = binding.get_player(peer_addr).unwrap();
+            for con in receivers {
+                let _ = con.tx.send(Message::Event(EventType::DROP {
+                    player_name: player.name.clone(),
+                    item: item.clone(),
+                }));
+            }
+            Message::Response {
+                error: ErrorCode::SUCCESS,
+                data: Some(json!({ "dropped": item })),
+            }
+        }
+        Err(code) => Message::Response {
+            error: code,
+            data: None,
+        },
     }
 }

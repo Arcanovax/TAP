@@ -1,13 +1,6 @@
 use crate::{
-    error::ErrorCode::SUCCESS,
-    protocol::Message,
-    state::SharedServer,
-    structures::{
-        enums::{exits::Exit, npc_kind::NPCKind},
-        item::Item,
-        npc::NPC,
-        room::Room,
-    },
+    error::ErrorCode::SUCCESS, protocol::Message, state::SharedServer,
+    structures::enums::exits::Exit,
 };
 use serde::Serialize;
 use std::net::SocketAddr;
@@ -16,61 +9,25 @@ use std::net::SocketAddr;
 mod tests;
 
 #[derive(Serialize)]
-enum NPCKindView {
-    Citizen,
-    Merchant,
-    Enemy {
-        hp: u32,
-        max_hp: u32,
-        defeated: bool,
-    },
-}
-
-#[derive(Serialize)]
-struct NpcView<'a> {
-    name: &'a str,
-    kind: NPCKindView,
-    has_quest: bool,
-}
-
-impl<'a> From<&'a NPC> for NpcView<'a> {
-    fn from(npc: &'a NPC) -> Self {
-        let kind = match npc.kind {
-            NPCKind::Citizen => NPCKindView::Citizen,
-            NPCKind::Merchant { .. } => NPCKindView::Merchant,
-            NPCKind::Enemy {
-                hp,
-                max_hp,
-                defeated,
-                ..
-            } => NPCKindView::Enemy {
-                hp,
-                max_hp,
-                defeated,
-            },
-        };
-        NpcView {
-            name: &npc.name,
-            kind,
-            has_quest: npc.quest.is_some(),
-        }
-    }
+struct RoomView<'a> {
+    id: &'a String,
+    name: &'a String,
+    description: &'a String,
+    exits: &'a [Exit],
 }
 
 #[derive(Serialize)]
 struct LookView<'a> {
-    name: &'a String,
-    description: &'a String,
-    exits: &'a [Exit],
-    items: Vec<&'a Item>,
-    npcs: Vec<NpcView<'a>>,
+    room: RoomView<'a>,
     players: Vec<String>,
+    npcs: &'a Vec<String>,
+    items: &'a Vec<String>,
 }
 
 pub fn look_request(server_info: &SharedServer, peer_addr: SocketAddr) -> Message {
     let binding = server_info.lock().unwrap();
-    let player_name = match binding.get_player(peer_addr) {
-        Ok(player) => player.name.clone(),
+    let player = match binding.get_player(peer_addr) {
+        Ok(player) => player,
         Err(code) => {
             return Message::Response {
                 error: code,
@@ -78,6 +35,8 @@ pub fn look_request(server_info: &SharedServer, peer_addr: SocketAddr) -> Messag
             };
         }
     };
+    let player_name = player.name.clone();
+    let room_id = &player.location;
     let room = match binding.get_player_room(peer_addr) {
         Ok(room) => room,
         Err(code) => {
@@ -102,24 +61,18 @@ pub fn look_request(server_info: &SharedServer, peer_addr: SocketAddr) -> Messag
         .collect();
     players.push(player_name);
     let view = LookView {
-        name: &room.name,
-        description: &room.description,
-        exits: &room.exits,
-        items: room
-            .items
-            .iter()
-            .filter_map(|id| binding.world.items.get(id))
-            .collect(),
-        npcs: room
-            .npc
-            .iter()
-            .filter_map(|id| binding.world.npcs.get(id))
-            .map(NpcView::from)
-            .collect(),
+        room: RoomView {
+            id: room_id,
+            name: &room.name,
+            description: &room.description,
+            exits: &room.exits,
+        },
         players,
+        npcs: &room.npc,
+        items: &room.items,
     };
     Message::Response {
         error: SUCCESS,
-        data: Some(serde_json::to_string(&view).unwrap()),
+        data: Some(serde_json::to_value(&view).unwrap()),
     }
 }

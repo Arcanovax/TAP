@@ -9,6 +9,10 @@ npc:
       default:
         - "Stay safe, traveler."
         - "The roads can be dangerous."
+      0:
+        - "test quest step 0"
+      1:
+        - "test quest step 1"
     kind: Citizen
     quest: "quest.test"
 

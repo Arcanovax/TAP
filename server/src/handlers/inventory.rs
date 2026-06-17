@@ -9,6 +9,6 @@ pub fn inventory_request(server_info: &SharedServer, peer_addr: SocketAddr) -> M
         .lock()
         .unwrap()
         .get_player(peer_addr)
-        .map(|player| serde_json::to_string(&player.inventory).unwrap())
+        .map(|player| serde_json::to_value(&player.inventory).unwrap())
         .into()
 }

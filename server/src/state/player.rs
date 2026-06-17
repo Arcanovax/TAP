@@ -46,8 +46,17 @@ impl ServerInfo {
         Ok(name)
     }
 
-    pub fn get_number_of_players(&mut self) -> usize {
+    pub fn get_number_of_players(&self) -> usize {
         self.connections.len()
+    }
+
+    pub fn send_players_event(&mut self, peer_addr: SocketAddr) {
+        let players = self.get_number_of_players();
+        let receivers = self.get_global_receivers(peer_addr);
+
+        for con in receivers {
+            let _ = con.tx.send(Message::Event(EventType::PLAYERS { players }));
+        }
     }
 
     pub fn get_player(&self, peer_addr: SocketAddr) -> Result<&Player, ErrorCode> {

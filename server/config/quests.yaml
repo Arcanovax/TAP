@@ -12,4 +12,4 @@ quest:
           item: "item.ale"
           amount: 1
       - Talk:
-          dialog: "npc.city_gard.dialog.default"
+          dialog: "npc.city_gard.dialog.1"

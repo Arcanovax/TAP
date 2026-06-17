@@ -94,6 +94,6 @@ fn group_list_request(server_info: &SharedServer, peer_addr: SocketAddr) -> Mess
         .lock()
         .unwrap()
         .try_get_group_list(peer_addr)
-        .map(|list| serde_json::to_string(&list).unwrap())
+        .map(|list| serde_json::to_value(&list).unwrap())
         .into()
 }

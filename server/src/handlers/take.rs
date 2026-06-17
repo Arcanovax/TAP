@@ -1,4 +1,10 @@
-use crate::{error::ErrorCode, protocol::Message, state::SharedServer};
+use serde_json::json;
+
+use crate::{
+    error::ErrorCode,
+    protocol::{EventType, Message},
+    state::SharedServer,
+};
 use std::net::SocketAddr;
 
 #[cfg(test)]
@@ -23,14 +29,28 @@ pub fn take_request(
         };
     }
 
-    let mut taken: Vec<String> = Vec::new();
-    for item in args {
-        if let Ok(item) = binding.try_take_item(peer_addr, item) {
-            taken.push(item);
-        }
+    let mut item = args.join(" ");
+    if let Some(reference) = binding.world.name_to_ref.get(&item.to_lowercase()) {
+        item = reference.clone();
     }
-    Message::Response {
-        error: ErrorCode::SUCCESS,
-        data: Some(serde_json::to_string(&taken).unwrap()),
+    match binding.try_take_item(peer_addr, &item) {
+        Ok(item) => {
+            let receivers = binding.get_room_receivers(peer_addr).unwrap();
+            let player = binding.get_player(peer_addr).unwrap();
+            for con in receivers {
+                let _ = con.tx.send(Message::Event(EventType::TAKE {
+                    player_name: player.name.clone(),
+                    item: item.clone(),
+                }));
+            }
+            Message::Response {
+                error: ErrorCode::SUCCESS,
+                data: Some(json!({ "taken": item })),
+            }
+        }
+        Err(code) => Message::Response {
+            error: code,
+            data: None,
+        },
     }
 }
