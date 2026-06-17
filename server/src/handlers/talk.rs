@@ -37,6 +37,14 @@ pub fn talk_request(
     if let Some(reference) = binding.world.name_to_ref.get(&npc_ref.to_lowercase()) {
         npc_ref = reference.clone();
     }
+    let player_room = binding.get_player_room(peer_addr).unwrap();
+    if !player_room.npc.iter().any(|npc| *npc == npc_ref) {
+        return Message::Response {
+            error: ErrorCode::NPC_NOT_FOUND,
+            data: None,
+        }
+        .into();
+    }
     let npc = match binding.world.npcs.get(&npc_ref) {
         Some(npc) => npc,
         None => {
