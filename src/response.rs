@@ -1,5 +1,26 @@
 use crate::*;
 
+#[derive(Debug, Clone, PartialEq)]
+pub enum PendingAction {
+    None,
+    GroupList,
+	Auth,
+	GroupCreate(String),
+	GroupJoin(String, String),
+	GroupInvite(String),
+	GroupLeave,
+	SendChat(String, String),
+	Look,
+	Command(String, String),
+	Status,
+	Move(Spawn),
+	Take,
+	Drop,
+	Who,
+	Items,
+	Npcs,
+	Talk(String)
+}
 
 
 pub async fn handle_response(game: &mut Game, server_event: ServerEvent, msg: String){
@@ -232,6 +253,27 @@ pub async fn handle_response(game: &mut Game, server_event: ServerEvent, msg: St
 						}
 						Err(e) => {
 							eprintln!("MOVE error: {}", e);
+						}
+					}
+				}
+			}
+		}
+		PendingAction::Talk(ref npc_id) => {
+
+			if msg.contains("SUCCESS") && game.player.new_spawn == Spawn::None{
+				if let Some(data_val) = server_event.data{
+					let data_str = data_val.to_string();
+					match serde_json::from_str::<Vec<String>>(&data_str) {
+						Ok(texts) => {
+							if let Some(npc) = game.loaded_npcs.get_mut(npc_id){
+								npc.npc_talk = Some(NpcTalk{
+								texts: texts,
+								text_i: 0
+							})
+							}
+						}
+						Err(e) => {
+							eprintln!("Talk error: {}", e);
 						}
 					}
 				}

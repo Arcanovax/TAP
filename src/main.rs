@@ -50,26 +50,6 @@ pub enum Exit {
     West { toward: String },
 }
 
-#[derive(Debug, Clone, PartialEq)]
-pub enum PendingAction {
-    None,
-    GroupList,
-	Auth,
-	GroupCreate(String),
-	GroupJoin(String, String),
-	GroupInvite(String),
-	GroupLeave,
-	SendChat(String, String),
-	Look,
-	Command(String, String),
-	Status,
-	Move(Spawn),
-	Take,
-	Drop,
-	Who,
-	Items,
-	Npcs
-}
 
 
 
@@ -253,7 +233,7 @@ async fn main() {
     loop {
 		while let Ok(msg) = game.rx_from_serv.try_recv() {
 			println!("Send: {:?}", game.pending_action);
-            println!("GET: {} //", msg);
+            println!("GET: {}", msg);
 			if let Ok(server_event) = serde_json::from_str::<ServerEvent>(&msg) {
 				if server_event.event_type == "Event" {
 					handle_events(&mut game, server_event).await;
@@ -448,11 +428,18 @@ async fn main() {
 
 					draw_flat_triangle(place.x + 8.0, place.y);
 
-
 					let rect: Rect = Rect::new(place.x + 18.0, place.y, 40.0, 38.0);
 					draw_rectangle(rect.x, rect.y, rect.w, rect.h, Color::new(0.0, 0.0, 0.0, 0.5));
 
 					set_default_camera();
+
+					if let Some(npc_talk) = npc.npc_talk.clone() {
+						let talk_pos = world_to_screen_pos(vec2(place.x, place.y - 20.0));
+						draw_rectangle(talk_pos.x, talk_pos.y, 200.0,30.0, WHITE);
+						draw_text(npc_talk.texts[npc_talk.text_i].clone(), talk_pos.x, talk_pos.y + 20.0, 25.0, BLACK);
+					}
+
+
 					let screen_pos = world_to_screen_pos(vec2(rect.x, rect.y));
 					let npc_info = format!("{}", npc.name);
 					draw_text(npc_info, screen_pos.x, screen_pos.y + 20.0, 25.0, WHITE);
@@ -460,8 +447,19 @@ async fn main() {
 					let mouse = mouse_position();
 					let btn_talk: Rect = Rect::new(screen_pos.x, screen_pos.y + 30.0, 100.0, 25.0);
 
-					if get_button(btn_talk, "Talk", 25, WHITE, mouse){
 
+
+					if get_button(btn_talk, "Talk", 25, WHITE, mouse){
+						let rq: String = format!("TALK {}\n",npc.id);
+						if let Some(npc) = game.loaded_npcs.get_mut(&npc.id) {
+        					if let Some(ref mut npc_talk) = npc.npc_talk {
+								npc_talk.text_i = (npc_talk.text_i + 1) % npc_talk.texts.len();
+							}
+							else {
+								game.tx_to_serv.try_send(rq).ok();
+								game.pending_action = PendingAction::Talk(npc.id.clone());
+							}
+    					}
 					}
 					if npc.has_quest{
 						let btn_quest: Rect = Rect::new(screen_pos.x, screen_pos.y + 60.0, 100.0, 25.0);

@@ -29,7 +29,7 @@ pub enum NPCKind {
 // 	Citizen
 // }
 
-#[derive(Clone, PartialEq)]
+#[derive(Clone, PartialEq, Debug)]
 pub struct Npc {
     pub id: String,
     pub texture: Texture2D,
@@ -40,10 +40,10 @@ pub struct Npc {
 
 }
 
-#[derive(Clone, PartialEq)]
+#[derive(Clone, PartialEq, Debug)]
 pub struct NpcTalk{
 	pub text_i: usize,
-	pub current_text: String
+	pub texts: Vec<String>
 }
 
 impl Npc {
