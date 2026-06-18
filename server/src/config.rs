@@ -1,7 +1,7 @@
 mod error;
 mod loader;
 
-use crate::game::World;
+use crate::structures::game::World;
 pub use error::ConfigError;
 use std::path::Path;
 

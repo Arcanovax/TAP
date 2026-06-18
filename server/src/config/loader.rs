@@ -1,7 +1,6 @@
 use crate::{
     config::ConfigError,
-    game::World,
-    structures::{item::Item, npc::NPC, quest::Quest, room::Room},
+    structures::{game::World, item::Item, npc::NPC, quest::Quest, room::Room},
 };
 use serde::Deserialize;
 use std::{
@@ -74,6 +73,9 @@ impl Loader {
         }
         for (name, npc) in parsed.npc {
             let id = format!("npc.{}", name);
+            self.world
+                .name_to_ref
+                .insert(npc.name.to_lowercase().clone(), id.clone());
             if let Some(file_a) = self.definer.insert(id.clone(), path.clone()) {
                 return Err(ConfigError::Conflict {
                     id,
@@ -108,6 +110,9 @@ impl Loader {
         }
         for (name, item) in parsed.item {
             let id = format!("item.{}", name);
+            self.world
+                .name_to_ref
+                .insert(item.name.to_lowercase().clone(), id.clone());
             self.world.items.insert(id.clone(), item);
             if let Some(file_a) = self.definer.insert(id.clone(), path.clone()) {
                 return Err(ConfigError::Conflict {

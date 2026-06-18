@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 
-use crate::command::Command;
+use crate::structures::{enums::game_event::GameEvent, player::Player};
 
 #[derive(Debug, Deserialize, Serialize, PartialEq, Eq, Clone)]
 pub enum Goal {
@@ -9,10 +9,14 @@ pub enum Goal {
 }
 
 impl Goal {
-    pub fn command(&self) -> Command {
+    pub(crate) fn is_satisfied(&self, player: &Player, event: Option<&GameEvent>) -> bool {
         match self {
-            Goal::Collect { .. } => Command::TAKE,
-            Goal::Talk { .. } => Command::TALK,
+            Goal::Collect { item, amount } => {
+                player.inventory.get(item).copied().unwrap_or(0) >= *amount
+            }
+            Goal::Talk { dialog } => {
+                matches!(event, Some(GameEvent::Talked { dialog: d }) if d == dialog)
+            }
         }
     }
 }

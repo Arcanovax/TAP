@@ -1,4 +1,5 @@
 use super::*;
+use crate::structures::enums::error::ErrorCode;
 
 impl ServerInfo {
     pub fn get_global_receivers(&mut self, peer_addr: SocketAddr) -> Vec<&Connection> {

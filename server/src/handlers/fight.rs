@@ -1,9 +1,6 @@
 use crate::{
-    error::ErrorCode::{self},
     handlers::{
-        fight_func::{
-            attack::execute_attack, enemy_attack::enemy_attack, is_it_my_turn::is_it_my_turn,
-        },
+        fight::{attack::execute_attack, enemy_attack::enemy_attack, is_it_my_turn::is_it_my_turn},
         global_func::{
             check_fight::check_fight, get_player::get_player_mut, is_he_there::is_he_there,
         },
@@ -12,18 +9,25 @@ use crate::{
     state::SharedServer,
     structures::{
         enums::{
-            attack_res::AttackRes, enn_att_res::EnnAttRes, npc_kind::NPCKind, state::State,
-            turn_res::TurnRes,
+            attack_res::AttackRes, enn_att_res::EnnAttRes, error::ErrorCode, npc_kind::NPCKind,
+            state::State, turn_res::TurnRes,
         },
         fight::Fight,
     },
 };
 use std::net::SocketAddr;
 
+mod attack;
+mod enemy_attack;
+mod is_it_my_turn;
 #[cfg(test)]
 mod tests;
 
-pub fn fight(peer_addr: SocketAddr, enn_name: &Vec<String>, world: &SharedServer) -> Message {
+pub fn fight_request(
+    peer_addr: SocketAddr,
+    enn_name: &Vec<String>,
+    world: &SharedServer,
+) -> Message {
     if enn_name.len() != 1 {
         return Message::Response {
             error: ErrorCode::INVALID_ARGS,
@@ -38,7 +42,7 @@ pub fn fight(peer_addr: SocketAddr, enn_name: &Vec<String>, world: &SharedServer
                 if !is_he_there(&enn_name[0], loc) {
                     return Message::Response {
                         error: ErrorCode::NPC_NOT_FOUND,
-                        data: Some(serde_json::to_string("This target isn't here.").unwrap()),
+                        data: Some(serde_json::to_value("This target isn't here.").unwrap()),
                     };
                 }
                 if let NPCKind::Enemy { defeated, .. } = &world_mut.world.npcs[&enn_name[0]].kind {
@@ -46,7 +50,7 @@ pub fn fight(peer_addr: SocketAddr, enn_name: &Vec<String>, world: &SharedServer
                         return Message::Response {
                             error: ErrorCode::DEFEATED_ENEMY,
                             data: Some(
-                                serde_json::to_string("This target has already been defeated")
+                                serde_json::to_value("This target has already been defeated")
                                     .unwrap(),
                             ),
                         };
@@ -54,7 +58,7 @@ pub fn fight(peer_addr: SocketAddr, enn_name: &Vec<String>, world: &SharedServer
                 } else {
                     return Message::Response {
                         error: ErrorCode::NPC_NOT_HOSTILE,
-                        data: Some(serde_json::to_string("This target isn't an enemy.").unwrap()),
+                        data: Some(serde_json::to_value("This target isn't an enemy.").unwrap()),
                     };
                 }
                 match &player.status {
@@ -77,7 +81,7 @@ pub fn fight(peer_addr: SocketAddr, enn_name: &Vec<String>, world: &SharedServer
                         Message::Response {
                             error: ErrorCode::SUCCESS,
                             data: Some(
-                                serde_json::to_string(&format!(
+                                serde_json::to_value(&format!(
                                     "{} says: 'Hello there!'",
                                     player.name
                                 ))
@@ -101,7 +105,7 @@ pub fn fight(peer_addr: SocketAddr, enn_name: &Vec<String>, world: &SharedServer
                                                 | EnnAttRes::Error(msg) => Message::Response {
                                                     error: ErrorCode::SUCCESS,
                                                     data: Some(
-                                                        serde_json::to_string(&format!(
+                                                        serde_json::to_value(&format!(
                                                             "{}\n{}",
                                                             message, msg
                                                         ))
@@ -112,45 +116,41 @@ pub fn fight(peer_addr: SocketAddr, enn_name: &Vec<String>, world: &SharedServer
                                         } else {
                                             Message::Response {
                                                 error: ErrorCode::SUCCESS,
-                                                data: Some(
-                                                    serde_json::to_string(&message).unwrap(),
-                                                ),
+                                                data: Some(serde_json::to_value(&message).unwrap()),
                                             }
                                         }
                                     }
                                     AttackRes::KillTarget(msg) => Message::Response {
                                         error: ErrorCode::SUCCESS,
-                                        data: Some(serde_json::to_string(&msg).unwrap()),
+                                        data: Some(serde_json::to_value(&msg).unwrap()),
                                     },
                                     AttackRes::Peace(msg) => Message::Response {
                                         error: ErrorCode::SUCCESS,
-                                        data: Some(serde_json::to_string(msg).unwrap()),
+                                        data: Some(serde_json::to_value(msg).unwrap()),
                                     },
                                 }
                             }
                             TurnRes::NotMyTurn | TurnRes::EnemyTurn => Message::Response {
                                 error: ErrorCode::SUCCESS,
-                                data: Some(serde_json::to_string("It's not your turn!").unwrap()),
+                                data: Some(serde_json::to_value("It's not your turn!").unwrap()),
                             },
                         }
                     }
                     State::Discuss => Message::Response {
                         error: ErrorCode::INVALID_COMMAND,
-                        data: Some(
-                            serde_json::to_string("You can't fight in your state.").unwrap(),
-                        ),
+                        data: Some(serde_json::to_value("You can't fight in your state.").unwrap()),
                     },
                 }
             } else {
                 Message::Response {
                     error: ErrorCode::ROOM_NOT_FOUND,
-                    data: Some(serde_json::to_string("You're nowhere. I can't find you.").unwrap()),
+                    data: Some(serde_json::to_value("You're nowhere. I can't find you.").unwrap()),
                 }
             }
         }
         Err(msg) => Message::Response {
             error: ErrorCode::PLAYER_NOT_FOUND,
-            data: Some(serde_json::to_string(msg).unwrap()),
+            data: Some(serde_json::to_value(msg).unwrap()),
         },
     }
 }

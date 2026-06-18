@@ -20,7 +20,7 @@ fn group_create_with_connected_return_success() {
     let addr = addr(10101);
     connect(&server, addr, "test_user");
     let result = group_create_request(&server, addr, &vec![]);
-    assert_eq!(result, err(ErrorCode::SUCCESS));
+    assert_success_contains(&result, "group");
 }
 
 #[test]
@@ -47,7 +47,7 @@ fn group_create_with_args_return_success() {
             "group".to_string(),
         ],
     );
-    assert_eq!(result, err(ErrorCode::SUCCESS));
+    assert_success_contains(&result, "group");
 }
 
 // GROUP LEAVE TESTS
@@ -181,7 +181,7 @@ fn group_join_notifies_existing_members() {
 
     let result = group_join_request(&server, addr(2));
 
-    assert_eq!(result, err(ErrorCode::SUCCESS));
+    assert_success_contains(&result, "group");
     assert_eq!(
         rx_alice
             .try_recv()

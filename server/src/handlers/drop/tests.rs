@@ -25,7 +25,7 @@ fn drop_item_in_inventory_returns_it() {
     take_request(&server, addr(1), &vec!["sword".to_string()]);
 
     let result = drop_request(&server, addr(1), &vec!["sword".to_string()]);
-    assert_eq!(result, ok_data(r#"["sword"]"#));
+    assert_eq!(result, ok_data(r#"{"dropped":"sword"}"#));
     // l'item n'est plus dans l'inventaire
     let guard = server.lock().unwrap();
     assert!(
@@ -39,9 +39,9 @@ fn drop_item_in_inventory_returns_it() {
 }
 
 #[test]
-fn drop_item_not_in_inventory_returns_empty_success() {
+fn drop_item_not_in_inventory_returns_item_not_in_inventory() {
     let server = populated_server();
     connect(&server, addr(1), "alice");
     let result = drop_request(&server, addr(1), &vec!["sword".to_string()]);
-    assert_eq!(result, ok_data("[]"));
+    assert_eq!(result, err(ErrorCode::ITEM_NOT_IN_INVENTORY));
 }

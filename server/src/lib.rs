@@ -9,11 +9,7 @@ use tokio::io::{AsyncBufReadExt, AsyncWriteExt, BufReader};
 use tokio::net::TcpListener;
 use tracing::{Instrument, error, info};
 
-mod command;
 mod config;
-mod error;
-mod game;
-mod group;
 mod handlers;
 pub mod protocol;
 mod state;
@@ -38,6 +34,7 @@ fn cleanup_tcp_connection(server_info: &SharedServer, peer_addr: SocketAddr) {
         Ok(name) => info!("{} disconnected", name),
         Err(_) => {}
     }
+    server_info.lock().unwrap().send_players_event(peer_addr);
     info!("TCP connection closed");
 }
 
@@ -86,14 +83,14 @@ pub async fn run(addr: String, port: String) -> Result<(), Box<dyn std::error::E
                             }
                             let request = parse_command(line.as_str()); // DEV TEST
                             // let request = Message::parse(line)?; // PROD
+                            let response = handle_request(&request, &server_info_copy, peer_addr, &tx);
+                            let _ = write_half.write_all(response.to_str().as_bytes()).await;
+                            line.clear();
                             if let Message::Command { name, .. } = &request {
                                 if name.to_uppercase() == "QUIT" {
                                     break;
                                 }
                             }
-                            let response = handle_request(request, &server_info_copy, peer_addr, &tx);
-                            let _ = write_half.write_all(response.to_str().as_bytes()).await;
-                            line.clear();
                         }
                         Some(event) = rx.recv() => {
                             let _ = write_half.write_all(event.to_str().as_bytes()).await;

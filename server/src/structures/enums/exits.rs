@@ -1,6 +1,7 @@
-use crate::error::ErrorCode;
 use serde::{Deserialize, Serialize};
 use std::str::FromStr;
+
+use crate::structures::enums::error::ErrorCode;
 
 #[derive(Debug, PartialEq, Serialize, Deserialize)]
 pub enum Exit {

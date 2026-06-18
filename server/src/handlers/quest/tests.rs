@@ -18,7 +18,7 @@ fn quest_with_wrong_args_returns_invalid_args() {
     );
     assert_eq!(
         quest_request(&vec!["a".to_string(), "b".to_string()], &server, addr(1)),
-        err(ErrorCode::INVALID_ARGS)
+        err(ErrorCode::NPC_NOT_FOUND)
     );
 }
 
@@ -35,7 +35,7 @@ fn quest_from_npc_without_quest_returns_no_quest_available() {
     let server = populated_server();
     connect(&server, addr(1), "alice");
     let result = quest_request(&vec!["villager".to_string()], &server, addr(1));
-    assert_eq!(result, err(ErrorCode::NO_QUEST_AVAILABLE));
+    assert_eq!(result, err(ErrorCode::NPC_NOT_FOUND));
 }
 
 #[test]

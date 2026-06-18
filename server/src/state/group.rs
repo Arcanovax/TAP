@@ -1,4 +1,6 @@
 use super::*;
+use crate::structures::enums::error::ErrorCode;
+use serde_json::{Value, json};
 
 impl ServerInfo {
     fn create_new_group(&mut self, name: &str) -> Uuid {
@@ -12,7 +14,7 @@ impl ServerInfo {
         &mut self,
         peer_addr: SocketAddr,
         group_id: Uuid,
-    ) -> Result<(), ErrorCode> {
+    ) -> Result<Value, ErrorCode> {
         let con = self
             .connections
             .get(&peer_addr)
@@ -36,14 +38,14 @@ impl ServerInfo {
                 player_name: player_name.clone(),
             }));
         }
-        Ok(())
+        Ok(json!({ "group": group_id }))
     }
 
     pub fn try_create_group(
         &mut self,
         peer_addr: SocketAddr,
         group_name: &str,
-    ) -> Result<(), ErrorCode> {
+    ) -> Result<Value, ErrorCode> {
         let con = self
             .connections
             .get(&peer_addr)
@@ -55,7 +57,8 @@ impl ServerInfo {
         let name = con.player.name.clone();
         let group_id = self.create_new_group(group_name);
         info!("{} created group({}:{})", name, group_name, group_id);
-        self.try_add_player_to_group(peer_addr, group_id)
+        self.try_add_player_to_group(peer_addr, group_id)?;
+        Ok(json!({ "group": group_id }))
     }
 
     pub fn cleanup_player_invitation(&mut self, peer_addr: SocketAddr) {
@@ -129,15 +132,15 @@ impl ServerInfo {
         Ok(())
     }
 
-    pub fn try_join_group(&mut self, peer_addr: SocketAddr) -> Result<(), ErrorCode> {
+    pub fn try_join_group(&mut self, peer_addr: SocketAddr) -> Result<Value, ErrorCode> {
         let group_id = *self
             .invitations
             .get(&peer_addr)
             .ok_or(ErrorCode::INVALID_COMMAND)?;
         match self.try_add_player_to_group(peer_addr, group_id) {
-            Ok(()) => {
+            Ok(value) => {
                 self.invitations.remove_entry(&peer_addr);
-                Ok(())
+                Ok(value)
             }
             Err(code) => Err(code),
         }
