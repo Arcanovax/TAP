@@ -1,6 +1,8 @@
 use crate::*;
 
-pub fn camera_handler(camera: &mut Camera2D, tile_size: f32) {
+pub fn camera_handler(game: &mut Game) {
+	let camera: &mut Camera2D = &mut game.config.camera;
+	let tile_size: f32 = game.config.tile_size;
 	let map_w = 25.0 * tile_size;
 	let map_h = 14.0 * tile_size;
 

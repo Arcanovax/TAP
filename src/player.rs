@@ -1,6 +1,6 @@
 use crate::*;
 
-pub fn player_handler(game: &mut Game, map: &[[i32; 25]; 15], tile_size: f32, sprite_width: f32, sprite_height: f32) {
+pub fn player_handler(game: &mut Game, map: &[[i32; 25]; 15]) {
 	let player = &mut game.player;
 
 	let mut direction = Vec2::ZERO;
@@ -41,10 +41,11 @@ pub fn player_handler(game: &mut Game, map: &[[i32; 25]; 15], tile_size: f32, sp
 		player.row = 0
 	}
 
-	let player_w = sprite_width;
-	let player_h = sprite_height;
-	let hitbox_w = player_w * 0.5;
-	let hitbox_h = player_h * 0.7;
+	let tile_size: f32 = game.config.tile_size;
+	let player_w: f32 = game.config.sprite_width;
+	let player_h: f32 = game.config.sprite_height;
+	let hitbox_w: f32 = player_w * 0.5;
+	let hitbox_h: f32 = player_h * 0.7;
 	let hitbox_offset_x = (player_w - hitbox_w) * 0.5;
 	let hitbox_offset_y = player_h - hitbox_h;
 

@@ -101,7 +101,16 @@ struct Game {
 	pub map_data: Option<LookData>,
 	pub loaded_items:HashMap<String, Item>,
 	pub loaded_npcs: HashMap<String,Npc>,
-	pub nb_players: i32
+	pub nb_players: i32,
+	pub config: GameConfig
+
+}
+
+struct GameConfig {
+	sprite_width: f32,
+    sprite_height: f32,
+    tile_size: f32,
+   	camera:Camera2D
 }
 
 impl Game {
@@ -204,7 +213,13 @@ async fn main() {
 		map_data: None,
 		loaded_items: HashMap::new(),
 		loaded_npcs: HashMap::new(),
-		nb_players: 0
+		nb_players: 0,
+		config: GameConfig{
+			sprite_width: 16.0,
+			sprite_height: 32.0,
+			tile_size: 16.0,
+			camera: Camera2D::default()
+		}
     };
 
 
@@ -219,14 +234,7 @@ async fn main() {
     ];
     game.load_skins(skin_data).await;
 
-	let sprite_width: f32 = 16.0;
-    let sprite_height: f32 = 32.0;
 
-
-    let tile_size: f32 = 16.0;
-
-
-    let mut camera = Camera2D::default();
 
 
 
@@ -318,13 +326,15 @@ async fn main() {
 
 				clear_background(BLACK);
 
-				camera_handler(&mut camera, tile_size);
+				camera_handler(&mut game);
 
 				if game.focus == InputFocus::Game{
-					player_handler(&mut game, &map_obstacles, tile_size, sprite_width, sprite_height);
+					player_handler(&mut game, &map_obstacles);
 				}
 
 				let current_skin_texture = game.skins[game.player.spritesheet_index as usize].texture.clone();
+				let sprite_width: f32 = game.config.sprite_width;
+				let sprite_height: f32 = game.config.sprite_height;
 				let source_x: f32 = game.player.row as f32 * sprite_width;
 				let source_y: f32 = game.player.line as f32 * sprite_height;
 
@@ -367,18 +377,16 @@ async fn main() {
 					let screen_pos = world_to_screen_pos(*coords);
 					set_default_camera();
 					draw_text(player_name, screen_pos.x, screen_pos.y, 20.0, WHITE);
-					camera_handler(&mut camera, tile_size);
+					camera_handler(&mut game);
 					}
 				}
 
 
-				let npc_slots: Vec<Vec2> = find_npc_spawns(&map.colliders, tile_size);
+				let npc_slots: Vec<Vec2> = find_npc_spawns(&map.colliders, game.config.tile_size);
 				let texture_param = DrawTextureParams {
-					dest_size: Some(vec2(tile_size, tile_size * 2.0)),
+					dest_size: Some(vec2(sprite_width, sprite_height)),
 					..Default::default()
 				};
-
-
 
 				let activation_distance = 20.0;
 				let mut active_npc: Option<(Vec2, Npc)> = None;
@@ -425,52 +433,7 @@ async fn main() {
 				);
 
 				if let Some((place, npc)) = active_npc {
-
-					draw_flat_triangle(place.x + 8.0, place.y);
-
-					let rect: Rect = Rect::new(place.x + 18.0, place.y, 40.0, 38.0);
-					draw_rectangle(rect.x, rect.y, rect.w, rect.h, Color::new(0.0, 0.0, 0.0, 0.5));
-
-					set_default_camera();
-
-					if let Some(npc_talk) = npc.npc_talk.clone() {
-						let talk_pos = world_to_screen_pos(vec2(place.x, place.y - 20.0));
-						draw_rectangle(talk_pos.x, talk_pos.y, 200.0,30.0, WHITE);
-						draw_text(npc_talk.texts[npc_talk.text_i].clone(), talk_pos.x, talk_pos.y + 20.0, 25.0, BLACK);
-					}
-
-
-					let screen_pos = world_to_screen_pos(vec2(rect.x, rect.y));
-					let npc_info = format!("{}", npc.name);
-					draw_text(npc_info, screen_pos.x, screen_pos.y + 20.0, 25.0, WHITE);
-
-					let mouse = mouse_position();
-					let btn_talk: Rect = Rect::new(screen_pos.x, screen_pos.y + 30.0, 100.0, 25.0);
-
-
-
-					if get_button(btn_talk, "Talk", 25, WHITE, mouse){
-						let rq: String = format!("TALK {}\n",npc.id);
-						if let Some(npc) = game.loaded_npcs.get_mut(&npc.id) {
-        					if let Some(ref mut npc_talk) = npc.npc_talk {
-								npc_talk.text_i = (npc_talk.text_i + 1) % npc_talk.texts.len();
-							}
-							else {
-								game.tx_to_serv.try_send(rq).ok();
-								game.pending_action = PendingAction::Talk(npc.id.clone());
-							}
-    					}
-					}
-					if npc.has_quest{
-						let btn_quest: Rect = Rect::new(screen_pos.x, screen_pos.y + 60.0, 100.0, 25.0);
-						if get_button(btn_quest, "Quest", 25, WHITE, mouse){
-						}
-					}
-					let btn_attack: Rect = Rect::new(screen_pos.x, screen_pos.y + 90.0, 100.0, 25.0);
-					if get_button(btn_attack, "Attack", 25, WHITE, mouse){
-
-					}
-					camera_handler(&mut camera, tile_size);
+					handle_npc_interactions(&mut game, place, npc);
 				}
 
 				if let Some(builds_texture) = builds.as_ref() {
