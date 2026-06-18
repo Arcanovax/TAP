@@ -82,15 +82,14 @@ pub fn handle_npc_interactions(game: &mut Game, place: Vec2, npc: Npc){
 	let mouse = mouse_position();
 	let btn_talk: Rect = Rect::new(screen_pos.x, screen_pos.y + 30.0, 100.0, 25.0);
 
-
-
 	if get_button(btn_talk, "Talk", 25, WHITE, mouse){
-		let rq: String = format!("TALK {}\n",npc.id);
+
 		if let Some(npc) = game.loaded_npcs.get_mut(&npc.id) {
 			if let Some(ref mut npc_talk) = npc.npc_talk {
 				npc_talk.text_i = (npc_talk.text_i + 1) % npc_talk.texts.len();
 			}
 			else {
+				let rq: String = format!("TALK {}\n",npc.id);
 				game.tx_to_serv.try_send(rq).ok();
 				game.pending_action = PendingAction::Talk(npc.id.clone());
 			}
@@ -103,6 +102,9 @@ pub fn handle_npc_interactions(game: &mut Game, place: Vec2, npc: Npc){
 	}
 	let btn_attack: Rect = Rect::new(screen_pos.x, screen_pos.y + 90.0, 100.0, 25.0);
 	if get_button(btn_attack, "Attack", 25, WHITE, mouse){
+		let rq: String = format!("ATTACK {}\n",npc.id);
+		game.tx_to_serv.try_send(rq).ok();
+		game.pending_action = PendingAction::Attack(npc.id.clone());
 
 	}
 	camera_handler(game);
@@ -113,6 +115,7 @@ pub fn handle_npc_interactions(game: &mut Game, place: Vec2, npc: Npc){
 pub async fn get_npc_texture(item_id: &str) -> Texture2D {
     let path = match item_id {
         "npc.city_gard" => "assets/npc/city_gard.png",
+		"npc.goblins" => "assets/npc/goblin.png",
         _ => return Texture2D::empty(),
     };
 

@@ -19,7 +19,8 @@ pub enum PendingAction {
 	Who,
 	Items,
 	Npcs,
-	Talk(String)
+	Talk(String),
+	Attack(String)
 }
 
 
@@ -150,8 +151,8 @@ pub async fn handle_response(game: &mut Game, server_event: ServerEvent, msg: St
 			if let Some(data_val) = &server_event.data {
 				let data_str = data_val.to_string();
 				match serde_json::from_str::<LookData>(&data_str) {
-					Ok(parsed_map_data) => {
-						game.map_data = Some(parsed_map_data);
+					Ok(look_data) => {
+						game.map_data = Some(look_data);
 					}
 					Err(e) => {
 					eprintln!("LOOK error: {}", e);
@@ -212,10 +213,9 @@ pub async fn handle_response(game: &mut Game, server_event: ServerEvent, msg: St
 		PendingAction::Status => {
 			if let Some(data_val) = &server_event.data {
 				let data_str = data_val.to_string();
-				match serde_json::from_str::<StatusData>(&data_str) {
-					Ok(parsed_map_data) => {
-						game.player.hp = parsed_map_data.hp;
-						game.player.max_hp = parsed_map_data.max_hp;
+				match serde_json::from_str::<PlayerState>(&data_str) {
+					Ok(state) => {
+						game.player.state = Some(state)
 					}
 					Err(e) => {
 					eprintln!("STATUS error: {}", e);
@@ -277,6 +277,15 @@ pub async fn handle_response(game: &mut Game, server_event: ServerEvent, msg: St
 						}
 					}
 				}
+			}
+		}
+		PendingAction::Attack(ref npc_id) => {
+
+			if msg.contains("SUCCESS") && game.player.new_spawn == Spawn::None{
+				if let Some(ref mut state) = game.player.state{
+							state.status= Status::InFight { target_id: npc_id.to_string()}
+					};
+
 			}
 		}
 
@@ -385,9 +394,3 @@ pub struct RoomData {
 
 
 
-#[derive(Deserialize, Debug, Clone)]
-pub struct StatusData {
-    pub hp: i32,
-    pub max_hp: i32,
-    pub status: String,
-}
