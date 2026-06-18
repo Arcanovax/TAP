@@ -2,7 +2,7 @@ use std::{collections::HashMap, fs::OpenOptions, io::Write};
 
 use serde_json::Value;
 
-use crate::{enums::{actions::PendingAction, states::States}, structures::{room::Room, server_event::ServerEvent, world::World}};
+use crate::{enums::{actions::PendingAction, focus::Focus, states::States}, structures::{room::Room, server_event::ServerEvent, world::World}};
 
 pub fn response_handling(world: &mut World, server: &ServerEvent) {
 	if server.error == Some("SUCCESS".to_string()) {
@@ -39,6 +39,9 @@ pub fn response_handling(world: &mut World, server: &ServerEvent) {
 								"CHAT ROOM" => world.chat.room_messages.push_back(format!("[me] {}", args.clone())),
 								_ => {}
 							}
+							if world.room.focus != Focus::CHAT {
+									world.room.chat_scroll_pos.scroll_to_bottom();
+								}
 							world.action = PendingAction::None;
 						},
 						PendingAction::Move => {
@@ -46,6 +49,9 @@ pub fn response_handling(world: &mut World, server: &ServerEvent) {
 							world.action = PendingAction::ClientLook;
 						}
 						_ => {}
+				}
+				if world.room.focus != Focus::OUTPUT {
+					world.room.output_scroll_pos.scroll_to_bottom();
 				}
 			}
 			_ => {}

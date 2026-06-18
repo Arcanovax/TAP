@@ -19,14 +19,14 @@ pub struct Room<'a> {
 
 	#[serde(skip)]
 	pub focus: Focus,
+	// #[serde(skip)]
+	// pub available_focus: Vec<Focus>,
 	#[serde(skip)]
-	pub available_focus: Vec<Focus>,
-	#[serde(skip)]
-	pub chat_scroll_pos: u16,
+	pub chat_scroll_pos: ScrollViewState,
 	#[serde(skip)]
 	pub output_scroll_pos: ScrollViewState,
 	#[serde(skip)]
-	pub descr_scroll_pos: u16,
+	pub descr_scroll_pos: ScrollViewState,
 	#[serde(skip)]
 	pub npc_list_state: ListState,
 	#[serde(skip)]
@@ -40,19 +40,15 @@ pub struct Room<'a> {
 impl Room<'_> {
 	pub fn new() -> Self {
 		Room {
-			// id: String::from(""),
-			// name: String::from(""),
-			// exits: Vec::new(),
-			// description: String::from(""),
 			room_view: RoomView::new(),
 			npcs: Vec::new(),
 			items: Vec::new(),
 			players: Vec::new(),
 			focus: Focus::COMMAND,
-			available_focus: Vec::new(),
-			chat_scroll_pos: 0,
-			output_scroll_pos: ScrollViewState::default(),
-			descr_scroll_pos: 0,
+			// available_focus: vec![Focus::COMMAND, Focus::CHAT, Focus::NPC, Focus::OUTPUT, Focus::DESCR, Focus::INVENTORY, Focus::EXITS],
+			chat_scroll_pos: ScrollViewState::new(),
+			output_scroll_pos: ScrollViewState::new(),
+			descr_scroll_pos: ScrollViewState::new(),
 			npc_list_state: ListState::default(),
 			inventory_list_state: ListState::default(),
 			exits_list_state: ListState::default(),

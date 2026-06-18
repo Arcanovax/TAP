@@ -1,5 +1,3 @@
-use std::fmt::Display;
-
 use serde::Deserialize;
 
 #[derive(Deserialize, Debug)]
@@ -9,9 +7,3 @@ pub enum Exits {
 	East { toward: String },
 	West { toward: String },
 }
-
-// impl Display for Exits {
-// 	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-// 		write!(f, "")
-// 	}
-// }

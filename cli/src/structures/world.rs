@@ -117,24 +117,16 @@ impl World<'_>{
 							match key.code {
 								KeyCode::Down => {
 									match self.room.focus {
-										Focus::CHAT => {
-											if self.chat.scroll_bar {
-												self.room.chat_scroll_pos =  self.room.chat_scroll_pos.saturating_add(1);
-											}
-										},
-										Focus::DESCR => self.room.descr_scroll_pos =  self.room.descr_scroll_pos.saturating_add(1),
+										Focus::CHAT => self.room.chat_scroll_pos.scroll_down(),
+										Focus::DESCR => self.room.descr_scroll_pos.scroll_down(),
 										Focus::OUTPUT => self.room.output_scroll_pos.scroll_down(),
 										_ => {}
 									}
 									}
 								KeyCode::Up => {
 									match self.room.focus {
-										Focus::CHAT => {
-											if self.chat.scroll_bar {
-												self.room.chat_scroll_pos =  self.room.chat_scroll_pos.saturating_sub(1);
-											}
-										},
-										Focus::DESCR => self.room.descr_scroll_pos =  self.room.descr_scroll_pos.saturating_sub(1),
+										Focus::CHAT => self.room.chat_scroll_pos.scroll_up(),
+										Focus::DESCR => self.room.descr_scroll_pos.scroll_up(),
 										Focus::OUTPUT => self.room.output_scroll_pos.scroll_up(),
 										_ => {}
 									}
@@ -164,20 +156,17 @@ impl World<'_>{
 									}
 								}
 								KeyCode::Tab => {
-									if !self.room.available_focus.is_empty() {
-										let current_index = self.room.available_focus
-										.iter()
-										.position(|f|f == &self.room.focus)
-										.unwrap_or(0);
-										
-										let next_index = (current_index + 1) % self.room.available_focus.len();
-										self.room.focus = self.room.available_focus[next_index].clone();
-										match self.room.focus {
-											Focus::EXITS => self.room.exits_list_state.select_first(),
-											Focus::INVENTORY => self.room.inventory_list_state.select_first(),
-											Focus::NPC => self.room.npc_list_state.select_first(),
-											_ => {}
-										}
+									let current_index = Focus::iterator()
+									.position(|f|f == &self.room.focus)
+									.unwrap_or(0);
+									
+									let next_index = (current_index + 1) % Focus::iterator().len();
+									self.room.focus = Focus::iterator().nth(next_index).unwrap().clone();
+									match self.room.focus {
+										Focus::EXITS => self.room.exits_list_state.select_first(),
+										Focus::INVENTORY => self.room.inventory_list_state.select_first(),
+										Focus::NPC => self.room.npc_list_state.select_first(),
+										_ => {}
 									}
 								}
 								KeyCode::Enter => {
@@ -187,7 +176,10 @@ impl World<'_>{
 											let split_command: Vec<&str> = command.split(" ").collect();
 											if ["TALK", "DROP", "TAKE", "LOOK", "MOVE", "WHO", "CHAT", "GROUP", "STATUS", "ATTACK", "INVENTORY", "QUEST"].contains(&split_command[0].to_uppercase().as_str()) {
 												let _ = self.tx_to_serv.try_send(split_command.join(" ") + "\n");
-												self.output.push_back(format!("> {}", split_command.join(" ")));
+												if !["CHAT"].contains(&split_command[0].to_uppercase().as_str()) {
+													self.output.push_back(format!("> {}", split_command.join(" ")));
+													self.room.output_scroll_pos.scroll_to_bottom();
+												}
 												// if let Ok(mut file) = OpenOptions::new().create(true).append(true).open("debug_draw.txt") {
 												// 	let _ = writeln!(file, "RECU (State {:?}) : {:#?}", self.state, split_command.join(" "));}
 												if ["GROUP", "CHAT"].contains(&split_command[0].to_uppercase().as_str()){
@@ -198,6 +190,7 @@ impl World<'_>{
 											} else {
 												self.output.push_back("Unknown command.".to_string());
 											}
+											self.room.text_area.clear();
 										}
 										_ => {}
 									}
@@ -255,6 +248,10 @@ impl World<'_>{
 										};
 										let text: String = format!("[{}] {}",msg.sender,msg.body);
 										channel.push_back(text);
+
+										if self.room.focus != Focus::CHAT {
+											self.room.chat_scroll_pos.scroll_to_bottom();
+										}
 										// if let Ok(mut file) = OpenOptions::new().create(true).append(true).open("debug_network.txt") {
 										// 	let _ = writeln!(file, "ok (State {:?}) : {:#?}", self.state, channel.);}
 									}
