@@ -116,6 +116,7 @@ struct Game {
 	pub loaded_npcs: HashMap<String,Npc>,
 	pub nb_players: i32,
 	pub config: GameConfig,
+	pub active_fight: HashMap<String, Fight>
 }
 
 
@@ -231,7 +232,8 @@ async fn main() {
 			sprite_height: 32.0,
 			tile_size: 16.0,
 			camera: Camera2D::default()
-		}
+		},
+		active_fight: HashMap::new()
     };
 
 
