@@ -19,14 +19,10 @@ pub fn response_handling(world: &mut World, msg: &str, server: &ServerEvent) {
 					world.click = true;
 				}
 			}
-			// let datas: LoginResponse = serde_json::from_str(&json.get_mut("data").unwrap()).unwrap();
-			// self.room = datas.room;
-			// self.player = datas.player;
-			// self.state = States::InGame;
-			// self.input.clear();
-			// self.input = msg.to_string()
 		},
 		States::InGame => {
+			if let Ok(mut file) = OpenOptions::new().create(true).append(true).open("debug_network.txt") {
+				let _ = writeln!(file, "ko (State {:#?}) : {:#?}", world.action, msg);}
 			match &world.action {
 				PendingAction::Look => {
 					world.room = serde_json::from_value(server.data.clone().unwrap()).unwrap();
@@ -34,9 +30,9 @@ pub fn response_handling(world: &mut World, msg: &str, server: &ServerEvent) {
 				},
 				PendingAction::SendChat(command, args) => {
 					match command.to_uppercase().as_str() {
-						"CHAT GLOBAL" => world.chat.global_messages.push_back(args.clone()),
-						"CHAT GROUP" => world.chat.group_messages.push_back(args.clone()),
-						"CHAT ROOM" => world.chat.room_messages.push_back(args.clone()),
+						"CHAT GLOBAL" => world.chat.global_messages.push_back(format!("[me] {}", args.clone())),
+						"CHAT GROUP" => world.chat.group_messages.push_back(format!("[me] {}", args.clone())),
+						"CHAT ROOM" => world.chat.room_messages.push_back(format!("[me] {}", args.clone())),
 						_ => {}
 					}
 				},

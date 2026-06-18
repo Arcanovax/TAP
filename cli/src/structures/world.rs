@@ -251,7 +251,7 @@ impl World<'_>{
 										"GROUP" => &mut self.chat.group_messages,
 										_ => continue
 										};
-										let text: String = format!("[{}]{}",msg.sender,msg.body);
+										let text: String = format!("[{}] {}",msg.sender,msg.body);
 										channel.push_back(text);
 										// if let Ok(mut file) = OpenOptions::new().create(true).append(true).open("debug_network.txt") {
 										// 	let _ = writeln!(file, "ok (State {:?}) : {:#?}", self.state, channel.);}

@@ -10,7 +10,7 @@ use tracing::info;
 #[cfg(test)]
 mod tests;
 
-#[derive(Serialize)]
+#[derive(Serialize, Debug)]
 struct RoomView<'a> {
     id: &'a String,
     name: &'a String,
