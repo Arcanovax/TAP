@@ -1,4 +1,56 @@
 use serde::Deserialize;
+use crate::*;
+
+pub async fn handle_events(game: &mut Game, server_event: ServerEvent){
+	if let Some(invite) = server_event.invite {
+		game.group.invitation = Some(Invitation{sender: invite.sender, group_name: invite.group_name})
+	}
+	if let Some(new) = server_event.join {
+		game.group.grouplist.push(new.player_name);
+	}
+	if let Some(leaver) = server_event.leave {
+		game.group.grouplist.retain(|x| x != &leaver.player_name);
+	}
+	if let Some(leave) = server_event.room_leave {
+		if let Some(ref mut map_data) = game.map_data{
+			if leave.player_name != game.player.name{
+				map_data.players.retain(|x| x != &leave.player_name);
+			}
+		}
+	}
+	if let Some(join) = server_event.room_join {
+		if let Some(ref mut map_data) = game.map_data{
+			map_data.players.push(join.player_name);
+			game.map_data = None
+		}
+	}
+	if let Some(players) = server_event.players {
+		game.nb_players = players.players;
+	}
+	if let Some(take) = server_event.take {
+		if let Some(ref mut map_data) = game.map_data {
+			if let Some(pos) = map_data.items.iter().position(|x| x == &take.item) {
+				map_data.items.remove(pos);
+			}
+		}
+	}
+	if let Some(drop) = server_event.drop {
+		if let Some(ref mut map_data) = game.map_data {
+			map_data.items.push(drop.item);
+		}
+	}
+	if let Some(msg) = server_event.chat {
+		let channel = match msg.scope.as_str(){
+			"ROOM" => &mut game.chat.room_messages,
+			"GLOBAL" => &mut game.chat.global_messages,
+			"GROUP" => &mut game.chat.group_messages,
+			_ => return
+			};
+		let text: String = format!("[{}] {}\n",msg.sender,msg.body);
+		channel.push(text);
+	}
+}
+
 
 #[derive(Deserialize, Debug)]
 pub struct ServerEvent {
