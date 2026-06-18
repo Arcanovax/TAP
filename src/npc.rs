@@ -1,16 +1,14 @@
 use crate::*;
-use macroquad::prelude::*;
+use macroquad::{prelude::*};
 
 #[derive(Deserialize, Clone, PartialEq, Debug)]
 pub enum NPCKind {
-    Merchant, // Retrait des champs pour correspondre à la string JSON "Merchant"
+    Merchant,
     Citizen,
     Enemy {
         hp: u32,
         max_hp: u32,
-        defeated: bool,
-        // 'damages' et 'loot' sont retirés car absents du JSON.
-        // (Alternative : utilisez Option<u32> ou #[serde(default)])
+        defeated: bool
     },
 }
 
@@ -37,7 +35,28 @@ pub struct Npc {
     pub texture: Texture2D,
 	pub name: String,
 	pub kind: NPCKind,
-	pub has_quest: bool
+	pub has_quest: bool,
+	pub npc_talk: Option<NpcTalk>
+
+}
+
+#[derive(Clone, PartialEq)]
+pub struct NpcTalk{
+	pub text_i: usize,
+	pub current_text: String
+}
+
+impl Npc {
+	pub fn new(id:String, texture: Texture2D, name: String, kind: NPCKind, has_quest: bool) -> Self {
+		Self {
+			id: id,
+			texture: texture,
+			name: name,
+			kind: kind,
+			has_quest: has_quest,
+			npc_talk: None
+		}
+	}
 }
 
 

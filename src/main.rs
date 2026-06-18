@@ -8,16 +8,21 @@ mod group;
 mod player;
 mod items;
 mod npc;
+mod server_event;
+mod response;
+mod camera;
 
-use macroquad::texture::FilterMode::Nearest;
+
 use player::*;
 use items::*;
+use server_event::*;
+use camera::*;
+use response::*;
 
 use serde_json::Value;
 use utils::*;
 use npc::*;
 use std::collections::HashMap;
-use std::iter;
 
 use macroquad::prelude::*;
 use rooms::*;
@@ -33,119 +38,9 @@ use crate::chat::handle_chat;
 use serde::Deserialize;
 
 
-#[derive(Deserialize, Debug)]
-struct ServerEvent {
-    #[serde(rename = "type")]
-    event_type: String,
-
-    #[serde(rename = "INVITE")]
-    invite: Option<InviteData>,
-	#[serde(rename = "GROUP_JOIN")]
-    join: Option<GroupEvent>,
-	#[serde(rename = "GROUP_LEAVE")]
-    leave: Option<GroupEvent>,
-	#[serde(rename = "ROOM_LEAVE")]
-	room_leave: Option<PlayersEvent>,
-	#[serde(rename = "ROOM_JOIN")]
-	room_join: Option<PlayersEvent>,
-	#[serde(rename = "PLAYERS")]
-	players: Option<Players>,
-
-	#[serde(rename = "TAKE")]
-    take: Option<ItemEvent>,
-	#[serde(rename = "DROP")]
-    drop: Option<ItemEvent>,
-
-	#[serde(rename = "CHAT")]
-    chat: Option<ChatData>,
-    data: Option<serde_json::Value>,
-	error: Option<String>
-
-}
-
-
-#[derive(Deserialize, Debug)]
-struct ItemData {
-    kind: ItemKind,
-    name: String,
-	price: i32
-}
-
-#[derive(Deserialize, Debug)]
-struct NpcData {
-	name: String,
-	kind: NPCKind,
-	has_quest: bool
-}
 
 
 
-#[derive(Deserialize, Debug)]
-struct PlayersEvent {
-	player_name: String,
-}
-
-#[derive(Deserialize, Debug)]
-struct Players {
-	players: i32,
-}
-
-#[derive(Deserialize, Debug)]
-struct ItemEvent {
-	player_name: String,
-	item: String
-}
-
-#[derive(Deserialize, Debug)]
-struct GroupEvent {
-	player_name: String,
-}
-
-#[derive(Deserialize, Debug)]
-struct ChatData {
-	body: String,
-    sender: String,
-    scope: String,
-}
-
-#[derive(Deserialize, Debug)]
-struct MoveData {
-	room: String,
-}
-
-#[derive(Deserialize, Debug)]
-struct InviteData {
-    sender: String,
-    group_name: String,
-}
-
-
-#[derive(Deserialize, Debug, Clone)]
-pub struct LookData {
-    pub room: RoomData,
-	pub players: Vec<String>,
-	pub items: Vec<String>,
-    pub npcs: Vec<String>,
-}
-
-
-#[derive(Deserialize, Debug, Clone)]
-pub struct RoomData {
-    pub id: String,
-    pub name: String,
-	pub description: String,
-    pub exits: Vec<Exit>,
-
-}
-
-
-
-#[derive(Deserialize, Debug, Clone)]
-pub struct StatusData {
-    pub hp: i32,
-    pub max_hp: i32,
-    pub status: String,
-}
 
 #[derive(Deserialize, Debug, Clone)]
 pub enum Exit {
@@ -178,7 +73,6 @@ pub enum PendingAction {
 
 
 
-
 #[derive(Clone, Debug, PartialEq, Hash, Eq)]
 pub enum Spawn {
 	None,
@@ -191,39 +85,6 @@ pub enum Spawn {
 
 
 
-
-fn camera_handler(camera: &mut Camera2D, tile_size: f32) {
-	let map_w = 25.0 * tile_size;
-	let map_h = 14.0 * tile_size;
-
-	camera.target = vec2(map_w / 2.0, map_h / 2.0);
-
-	let scale_x = screen_width() / map_w;
-	let scale_y = screen_height() / map_h;
-	let scale = scale_x.min(scale_y);
-	camera.zoom = vec2(scale * 2.0 / screen_width(), scale * 2.0 / screen_height());
-
-	set_camera(camera);
-}
-
-fn world_to_screen_pos(world_pos: Vec2) -> Vec2 {
-    let map_w = 25.0 * 16.0;
-    let map_h = 14.0 * 16.0;
-
-    let scale_x = screen_width() / map_w;
-    let scale_y = screen_height() / map_h;
-    let scale = scale_x.min(scale_y);
-
-    let rendered_w = map_w * scale;
-    let rendered_h = map_h * scale;
-    let offset_x = (screen_width() - rendered_w) / 2.0;
-    let offset_y = (screen_height() - rendered_h) / 2.0;
-
-    return vec2(
-        offset_x + world_pos.x * scale,
-        offset_y + world_pos.y * scale,
-    )
-}
 struct Player {
     x: f32,
     y: f32,
@@ -238,11 +99,6 @@ struct Player {
 	hp: i32,
 	max_hp: i32,
 }
-
-
-
-
-
 
 
 
@@ -616,14 +472,14 @@ async fn main() {
 								Ok(npcs_data) => {
 									for (npc_id , npc_data) in npcs_data{
 										let texture: Texture2D = get_npc_texture(&npc_id).await;
-										let npc = Npc{
-											id: npc_id.clone(),
-											texture: texture,
-											name: npc_data.name,
-											kind: npc_data.kind,
-											has_quest: npc_data.has_quest
+										let npc: Npc = Npc::new(
+											npc_id.clone(),
+											texture,
+											npc_data.name,
+											npc_data.kind,
+											npc_data.has_quest,
+										);
 
-										};
 										game.loaded_npcs.insert(npc_id, npc);
 									}
 								}
@@ -932,24 +788,28 @@ async fn main() {
 					draw_flat_triangle(place.x + 8.0, place.y);
 
 
-					let rect: Rect = Rect::new(place.x + 18.0, place.y, 40.0, 25.0);
+					let rect: Rect = Rect::new(place.x + 18.0, place.y, 40.0, 38.0);
 					draw_rectangle(rect.x, rect.y, rect.w, rect.h, Color::new(0.0, 0.0, 0.0, 0.5));
 
 					set_default_camera();
 					let screen_pos = world_to_screen_pos(vec2(rect.x, rect.y));
 					let npc_info = format!("{}", npc.name);
-					draw_text(npc_info, screen_pos.x, screen_pos.y + 15.0, 25.0, WHITE);
+					draw_text(npc_info, screen_pos.x, screen_pos.y + 20.0, 25.0, WHITE);
 
 					let mouse = mouse_position();
-					let btn_talk: Rect = Rect::new(screen_pos.x, screen_pos.y + 25.0, 100.0, 25.0);
+					let btn_talk: Rect = Rect::new(screen_pos.x, screen_pos.y + 30.0, 100.0, 25.0);
 
 					if get_button(btn_talk, "Talk", 25, WHITE, mouse){
 
 					}
 					if npc.has_quest{
-						let btn_quest: Rect = Rect::new(screen_pos.x, screen_pos.y + 50.0, 100.0, 25.0);
+						let btn_quest: Rect = Rect::new(screen_pos.x, screen_pos.y + 60.0, 100.0, 25.0);
 						if get_button(btn_quest, "Quest", 25, WHITE, mouse){
 						}
+					}
+					let btn_attack: Rect = Rect::new(screen_pos.x, screen_pos.y + 90.0, 100.0, 25.0);
+					if get_button(btn_attack, "Attack", 25, WHITE, mouse){
+
 					}
 					camera_handler(&mut camera, tile_size);
 				}
