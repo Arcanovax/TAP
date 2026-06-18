@@ -1,4 +1,5 @@
 use super::*;
+use crate::structures::enums::error::ErrorCode;
 
 impl ServerInfo {
     pub fn try_add_player(

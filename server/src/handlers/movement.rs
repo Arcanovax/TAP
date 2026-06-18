@@ -1,10 +1,10 @@
 use serde_json::json;
+use tracing::info;
 
 use crate::{
-    error::ErrorCode,
     protocol::{EventType, Message},
     state::SharedServer,
-    structures::enums::exits::Exit,
+    structures::enums::{error::ErrorCode, exits::Exit},
 };
 use std::{mem::discriminant, net::SocketAddr};
 
@@ -60,6 +60,7 @@ pub fn move_request(server: &SharedServer, peer_addr: SocketAddr, dest: &Vec<Str
     };
 
     let player = server.get_player(peer_addr).unwrap();
+    let old_room = player.location.clone();
     let exit_receivers = server.get_room_receivers(peer_addr).unwrap();
     for con in exit_receivers {
         let _ = con.tx.send(Message::Event(EventType::ROOM_LEAVE {
@@ -78,6 +79,7 @@ pub fn move_request(server: &SharedServer, peer_addr: SocketAddr, dest: &Vec<Str
         }));
     }
 
+    info!("{} moved from {} to {}", player.name, old_room, target);
     Message::Response {
         error: ErrorCode::SUCCESS,
         data: Some(json!({ "room": target })),

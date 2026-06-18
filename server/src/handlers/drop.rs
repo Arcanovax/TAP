@@ -1,11 +1,11 @@
-use serde_json::json;
-
 use crate::{
-    error::ErrorCode,
     protocol::{EventType, Message},
     state::SharedServer,
+    structures::enums::error::ErrorCode,
 };
+use serde_json::json;
 use std::net::SocketAddr;
+use tracing::info;
 
 #[cfg(test)]
 mod tests;
@@ -35,6 +35,7 @@ pub fn drop_request(
     }
     match binding.try_drop_item(peer_addr, &item) {
         Ok(item) => {
+            info!("{} dropped", item);
             let receivers = binding.get_room_receivers(peer_addr).unwrap();
             let player = binding.get_player(peer_addr).unwrap();
             for con in receivers {

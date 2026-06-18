@@ -1,5 +1,7 @@
 pub mod enums;
 pub mod fight;
+pub mod game;
+pub mod group;
 pub mod handler_outcome;
 pub mod item;
 pub mod npc;

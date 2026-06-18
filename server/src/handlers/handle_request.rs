@@ -1,15 +1,21 @@
 use crate::{
-    handlers::quest::quest_request,
+    handlers::{
+        item::{item_request, items_request},
+        npc::{npc_request, npcs_request},
+        quest::quest_request,
+        quests::quests_request,
+    },
     state::{SharedServer, Tx},
-    structures::handler_outcome::HandlerOutcome,
+    structures::{
+        enums::{command::Command, error::ErrorCode},
+        handler_outcome::HandlerOutcome,
+    },
 };
 use std::{fs::OpenOptions, net::SocketAddr, io::Write};
 
 use crate::{
-    command::Command,
-    error::ErrorCode,
     handlers::{
-        chat::chat_request, connect::connect_request, drop::drop_request, fight_func::fight::fight,
+        chat::chat_request, connect::connect_request, drop::drop_request, fight::fight_request,
         group::group_request, inventory::inventory_request, look::look_request,
         movement::move_request, status::status_request, take::take_request, talk::talk_request,
         who::who_request,
@@ -37,12 +43,17 @@ pub fn handle_request(
             Some(Command::STATUS) => status_request(server_info, peer_addr).into(),
             Some(Command::MOVE) => move_request(server_info, peer_addr, args).into(),
             Some(Command::TALK) => talk_request(peer_addr, args, server_info),
-            Some(Command::ATTACK) => fight(peer_addr, args, server_info).into(),
+            Some(Command::ATTACK) => fight_request(peer_addr, args, server_info).into(),
             Some(Command::LOOK) => look_request(server_info, peer_addr).into(),
             Some(Command::DROP) => drop_request(server_info, peer_addr, args).into(),
             Some(Command::TAKE) => take_request(server_info, peer_addr, args).into(),
             Some(Command::INVENTORY) => inventory_request(server_info, peer_addr).into(),
             Some(Command::QUEST) => quest_request(args, server_info, peer_addr).into(),
+            Some(Command::NPC) => npc_request(server_info, args).into(),
+            Some(Command::NPCS) => npcs_request(server_info).into(),
+            Some(Command::ITEM) => item_request(server_info, args).into(),
+            Some(Command::ITEMS) => items_request(server_info).into(),
+            Some(Command::QUESTS) => quests_request(server_info, peer_addr).into(),
             _ => Message::Response {
                 error: ErrorCode::INVALID_COMMAND,
                 data: None,

@@ -1,7 +1,6 @@
-use crate::error::ErrorCode;
 use crate::protocol::{ChatScope, EventType, Message};
 use crate::state::SharedServer;
-use std::{fs::OpenOptions, io::Write};
+use crate::structures::enums::error::ErrorCode;
 use std::net::SocketAddr;
 use tracing::info;
 

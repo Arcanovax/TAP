@@ -1,6 +1,6 @@
 use super::*;
 use crate::{
-    error::ErrorCode,
+    structures::enums::error::ErrorCode,
     test_utils::{addr, connect, err, ok_data, test_server},
 };
 

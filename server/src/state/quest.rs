@@ -1,4 +1,7 @@
-use crate::structures::{enums::game_event::GameEvent, quest::Quest};
+use crate::structures::{
+    enums::{error::ErrorCode, game_event::GameEvent},
+    quest::Quest,
+};
 
 use super::*;
 use serde_json::Value;

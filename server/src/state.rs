@@ -1,9 +1,6 @@
 use crate::{
-    error::ErrorCode,
-    game::World,
-    group::Group,
     protocol::{EventType, Message},
-    structures::{fight::Fight, player::Player, room::Room},
+    structures::{fight::Fight, game::World, group::Group, player::Player, room::Room},
 };
 use std::{
     collections::HashMap,

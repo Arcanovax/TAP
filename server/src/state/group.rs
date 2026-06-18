@@ -1,6 +1,6 @@
-use serde_json::{Value, json};
-
 use super::*;
+use crate::structures::enums::error::ErrorCode;
+use serde_json::{Value, json};
 
 impl ServerInfo {
     fn create_new_group(&mut self, name: &str) -> Uuid {

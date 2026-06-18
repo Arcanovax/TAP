@@ -1,14 +1,16 @@
 use crate::{
-    error::ErrorCode::SUCCESS, protocol::Message, state::SharedServer,
-    structures::enums::exits::Exit,
+    protocol::Message,
+    state::SharedServer,
+    structures::enums::{error::ErrorCode, exits::Exit},
 };
 use serde::Serialize;
-use std::{fs::OpenOptions, net::SocketAddr, io::Write};
+use std::net::SocketAddr;
+use tracing::info;
 
 #[cfg(test)]
 mod tests;
 
-#[derive(Serialize, Debug)]
+#[derive(Serialize)]
 struct RoomView<'a> {
     id: &'a String,
     name: &'a String,
@@ -56,23 +58,24 @@ pub fn look_request(server_info: &SharedServer, peer_addr: SocketAddr) -> Messag
         }
     };
     let mut players: Vec<String> = room_players
-    .iter()
-    .map(|con| con.player.name.clone())
-    .collect();
-players.push(player_name);
-let view = LookView {
-    room: RoomView {
-        id: room_id,
-        name: &room.name,
-        description: &room.description,
-        exits: &room.exits,
-    },
-    players,
-    npcs: &room.npc,
-    items: &room.items,
-};
-Message::Response {
-    error: SUCCESS,
-    data: Some(serde_json::to_value(&view).unwrap()),
-}
+        .iter()
+        .map(|con| con.player.name.clone())
+        .collect();
+    players.push(player_name);
+    let view = LookView {
+        room: RoomView {
+            id: room_id,
+            name: &room.name,
+            description: &room.description,
+            exits: &room.exits,
+        },
+        players,
+        npcs: &room.npc,
+        items: &room.items,
+    };
+    info!("Get room info");
+    Message::Response {
+        error: ErrorCode::SUCCESS,
+        data: Some(serde_json::to_value(&view).unwrap()),
+    }
 }

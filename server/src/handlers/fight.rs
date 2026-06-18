@@ -1,9 +1,6 @@
 use crate::{
-    error::ErrorCode::{self},
     handlers::{
-        fight_func::{
-            attack::execute_attack, enemy_attack::enemy_attack, is_it_my_turn::is_it_my_turn,
-        },
+        fight::{attack::execute_attack, enemy_attack::enemy_attack, is_it_my_turn::is_it_my_turn},
         global_func::{
             check_fight::check_fight, get_player::get_player_mut, is_he_there::is_he_there,
         },
@@ -12,18 +9,25 @@ use crate::{
     state::SharedServer,
     structures::{
         enums::{
-            attack_res::AttackRes, enn_att_res::EnnAttRes, npc_kind::NPCKind, state::State,
-            turn_res::TurnRes,
+            attack_res::AttackRes, enn_att_res::EnnAttRes, error::ErrorCode, npc_kind::NPCKind,
+            state::State, turn_res::TurnRes,
         },
         fight::Fight,
     },
 };
 use std::net::SocketAddr;
 
+mod attack;
+mod enemy_attack;
+mod is_it_my_turn;
 #[cfg(test)]
 mod tests;
 
-pub fn fight(peer_addr: SocketAddr, enn_name: &Vec<String>, world: &SharedServer) -> Message {
+pub fn fight_request(
+    peer_addr: SocketAddr,
+    enn_name: &Vec<String>,
+    world: &SharedServer,
+) -> Message {
     if enn_name.len() != 1 {
         return Message::Response {
             error: ErrorCode::INVALID_ARGS,

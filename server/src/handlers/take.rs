@@ -1,9 +1,10 @@
 use serde_json::json;
+use tracing::info;
 
 use crate::{
-    error::ErrorCode,
     protocol::{EventType, Message},
     state::SharedServer,
+    structures::enums::error::ErrorCode,
 };
 use std::net::SocketAddr;
 
@@ -35,6 +36,7 @@ pub fn take_request(
     }
     match binding.try_take_item(peer_addr, &item) {
         Ok(item) => {
+            info!("{} dropped", item);
             let receivers = binding.get_room_receivers(peer_addr).unwrap();
             let player = binding.get_player(peer_addr).unwrap();
             for con in receivers {

@@ -1,11 +1,14 @@
 use std::net::SocketAddr;
 
+use tracing::info;
+
 use crate::{
-    error::ErrorCode,
-    // handlers::global_func::{get_player::get_player_mut, is_he_there::is_he_there},
     protocol::Message,
     state::SharedServer,
-    structures::{enums::game_event::GameEvent, handler_outcome::HandlerOutcome},
+    structures::{
+        enums::{error::ErrorCode, game_event::GameEvent},
+        handler_outcome::HandlerOutcome,
+    },
 };
 
 pub fn talk_request(
@@ -35,6 +38,14 @@ pub fn talk_request(
     let mut npc_ref = args.join(" ");
     if let Some(reference) = binding.world.name_to_ref.get(&npc_ref.to_lowercase()) {
         npc_ref = reference.clone();
+    }
+    let player_room = binding.get_player_room(peer_addr).unwrap();
+    if !player_room.npc.iter().any(|npc| *npc == npc_ref) {
+        return Message::Response {
+            error: ErrorCode::NPC_NOT_FOUND,
+            data: None,
+        }
+        .into();
     }
     let npc = match binding.world.npcs.get(&npc_ref) {
         Some(npc) => npc,
@@ -69,6 +80,8 @@ pub fn talk_request(
             }
         },
     };
+
+    info!("{} talked", npc_ref);
 
     HandlerOutcome {
         message: Message::Response {

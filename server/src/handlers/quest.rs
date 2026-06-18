@@ -1,4 +1,6 @@
-use crate::{error::ErrorCode, protocol::Message, state::SharedServer};
+use tracing::info;
+
+use crate::{protocol::Message, state::SharedServer, structures::enums::error::ErrorCode};
 use std::net::SocketAddr;
 
 #[cfg(test)]
@@ -15,16 +17,29 @@ pub(super) fn quest_request(
             data: None,
         };
     }
-    if args.len() != 1 {
+    if args.len() == 0 {
         return Message::Response {
             error: ErrorCode::INVALID_ARGS,
             data: None,
         };
     }
 
-    server_info
-        .lock()
-        .unwrap()
-        .try_accept_quest(peer_addr, &args[0])
-        .into()
+    let mut binding = server_info.lock().unwrap();
+    let mut npc_ref = args.join(" ");
+    if let Some(reference) = binding.world.name_to_ref.get(&npc_ref.to_lowercase()) {
+        npc_ref = reference.clone();
+    }
+    let player_room = binding.get_player_room(peer_addr).unwrap();
+    if !player_room.npc.iter().any(|npc| *npc == npc_ref) {
+        return Message::Response {
+            error: ErrorCode::NPC_NOT_FOUND,
+            data: None,
+        }
+        .into();
+    }
+    let res = binding.try_accept_quest(peer_addr, &npc_ref);
+    if let Ok(_) = &res {
+        info!("Accepted {} quest", npc_ref);
+    };
+    res.into()
 }
