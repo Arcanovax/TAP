@@ -6,7 +6,7 @@ use ratatui::{
 		{
 			Horizontal,
 			Vertical
-		}, HorizontalAlignment::Center, Layout, Spacing::Overlap
+		}, HorizontalAlignment::Center, Layout, Rect, Size, Spacing::Overlap
 	},
 	style::{
 		Color,
@@ -17,9 +17,10 @@ use ratatui::{
 		Span, Text
 	},
 	widgets::{
-		Block, Borders, Gauge, List, ListItem, Paragraph, Wrap
+		Block, Borders, Gauge, List, ListItem, Paragraph, StatefulWidget, Wrap
 	}
 };
+use tui_widgets::scrollview::{ScrollView, ScrollViewState};
 
 use crate::{enums::{channels::Channels, exits::Exits, focus::Focus}, global_functions::draw_scrollbars::draw_scrollbars, structures::world::World};
 
@@ -186,7 +187,7 @@ pub fn draw_room(world: &mut World, frame: &mut Frame) {
 		Channels::GROUP => world.chat.group_messages.clone(),
 	};
 
-	let mut lines = Vec::new();
+	lines = Vec::new();
 	for mess in messages {
 		lines.push(Line::from(mess));
 	}
@@ -237,11 +238,21 @@ pub fn draw_room(world: &mut World, frame: &mut Frame) {
 	.title_alignment(Alignment::Center)
 	.title_style(Color::Green);
 
-	let command = Block::new()
-	.borders(Borders::ALL)
-	.title("You can tap your commands here:")
-	.title_alignment(Alignment::Center)
-	.title_style(Color::Green);
+	lines = Vec::new();
+
+	for message in &world.output {
+		for text_line in message.lines() {
+			lines.push(Line::from(text_line));
+		}
+	}
+
+	let content_height = lines.len() as u16 + 2;
+	let content_width = output_area.width;
+
+	let mut scroll_output = ScrollView::new(Size::new(content_width, content_height));
+	let output_content = Paragraph::new(lines)
+	.block(output)
+	.wrap(Wrap { trim: true });
 
 	world.room.text_area.set_block(
 		Block::bordered()
@@ -263,8 +274,9 @@ pub fn draw_room(world: &mut World, frame: &mut Frame) {
 	frame.render_widget(group_channel, channels[2]);
 	frame.render_widget(chat, left_layout[2]);
 	frame.render_widget(chat_content, chat_area);
-	// frame.render_widget(borders_channels, chat_space[0]);
-	frame.render_widget(output, left_layout[3]);
+	// frame.render_widget(output_content, output_area);
+	scroll_output.render_widget(output_content, Rect::new(0, 0, content_width, content_height));
+	frame.render_stateful_widget(scroll_output, output_area, &mut world.room.output_scroll_pos);
 	frame.render_widget(&world.room.text_area, main_layout[1]);
 	frame.render_stateful_widget(npc_list, lists_layout[0], &mut world.room.npc_list_state);
 	frame.render_stateful_widget(items_list, lists_layout[1], &mut world.room.inventory_list_state);

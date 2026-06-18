@@ -1,6 +1,7 @@
 use ratatui::widgets::ListState;
 use ratatui_textarea::TextArea;
 use serde::Deserialize;
+use tui_widgets::scrollview::ScrollViewState;
 
 use crate::{enums::{focus::Focus}, structures::room_view::RoomView};
 
@@ -23,7 +24,7 @@ pub struct Room<'a> {
 	#[serde(skip)]
 	pub chat_scroll_pos: u16,
 	#[serde(skip)]
-	pub output_scroll_pos: u16,
+	pub output_scroll_pos: ScrollViewState,
 	#[serde(skip)]
 	pub descr_scroll_pos: u16,
 	#[serde(skip)]
@@ -50,7 +51,7 @@ impl Room<'_> {
 			focus: Focus::COMMAND,
 			available_focus: Vec::new(),
 			chat_scroll_pos: 0,
-			output_scroll_pos: 0,
+			output_scroll_pos: ScrollViewState::default(),
 			descr_scroll_pos: 0,
 			npc_list_state: ListState::default(),
 			inventory_list_state: ListState::default(),

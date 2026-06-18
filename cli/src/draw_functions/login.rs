@@ -70,7 +70,7 @@ pub fn login_draw(world: &mut World, frame:&mut Frame) {
 
 	if world.error {
         let popup = Popup::default()
-        .content("Username already in use!")
+        .content(world.message_error.as_str())
         .style(Style::new().yellow())
         .border_style(Style::new().red());
 

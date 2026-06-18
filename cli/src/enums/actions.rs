@@ -14,6 +14,7 @@ pub enum PendingAction {
 	GroupLeave(String),
 	GroupInvite(String),
 	SendChat(String, String),
+	ClientLook,
 	Look,
 	Status,
 	Move,

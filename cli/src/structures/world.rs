@@ -1,6 +1,5 @@
 use std::{
-	io::Write,
-	fs::OpenOptions, io, sync::mpsc::{
+	collections::VecDeque, fs::OpenOptions, io::{self, Write}, sync::mpsc::{
 		Receiver,
 		TryRecvError
 	}
@@ -37,11 +36,12 @@ pub struct World<'a> {
 	pub quit: bool,
 	pub message: String,
 	pub chat: Chat,
-	pub output: String,
+	pub output: VecDeque<String>,
 	pub action: PendingAction,
 	pub group: Group,
 	pub counter: u32,
 	pub error: bool,
+	pub message_error: String,
 	pub click: bool,
 	pub input: String,
 	pub state: States,
@@ -58,11 +58,12 @@ impl World<'_>{
 			quit: false,
 			message: String::from(""),
 			chat: Chat::new(),
-			output: String::from(""),
+			output: VecDeque::new(),
 			action: PendingAction::None,
 			counter: 0,
 			group: Group::new(),
 			error: false,
+			message_error: "".to_string(),
 			click: false,
 			input: "".to_string(),
 			state: States::ServerWait,
@@ -122,7 +123,7 @@ impl World<'_>{
 											}
 										},
 										Focus::DESCR => self.room.descr_scroll_pos =  self.room.descr_scroll_pos.saturating_add(1),
-										Focus::OUTPUT => self.room.output_scroll_pos =  self.room.output_scroll_pos.saturating_add(1),
+										Focus::OUTPUT => self.room.output_scroll_pos.scroll_down(),
 										_ => {}
 									}
 									}
@@ -134,7 +135,7 @@ impl World<'_>{
 											}
 										},
 										Focus::DESCR => self.room.descr_scroll_pos =  self.room.descr_scroll_pos.saturating_sub(1),
-										Focus::OUTPUT => self.room.output_scroll_pos =  self.room.output_scroll_pos.saturating_sub(1),
+										Focus::OUTPUT => self.room.output_scroll_pos.scroll_up(),
 										_ => {}
 									}
 								}
@@ -186,6 +187,7 @@ impl World<'_>{
 											let split_command: Vec<&str> = command.split(" ").collect();
 											if ["TALK", "DROP", "TAKE", "LOOK", "MOVE", "WHO", "CHAT", "GROUP", "STATUS", "ATTACK", "INVENTORY", "QUEST"].contains(&split_command[0].to_uppercase().as_str()) {
 												let _ = self.tx_to_serv.try_send(split_command.join(" ") + "\n");
+												self.output.push_back(format!("> {}", split_command.join(" ")));
 												// if let Ok(mut file) = OpenOptions::new().create(true).append(true).open("debug_draw.txt") {
 												// 	let _ = writeln!(file, "RECU (State {:?}) : {:#?}", self.state, split_command.join(" "));}
 												if ["GROUP", "CHAT"].contains(&split_command[0].to_uppercase().as_str()){
@@ -194,7 +196,7 @@ impl World<'_>{
 													find_action(split_command[0], self, None);
 												}
 											} else {
-												self.output += "Unknown command.";
+												self.output.push_back("Unknown command.".to_string());
 											}
 										}
 										_ => {}
@@ -232,7 +234,7 @@ impl World<'_>{
 								// if let Ok(mut file) = OpenOptions::new().create(true).append(true).open("debug_network.txt") {
 								// 	let _ = writeln!(file, "ok (State {:?}) : {:#?}", self.state, server_event);}
 								if server_event.event_type == "Response" {
-									response_handling(self, &msg, &server_event);
+									response_handling(self, &server_event);
 								}
 								if server_event.event_type == "Event" {
 									if let Some(invite) = server_event.invite {

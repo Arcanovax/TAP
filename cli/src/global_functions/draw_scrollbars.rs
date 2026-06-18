@@ -8,10 +8,11 @@ use crate::{enums::{channels::Channels, focus::Focus}, global_functions::{estima
 pub fn draw_scrollbars(frame: &mut Frame, chat_area: &mut Rect, descr_area: &mut Rect, output_area: &mut Rect, world: &mut World) {
     
     world.room.available_focus.clear();
-	for foc in [Focus::COMMAND, Focus::CHAT, Focus::NPC, Focus::INVENTORY, Focus::EXITS] {
+	for foc in [Focus::COMMAND, Focus::CHAT, Focus::NPC, Focus::OUTPUT, Focus::INVENTORY, Focus::EXITS] {
 		world.room.available_focus.push(foc);
 	}
 	let mut chat_messages: String = String::from("");
+	let output_messages: String = world.chat.global_messages.iter().cloned().collect::<Vec<String>>().join("");
 	
 	match world.chat.channel {
 		Channels::GLOBAL => {
@@ -30,7 +31,7 @@ pub fn draw_scrollbars(frame: &mut Frame, chat_area: &mut Rect, descr_area: &mut
 	
 	let list: Vec<(&mut Rect, String, u16, bool, Focus)> = vec![
 		(chat_area, chat_messages, world.room.chat_scroll_pos, world.room.focus == Focus::CHAT, Focus::CHAT),
-        (output_area, world.output.to_string(), world.room.output_scroll_pos, world.room.focus == Focus::OUTPUT, Focus::OUTPUT),
+        // (output_area, output_messages, world.room.output_scroll_pos, world.room.focus == Focus::OUTPUT, Focus::OUTPUT),
         (descr_area, world.room.room_view.description.to_string(), world.room.descr_scroll_pos, world.room.focus == Focus::DESCR, Focus::DESCR)
         ];
 		
@@ -48,7 +49,7 @@ pub fn draw_scrollbars(frame: &mut Frame, chat_area: &mut Rect, descr_area: &mut
 					world.room.chat_scroll_pos = clamped_pos;
 				}
 			},
-            Focus::OUTPUT => world.room.output_scroll_pos = clamped_pos,
+            // Focus::OUTPUT => world.room.output_scroll_pos = clamped_pos,
             Focus::DESCR => world.room.descr_scroll_pos = clamped_pos,
             _ => {}
     		}
