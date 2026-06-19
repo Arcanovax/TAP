@@ -20,7 +20,8 @@ pub enum PendingAction {
 	Items,
 	Npcs,
 	Talk(String),
-	Attack(String)
+	Attack(String),
+	Quest(String)
 }
 
 

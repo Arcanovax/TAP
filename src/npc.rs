@@ -98,6 +98,9 @@ pub fn handle_npc_interactions(game: &mut Game, place: Vec2, npc: Npc){
 	if npc.has_quest{
 		let btn_quest: Rect = Rect::new(screen_pos.x, screen_pos.y + 60.0, 100.0, 25.0);
 		if get_button(btn_quest, "Quest", 25, WHITE, mouse){
+			let rq: String = format!("QUEST {}\n",npc.id);
+			game.tx_to_serv.try_send(rq).ok();
+			game.pending_action = PendingAction::Quest(npc.id.clone());
 		}
 	}
 	let btn_attack: Rect = Rect::new(screen_pos.x, screen_pos.y + 90.0, 100.0, 25.0);

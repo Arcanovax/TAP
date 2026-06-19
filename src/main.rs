@@ -116,7 +116,7 @@ struct Game {
 	pub loaded_npcs: HashMap<String,Npc>,
 	pub nb_players: i32,
 	pub config: GameConfig,
-	pub active_fight: HashMap<String, Fight>
+	pub active_fight: Option<Fight>
 }
 
 
@@ -233,7 +233,7 @@ async fn main() {
 			tile_size: 16.0,
 			camera: Camera2D::default()
 		},
-		active_fight: HashMap::new()
+		active_fight: None
     };
 
 
@@ -248,7 +248,7 @@ async fn main() {
     ];
     game.load_skins(skin_data).await;
 
-
+	let floor: Texture2D = load_texture("assets/map/fightmap.png").await.unwrap();
 
 
 
@@ -302,7 +302,10 @@ async fn main() {
 			else{
 				if let Some(state) = game.player.state.clone() {
 					if state.status != Status::Idle{
-						handle_fight(&mut game).await;
+						handle_fight(&mut game, &floor);
+						if is_key_pressed(KeyCode::C){
+							break;
+					}
 					}
 					else{
 
@@ -489,7 +492,6 @@ async fn main() {
 						let hp_info = format!("{}/{}",state.hp,state.max_hp);
 						draw_text_bottom(rect_info, &hp_info.to_string(), 30, 0.0);
 					}
-
 
 					if game.focus == InputFocus::Game {
 						while get_char_pressed().is_some() {}
