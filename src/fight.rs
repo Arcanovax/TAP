@@ -22,15 +22,26 @@ pub async fn handle_fight(game: &mut Game){
 	
 
 	let npc = get_npc(game).expect("No npc");
-	if game.active_fight.contains_key(&npc.id){
-		game.active_fight.get(&npc.id).expect("").clone().players.push(game.player.name);
-		
+	let npc_id = npc.id.clone();
+	if game.active_fight.contains_key(&npc_id){
+		if let Some(fight) = game.active_fight.get_mut(&npc_id){
+			if !fight.players.contains(&game.player.name){
+				fight.players.push(game.player.name.clone());
+			}
+		}
 	}
 	else {
-		let new_fight: Fight = Fight { ennemy: npc, players: vec![game.player.name.clone()] };
-		game.active_fight.insert(npc.id, new_fight);
-	}
+    game.active_fight.insert(
+        npc.id.clone(),
+        Fight {
+            ennemy: npc,
+            players: vec![game.player.name.clone()],
+        },
+    );
+}	camera_handler(game);
 
+	let fight = game.active_fight.get(&npc_id).unwrap();
+	println!("fight {:?}: {:?}", fight.ennemy.name, fight.players);
 	let floor: Texture2D = load_texture("assets/map/fightmap.png").await.unwrap();
 	let texture_sprite = DrawTextureParams {
 						dest_size: Some(vec2(game.config.sprite_width * 1.5, game.config.sprite_height* 1.5)),
@@ -39,7 +50,7 @@ pub async fn handle_fight(game: &mut Game){
 
 
 
-	camera_handler(game);
+	
 	let map_params = DrawTextureParams {
 							dest_size: Some(vec2(floor.width(), floor.height())),
 							..Default::default()
@@ -56,7 +67,7 @@ pub async fn handle_fight(game: &mut Game){
 	);
 
 	draw_texture_ex(
-		&npc.texture,
+		&fight.ennemy.texture,
 		ENEMY_POS.x,
 		ENEMY_POS.y,
 		WHITE,
