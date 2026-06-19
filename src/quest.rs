@@ -1,6 +1,6 @@
 use crate::*;
 
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Debug, PartialEq)]
 pub struct Quest{
     pub npc_id: String,
 	pub name: String,

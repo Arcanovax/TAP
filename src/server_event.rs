@@ -8,6 +8,17 @@ pub async fn handle_events(game: &mut Game, server_event: ServerEvent){
 	if let Some(new) = server_event.join {
 		game.group.grouplist.push(new.player_name);
 	}
+	if let Some(quest_upt) = server_event.quest_update {
+		for quest in &mut game.quests{
+			if quest.name == quest_upt.quest_name{
+				quest.goals = vec![quest_upt.goal];
+				break;
+			}
+		}
+	}
+	if let Some(quest_finish) = server_event.quest_finish {
+		game.quests.retain(|quest| quest.name != quest_finish.quest_name);
+	}
 	if let Some(leaver) = server_event.leave {
 		game.group.grouplist.retain(|x| x != &leaver.player_name);
 	}
@@ -70,7 +81,9 @@ pub struct ServerEvent {
 	#[serde(rename = "PLAYERS")]
 	pub players: Option<Players>,
 	#[serde(rename = "QUEST_UPDATE")]
-	pub quest: Option<Quest>,
+	pub quest_update: Option<QuestUpdateEvent>,
+	#[serde(rename = "QUEST_FINISH")]
+	pub quest_finish: Option<QuestFinishEvent>,
 
 	#[serde(rename = "TAKE")]
     pub take: Option<ItemEvent>,
@@ -98,8 +111,15 @@ pub struct Players {
 #[derive(Deserialize, Debug)]
 pub struct QuestUpdateEvent {
 	pub quest_name: String,
-	pub item: String
+	pub goal: Goal
 }
+
+#[derive(Deserialize, Debug)]
+pub struct QuestFinishEvent {
+	pub quest_name: String
+}
+
+
 
 #[derive(Deserialize, Debug)]
 pub struct ItemEvent {
