@@ -1,7 +1,7 @@
 use ratatui::{Frame, layout::{Constraint::{Length, Percentage}, Direction::Vertical, Layout}, style::Style, widgets::{Block, Paragraph, Wrap}};
 use ratatui::prelude::Stylize;
 use tui_widgets::big_text::{BigText, PixelSize};
-use crate::{global_functions::estimate_height::estimate_height, structures::{popup::Popup, world::World}};
+use crate::{draw_functions::popup::pop_popup, structures::{world::World}};
 
 pub fn login_draw(world: &mut World, frame:&mut Frame) {
     let layout = Layout::default()
@@ -28,13 +28,15 @@ pub fn login_draw(world: &mut World, frame:&mut Frame) {
         world where everything is possible. The first amazing and fantastic thing you 
         can do is to choose your username and press enter. Unbelievable, isn't it?
             Good luck adventurer!";
+	
+	let mess_len = world.message.len();
 
-    if world.message.len() < descr.len() {
+    if mess_len < descr.len() {
         world.counter += 1;
     }
 
-    if world.message.len() < descr.len() && world.counter % 2 == 0 {
-        world.message.push(descr.chars().nth(world.message.len()).unwrap());
+    if mess_len < descr.len() && world.counter % 2 == 0 {
+        world.message.push(descr.chars().nth(mess_len).unwrap());
     }
 
     let presentation = Paragraph::new(world.message.clone())
@@ -56,27 +58,11 @@ pub fn login_draw(world: &mut World, frame:&mut Frame) {
     frame.render_widget(username, username_area);
 
     if world.click && !world.error{
-        let popup = Popup::default()
-        .content("You don't need to click anywhere (except to remove this pop-up). Just write your name and press enter.
-        You can do it. I believe in you adventurer!")
-        .style(Style::new().yellow())
-        .border_style(Style::new().red());
-
-        let popup_area = frame.area().centered(
-            Percentage(50),
-        Length(estimate_height(frame.area(), &popup.content.to_string(), true)));
-        frame.render_widget(popup, popup_area);
-    }
+		pop_popup(world, "You don't need to click anywhere (except to remove this pop-up). Just write your name and press enter.
+		You can do it. I believe in you adventurer!", frame);
+	}
 
 	if world.error {
-        let popup = Popup::default()
-        .content(world.message_error.as_str())
-        .style(Style::new().yellow())
-        .border_style(Style::new().red());
-
-        let popup_area = frame.area().centered(
-            Percentage(50),
-        Length(estimate_height(frame.area(), &popup.content.to_string(), true)));
-        frame.render_widget(popup, popup_area);
-    }
+		pop_popup(world, &world.message_error.clone(), frame);
+	}
 }

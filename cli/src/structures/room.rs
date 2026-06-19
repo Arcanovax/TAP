@@ -1,3 +1,5 @@
+use std::collections::VecDeque;
+
 use ratatui::widgets::ListState;
 use ratatui_textarea::TextArea;
 use serde::Deserialize;
@@ -15,6 +17,8 @@ pub struct Room<'a> {
 
 	#[serde(skip)]
 	pub focus: Focus,
+	#[serde(skip)]
+	pub dialogs: VecDeque<String>,
 	#[serde(skip)]
 	pub chat_scroll_pos: ScrollViewState,
 	#[serde(skip)]
@@ -37,6 +41,7 @@ impl Room<'_> {
 			room_view: RoomView::new(),
 			npcs: Vec::new(),
 			items: Vec::new(),
+			dialogs: VecDeque::new(),
 			players: Vec::new(),
 			focus: Focus::COMMAND,
 			chat_scroll_pos: ScrollViewState::new(),

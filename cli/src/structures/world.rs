@@ -17,9 +17,7 @@ use tokio::sync::mpsc::Sender;
 
 use crate::{
 	draw_functions::{
-		login::login_draw,
-		rooms::draw_room,
-		wait_server::draw_wait
+		discuss::draw_room_discuss, login::login_draw, rooms::draw_room, wait_server::draw_wait
 	},
 	enums::{
 		actions::PendingAction, channels::Channels, exits::Exits, focus::Focus, states::States
@@ -93,6 +91,10 @@ impl World<'_>{
 				// 	let _ = writeln!(file, "RECU (State {:?}) : {:#?}", self.state, self.player.name);}
 				draw_room(self, frame);
 			},
+			States::InDiscuss(name) => {
+				self.room.focus = Focus::DISCUSS;
+				draw_room_discuss(self, frame, name);
+			}
 			_ => {}
 		}
 	}
@@ -223,7 +225,7 @@ impl World<'_>{
 											if let Some(index) = self.room.npc_list_state.selected_mut() {
 												if let Some(selected_npc) = self.room.npcs.get(*index) {
 													let _ = self.tx_to_serv.try_send(format!("TALK {}\n", selected_npc));
-													self.action = PendingAction::Talk;
+													self.action = PendingAction::Talk(selected_npc.clone());
 												}
 											}
 										}
@@ -252,8 +254,8 @@ impl World<'_>{
 		loop {
 			match self.rx_from_serv.try_recv() {
 				Ok(msg) => {
-					if let Ok(mut file) = OpenOptions::new().create(true).append(true).open("debug_network.txt") {
-								let _ = writeln!(file, "all (State {:?}) : {:#?}", self.state, msg);}
+					// if let Ok(mut file) = OpenOptions::new().create(true).append(true).open("debug_network.txt") {
+					// 			let _ = writeln!(file, "all (State {:?}) : {:#?}", self.state, msg);}
 					if self.state == States::ServerWait {
 						if msg.contains("OK hello proto") {self.state = States::Login};
 					} else {

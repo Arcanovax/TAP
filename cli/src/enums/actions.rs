@@ -6,7 +6,7 @@ pub enum PendingAction {
     None,
     GroupList,
 	Npcs,
-    Talk,
+    Talk(String),
     Drop,
     Take,
 	Auth,

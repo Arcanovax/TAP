@@ -1,4 +1,4 @@
-use std::{collections::HashMap, fs::OpenOptions, io::Write};
+use std::{collections::{HashMap, VecDeque}, fs::OpenOptions, io::Write};
 
 use serde_json::Value;
 
@@ -44,6 +44,14 @@ pub fn response_handling(world: &mut World, server: &ServerEvent) {
 							let _ = world.tx_to_serv.try_send(String::from("LOOK\n"));
 							world.action = PendingAction::ClientLook;
 						}
+						PendingAction::Talk(name) => {
+							world.room.dialogs = serde_json::from_value(server.data.clone().unwrap()).unwrap();
+							if let Some(npc) = world.list_npcs.get(name) {
+								world.state = States::InDiscuss(npc.name.clone());
+							} else {
+								world.state = States::InDiscuss(name.clone());
+							}
+						}
 						PendingAction::SendChat(command, args) => {
 							match command.to_uppercase().as_str() {
 								"CHAT GLOBAL" => world.chat.global_messages.push_back(format!("[me] {}", args.clone())),
@@ -57,6 +65,7 @@ pub fn response_handling(world: &mut World, server: &ServerEvent) {
 							world.action = PendingAction::None;
 						},
 						PendingAction::Move => {
+							world.chat.room_messages = VecDeque::new();
 							let _ = world.tx_to_serv.try_send(String::from("LOOK\n"));
 							world.action = PendingAction::ClientLook;
 						}
