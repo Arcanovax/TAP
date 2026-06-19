@@ -7,4 +7,6 @@ pub mod chat_data;
 pub mod invite_data;
 pub mod chat;
 pub mod group;
+pub mod items;
 pub mod room_view;
+pub mod npc;

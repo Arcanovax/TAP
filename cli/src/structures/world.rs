@@ -1,5 +1,5 @@
 use std::{
-	collections::VecDeque, fs::OpenOptions, io::{self, Write}, sync::mpsc::{
+	collections::{HashMap, VecDeque}, fs::OpenOptions, io::{self, Write}, sync::mpsc::{
 		Receiver,
 		TryRecvError
 	}
@@ -22,11 +22,11 @@ use crate::{
 		wait_server::draw_wait
 	},
 	enums::{
-		actions::PendingAction, channels::Channels, focus::Focus, states::States
+		actions::PendingAction, channels::Channels, exits::Exits, focus::Focus, states::States
 	},
 	global_functions::{find_action::find_action, response_handling::response_handling},
 	structures::{
-		chat::Chat, group::{Group, Invitation}, player::Player, room::Room, server_event::ServerEvent
+		chat::Chat, group::{Group, Invitation}, items::Item, npc::NPC, player::Player, room::Room, server_event::ServerEvent
 	}
 };
 
@@ -43,6 +43,8 @@ pub struct World<'a> {
 	pub error: bool,
 	pub message_error: String,
 	pub click: bool,
+	pub list_items: HashMap<String, Item>,
+	pub list_npcs: HashMap<String, NPC>,
 	pub input: String,
 	pub state: States,
 	pub tx_to_serv: tokio::sync::mpsc::Sender<String>,
@@ -63,6 +65,8 @@ impl World<'_>{
 			counter: 0,
 			group: Group::new(),
 			error: false,
+			list_items: HashMap::new(),
+			list_npcs: HashMap::new(),
 			message_error: "".to_string(),
 			click: false,
 			input: "".to_string(),
@@ -120,6 +124,9 @@ impl World<'_>{
 										Focus::CHAT => self.room.chat_scroll_pos.scroll_down(),
 										Focus::DESCR => self.room.descr_scroll_pos.scroll_down(),
 										Focus::OUTPUT => self.room.output_scroll_pos.scroll_down(),
+										Focus::NPC => self.room.npc_list_state.select_next(),
+										Focus::INVENTORY => self.room.inventory_list_state.select_next(),
+										Focus::EXITS => self.room.exits_list_state.select_next(),
 										_ => {}
 									}
 									}
@@ -128,6 +135,9 @@ impl World<'_>{
 										Focus::CHAT => self.room.chat_scroll_pos.scroll_up(),
 										Focus::DESCR => self.room.descr_scroll_pos.scroll_up(),
 										Focus::OUTPUT => self.room.output_scroll_pos.scroll_up(),
+										Focus::NPC => self.room.npc_list_state.select_previous(),
+										Focus::INVENTORY => self.room.inventory_list_state.select_previous(),
+										Focus::EXITS => self.room.exits_list_state.select_previous(),
 										_ => {}
 									}
 								}
@@ -162,6 +172,9 @@ impl World<'_>{
 									
 									let next_index = (current_index + 1) % Focus::iterator().len();
 									self.room.focus = Focus::iterator().nth(next_index).unwrap().clone();
+									self.room.exits_list_state.select(None);
+									self.room.inventory_list_state.select(None);
+									self.room.npc_list_state.select(None);
 									match self.room.focus {
 										Focus::EXITS => self.room.exits_list_state.select_first(),
 										Focus::INVENTORY => self.room.inventory_list_state.select_first(),
@@ -174,24 +187,47 @@ impl World<'_>{
 										Focus::COMMAND => {
 											let command = self.room.text_area.lines().join("");
 											let split_command: Vec<&str> = command.split(" ").collect();
-											if ["TALK", "DROP", "TAKE", "LOOK", "MOVE", "WHO", "CHAT", "GROUP", "STATUS", "ATTACK", "INVENTORY", "QUEST"].contains(&split_command[0].to_uppercase().as_str()) {
-												let _ = self.tx_to_serv.try_send(split_command.join(" ") + "\n");
-												if !["CHAT"].contains(&split_command[0].to_uppercase().as_str()) {
-													self.output.push_back(format!("> {}", split_command.join(" ")));
-													self.room.output_scroll_pos.scroll_to_bottom();
-												}
-												// if let Ok(mut file) = OpenOptions::new().create(true).append(true).open("debug_draw.txt") {
-												// 	let _ = writeln!(file, "RECU (State {:?}) : {:#?}", self.state, split_command.join(" "));}
-												if ["GROUP", "CHAT"].contains(&split_command[0].to_uppercase().as_str()){
-													find_action(&split_command[..2].join(" "), self, Some(split_command[2..].join(" ")));
-												} else {
-													find_action(split_command[0], self, None);
-												}
-											} else {
-												self.output.push_back("Unknown command.".to_string());
+											// if ["TALK", "DROP", "TAKE", "LOOK", "MOVE", "WHO", "CHAT", "GROUP", "STATUS", "ATTACK", "INVENTORY", "QUEST"].contains(&split_command[0].to_uppercase().as_str()) {
+											let _ = self.tx_to_serv.try_send(split_command.join(" ") + "\n");
+											if !["CHAT"].contains(&split_command[0].to_uppercase().as_str()) {
+												self.output.push_back(format!("\n> {}", split_command.join(" ")));
+												self.room.output_scroll_pos.scroll_to_bottom();
 											}
+											// if let Ok(mut file) = OpenOptions::new().create(true).append(true).open("debug_draw.txt") {
+											// 	let _ = writeln!(file, "RECU (State {:?}) : {:#?}", self.state, split_command.join(" "));}
+											if ["GROUP", "CHAT"].contains(&split_command[0].to_uppercase().as_str()){
+												find_action(&split_command[..2].join(" "), self, Some(split_command[2..].join(" ")));
+											} else {
+												find_action(split_command[0], self, None);
+											}
+											// } else {
+											// 	self.output.push_back("Unknown command.".to_string());
+											// }
 											self.room.text_area.clear();
 										}
+										Focus::EXITS => {
+											if let Some(index) = self.room.exits_list_state.selected_mut() {
+												if let Some(exit) = self.room.room_view.exits.get(*index) {
+													let direction = match exit {
+														Exits::East { .. } => "East",
+														Exits::West { .. } => "West",
+														Exits::North { .. } => "North",
+														Exits::South { .. } => "South"
+													};
+													let _ = self.tx_to_serv.try_send(format!("MOVE {}\n", direction));
+													self.action = PendingAction::Move;
+												}
+											}
+										}
+										Focus::NPC => {
+											if let Some(index) = self.room.npc_list_state.selected_mut() {
+												if let Some(selected_npc) = self.room.npcs.get(*index) {
+													let _ = self.tx_to_serv.try_send(format!("TALK {}\n", selected_npc));
+													self.action = PendingAction::Talk;
+												}
+											}
+										}
+										Focus::INVENTORY => {todo!()}
 										_ => {}
 									}
 								}
@@ -199,7 +235,7 @@ impl World<'_>{
 							}
 						}
 					}
-				},
+				}
 				Event::Mouse(event) => {
 					if event.kind == MouseEventKind::Down(MouseButton::Left) {
 						self.click = !self.click;
@@ -216,8 +252,8 @@ impl World<'_>{
 		loop {
 			match self.rx_from_serv.try_recv() {
 				Ok(msg) => {
-					// if let Ok(mut file) = OpenOptions::new().create(true).append(true).open("debug_network.txt") {
-					// 			let _ = writeln!(file, "all (State {:?}) : {:#?}", self.state, msg);}
+					if let Ok(mut file) = OpenOptions::new().create(true).append(true).open("debug_network.txt") {
+								let _ = writeln!(file, "all (State {:?}) : {:#?}", self.state, msg);}
 					if self.state == States::ServerWait {
 						if msg.contains("OK hello proto") {self.state = States::Login};
 					} else {

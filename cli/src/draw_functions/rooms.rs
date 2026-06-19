@@ -7,16 +7,12 @@ use ratatui::{
 			Horizontal,
 			Vertical
 		}, HorizontalAlignment::Center, Layout, Margin, Rect, Size
-	},
-	style::{
-		Color,
-		Style, Stylize
-	},
-	text::{
+	}, style::{
+		Color, Modifier, Style, Stylize
+	}, text::{
 		Line,
 		Span, Text
-	},
-	widgets::{
+	}, widgets::{
 		Block, Borders, Gauge, List, ListItem, Paragraph, Wrap
 	}
 };
@@ -153,10 +149,12 @@ pub fn draw_room(world: &mut World, frame: &mut Frame) {
 	.block(
 		Block::bordered()
 		.border_style(if world.room.focus == Focus::NPC {Color::LightBlue} else {Color::White})
-	.title("You can talk to:")
-	.title_alignment(Alignment::Center)
-	.title_style(Color::Green)
-	.bold());
+		.title("You can talk to:")
+		.title_alignment(Alignment::Center)
+		.title_style(Color::Green)
+		.bold())
+	.style(Color::LightCyan)
+	.highlight_style(Modifier::REVERSED);
 
 	frame.render_stateful_widget(npc_list, lists_layout[0], &mut world.room.npc_list_state);
 
@@ -169,10 +167,12 @@ pub fn draw_room(world: &mut World, frame: &mut Frame) {
 	.block(
 		Block::bordered()
 		.border_style(if world.room.focus == Focus::INVENTORY {Color::LightBlue} else {Color::White})
-	.title("You can take:")
-	.title_alignment(Alignment::Center)
-	.title_style(Color::Green)
-	.bold());
+		.title("You can take:")
+		.title_alignment(Alignment::Center)
+		.title_style(Color::Green)
+		.bold())
+	.style(Color::LightCyan)
+	.highlight_style(Modifier::REVERSED);
 
 	frame.render_stateful_widget(items_list, lists_layout[1], &mut world.room.inventory_list_state);
 
@@ -192,12 +192,14 @@ pub fn draw_room(world: &mut World, frame: &mut Frame) {
 	.block(
 		Block::bordered()
 		.border_style(if world.room.focus == Focus::EXITS {Color::LightBlue} else {Color::White})
-	.title("You can move to:")
-	.title_alignment(Alignment::Center)
-	.title_style(Color::Green)
-	.bold());
+		.title("You can move to:")
+		.title_alignment(Alignment::Center)
+		.title_style(Color::Green)
+		.bold())
+	.style(Color::LightCyan)
+	.highlight_style(Modifier::REVERSED);
 
-	frame.render_widget(exits_list, right_layout[2]);
+	frame.render_stateful_widget(exits_list, right_layout[2], &mut world.room.exits_list_state);
 
 	// CHAT
 	let messages = match world.chat.channel {

@@ -12,10 +12,12 @@ pub fn response_handling(world: &mut World, server: &ServerEvent) {
 						world.state = States::InGame;
 						world.player.name = world.input.to_string();
 						world.input.clear();
-						let _ = world.tx_to_serv.try_send(String::from("LOOK\n"));
+						let _ = world.tx_to_serv.try_send(String::from("ITEMS\n"));
+						// let _ = world.tx_to_serv.try_send(String::from("LOOK\n"));
 						// if let Ok(mut file) = OpenOptions::new().create(true).append(true).open("debug_network.txt") {
 						// 	let _ = writeln!(file, "ko (State {:?}) : {:#?}", world.state, res);}
-						world.action = PendingAction::ClientLook;
+						world.action = PendingAction::Items;
+						// world.action = PendingAction::ClientLook;
 					}
 				},
 				States::InGame => {
@@ -32,6 +34,16 @@ pub fn response_handling(world: &mut World, server: &ServerEvent) {
 							}
 							world.action = PendingAction::None;
 						},
+						PendingAction::Items => {
+							world.list_items = serde_json::from_value(server.data.clone().unwrap()).unwrap();
+							let _ = world.tx_to_serv.try_send(String::from("NPCS\n"));
+							world.action = PendingAction::Npcs;
+						},
+						PendingAction::Npcs => {
+							world.list_npcs = serde_json::from_value(server.data.clone().unwrap()).unwrap();
+							let _ = world.tx_to_serv.try_send(String::from("LOOK\n"));
+							world.action = PendingAction::ClientLook;
+						}
 						PendingAction::SendChat(command, args) => {
 							match command.to_uppercase().as_str() {
 								"CHAT GLOBAL" => world.chat.global_messages.push_back(format!("[me] {}", args.clone())),
@@ -62,7 +74,18 @@ pub fn response_handling(world: &mut World, server: &ServerEvent) {
 			world.message_error = server.error.clone().unwrap_or("Unknown error".to_string());
 			world.click = true;
 		} else {
-			world.output.push_back(format!("[Error] {}", server.error.clone().unwrap_or("Unknown error".to_string())));
+			match world.action {
+				PendingAction::Items => {
+					let _ = world.tx_to_serv.try_send(String::from("NPCS\n"));
+					world.action = PendingAction::Npcs;
+				},
+				PendingAction::Npcs => {
+					let _ = world.tx_to_serv.try_send(String::from("LOOK\n"));
+					world.action = PendingAction::ClientLook;
+				}
+				_ => world.output.push_back(format!("[Error] {}", server.error.clone().unwrap_or("Unknown error".to_string())))
+			}
+			
 		}
 	}
 }

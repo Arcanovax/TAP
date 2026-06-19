@@ -5,6 +5,7 @@ use crate::enums::channels::Channels;
 pub enum PendingAction {
     None,
     GroupList,
+	Npcs,
     Talk,
     Drop,
     Take,
@@ -21,5 +22,6 @@ pub enum PendingAction {
 	Who,
 	Attack,
 	Inventory,
-	Quest
+	Quest,
+	Items
 }

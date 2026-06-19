@@ -9,18 +9,12 @@ use crate::{enums::{focus::Focus}, structures::room_view::RoomView};
 pub struct Room<'a> {
 	#[serde(rename = "room")]
 	pub room_view: RoomView,
-	// pub id: String,
-    // pub name: String,
-    // pub exits: Vec<Exits>,
-    // pub description: String,
     pub npcs: Vec<String>,
     pub items: Vec<String>,
     pub players: Vec<String>,
 
 	#[serde(skip)]
 	pub focus: Focus,
-	// #[serde(skip)]
-	// pub available_focus: Vec<Focus>,
 	#[serde(skip)]
 	pub chat_scroll_pos: ScrollViewState,
 	#[serde(skip)]
@@ -45,7 +39,6 @@ impl Room<'_> {
 			items: Vec::new(),
 			players: Vec::new(),
 			focus: Focus::COMMAND,
-			// available_focus: vec![Focus::COMMAND, Focus::CHAT, Focus::NPC, Focus::OUTPUT, Focus::DESCR, Focus::INVENTORY, Focus::EXITS],
 			chat_scroll_pos: ScrollViewState::new(),
 			output_scroll_pos: ScrollViewState::new(),
 			descr_scroll_pos: ScrollViewState::new(),
