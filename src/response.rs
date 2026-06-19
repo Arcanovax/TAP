@@ -288,7 +288,6 @@ pub async fn handle_response(game: &mut Game, server_event: ServerEvent, msg: St
 						Ok(quest) => {
 							game.quests.push(Quest {
 								npc_id: npc_id.to_string(),
-								id: quest.id,
 								name: quest.name,
 								description: quest.description,
 								reward: quest.reward,
@@ -296,7 +295,7 @@ pub async fn handle_response(game: &mut Game, server_event: ServerEvent, msg: St
 							});
 						}
 						Err(e) => {
-							eprintln!("MOVE error: {}", e);
+							eprintln!("QUEST error: {}", e);
 						}
 					}
 				}
@@ -398,18 +397,12 @@ pub struct MoveData {
 
 #[derive(Deserialize, Debug)]
 pub struct QuestData {
-	pub id: String,
 	pub name: String,
     pub description: String,
     pub reward: String,
     pub goals: Vec<Goal>,
 }
 
-#[derive(Debug, Deserialize, PartialEq, Eq, Clone)]
-pub enum Goal {
-    Collect { item: String, amount: u32 },
-    Talk { dialog: String },
-}
 
 
 

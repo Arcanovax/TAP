@@ -498,14 +498,9 @@ async fn main() {
 					// }
 
 
-					let rect_info: Rect =get_rect_right(vec2(100.0, 60.0), 0.0);
-					draw_rectangle(rect_info.x, rect_info.y, rect_info.w, rect_info.h, BLACK);
-					for (i, quest) in game.quests.iter().enumerate().clone(){
-						let quest_info = format!("{}: {}", quest.name, quest.description);
-						draw_text(quest_info, rect_info.x, rect_info.y -20.0 - (20*i) as f32, 20.0, WHITE);
-					}
 					
-						
+					
+					display_quests(&mut game);
 	
 					
 

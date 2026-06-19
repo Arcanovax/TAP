@@ -69,6 +69,8 @@ pub struct ServerEvent {
 	pub room_join: Option<PlayersEvent>,
 	#[serde(rename = "PLAYERS")]
 	pub players: Option<Players>,
+	#[serde(rename = "QUEST_UPDATE")]
+	pub quest: Option<Quest>,
 
 	#[serde(rename = "TAKE")]
     pub take: Option<ItemEvent>,
@@ -92,6 +94,12 @@ pub struct Players {
 	pub players: i32,
 }
 
+
+#[derive(Deserialize, Debug)]
+pub struct QuestUpdateEvent {
+	pub quest_name: String,
+	pub item: String
+}
 
 #[derive(Deserialize, Debug)]
 pub struct ItemEvent {
