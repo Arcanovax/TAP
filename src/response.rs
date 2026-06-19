@@ -261,7 +261,7 @@ pub async fn handle_response(game: &mut Game, server_event: ServerEvent, msg: St
 		}
 		PendingAction::Talk(ref npc_id) => {
 
-			if msg.contains("SUCCESS") && game.player.new_spawn == Spawn::None{
+			if msg.contains("SUCCESS"){
 				if let Some(data_val) = server_event.data{
 					let data_str = data_val.to_string();
 					match serde_json::from_str::<Vec<String>>(&data_str) {
@@ -280,9 +280,31 @@ pub async fn handle_response(game: &mut Game, server_event: ServerEvent, msg: St
 				}
 			}
 		}
+		PendingAction::Quest(ref npc_id) => {
+			if msg.contains("SUCCESS"){
+				if let Some(data_val) = server_event.data{
+					let data_str = data_val.to_string();
+					match serde_json::from_str::<QuestData>(&data_str) {
+						Ok(quest) => {
+							game.quests.push(Quest {
+								npc_id: npc_id.to_string(),
+								id: quest.id,
+								name: quest.name,
+								description: quest.description,
+								reward: quest.reward,
+								goals: quest.goals
+							});
+						}
+						Err(e) => {
+							eprintln!("MOVE error: {}", e);
+						}
+					}
+				}
+			}
+		}
 		PendingAction::Attack(ref npc_id) => {
 
-			if msg.contains("SUCCESS") && game.player.new_spawn == Spawn::None{
+			if msg.contains("SUCCESS"){
 				if let Some(ref mut state) = game.player.state{
 							state.status= Status::InFight { target_id: npc_id.to_string()}
 					};
@@ -371,6 +393,22 @@ pub struct NpcData {
 #[derive(Deserialize, Debug)]
 pub struct MoveData {
 	pub room: String,
+}
+
+
+#[derive(Deserialize, Debug)]
+pub struct QuestData {
+	pub id: String,
+	pub name: String,
+    pub description: String,
+    pub reward: String,
+    pub goals: Vec<Goal>,
+}
+
+#[derive(Debug, Deserialize, PartialEq, Eq, Clone)]
+pub enum Goal {
+    Collect { item: String, amount: u32 },
+    Talk { dialog: String },
 }
 
 

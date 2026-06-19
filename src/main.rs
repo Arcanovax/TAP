@@ -12,6 +12,7 @@ mod server_event;
 mod response;
 mod camera;
 mod fight;
+mod quest;
 
 use fight::*;
 use player::*;
@@ -19,6 +20,7 @@ use items::*;
 use server_event::*;
 use camera::*;
 use response::*;
+use quest::*;
 
 use serde_json::Value;
 use utils::*;
@@ -116,7 +118,8 @@ struct Game {
 	pub loaded_npcs: HashMap<String,Npc>,
 	pub nb_players: i32,
 	pub config: GameConfig,
-	pub active_fight: Option<Fight>
+	pub active_fight: Option<Fight>,
+	pub quests: Vec<Quest>
 }
 
 
@@ -233,7 +236,8 @@ async fn main() {
 			tile_size: 16.0,
 			camera: Camera2D::default()
 		},
-		active_fight: None
+		active_fight: None,
+		quests: Vec::new()
     };
 
 
@@ -486,12 +490,24 @@ async fn main() {
 					draw_text(map_data.room.name.clone(), 5.0, 30.0, 60.0, WHITE);
 					draw_text(text_player, 5.0, 70.0, 60.0, WHITE);
 
-					if let Some(state) = game.player.state.as_ref(){
-						let rect_info: Rect =get_rect_right(vec2(100.0, 60.0), 0.0);
-						draw_rectangle(rect_info.x, rect_info.y, rect_info.w, rect_info.h, BLACK);
-						let hp_info = format!("{}/{}",state.hp,state.max_hp);
-						draw_text_bottom(rect_info, &hp_info.to_string(), 30, 0.0);
+					// if let Some(state) = game.player.state.as_ref(){
+					// 	let rect_info: Rect =get_rect_right(vec2(100.0, 60.0), 0.0);
+					// 	draw_rectangle(rect_info.x, rect_info.y, rect_info.w, rect_info.h, BLACK);
+					// 	let hp_info = format!("{}/{}",state.hp,state.max_hp);
+					// 	draw_text_bottom(rect_info, &hp_info.to_string(), 30, 0.0);
+					// }
+
+
+					let rect_info: Rect =get_rect_right(vec2(100.0, 60.0), 0.0);
+					draw_rectangle(rect_info.x, rect_info.y, rect_info.w, rect_info.h, BLACK);
+					for (i, quest) in game.quests.iter().enumerate().clone(){
+						let quest_info = format!("{}: {}", quest.name, quest.description);
+						draw_text(quest_info, rect_info.x, rect_info.y -20.0 - (20*i) as f32, 20.0, WHITE);
 					}
+					
+						
+	
+					
 
 					if game.focus == InputFocus::Game {
 						while get_char_pressed().is_some() {}
