@@ -15,6 +15,7 @@ mod fight;
 mod quest;
 
 use fight::*;
+use macroquad::input::KeyCode::S;
 use player::*;
 use items::*;
 use server_event::*;
@@ -304,7 +305,7 @@ async fn main() {
 			}
 
 			else{
-				if let Some(state) = game.player.state.clone() {
+				if let Some(mut state) = game.player.state.clone() {
 					if state.status != Status::Idle{
 						handle_fight(&mut game, &floor);
 						if is_key_pressed(KeyCode::C){
@@ -484,16 +485,44 @@ async fn main() {
 					}
 
 					set_default_camera();
+					let info: Rect = Rect::new(10.0, 10.0, 350.0, 120.0);
+					draw_rectangle(info.x, info.y, info.w, info.h, Color::new(0.0, 0.0, 0.0, 0.5));
+					
+
+					let frame = Rect::new(info.x+10.0, info.y+10.0, 100.0, 100.0);
+					draw_rectangle(frame.x, frame.y, frame.w, frame.h,BLACK);
+					
+					let cut_sheet_head = DrawTextureParams {
+						source: Some(Rect::new(0.0, 0.0, sprite_width, 20.0)),
+						dest_size: Some(vec2(75.0, 100.0 )),
+						..Default::default()
+					};
+					draw_texture_ex(
+						&current_skin_texture,
+					 	frame.x+12.5, frame.y,
+						WHITE,
+						cut_sheet_head
+					);
+					draw_rectangle_lines(frame.x, frame.y, frame.w, frame.h, 10.0, Color::new(0.53, 0.31, 0.16, 1.0));
 
 
-					let text_player = format!("Total players: {}",game.nb_players.clone());
-					draw_text(map_data.room.name.clone(), 5.0, 30.0, 60.0, WHITE);
-					draw_text(text_player, 5.0, 70.0, 60.0, WHITE);
+					draw_text(&game.player.name, frame.x + frame.w + 5.0, frame.y + 30.0, 40.0, WHITE);
+					let lifebar = Rect::new(frame.x + frame.w + 5.0, frame.y + 40.0, 200.0, 25.0);
+					draw_rectangle(lifebar.x, lifebar.y, lifebar.w, lifebar.h,BLACK);
+					let hp_ratio: f32 = state.hp as f32 / state.max_hp as f32;
+					draw_rectangle(lifebar.x, lifebar.y+2.5, lifebar.w * hp_ratio, 20.0,RED);
+					let hp_info = format!("{}/{}",state.hp,state.max_hp);
+					draw_text_center(lifebar, &hp_info, 20);
+					draw_rectangle_lines(lifebar.x, lifebar.y, lifebar.w, lifebar.h, 5.0, GRAY);
+
+					// let text_player = format!("Total players: {}",game.nb_players.clone());
+					// draw_text(map_data.room.name.clone(), 5.0, 30.0, 30.0, WHITE);
+					// draw_text(text_player, 5.0, 70.0, 30.0, WHITE);
 
 					// if let Some(state) = game.player.state.as_ref(){
 					// 	let rect_info: Rect =get_rect_right(vec2(100.0, 60.0), 0.0);
 					// 	draw_rectangle(rect_info.x, rect_info.y, rect_info.w, rect_info.h, BLACK);
-					// 	let hp_info = format!("{}/{}",state.hp,state.max_hp);
+					// 
 					// 	draw_text_bottom(rect_info, &hp_info.to_string(), 30, 0.0);
 					// }
 
