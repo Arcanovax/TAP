@@ -1,3 +1,5 @@
+use std::{fs::OpenOptions, io::Write};
+
 use ratatui::{Frame, layout::{Constraint::{Length, Percentage}, Direction::Vertical, Layout}, style::Style, widgets::{Block, Paragraph, Wrap}};
 use ratatui::prelude::Stylize;
 use tui_widgets::big_text::{BigText, PixelSize};
@@ -35,9 +37,14 @@ pub fn login_draw(world: &mut World, frame:&mut Frame) {
         world.counter += 1;
     }
 
-    if mess_len < descr.len() && world.counter % 2 == 0 {
+    if mess_len >= descr.len() {
+        world.counter = 0;
+    } else if world.counter % 2 == 0 {
         world.message.push(descr.chars().nth(mess_len).unwrap());
     }
+
+	// if let Ok(mut file) = OpenOptions::new().create(true).append(true).open("debug_network.txt") {
+	// 			let _ = writeln!(file, "len {:?} counter {:#?}", mess_len, world.counter);}
 
     let presentation = Paragraph::new(world.message.clone())
     .wrap(Wrap {trim: true})

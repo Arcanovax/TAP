@@ -10,6 +10,7 @@ pub fn response_handling(world: &mut World, server: &ServerEvent) {
 			States::Login => {
 				if world.action == PendingAction::Auth{
 						world.state = States::InGame;
+						world.message = String::new();
 						world.player.name = world.input.to_string();
 						world.input.clear();
 						let _ = world.tx_to_serv.try_send(String::from("ITEMS\n"));
@@ -47,10 +48,11 @@ pub fn response_handling(world: &mut World, server: &ServerEvent) {
 						PendingAction::Talk(name) => {
 							world.room.dialogs = serde_json::from_value(server.data.clone().unwrap()).unwrap();
 							if let Some(npc) = world.list_npcs.get(name) {
-								world.state = States::InDiscuss(npc.name.clone());
+								world.state = States::InDiscuss(npc.name.clone(), world.room.dialogs.pop_front().unwrap_or("".to_string()));
 							} else {
-								world.state = States::InDiscuss(name.clone());
+								world.state = States::InDiscuss(name.clone(), world.room.dialogs.pop_front().unwrap_or("".to_string()));
 							}
+							world.room.npc_list_state.select(None);
 						}
 						PendingAction::SendChat(command, args) => {
 							match command.to_uppercase().as_str() {

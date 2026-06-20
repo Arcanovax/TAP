@@ -1,5 +1,5 @@
 use std::{
-	collections::{HashMap, VecDeque}, fs::OpenOptions, io::{self, Write}, sync::mpsc::{
+	any::type_name, collections::{HashMap, VecDeque}, fs::OpenOptions, io::{self, Write}, sync::mpsc::{
 		Receiver,
 		TryRecvError
 	}
@@ -83,7 +83,7 @@ impl World<'_>{
 		Ok(())
 	}
 	pub fn draw(&mut self, frame:&mut Frame) {
-		match self.state {
+		match &self.state {
 			States::ServerWait => draw_wait(frame),
 			States::Login => login_draw(self, frame),
 			States::InGame => {
@@ -91,9 +91,8 @@ impl World<'_>{
 				// 	let _ = writeln!(file, "RECU (State {:?}) : {:#?}", self.state, self.player.name);}
 				draw_room(self, frame);
 			},
-			States::InDiscuss(name) => {
-				self.room.focus = Focus::DISCUSS;
-				draw_room_discuss(self, frame, name);
+			States::InDiscuss(name, sentence) => {
+				draw_room_discuss(self, frame, name.to_string(), sentence.to_string());
 			}
 			_ => {}
 		}
@@ -104,150 +103,171 @@ impl World<'_>{
 			match event::read()? {
 				Event::Key(key) => {
 					if key.code == KeyCode::Esc { self.quit = true };
-					if self.state == States::Login {
-						match key.code {
-							KeyCode::Char(c) => {
-								if self.input.len() < 20 {self.input.push(c);}
-							},
-							KeyCode::Backspace => { self.input.pop(); },
-							KeyCode::Enter => {
-								let _ = self.tx_to_serv.try_send(format!("CONNECT {}\n", self.input));
-								self.action = PendingAction::Auth;
-							}
-							_ => {}
-						}
-					} else if self.state == States::InGame {
-						if self.room.focus == Focus::COMMAND && key.code != KeyCode::Tab && key.code != KeyCode::Enter{
-								self.room.text_area.input(key);
-						} else {
+					match &self.state {
+						States::Login => {
 							match key.code {
-								KeyCode::Down => {
-									match self.room.focus {
-										Focus::CHAT => self.room.chat_scroll_pos.scroll_down(),
-										Focus::DESCR => self.room.descr_scroll_pos.scroll_down(),
-										Focus::OUTPUT => self.room.output_scroll_pos.scroll_down(),
-										Focus::NPC => self.room.npc_list_state.select_next(),
-										Focus::INVENTORY => self.room.inventory_list_state.select_next(),
-										Focus::EXITS => self.room.exits_list_state.select_next(),
-										_ => {}
-									}
-									}
-								KeyCode::Up => {
-									match self.room.focus {
-										Focus::CHAT => self.room.chat_scroll_pos.scroll_up(),
-										Focus::DESCR => self.room.descr_scroll_pos.scroll_up(),
-										Focus::OUTPUT => self.room.output_scroll_pos.scroll_up(),
-										Focus::NPC => self.room.npc_list_state.select_previous(),
-										Focus::INVENTORY => self.room.inventory_list_state.select_previous(),
-										Focus::EXITS => self.room.exits_list_state.select_previous(),
-										_ => {}
-									}
-								}
-								KeyCode::Left => {
-									match self.room.focus {
-										Focus::CHAT => {
-											self.chat.channel = match self.chat.channel {
-												Channels::GLOBAL => Channels::GROUP,
-												Channels::GROUP => Channels::ROOM,
-												Channels::ROOM => Channels::GLOBAL
-											}
-										},
-										_ => {}
-									}
-								}
-								KeyCode::Right => {
-									match self.room.focus {
-										Focus::CHAT => {
-											self.chat.channel = match self.chat.channel {
-												Channels::GLOBAL => Channels::ROOM,
-												Channels::GROUP => Channels::GLOBAL,
-												Channels::ROOM => Channels::GROUP
-											}
-										},
-										_ => {}
-									}
-								}
-								KeyCode::Tab => {
-									let current_index = Focus::iterator()
-									.position(|f|f == &self.room.focus)
-									.unwrap_or(0);
-									
-									let next_index = (current_index + 1) % Focus::iterator().len();
-									self.room.focus = Focus::iterator().nth(next_index).unwrap().clone();
-									self.room.exits_list_state.select(None);
-									self.room.inventory_list_state.select(None);
-									self.room.npc_list_state.select(None);
-									match self.room.focus {
-										Focus::EXITS => self.room.exits_list_state.select_first(),
-										Focus::INVENTORY => self.room.inventory_list_state.select_first(),
-										Focus::NPC => self.room.npc_list_state.select_first(),
-										_ => {}
-									}
-								}
+								KeyCode::Char(c) => {
+									if self.input.len() < 20 {self.input.push(c);}
+								},
+								KeyCode::Backspace => { self.input.pop(); },
 								KeyCode::Enter => {
-									match self.room.focus {
-										Focus::COMMAND => {
-											let command = self.room.text_area.lines().join("");
-											let split_command: Vec<&str> = command.split(" ").collect();
-											// if ["TALK", "DROP", "TAKE", "LOOK", "MOVE", "WHO", "CHAT", "GROUP", "STATUS", "ATTACK", "INVENTORY", "QUEST"].contains(&split_command[0].to_uppercase().as_str()) {
-											let _ = self.tx_to_serv.try_send(split_command.join(" ") + "\n");
-											if !["CHAT"].contains(&split_command[0].to_uppercase().as_str()) {
-												self.output.push_back(format!("\n> {}", split_command.join(" ")));
-												self.room.output_scroll_pos.scroll_to_bottom();
-											}
-											// if let Ok(mut file) = OpenOptions::new().create(true).append(true).open("debug_draw.txt") {
-											// 	let _ = writeln!(file, "RECU (State {:?}) : {:#?}", self.state, split_command.join(" "));}
-											if ["GROUP", "CHAT"].contains(&split_command[0].to_uppercase().as_str()){
-												find_action(&split_command[..2].join(" "), self, Some(split_command[2..].join(" ")));
-											} else {
-												find_action(split_command[0], self, None);
-											}
-											// } else {
-											// 	self.output.push_back("Unknown command.".to_string());
-											// }
-											self.room.text_area.clear();
+									let _ = self.tx_to_serv.try_send(format!("CONNECT {}\n", self.input));
+									self.action = PendingAction::Auth;
+								}
+								_ => {}
+							}
+						},
+						States::InGame => {
+							if self.room.focus == Focus::COMMAND && key.code != KeyCode::Tab && key.code != KeyCode::Enter{
+									self.room.text_area.input(key);
+							} else {
+								match key.code {
+									KeyCode::Down => {
+										match self.room.focus {
+											Focus::CHAT => self.room.chat_scroll_pos.scroll_down(),
+											Focus::DESCR => self.room.descr_scroll_pos.scroll_down(),
+											Focus::OUTPUT => self.room.output_scroll_pos.scroll_down(),
+											Focus::NPC => self.room.npc_list_state.select_next(),
+											Focus::INVENTORY => self.room.inventory_list_state.select_next(),
+											Focus::EXITS => self.room.exits_list_state.select_next(),
+											_ => {}
 										}
-										Focus::EXITS => {
-											if let Some(index) = self.room.exits_list_state.selected_mut() {
-												if let Some(exit) = self.room.room_view.exits.get(*index) {
-													let direction = match exit {
-														Exits::East { .. } => "East",
-														Exits::West { .. } => "West",
-														Exits::North { .. } => "North",
-														Exits::South { .. } => "South"
-													};
-													let _ = self.tx_to_serv.try_send(format!("MOVE {}\n", direction));
-													self.action = PendingAction::Move;
+										}
+									KeyCode::Up => {
+										match self.room.focus {
+											Focus::CHAT => self.room.chat_scroll_pos.scroll_up(),
+											Focus::DESCR => self.room.descr_scroll_pos.scroll_up(),
+											Focus::OUTPUT => self.room.output_scroll_pos.scroll_up(),
+											Focus::NPC => self.room.npc_list_state.select_previous(),
+											Focus::INVENTORY => self.room.inventory_list_state.select_previous(),
+											Focus::EXITS => self.room.exits_list_state.select_previous(),
+											_ => {}
+										}
+									}
+									KeyCode::Left => {
+										match self.room.focus {
+											Focus::CHAT => {
+												self.chat.channel = match self.chat.channel {
+													Channels::GLOBAL => Channels::GROUP,
+													Channels::GROUP => Channels::ROOM,
+													Channels::ROOM => Channels::GLOBAL
+												}
+											},
+											_ => {}
+										}
+									}
+									KeyCode::Right => {
+										match self.room.focus {
+											Focus::CHAT => {
+												self.chat.channel = match self.chat.channel {
+													Channels::GLOBAL => Channels::ROOM,
+													Channels::GROUP => Channels::GLOBAL,
+													Channels::ROOM => Channels::GROUP
+												}
+											},
+											_ => {}
+										}
+									}
+									KeyCode::Tab => {
+										let current_index = Focus::iterator()
+										.position(|f|f == &self.room.focus)
+										.unwrap_or(0);
+										
+										let next_index = (current_index + 1) % Focus::iterator().len();
+										self.room.focus = Focus::iterator().nth(next_index).unwrap().clone();
+										self.room.exits_list_state.select(None);
+										self.room.inventory_list_state.select(None);
+										self.room.npc_list_state.select(None);
+										match self.room.focus {
+											Focus::EXITS => self.room.exits_list_state.select_first(),
+											Focus::INVENTORY => self.room.inventory_list_state.select_first(),
+											Focus::NPC => self.room.npc_list_state.select_first(),
+											_ => {}
+										}
+									}
+									KeyCode::Enter => {
+										match self.room.focus {
+											Focus::COMMAND => {
+												let command = self.room.text_area.lines().join("");
+												let split_command: Vec<&str> = command.split(" ").collect();
+												// if ["TALK", "DROP", "TAKE", "LOOK", "MOVE", "WHO", "CHAT", "GROUP", "STATUS", "ATTACK", "INVENTORY", "QUEST"].contains(&split_command[0].to_uppercase().as_str()) {
+												let _ = self.tx_to_serv.try_send(split_command.join(" ") + "\n");
+												if !["CHAT"].contains(&split_command[0].to_uppercase().as_str()) {
+													self.output.push_back(format!("\n> {}", split_command.join(" ")));
+													self.room.output_scroll_pos.scroll_to_bottom();
+												}
+												// if let Ok(mut file) = OpenOptions::new().create(true).append(true).open("debug_draw.txt") {
+												// 	let _ = writeln!(file, "RECU (State {:?}) : {:#?}", self.state, split_command.join(" "));}
+												if ["GROUP", "CHAT"].contains(&split_command[0].to_uppercase().as_str()){
+													find_action(&split_command[..2].join(" "), self, Some(split_command[2..].join(" ")));
+												} else {
+													find_action(split_command[0], self, None);
+												}
+												// } else {
+												// 	self.output.push_back("Unknown command.".to_string());
+												// }
+												self.room.text_area.clear();
+											}
+											Focus::EXITS => {
+												if let Some(index) = self.room.exits_list_state.selected_mut() {
+													if let Some(exit) = self.room.room_view.exits.get(*index) {
+														let direction = match exit {
+															Exits::East { .. } => "East",
+															Exits::West { .. } => "West",
+															Exits::North { .. } => "North",
+															Exits::South { .. } => "South"
+														};
+														let _ = self.tx_to_serv.try_send(format!("MOVE {}\n", direction));
+														self.action = PendingAction::Move;
+													}
 												}
 											}
-										}
-										Focus::NPC => {
-											if let Some(index) = self.room.npc_list_state.selected_mut() {
-												if let Some(selected_npc) = self.room.npcs.get(*index) {
-													let _ = self.tx_to_serv.try_send(format!("TALK {}\n", selected_npc));
-													self.action = PendingAction::Talk(selected_npc.clone());
+											Focus::NPC => {
+												if let Some(index) = self.room.npc_list_state.selected_mut() {
+													if let Some(selected_npc) = self.room.npcs.get(*index) {
+														let _ = self.tx_to_serv.try_send(format!("TALK {}\n", selected_npc));
+														self.action = PendingAction::Talk(selected_npc.clone());
+													}
 												}
 											}
+											Focus::INVENTORY => {todo!()}
+											_ => {}
 										}
-										Focus::INVENTORY => {todo!()}
-										_ => {}
+									}
+									_ => {}
+								}
+							}
+						}
+						States::InDiscuss(name, _) => {
+							match key.code {
+								KeyCode::Enter => {
+									if let Some(new_sentence) = self.room.dialogs.pop_front() {
+										self.state = States::InDiscuss(name.to_string(), new_sentence);
+										self.message = String::new();
+										self.counter = 0;
+									} else {
+										self.message = String::new();
+										self.counter = 0;
+										self.state = States::InGame;
+										self.room.focus = Focus::COMMAND;
 									}
 								}
 								_ => {}
 							}
 						}
-					}
+						_ => {}
 				}
-				Event::Mouse(event) => {
-					if event.kind == MouseEventKind::Down(MouseButton::Left) {
-						self.click = !self.click;
-						self.error = false;
-					}
-				}
-				_ => {}
 			}
+			Event::Mouse(event) => {
+				if event.kind == MouseEventKind::Down(MouseButton::Left) {
+					self.click = !self.click;
+					self.error = false;
+				}
+			}
+			_ => {}
 		}
-		Ok(())
+	}
+	Ok(())
 	}
 
 	pub fn process_network(&mut self) {

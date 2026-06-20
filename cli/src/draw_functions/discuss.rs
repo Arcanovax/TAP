@@ -18,9 +18,9 @@ use ratatui::{
 };
 use tui_widgets::scrollview::{ScrollView};
 
-use crate::{enums::{channels::Channels, exits::Exits, focus::Focus}, structures::world::World};
+use crate::{enums::{channels::Channels, exits::Exits}, structures::world::World};
 
-pub fn draw_room_discuss(world: &mut World, frame: &mut Frame, name: String) {
+pub fn draw_room_discuss(world: &mut World, frame: &mut Frame, name: String, sentence: String) {
 
 	let main_layout = Layout::default()
     .direction(Vertical)
@@ -68,14 +68,6 @@ pub fn draw_room_discuss(world: &mut World, frame: &mut Frame, name: String) {
     ])
     .split(layout[1]);
 
-	let lists_layout = Layout::default()
-    .direction(Horizontal)
-    .constraints(vec![
-        Percentage(50),
-        Percentage(50)
-    ])
-    .split(right_layout[1]);
-
 	// ID
 	let mut lines = vec![
 		Line::from(Span::styled(world.player.name.as_str(), Style::default().fg(Color::Green).bold())),
@@ -95,7 +87,6 @@ pub fn draw_room_discuss(world: &mut World, frame: &mut Frame, name: String) {
 
 	// CITY DESCRIPTION
 	let city_block = Block::bordered()
-		.border_style(if world.room.focus == Focus::DESCR {Color::LightBlue} else {Color::White})
 		.title(world.room.room_view.name.as_str())
 		.title_style(Color::Green)
 		.bold()
@@ -136,45 +127,43 @@ pub fn draw_room_discuss(world: &mut World, frame: &mut Frame, name: String) {
 
 	frame.render_widget(hp_bar, left_layout[1]);
 
-	// NPCS
-	let mut npc_items: Vec<ListItem> = vec![ListItem::new(Line::from("Nobody").alignment(Alignment::Center))];
+	// DISCUSS
+	let discuss_block = Block::new()
+	.borders(Borders::ALL)
+	.border_style(Color::LightBlue);
 
-	if world.room.npcs.len() > 0 {
-		npc_items = world.room.npcs.iter()
-		.map(|npc| ListItem::new(Line::from(npc.as_str()).alignment(Alignment::Center)))
-		.collect();
-	}
+	let inner_discuss = right_layout[1].inner(Margin { horizontal: 1, vertical: 1 });
+	
+	let mess_len = world.message.len();
 
-	let npc_list = List::new(npc_items)
-	.block(
-		Block::bordered()
-		.border_style(if world.room.focus == Focus::NPC {Color::LightBlue} else {Color::White})
-		.title("You can talk to:")
-		.title_alignment(Alignment::Center)
-		.title_style(Color::Green)
-		.bold())
-	.style(Color::LightCyan)
-	.highlight_style(Modifier::REVERSED);
+    if mess_len < sentence.len() {
+        world.counter += 1;
+    }
 
-	frame.render_stateful_widget(npc_list, lists_layout[0], &mut world.room.npc_list_state);
+    if mess_len >= sentence.len() {
+        world.counter = 0;
+    } else if world.counter % 2 == 0 {
+        world.message.push(sentence.chars().nth(mess_len).unwrap());
+    }
 
-	// INVENTORY
-	let inventory_items: Vec<ListItem> = world.player.inventory.iter()
-		.map(|item| ListItem::new(Line::from(format!("{} x{}", item.0.trim_start_matches("item."), item.1)).alignment(Alignment::Center)))
-		.collect();
+	lines = vec![
+		Line::raw("(Press enter => Skip)").centered(),
+		Line::raw(""),
+		Line::styled(name + ":", Color::Green).bold().centered(),
+		Line::styled(&world.message, Style::default().add_modifier(Modifier::ITALIC)).centered()
+	];
 
-	let items_list = List::new(inventory_items)
-	.block(
-		Block::bordered()
-		.border_style(if world.room.focus == Focus::INVENTORY {Color::LightBlue} else {Color::White})
-		.title("You can take:")
-		.title_alignment(Alignment::Center)
-		.title_style(Color::Green)
-		.bold())
-	.style(Color::LightCyan)
-	.highlight_style(Modifier::REVERSED);
+	content_width = inner_discuss.width;
+	content_height = textwrap::wrap(&world.message, content_width as usize).len() as u16 + 3;
 
-	frame.render_stateful_widget(items_list, lists_layout[1], &mut world.room.inventory_list_state);
+	scroll_output = ScrollView::new(Size { width: content_width, height: content_height });
+
+	let discuss_content = Paragraph::new(Text::from(lines))
+	.wrap(Wrap { trim: true });
+
+	frame.render_widget(discuss_block, right_layout[1]);
+	scroll_output.render_widget(discuss_content, Rect { x: 0, y: 0, width: content_width, height: content_height });
+	frame.render_stateful_widget(scroll_output, inner_discuss, &mut world.room.discuss_scroll_pos);
 
 	// EXITS
 	let exits_items: Vec<ListItem> = world.room.room_view.exits.iter()
@@ -191,7 +180,6 @@ pub fn draw_room_discuss(world: &mut World, frame: &mut Frame, name: String) {
 	let exits_list = List::new(exits_items)
 	.block(
 		Block::bordered()
-		.border_style(if world.room.focus == Focus::EXITS {Color::LightBlue} else {Color::White})
 		.title("You can move to:")
 		.title_alignment(Alignment::Center)
 		.title_style(Color::Green)
@@ -210,7 +198,6 @@ pub fn draw_room_discuss(world: &mut World, frame: &mut Frame, name: String) {
 
 	let chat = Block::new()
 	.borders(Borders::ALL)
-	.border_style(if world.room.focus == Focus::CHAT {Color::LightBlue} else {Color::White})
 	.title("Chat")
 	.title_alignment(Alignment::Center)
 	.title_style(Color::Green);
@@ -269,7 +256,6 @@ pub fn draw_room_discuss(world: &mut World, frame: &mut Frame, name: String) {
 
 	let output = Block::new()
 	.borders(Borders::ALL)
-	.border_style(if world.room.focus == Focus::OUTPUT {Color::LightBlue} else {Color::White})
 	.title("Output")
 	.title_alignment(Alignment::Center)
 	.title_style(Color::Green);
@@ -301,8 +287,7 @@ pub fn draw_room_discuss(world: &mut World, frame: &mut Frame, name: String) {
 		.title("You can write your command here:")
 		.title_alignment(Alignment::Center)
 		.title_style(Color::Green)
-		.bold()
-		.border_style(if world.room.focus == Focus::COMMAND {Color::LightBlue} else {Color::White}));
+		.bold());
 
 	// if let Ok(mut file) = OpenOptions::new().create(true).append(true).open("debug_network.txt") {
 	// 			let _ = writeln!(file, "ok (State {:?}) : {:#?}", world.state, world.room.focus);}

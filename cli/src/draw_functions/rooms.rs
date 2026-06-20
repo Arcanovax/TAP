@@ -141,7 +141,7 @@ pub fn draw_room(world: &mut World, frame: &mut Frame) {
 
 	if world.room.npcs.len() > 0 {
 		npc_items = world.room.npcs.iter()
-		.map(|npc| ListItem::new(Line::from(npc.as_str()).alignment(Alignment::Center)))
+		.map(|npc| ListItem::new(Line::from(if let Some(npc) = world.list_npcs.get(npc.as_str()) {&npc.name} else {npc.as_str()} ).alignment(Alignment::Center)))
 		.collect();
 	}
 
@@ -167,7 +167,7 @@ pub fn draw_room(world: &mut World, frame: &mut Frame) {
 	.block(
 		Block::bordered()
 		.border_style(if world.room.focus == Focus::INVENTORY {Color::LightBlue} else {Color::White})
-		.title("You can take:")
+		.title("In your bag:")
 		.title_alignment(Alignment::Center)
 		.title_style(Color::Green)
 		.bold())

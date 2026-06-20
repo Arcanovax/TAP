@@ -5,6 +5,6 @@ pub enum States {
 	ServerError(String),
 	InGame,
 	InFight,
-	InDiscuss(String),
+	InDiscuss(String, String),
 	Respawn
 }

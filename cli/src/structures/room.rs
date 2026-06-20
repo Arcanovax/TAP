@@ -22,6 +22,8 @@ pub struct Room<'a> {
 	#[serde(skip)]
 	pub chat_scroll_pos: ScrollViewState,
 	#[serde(skip)]
+	pub discuss_scroll_pos: ScrollViewState,
+	#[serde(skip)]
 	pub output_scroll_pos: ScrollViewState,
 	#[serde(skip)]
 	pub descr_scroll_pos: ScrollViewState,
@@ -45,6 +47,7 @@ impl Room<'_> {
 			players: Vec::new(),
 			focus: Focus::COMMAND,
 			chat_scroll_pos: ScrollViewState::new(),
+			discuss_scroll_pos: ScrollViewState::new(),
 			output_scroll_pos: ScrollViewState::new(),
 			descr_scroll_pos: ScrollViewState::new(),
 			npc_list_state: ListState::default(),
