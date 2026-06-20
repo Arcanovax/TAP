@@ -190,22 +190,16 @@ impl World<'_>{
 											Focus::COMMAND => {
 												let command = self.room.text_area.lines().join("");
 												let split_command: Vec<&str> = command.split(" ").collect();
-												// if ["TALK", "DROP", "TAKE", "LOOK", "MOVE", "WHO", "CHAT", "GROUP", "STATUS", "ATTACK", "INVENTORY", "QUEST"].contains(&split_command[0].to_uppercase().as_str()) {
 												let _ = self.tx_to_serv.try_send(split_command.join(" ") + "\n");
+
 												if !["CHAT"].contains(&split_command[0].to_uppercase().as_str()) {
 													self.output.push_back(format!("\n> {}", split_command.join(" ")));
 													self.room.output_scroll_pos.scroll_to_bottom();
 												}
+
+												find_action(split_command, self);
 												// if let Ok(mut file) = OpenOptions::new().create(true).append(true).open("debug_draw.txt") {
-												// 	let _ = writeln!(file, "RECU (State {:?}) : {:#?}", self.state, split_command.join(" "));}
-												if ["GROUP", "CHAT"].contains(&split_command[0].to_uppercase().as_str()){
-													find_action(&split_command[..2].join(" "), self, Some(split_command[2..].join(" ")));
-												} else {
-													find_action(split_command[0], self, None);
-												}
-												// } else {
-												// 	self.output.push_back("Unknown command.".to_string());
-												// }
+												// 	let _ = writeln!(file, "RECU (State {:?})", self.action);}
 												self.room.text_area.clear();
 											}
 											Focus::EXITS => {

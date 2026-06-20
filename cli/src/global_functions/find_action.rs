@@ -1,20 +1,24 @@
 use crate::{enums::actions::PendingAction, structures::world::World};
 
-pub fn find_action(command: &str, world: &mut World, args: Option<String>) {
-	match command.to_lowercase().as_str() {
+pub fn find_action(command: Vec<&str>, world: &mut World) {
+
+	match command[0].to_lowercase().as_str() {
 		"move" => world.action = PendingAction::Move,
-		"talk" => world.action = PendingAction::Talk(args.unwrap_or("Unknown NPC".to_string())),
+		"talk" => world.action = PendingAction::Talk(command[1..].join(" ")),
 		"drop" => world.action = PendingAction::Drop,
 		"take" => world.action = PendingAction::Take,
 		"look" => world.action = PendingAction::Look,
 		"who" => world.action = PendingAction::Who,
-		"chat global"
-		| "chat room"
-		| "chat group" => world.action = PendingAction::SendChat(command.to_string().clone(), args.unwrap_or("".to_string())),
-		"group join" => world.action = PendingAction::GroupJoin(args.unwrap_or("".to_string())),
-		"group invite" => world.action = PendingAction::GroupInvite(args.unwrap_or("".to_string())),
-		"group create" => world.action = PendingAction::GroupCreate(args.unwrap_or("".to_string())),
-		"group leave" => world.action = PendingAction::GroupLeave(args.unwrap_or("".to_string())),
+		"chat" => world.action = PendingAction::SendChat(command[..2].join(" ").clone().to_lowercase(), command[2..].join(" ")),
+		"group" => {
+			match command[1].to_lowercase().as_str() {
+				"join" => world.action = PendingAction::GroupJoin(command[2..].join(" ")),
+				"invite" => world.action = PendingAction::GroupInvite(command[2..].join(" ")),
+				"create" => world.action = PendingAction::GroupCreate(command[2..].join(" ")),
+				"leave" => world.action = PendingAction::GroupLeave(command[2..].join(" ")),
+				_ => {}
+			}
+		}
 		"status" => world.action = PendingAction::Status,
 		"attack" => world.action = PendingAction::Attack,
 		"inventory" => world.action = PendingAction::Inventory,
