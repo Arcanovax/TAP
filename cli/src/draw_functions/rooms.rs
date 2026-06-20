@@ -1,4 +1,4 @@
-use std::{fs::OpenOptions, io::Write};
+use std::{collections::VecDeque, fs::OpenOptions, io::Write};
 
 use ratatui::{
 	Frame, layout::{
@@ -205,7 +205,15 @@ pub fn draw_room(world: &mut World, frame: &mut Frame) {
 	let messages = match world.chat.channel {
 		Channels::GLOBAL => world.chat.global_messages.clone(),
 		Channels::ROOM => world.chat.room_messages.clone(),
-		Channels::GROUP => world.chat.group_messages.clone(),
+		Channels::GROUP => {
+			if !world.group.in_group {
+				let mut my_vec = VecDeque::new();
+				my_vec.push_back("Not yet in a group.".to_string());
+				my_vec.clone()
+			} else {
+				world.chat.group_messages.clone()
+			}
+		},
 	};
 
 	let chat = Block::new()

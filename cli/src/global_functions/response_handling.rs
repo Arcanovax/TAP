@@ -1,4 +1,4 @@
-use std::{collections::{HashMap, VecDeque}, fs::OpenOptions, io::Write};
+use std::{collections::{HashMap, VecDeque}, fs::OpenOptions, io::Write, process::Command};
 
 use serde_json::Value;
 
@@ -54,6 +54,11 @@ pub fn response_handling(world: &mut World, server: &ServerEvent) {
 							}
 							world.room.npc_list_state.select(None);
 						}
+						PendingAction::GroupCreate(name) => {
+							world.group.in_group = true;
+							world.group.name = name.to_string();
+							world.group.grouplist.push_back(world.player.name.clone());
+						}
 						PendingAction::SendChat(command, args) => {
 							match command.to_uppercase().as_str() {
 								"CHAT GLOBAL" => world.chat.global_messages.push_back(format!("[me] {}", args.clone())),
@@ -85,7 +90,7 @@ pub fn response_handling(world: &mut World, server: &ServerEvent) {
 			world.message_error = server.error.clone().unwrap_or("Unknown error".to_string());
 			world.click = true;
 		} else {
-			match world.action {
+			match &world.action {
 				PendingAction::Items => {
 					let _ = world.tx_to_serv.try_send(String::from("NPCS\n"));
 					world.action = PendingAction::Npcs;
@@ -94,7 +99,16 @@ pub fn response_handling(world: &mut World, server: &ServerEvent) {
 					let _ = world.tx_to_serv.try_send(String::from("LOOK\n"));
 					world.action = PendingAction::ClientLook;
 				}
-				_ => world.output.push_back(format!("[Error] {}", server.error.clone().unwrap_or("Unknown error".to_string())))
+				PendingAction::SendChat(command, args) => {
+					world.output.push_back(format!("> {command} {args}"));
+					world.output.push_back(format!("[Error] {}", server.error.clone().unwrap_or("Unknown error".to_string())));
+					world.action = PendingAction::None;
+				}
+				_ => {
+					world.output.push_back(format!("[Error] {}", server.error.clone().unwrap_or("Unknown error".to_string())));
+					world.action = PendingAction::None;
+				}
+
 			}
 			
 		}

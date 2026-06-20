@@ -286,7 +286,7 @@ impl World<'_>{
 										self.group.invitation = Some(Invitation{sender: invite.sender, group_name: invite.group_name})
 									}
 									if let Some(new) = server_event.join {
-										self.group.grouplist.push(new);
+										self.group.grouplist.push_back(new);
 									}
 									if let Some(leaver) = server_event.leave {
 										self.group.grouplist.retain(|x| x != &leaver);
