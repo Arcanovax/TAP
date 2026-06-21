@@ -1,5 +1,17 @@
 use macroquad::prelude::*;
 
+pub fn get_rect_center(container: Rect, size: Vec2, y:f32) -> Rect {
+		let pos_x: f32 = container.x + (container.w - size.x) / 2.0;
+		let pos_y: f32 = container.y + y;
+
+		return Rect::new(
+			pos_x,
+			pos_y,
+			size.x,
+			size.y,
+		)
+	}
+
 pub fn get_rect_bottom(size: Vec2, x: f32) -> Rect {
 		let max_y = screen_height();
 		let pos_x: f32 = if x < screen_width()/2.0 {x} else {x - size.x};

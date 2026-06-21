@@ -62,28 +62,26 @@ impl Npc {
 
 pub fn handle_npc_interactions(game: &mut Game, place: Vec2, npc: Npc){
 	draw_flat_triangle(place.x + 8.0, place.y);
-
-	let rect: Rect = Rect::new(place.x + 18.0, place.y, 40.0, 38.0);
-	draw_rectangle(rect.x, rect.y, rect.w, rect.h, Color::new(0.0, 0.0, 0.0, 0.5));
-
+	let w_pos: Vec2 = vec2(place.x, place.y);
+	let s_pos = world_to_screen_pos(w_pos);
+	
 	set_default_camera();
 
 	if let Some(npc_talk) = npc.npc_talk.clone() {
-		let talk_pos = world_to_screen_pos(vec2(place.x, place.y - 20.0));
+		let talk_pos = vec2(s_pos.x, s_pos.y - 20.0);
 		draw_rectangle(talk_pos.x, talk_pos.y, 200.0,30.0, WHITE);
 		draw_text(npc_talk.texts[npc_talk.text_i].clone(), talk_pos.x, talk_pos.y + 20.0, 25.0, BLACK);
 	}
 
+	let rect = Rect::new(s_pos.x + 62.5, s_pos.y, 175.0, 125.0);
+	draw_rectangle(rect.x, rect.y, rect.w, rect.h, Color::new(0.0, 0.0, 0.0, 0.5));
 
-	let screen_pos = world_to_screen_pos(vec2(rect.x, rect.y));
-	let npc_info = format!("{}", npc.name);
-	draw_text(npc_info, screen_pos.x, screen_pos.y + 20.0, 25.0, WHITE);
+	draw_text_center_top(rect, npc.name.as_str(), 30, 22.0);
 
 	let mouse = mouse_position();
-	let btn_talk: Rect = Rect::new(screen_pos.x, screen_pos.y + 30.0, 100.0, 25.0);
 
+	let btn_talk:Rect = get_rect_center(rect, vec2(125.0, 25.0), 30.0);
 	if get_button(btn_talk, "Talk", 25, WHITE, mouse){
-
 		if let Some(npc) = game.loaded_npcs.get_mut(&npc.id) {
 			if let Some(ref mut npc_talk) = npc.npc_talk {
 				npc_talk.text_i = (npc_talk.text_i + 1) % npc_talk.texts.len();
@@ -96,14 +94,14 @@ pub fn handle_npc_interactions(game: &mut Game, place: Vec2, npc: Npc){
 		}
 	}
 	if npc.has_quest{
-		let btn_quest: Rect = Rect::new(screen_pos.x, screen_pos.y + 60.0, 100.0, 25.0);
+		let btn_quest = get_rect_center(rect, vec2(125.0, 25.0), 60.0);
 		if get_button(btn_quest, "Quest", 25, WHITE, mouse){
 			let rq: String = format!("QUEST {}\n",npc.id);
 			game.tx_to_serv.try_send(rq).ok();
 			game.pending_action = PendingAction::Quest(npc.id.clone());
 		}
 	}
-	let btn_attack: Rect = Rect::new(screen_pos.x, screen_pos.y + 90.0, 100.0, 25.0);
+	let btn_attack: Rect = get_rect_center(rect, vec2(125.0, 25.0), 90.0);
 	if get_button(btn_attack, "Attack", 25, WHITE, mouse){
 		let rq: String = format!("ATTACK {}\n",npc.id);
 		game.tx_to_serv.try_send(rq).ok();
