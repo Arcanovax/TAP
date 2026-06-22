@@ -56,8 +56,20 @@ pub fn response_handling(world: &mut World, server: &ServerEvent) {
 						}
 						PendingAction::GroupCreate(name) => {
 							world.group.in_group = true;
-							world.group.name = name.to_string();
-							world.group.grouplist.push_back(world.player.name.clone());
+							// world.group.name = name.to_string();
+							// world.group.grouplist.push_back(world.player.name.clone());
+							world.output.push_back(format!("{name} group successfully created."));
+							world.action = PendingAction::None;
+						}
+						PendingAction::GroupJoin(name) => {
+							world.group.in_group = true;
+							// world.group.name = name.to_string();
+							// world.group.grouplist.push_back(world.player.name.clone());
+							world.output.push_back(format!("{name} group successfully joined."));
+							world.action = PendingAction::None;
+						}
+						PendingAction::GroupInvite(name) => {
+							world.output.push_back(format!("Invitation successfully sended to {name}."));
 							world.action = PendingAction::None;
 						}
 						PendingAction::SendChat(command, args) => {

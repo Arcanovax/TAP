@@ -7,11 +7,11 @@ pub struct Invitation {
 
 pub struct Group {
 	pub in_group: bool,
-	pub typed: String,
-	pub invitation: Option<Invitation>,
-	pub name: String,
-	pub grouplist: VecDeque<String>,
-	pub invite_info: Option<InviteInfo>
+	// pub typed: String,
+	pub invitation: Vec<Invitation>,
+	// pub name: String,
+	// pub grouplist: VecDeque<String>,
+	// pub invite_info: Option<InviteInfo>
 }
 
 pub struct InviteInfo{
@@ -23,11 +23,11 @@ impl Group {
 	pub fn new() -> Self {
 		Self {
 			in_group: false,
-			typed: String::new(),
-			invitation: None,
-			name: String::new(),
-			grouplist: VecDeque::new(),
-			invite_info: None
+			// typed: String::new(),
+			invitation: Vec::new(),
+			// name: String::new(),
+			// grouplist: VecDeque::new(),
+			// invite_info: None
 			}
 	}
 }

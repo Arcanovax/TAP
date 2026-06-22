@@ -207,9 +207,17 @@ pub fn draw_room(world: &mut World, frame: &mut Frame) {
 		Channels::ROOM => world.chat.room_messages.clone(),
 		Channels::GROUP => {
 			if !world.group.in_group {
-				let mut my_vec = VecDeque::new();
-				my_vec.push_back("Not yet in a group.".to_string());
-				my_vec.clone()
+				if world.group.invitation.len() == 0 {
+					let mut my_vec = VecDeque::new();
+					my_vec.push_back("Not yet in a group.".to_string());
+					my_vec.clone()
+				} else {
+					let mut invites: VecDeque<String> = VecDeque::new();
+					for invitation in &world.group.invitation {
+						invites.push_back(format!("{} invites you in {} group. Send 'GROUP JOIN {}' if you want to join.", invitation.sender, invitation.group_name,invitation.group_name));
+					}
+					invites
+				}
 			} else {
 				world.chat.group_messages.clone()
 			}
