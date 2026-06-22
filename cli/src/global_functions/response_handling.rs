@@ -58,6 +58,7 @@ pub fn response_handling(world: &mut World, server: &ServerEvent) {
 							world.group.in_group = true;
 							world.group.name = name.to_string();
 							world.group.grouplist.push_back(world.player.name.clone());
+							world.action = PendingAction::None;
 						}
 						PendingAction::SendChat(command, args) => {
 							match command.to_uppercase().as_str() {
