@@ -214,7 +214,7 @@ pub fn draw_room(world: &mut World, frame: &mut Frame) {
 				} else {
 					let mut invites: VecDeque<String> = VecDeque::new();
 					for invitation in &world.group.invitation {
-						invites.push_back(format!("{} invites you in {} group. Send 'GROUP JOIN {}' if you want to join.", invitation.sender, invitation.group_name,invitation.group_name));
+						invites.push_back(format!("{} invites you in {} group. Send 'GROUP JOIN {}' if you want to join.", invitation.sender, invitation.group_name, invitation.sender));
 					}
 					invites
 				}

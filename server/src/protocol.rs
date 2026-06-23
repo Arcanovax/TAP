@@ -65,6 +65,20 @@ pub enum EventType {
         player_name: String,
         item: String,
     },
+    ENTER_FIGHT {
+        player_name: String,
+        hp: u32
+    },
+    ATTACK {
+        player_name: String,
+        damages: u32,
+        enemy_hp: u32
+    },
+    ENEMY_ATTACK {
+        target: String,
+        damages: u32,
+        target_hp: u32
+    }
 }
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Eq)]

@@ -9,4 +9,6 @@ pub mod chat;
 pub mod group;
 pub mod items;
 pub mod room_view;
+pub mod attack_results;
 pub mod npc;
+pub mod fight;

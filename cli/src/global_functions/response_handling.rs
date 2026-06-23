@@ -2,7 +2,7 @@ use std::{collections::{HashMap, VecDeque}, fs::OpenOptions, io::Write, process:
 
 use serde_json::Value;
 
-use crate::{enums::{actions::PendingAction, focus::Focus, states::States}, structures::{room::Room, server_event::ServerEvent, world::World}};
+use crate::{enums::{actions::PendingAction, focus::Focus, states::States}, structures::{attack_results::Attack_Result, room::Room, server_event::ServerEvent, world::World}};
 
 pub fn response_handling(world: &mut World, server: &ServerEvent) {
 	if server.error == Some("SUCCESS".to_string()) {
@@ -88,6 +88,19 @@ pub fn response_handling(world: &mut World, server: &ServerEvent) {
 							world.chat.room_messages = VecDeque::new();
 							let _ = world.tx_to_serv.try_send(String::from("LOOK\n"));
 							world.action = PendingAction::ClientLook;
+						}
+						PendingAction::Attack(name) => {
+							let result: Attack_Result = serde_json::from_value(server.data.clone().unwrap()).unwrap();
+							world.player.hp = result.attacker_hp;
+							let fight = &mut world.room.fight;
+							if fight.target_name == "".to_string() {
+								fight.target_name = match world.list_npcs.get(name) {Some(npc) => npc.name.clone(), None => name.clone()}
+							}
+							match result.fighters {
+								Some(fighters) => fight.fighters = fighters,
+								None => {}
+							}
+							fight.target_hp = result.target_hp;
 						}
 						_ => {}
 				}

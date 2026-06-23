@@ -20,7 +20,7 @@ pub enum PendingAction {
 	Status,
 	Move,
 	Who,
-	Attack,
+	Attack(String),
 	Inventory,
 	Quest,
 	Items

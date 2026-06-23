@@ -5,7 +5,7 @@ use ratatui_textarea::TextArea;
 use serde::Deserialize;
 use tui_widgets::scrollview::ScrollViewState;
 
-use crate::{enums::{focus::Focus}, structures::room_view::RoomView};
+use crate::{enums::focus::Focus, structures::{fight::Fight, room_view::RoomView}};
 
 #[derive(Deserialize, Debug)]
 pub struct Room<'a> {
@@ -17,6 +17,8 @@ pub struct Room<'a> {
 
 	#[serde(skip)]
 	pub focus: Focus,
+	#[serde(skip)]
+	pub fight: Fight,
 	#[serde(skip)]
 	pub dialogs: VecDeque<String>,
 	#[serde(skip)]
@@ -43,6 +45,7 @@ impl Room<'_> {
 			room_view: RoomView::new(),
 			npcs: Vec::new(),
 			items: Vec::new(),
+			fight: Fight::new(),
 			dialogs: VecDeque::new(),
 			players: Vec::new(),
 			focus: Focus::COMMAND,
