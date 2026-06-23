@@ -1,5 +1,8 @@
 use super::*;
-use crate::structures::enums::error::ErrorCode;
+use crate::{
+    persistence::players::{load_player, save_player},
+    structures::enums::error::ErrorCode,
+};
 
 impl ServerInfo {
     pub fn try_add_player(
@@ -16,10 +19,19 @@ impl ServerInfo {
                 return Err(ErrorCode::NAME_IN_USE);
             }
         }
+        let db = self.db.clone();
+        let player = match load_player(&db, name.as_str()) {
+            Ok(Some(player)) => {
+                info!("{} player data loaded", name);
+                player
+            }
+            Ok(None) => Player::new(name.clone()),
+            Err(_) => return Err(ErrorCode::CONNECTION_FAILED),
+        };
         self.connections.insert(
             peer_addr,
             Connection {
-                player: Player::new(name.clone()),
+                player,
                 addr: peer_addr,
                 tx: tx.clone(),
             },
@@ -116,5 +128,15 @@ impl ServerInfo {
             }
         }
         Err(ErrorCode::ITEM_NOT_FOUND)
+    }
+
+    pub fn try_save_player(&self, peer_addr: SocketAddr) -> Result<(), ErrorCode> {
+        let player = self.get_player(peer_addr)?;
+        let db = self.db.clone();
+        match save_player(&db, &player) {
+            Ok(()) => {}
+            Err(_) => return Err(ErrorCode::DECONNECTION_FAIL),
+        };
+        Ok(())
     }
 }

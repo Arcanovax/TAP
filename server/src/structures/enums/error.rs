@@ -22,6 +22,7 @@ pub enum ErrorCode {
     ALREADY_CONNECTED,
     NO_DIALOG,
     SUCCESS,
+    DECONNECTION_FAIL,
 }
 
 impl ErrorCode {
@@ -45,6 +46,7 @@ impl ErrorCode {
             ErrorCode::INVALID_ARGS => 902,
             ErrorCode::INVALID_COMMAND => 903,
             ErrorCode::ALREADY_CONNECTED => 904,
+            ErrorCode::DECONNECTION_FAIL => 905,
             ErrorCode::SUCCESS => 0,
         }
     }

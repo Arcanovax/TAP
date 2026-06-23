@@ -2,6 +2,7 @@ use crate::{
     protocol::{EventType, Message},
     structures::{fight::Fight, game::World, group::Group, player::Player, room::Room},
 };
+use redb::Database;
 use std::{
     collections::HashMap,
     net::SocketAddr,
@@ -33,10 +34,11 @@ pub struct ServerInfo {
     invitations: HashMap<SocketAddr, Uuid>,
     pub fights: HashMap<String, Fight>,
     pub world: World,
+    pub db: Arc<Database>,
 }
 
 impl ServerInfo {
-    pub fn new(world: World) -> Self {
+    pub fn new(world: World, db: Arc<Database>) -> Self {
         ServerInfo {
             connections: HashMap::new(),
             name_to_addr: HashMap::new(),
@@ -44,6 +46,7 @@ impl ServerInfo {
             invitations: HashMap::new(),
             fights: HashMap::new(),
             world: world,
+            db: db,
         }
     }
 }

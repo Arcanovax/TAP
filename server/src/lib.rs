@@ -2,15 +2,18 @@ use crate::config::load;
 use crate::handlers::handle_request::handle_request;
 use crate::protocol::Message;
 use crate::state::{ServerInfo, SharedServer};
+use redb::Database;
 use std::net::SocketAddr;
 use std::path::Path;
 use std::sync::{Arc, Mutex};
 use tokio::io::{AsyncBufReadExt, AsyncWriteExt, BufReader};
 use tokio::net::TcpListener;
+use tokio::net::tcp::OwnedWriteHalf;
 use tracing::{Instrument, error, info};
 
 mod config;
 mod handlers;
+mod persistence;
 pub mod protocol;
 mod state;
 mod structures;
@@ -28,13 +31,32 @@ fn parse_command(line: &str) -> Message {
     }
 }
 
-fn cleanup_tcp_connection(server_info: &SharedServer, peer_addr: SocketAddr) {
-    let _ = server_info.lock().unwrap().try_leave_group(peer_addr);
-    match server_info.lock().unwrap().try_remove_player(peer_addr) {
+fn cleanup_tcp_connection(
+    server_info: &SharedServer,
+    peer_addr: SocketAddr,
+    mut write_half: OwnedWriteHalf,
+) {
+    let mut binding = server_info.lock().unwrap();
+    match binding.try_save_player(peer_addr) {
+        Ok(()) => {}
+        Err(code) => {
+            let _ = write_half.write_all(
+                Message::Response {
+                    error: code,
+                    data: None,
+                }
+                .to_str()
+                .as_bytes(),
+            );
+            return;
+        }
+    }
+    let _ = binding.try_leave_group(peer_addr);
+    match binding.try_remove_player(peer_addr) {
         Ok(name) => info!("{} disconnected", name),
         Err(_) => {}
     }
-    server_info.lock().unwrap().send_players_event(peer_addr);
+    binding.send_players_event(peer_addr);
     info!("TCP connection closed");
 }
 
@@ -47,7 +69,8 @@ pub async fn run(addr: String, port: String) -> Result<(), Box<dyn std::error::E
         .init();
 
     let world = load(Path::new("config.yaml"))?;
-    let server_info: SharedServer = Arc::new(Mutex::new(ServerInfo::new(world)));
+    let db = Arc::new(Database::create("game.redb")?);
+    let server_info: SharedServer = Arc::new(Mutex::new(ServerInfo::new(world, db)));
     let listener = TcpListener::bind(format!("{}:{}", addr, port)).await?;
 
     loop {
@@ -98,7 +121,7 @@ pub async fn run(addr: String, port: String) -> Result<(), Box<dyn std::error::E
                     }
                 }
 
-                cleanup_tcp_connection(&server_info_copy, peer_addr);
+                cleanup_tcp_connection(&server_info_copy, peer_addr, write_half);
                 Ok::<(), std::io::Error>(())
             }
             .instrument(span),

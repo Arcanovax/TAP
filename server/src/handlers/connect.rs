@@ -35,7 +35,7 @@ pub(super) fn connect_request(
             }
         }
         server_info.lock().unwrap().send_players_event(peer_addr);
+        info!("{} connected", name);
     }
-    info!("{} connected", name);
     res.into()
 }
