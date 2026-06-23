@@ -18,13 +18,10 @@ use tokio::sync::mpsc::Sender;
 use crate::{
 	draw_functions::{
 		discuss::draw_room_discuss, login::login_draw, rooms::draw_room, wait_server::draw_wait
-	},
-	enums::{
+	}, enums::{
 		actions::PendingAction, channels::Channels, exits::Exits, focus::Focus, states::States
-	},
-	global_functions::{find_action::find_action, response_handling::response_handling},
-	structures::{
-		chat::Chat, group::{Group, Invitation}, items::Item, npc::NPC, player::Player, room::Room, server_event::ServerEvent
+	}, global_functions::{find_action::find_action, response_handling::response_handling}, structures::{
+		chat::Chat, enn_attack::EnnAttack, group::{Group, Invitation}, items::Item, npc::NPC, player::Player, room::Room, server_event::ServerEvent
 	}
 };
 
@@ -86,7 +83,7 @@ impl World<'_>{
 		match &self.state {
 			States::ServerWait => draw_wait(frame),
 			States::Login => login_draw(self, frame),
-			States::InGame => {
+			States::Idle => {
 				// if let Ok(mut file) = OpenOptions::new().create(true).append(true).open("debug_draw.txt") {
 				// 	let _ = writeln!(file, "RECU (State {:?}) : {:#?}", self.state, self.player.name);}
 				draw_room(self, frame);
@@ -117,7 +114,7 @@ impl World<'_>{
 								_ => {}
 							}
 						},
-						States::InGame => {
+						States::Idle => {
 							if self.room.focus == Focus::COMMAND && key.code != KeyCode::Tab && key.code != KeyCode::Enter{
 									self.room.text_area.input(key);
 							} else {
@@ -242,7 +239,7 @@ impl World<'_>{
 									} else {
 										self.message = String::new();
 										self.counter = 0;
-										self.state = States::InGame;
+										self.state = States::Idle;
 										self.room.focus = Focus::COMMAND;
 									}
 								}
@@ -276,12 +273,12 @@ impl World<'_>{
 						let stream = Deserializer::from_str(&msg).into_iter::<ServerEvent>();
 						for result in stream {
 							if let Ok(server_event) = result {
-								// if let Ok(mut file) = OpenOptions::new().create(true).append(true).open("debug_network.txt") {
-								// 	let _ = writeln!(file, "ok (State {:?}) : {:#?}", self.state, server_event);}
 								if server_event.event_type == "Response" {
 									response_handling(self, &server_event);
 								}
 								if server_event.event_type == "Event" {
+									if let Ok(mut file) = OpenOptions::new().create(true).append(true).open("debug_network.txt") {
+										let _ = writeln!(file, "Event (State {:?}) : {:#?}", self.state, server_event);}
 									if let Some(invite) = server_event.invite {
 										self.group.invitation.push(Invitation{sender: invite.sender, group_name: invite.group_name});
 										// self.chat.group_messages.push_back(format!("{} invites you in {} group. Send 'GROUP JOIN {}' if you want to join.", invite.sender, invite.group_name,invite.group_name));
@@ -293,6 +290,27 @@ impl World<'_>{
 									if let Some(leaver) = server_event.leave {
 										// self.group.grouplist.retain(|x| x != &leaver);
 										self.chat.group_messages.push_back(format!("{leaver} leave the group."));
+									}
+									if let Some(enter) = server_event.enter {
+										self.output.push_back(format!("{} says: 'Hello there!'.", enter.player_name));
+										self.room.fight.fighters.insert(enter.player_name, enter.hp);
+									}
+									if let Some(attack) = server_event.attack {
+										self.output.push_back(format!(
+											"{} dealt {} damages to the enemy. {} has {} HP remaining.",
+											attack.player_name, attack.damages, self.room.fight.target_name, attack.enemy_hp
+										));
+										self.room.fight.target_hp = attack.enemy_hp;
+									}
+									if let Some(enn_attack) = server_event.enn_attack {
+										self.output.push_back(format!(
+											"{} dealt {} damages to {}. {} has {} HP remaining.",
+											self.room.fight.target_name, enn_attack.damage, enn_attack.target, enn_attack.target, enn_attack.target_hp
+										));
+										self.room.fight.fighters.insert(enn_attack.target.clone(), enn_attack.target_hp);
+										if enn_attack.target == self.player.name {
+											self.player.hp = enn_attack.target_hp;
+										}
 									}
 									if let Some(msg) = server_event.chat {
 										let channel = match msg.scope.as_str(){

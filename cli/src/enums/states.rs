@@ -5,8 +5,8 @@ pub enum States {
 	Login,
 	ServerWait,
 	ServerError(String),
-	InGame,
-	InFight,
+	Idle,
+	InFight {target_id: String},
 	InDiscuss(String, String),
 	Respawn
 }

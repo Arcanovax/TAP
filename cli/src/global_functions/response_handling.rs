@@ -9,7 +9,7 @@ pub fn response_handling(world: &mut World, server: &ServerEvent) {
 		match world.state {
 			States::Login => {
 				if world.action == PendingAction::Auth{
-						world.state = States::InGame;
+						world.state = States::Idle;
 						world.message = String::new();
 						world.player.name = world.input.to_string();
 						world.input.clear();
@@ -21,9 +21,7 @@ pub fn response_handling(world: &mut World, server: &ServerEvent) {
 						// world.action = PendingAction::ClientLook;
 					}
 				},
-				States::InGame => {
-					// if let Ok(mut file) = OpenOptions::new().create(true).append(true).open("debug_network.txt") {
-					// 	let _ = writeln!(file, "ko (State {:#?}) : {:#?}", world.action, msg);}
+				States::Idle => {
 					match &world.action {
 						PendingAction::Look
 						| PendingAction::ClientLook => {
@@ -80,8 +78,8 @@ pub fn response_handling(world: &mut World, server: &ServerEvent) {
 								_ => {}
 							}
 							if world.room.focus != Focus::CHAT {
-									world.room.chat_scroll_pos.scroll_to_bottom();
-								}
+								world.room.chat_scroll_pos.scroll_to_bottom();
+							}
 							world.action = PendingAction::None;
 						},
 						PendingAction::Move => {
@@ -90,6 +88,8 @@ pub fn response_handling(world: &mut World, server: &ServerEvent) {
 							world.action = PendingAction::ClientLook;
 						}
 						PendingAction::Attack(name) => {
+							if let Ok(mut file) = OpenOptions::new().create(true).append(true).open("debug_network.txt") {
+								let _ = writeln!(file, "ko (State {:#?}) : {:#?}", name, server.data);}
 							let result: Attack_Result = serde_json::from_value(server.data.clone().unwrap()).unwrap();
 							world.player.hp = result.attacker_hp;
 							let fight = &mut world.room.fight;

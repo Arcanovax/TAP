@@ -14,6 +14,7 @@ pub enum ErrorCode {
     ROOM_NOT_FOUND,
     PLAYER_NOT_FOUND,
     DEFEATED_ENEMY,
+    NOT_YOUR_TURN,
     DEFEATED_FIGHTER,
     NO_QUEST_AVAILABLE,
     CONNECTION_FAILED,
@@ -37,6 +38,7 @@ impl ErrorCode {
             | ErrorCode::PLAYER_NOT_FOUND
             | ErrorCode::ROOM_NOT_FOUND
             | ErrorCode::DEFEATED_ENEMY
+            | ErrorCode::NOT_YOUR_TURN
             | ErrorCode::DEFEATED_FIGHTER
             | ErrorCode::ITEM_NOT_IN_INVENTORY
             | ErrorCode::NPC_NOT_FOUND => 404,

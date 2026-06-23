@@ -17,6 +17,7 @@ room:
           toward: "room.market"
     npc:
       - "npc.city_gard"
+      - "npc.h"
     items:
       - "item.ale"
 

@@ -1,4 +1,4 @@
-use std::{collections::HashMap, net::SocketAddr};
+use std::{collections::HashMap, fs::OpenOptions, net::SocketAddr, io::Write};
 
 use crate::{
     handlers::fight::enemy_attack::enemy_attack, protocol::{EventType, Message}, state::ServerInfo, structures::{attack_result::Attack_Result, enums::{
@@ -37,6 +37,7 @@ pub fn execute_attack<'a>(
     {
         let enemy = world_mut.world.npcs.get_mut(target_id).unwrap();
         let fight = world_mut.fights.get_mut(target_id).unwrap();
+        fighters_list = fight.fighters.clone();
 
         if let NPCKind::Enemy { ref mut hp, ref loot, ref mut defeated, .. } = enemy.kind {
             if curr_damages < *hp {
@@ -55,21 +56,25 @@ pub fn execute_attack<'a>(
                 target_hp_after = 0;
                 enemy_died = true;
                 
-                fighters_list = fight.fighters.clone();
                 loot_list = loot.clone();
             }
         }
     }
 
+    // if let Ok(mut file) = OpenOptions::new().create(true).append(true).open("debug_network.txt") {
+    //             let _ = writeln!(file, "coucou {:#?}", fighters_list);}
     for fighter in &fighters_list {
-        if let Some(con) = world_mut.connections.get(&fighter) {
-            if con.player.name != player_name {
+        if let Some(con) = world_mut.connections.values().find(|c| c.player.name == *fighter) {
+            // if con.player.name != player_name {
                 let _ = con.tx.send(Message::Event(EventType::ATTACK {
                     player_name: player_name.clone(),
                     damages: curr_damages,
                     enemy_hp: target_hp_after 
                 }));
-            }
+            // }
+        } else {
+            if let Ok(mut file) = OpenOptions::new().create(true).append(true).open("debug_network.txt") {
+                let _ = writeln!(file, "coucou");}
         }
     }
 
@@ -78,7 +83,7 @@ pub fn execute_attack<'a>(
     if enemy_died {
         let mut status: State = State::Idle;
         for pl_name in &fighters_list {
-            if let Some(conn) = world_mut.connections.get_mut(&pl_name) {
+            if let Some(conn) = world_mut.connections.values_mut().find(|c| &c.player.name == pl_name) {
                 let pl = &mut conn.player;
                 pl.status = State::Idle;
                 status = pl.status.clone();
@@ -90,9 +95,10 @@ pub fn execute_attack<'a>(
         }
 
 
-        for fighter_addr in &fighters_list {
-            let fighter = world_mut.connections.get(&fighter_addr).unwrap();
-            fighters.insert(fighter.player.name.clone(), fighter.player.hp);
+        for fighter_name in &fighters_list {
+            if let Some(fighter) = world_mut.connections.values().find(|c| &c.player.name == fighter_name){
+                fighters.insert(fighter.player.name.clone(), fighter.player.hp);
+            }
         }
 
         return Attack_Result {
@@ -112,9 +118,10 @@ pub fn execute_attack<'a>(
         None
     };
 
-    for fighter_addr in &fighters_list {
-        let fighter = world_mut.connections.get(&fighter_addr).unwrap();
-        fighters.insert(fighter.player.name.clone(), fighter.player.hp);
+    for fighter_name in &fighters_list {
+        if let Some(fighter) = world_mut.connections.values().find(|c| &c.player.name == fighter_name){
+            fighters.insert(fighter.player.name.clone(), fighter.player.hp);
+        }
     }
 
     Attack_Result {

@@ -7,7 +7,7 @@ use crate::{
         }, fight::Fight, room::Room,
     },
 };
-use std::{collections::HashMap, net::SocketAddr};
+use std::{collections::HashMap, fs::OpenOptions, net::SocketAddr, io::Write};
 
 mod attack;
 mod enemy_attack;
@@ -93,16 +93,15 @@ pub fn fight_request(
         State::Idle => {
             if let Some(fight) = world_mut.fights.get_mut(&args[0]) {
                 for fighter in fight.fighters.clone() {
-                    if let Some(con) = world_mut.connections.get(&fighter) {
+                    if let Some(con) = world_mut.connections.values().find(|c|c.player.name == fighter) {
                         let _ = con.tx.send(Message::Event(EventType::ENTER_FIGHT {
                             player_name: p_name.clone(), hp: p_hp
                         }));
                     }
                 }
-                if !fight.fighters.contains(&peer_addr) {
-                    fight.fighters.push(peer_addr)
+                if !fight.fighters.contains(&p_name) && !fight.defeated_fighters.contains(&p_name) {
+                    fight.fighters.push(p_name.clone())
                 } else {
-                    // If he is in State::Idle and in the fighters list, it means he have been defeated and is not allowed to come back in fight
                     return Message::Response {
                         error: ErrorCode::DEFEATED_FIGHTER,
                         data: None
@@ -112,7 +111,8 @@ pub fn fight_request(
                 world_mut.fights.insert(
                     args[0].to_string(),
                     Fight {
-                        fighters: vec![peer_addr],
+                        fighters: vec![p_name.clone()],
+                        defeated_fighters: Vec::new(),
                         turn: 0,
                         enemy_turn: false,
                     },
@@ -125,9 +125,12 @@ pub fn fight_request(
 
             let mut fighters: HashMap<String, u32> = HashMap::new();
 
-            for fighter_addr in &world_mut.fights.get(&args[0]).unwrap().fighters {
-                let fighter = world_mut.connections.get(&fighter_addr).unwrap();
-                fighters.insert(fighter.player.name.clone(), fighter.player.hp);
+            for fighter_name in &world_mut.fights.get(&args[0]).unwrap().fighters {
+                // if let Ok(mut file) = OpenOptions::new().create(true).append(true).open("debug_network.txt") {
+                //     let _ = writeln!(file, "ko (State {:#?}) : {:#?}", world_mut.connections, fighter_name);}
+                if let Some(fighter) = world_mut.connections.values().find(|c| &c.player.name == fighter_name){
+                    fighters.insert(fighter.player.name.clone(), fighter.player.hp);
+                }
             }
             Message::Response {
                 error: ErrorCode::SUCCESS,
@@ -149,7 +152,7 @@ pub fn fight_request(
             let turn_result = {
                 let fight = world_mut.fights.get_mut(&target)
                     .expect("There is no fight.");
-                is_it_my_turn(peer_addr, fight)
+                is_it_my_turn(p_name, fight)
             };
 
             match turn_result {
@@ -203,8 +206,8 @@ pub fn fight_request(
                     // }
                 }
                 TurnRes::NotMyTurn | TurnRes::EnemyTurn => Message::Response {
-                    error: ErrorCode::SUCCESS,
-                    data: Some(serde_json::to_value("It's not your turn!").unwrap()),
+                    error: ErrorCode::NOT_YOUR_TURN,
+                    data: None,
                 },
             }
         }

@@ -1,0 +1,8 @@
+use serde::Deserialize;
+
+#[derive(Deserialize, Debug)]
+pub struct EnnAttack {
+	pub target: String,
+    pub damage: u32,
+    pub target_hp: u32,
+}

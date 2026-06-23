@@ -1,8 +1,7 @@
-use std::net::SocketAddr;
 
 use crate::structures::{enums::turn_res::TurnRes, fight::Fight};
 
-pub fn is_it_my_turn(name: SocketAddr, fight: &Fight) -> TurnRes {
+pub fn is_it_my_turn(name: String, fight: &Fight) -> TurnRes {
 	if fight.enemy_turn {
 		TurnRes::EnemyTurn
 	} else {

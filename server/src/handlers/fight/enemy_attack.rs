@@ -1,7 +1,7 @@
 use std::time::{SystemTime, UNIX_EPOCH};
 
 use crate::{
-    protocol::{EventType, Message}, state::ServerInfo, structures::{
+    handlers::fight, protocol::{EventType, Message}, state::ServerInfo, structures::{
         attack_result::Enemy_Attack, enums::{enn_att_res::EnnAttRes, npc_kind::NPCKind, state::State}, fight::Fight, npc::NPC, player::Player,
     },
 };
@@ -23,7 +23,8 @@ pub fn enemy_attack(opponent_id: &str, world: &mut ServerInfo) -> Enemy_Attack {
         if nb_fighters == 1 {
             target = &mut world
                 .connections
-                .get_mut(list_fighters.get(0).unwrap())
+                .values_mut()
+                .find(|c| c.player.name == *list_fighters.get(0).unwrap())
                 .unwrap()
                 .player;
         } else {
@@ -32,9 +33,11 @@ pub fn enemy_attack(opponent_id: &str, world: &mut ServerInfo) -> Enemy_Attack {
                 .unwrap()
                 .subsec_nanos() as usize;
             target_index = nanos % nb_fighters;
+            let target_name = list_fighters.get(target_index).unwrap();
             target = &mut world
                 .connections
-                .get_mut(&list_fighters[target_index])
+                .values_mut()
+                .find(|c| c.player.name == *target_name)
                 .unwrap()
                 .player;
         }
@@ -43,10 +46,13 @@ pub fn enemy_attack(opponent_id: &str, world: &mut ServerInfo) -> Enemy_Attack {
                 target.hp -= damages;
             } else {
                 target.hp = target.max_hp - 10;
-                target.location = String::from("loc.city_square");
+                target.location = String::from("room.city_square");
                 target.status = State::Idle;
                 if nb_fighters == 1 {
                     world.fights.remove(opponent_id);
+                } else {
+                    let fight = world.fights.get_mut(opponent_id).unwrap();
+                    fight.defeated_fighters.push(fight.fighters.remove(target_index));
                 }
             }
             (target.name.clone(), target.hp, damages)
@@ -55,10 +61,8 @@ pub fn enemy_attack(opponent_id: &str, world: &mut ServerInfo) -> Enemy_Attack {
         }
     };
     for fighter in list_fighters {
-        if let Some(con) = world.connections.get(&fighter) {
-            if con.player.name != target_name {
-                let _ = con.tx.send(Message::Event(EventType::ENEMY_ATTACK { target: target_name.clone(), damages: e_damages, target_hp }));
-            }
+        if let Some(con) = world.connections.values().find(|c| c.player.name == fighter) {
+            let _ = con.tx.send(Message::Event(EventType::ENEMY_ATTACK { target: target_name.clone(), damages: e_damages, target_hp }));
         }
     }
     Enemy_Attack { damages: e_damages, target: target_name }
