@@ -6,7 +6,7 @@ quest:
   test:
     name: "Test"
     description: "Test quest"
-    reward: "une orange"
+    reward: "item.ale"
     goals:
       - Collect:
           item: "item.ale"

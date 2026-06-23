@@ -2,13 +2,13 @@ use std::{collections::HashMap, net::SocketAddr};
 
 use crate::{
     handlers::fight::enemy_attack::enemy_attack, protocol::{EventType, Message}, state::ServerInfo, structures::{attack_result::Attack_Result, enums::{
-        attack_res::AttackRes, fighter_status::FighterStatus, item_kind::ItemKind, npc_kind::NPCKind, state::State,
+        item_kind::ItemKind, npc_kind::NPCKind, state::State,
     }},
 };
 
 pub fn execute_attack<'a>(
     player_id: SocketAddr,
-    target_id: Vec<String>,
+    target_id: &str,
     world_mut: &mut ServerInfo,
 ) -> Attack_Result {
     
@@ -35,8 +35,8 @@ pub fn execute_attack<'a>(
     let mut loot_list = Vec::new();
 
     {
-        let enemy = world_mut.world.npcs.get_mut(&target_id[0]).unwrap();
-        let fight = world_mut.fights.get_mut(&target_id[0]).unwrap();
+        let enemy = world_mut.world.npcs.get_mut(target_id).unwrap();
+        let fight = world_mut.fights.get_mut(target_id).unwrap();
 
         if let NPCKind::Enemy { ref mut hp, ref loot, ref mut defeated, .. } = enemy.kind {
             if curr_damages < *hp {
@@ -107,7 +107,7 @@ pub fn execute_attack<'a>(
     }
 
     let enemy_atk = if trigger_enemy_attack {
-        Some(enemy_attack(&target_id[0], world_mut))
+        Some(enemy_attack(target_id, world_mut))
     } else {
         None
     };

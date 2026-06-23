@@ -1,13 +1,10 @@
 use crate::{
-    handlers::{
-        fight::{attack::execute_attack, enemy_attack::enemy_attack, is_it_my_turn::is_it_my_turn},
-        global_func::{
-            check_fight::check_fight, get_player::get_player_mut, is_he_there::is_he_there,
-        },
+    handlers::fight::{
+        attack::execute_attack, is_it_my_turn::is_it_my_turn,
     }, protocol::{EventType, Message}, state::SharedServer, structures::{
-        attack_result::Attack_Result, enums::{
-            attack_res::AttackRes, enn_att_res::EnnAttRes, error::ErrorCode, fighter_status::FighterStatus, npc_kind::NPCKind, state::State, turn_res::TurnRes,
-        }, fight::Fight,
+        attack_result::Attack_Result, enums::{error::ErrorCode, npc_kind::NPCKind,
+            state::State, turn_res::TurnRes,
+        }, fight::Fight, room::Room,
     },
 };
 use std::{collections::HashMap, net::SocketAddr};
@@ -18,21 +15,34 @@ mod is_it_my_turn;
 #[cfg(test)]
 mod tests;
 
+fn is_he_there(name: &str, player_loc: &Room) -> bool {
+    if player_loc.npc.len() != 0 {
+        for npc in &player_loc.npc {
+            if npc == name {
+                return true;
+            }
+        }
+        return false;
+    } else {
+        return false;
+    };
+}
+
 pub fn fight_request(
     peer_addr: SocketAddr,
-    enn_name: &Vec<String>,
-    world: &SharedServer,
+    args: &Vec<String>,
+    server_info: &SharedServer,
 ) -> Message {
-    if enn_name.len() != 1 {
+    if args.len() != 1 {
         return Message::Response {
             error: ErrorCode::INVALID_ARGS,
             data: None,
         };
     }
-    let mut pre_world = world.lock().unwrap();
+    let mut pre_world = server_info.lock().unwrap();
     let world_mut = &mut *pre_world;
-    let (p_loc, p_status, p_name, p_hp) = {
-        let player = match get_player_mut(&mut world_mut.connections, &peer_addr) {
+    let (p_status, p_name, p_hp) = {
+        let player = match world_mut.get_player_mut(peer_addr) {
             Ok(p) => p,
             Err(msg) => {
                 return Message::Response {
@@ -41,20 +51,20 @@ pub fn fight_request(
                 }
             }
         };
-        (player.location.clone(), player.status.clone(), player.name.clone(), player.hp)
+        (player.status.clone(), player.name.clone(), player.hp)
     };
 
-    let loc = match world_mut.world.rooms.get(&p_loc) {
-        Some(l) => l,
-        None => {
+    let loc = match world_mut.get_player_room(peer_addr) {
+        Ok(room) => room,
+        Err(code) => {
             return Message::Response {
-                error: ErrorCode::ROOM_NOT_FOUND,
-                data: Some(serde_json::to_value("You're nowhere. I can't find you.").unwrap()),
-            }
+                error: code,
+                data: None,
+            };
         }
     };
 
-    if !is_he_there(&enn_name[0], loc) {
+    if !is_he_there(&args[0], loc) {
         return Message::Response {
             error: ErrorCode::NPC_NOT_FOUND,
             data: Some(serde_json::to_value("This target isn't here.").unwrap()),
@@ -62,8 +72,8 @@ pub fn fight_request(
     }
 
     let (is_defeated, target_hp) = {
-        if let NPCKind::Enemy { defeated, hp, .. } = &world_mut.world.npcs[&enn_name[0]].kind {
-            (*defeated, *hp)
+        if let NPCKind::Enemy { defeated, hp, .. } = world_mut.world.npcs[&args[0]].kind {
+            (defeated, hp)
         } else {
             return Message::Response {
                 error: ErrorCode::NPC_NOT_HOSTILE,
@@ -81,7 +91,7 @@ pub fn fight_request(
 
     match p_status {
         State::Idle => {
-            if let Some(fight) = check_fight(&enn_name[0], &mut world_mut.fights) {
+            if let Some(fight) = world_mut.fights.get_mut(&args[0]) {
                 for fighter in fight.fighters.clone() {
                     if let Some(con) = world_mut.connections.get(&fighter) {
                         let _ = con.tx.send(Message::Event(EventType::ENTER_FIGHT {
@@ -100,7 +110,7 @@ pub fn fight_request(
                 }
             } else {
                 world_mut.fights.insert(
-                    enn_name[0].to_string(),
+                    args[0].to_string(),
                     Fight {
                         fighters: vec![peer_addr],
                         turn: 0,
@@ -109,13 +119,13 @@ pub fn fight_request(
                 );
             };
 
-            if let Ok(player) = get_player_mut(&mut world_mut.connections, &peer_addr) {
-                player.status = State::InFight { target_id: enn_name[0].to_string() };
+            if let Ok(player) = world_mut.get_player_mut(peer_addr) {
+                player.status = State::InFight { target_id: args[0].to_string() };
             }
 
             let mut fighters: HashMap<String, u32> = HashMap::new();
 
-            for fighter_addr in &world_mut.fights.get(&enn_name[0]).unwrap().fighters {
+            for fighter_addr in &world_mut.fights.get(&args[0]).unwrap().fighters {
                 let fighter = world_mut.connections.get(&fighter_addr).unwrap();
                 fighters.insert(fighter.player.name.clone(), fighter.player.hp);
             }
@@ -127,7 +137,7 @@ pub fn fight_request(
                         attacker_name: p_name,
                         target_hp,
                         damage: 0,
-                        status: State::InFight { target_id: enn_name[0].to_string() },
+                        status: State::InFight { target_id: args[0].to_string() },
                         enemy_attack: None,
                         fighters: Some(fighters)
                     })
@@ -137,7 +147,7 @@ pub fn fight_request(
         }
         State::InFight { target_id: target } => {
             let turn_result = {
-                let fight = check_fight(&target, &mut world_mut.fights)
+                let fight = world_mut.fights.get_mut(&target)
                     .expect("There is no fight.");
                 is_it_my_turn(peer_addr, fight)
             };
@@ -148,7 +158,7 @@ pub fn fight_request(
                         error: ErrorCode::SUCCESS,
                         data: Some(
                             serde_json::to_value(execute_attack(
-                                peer_addr, enn_name.clone(), world_mut
+                                peer_addr, &args[0].clone(), world_mut
                             )).unwrap())
                         }
                     // match execute_attack(peer_addr, enn_name.clone(), world_mut) {

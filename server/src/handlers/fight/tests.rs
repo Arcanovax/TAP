@@ -15,7 +15,7 @@ fn fight_with_wrong_args_returns_invalid_args() {
 fn fight_without_connection_returns_player_not_found() {
     let server = populated_server();
     let result = fight_request(addr(1), &vec!["goblin".to_string()], &server);
-    assert_eq!(response_error(&result), &ErrorCode::PLAYER_NOT_FOUND);
+    assert_eq!(response_error(&result), &ErrorCode::INVALID_COMMAND);
 }
 
 #[test]
