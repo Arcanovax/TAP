@@ -31,7 +31,7 @@ pub struct Quest {
 
 impl Quest {
     pub fn references(&self) -> Vec<&str> {
-        let mut refs = Vec::new();
+        let mut refs: Vec<&str> = vec![&self.reward];
         for goal in &self.goals {
             match goal {
                 Goal::Collect { item, .. } => refs.push(item.as_str()),

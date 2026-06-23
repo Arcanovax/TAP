@@ -41,6 +41,7 @@ pub enum EventType {
     },
     QUEST_FINISH {
         quest_name: String,
+        reward: String,
     },
     GROUP_LEAVE {
         player_name: String,

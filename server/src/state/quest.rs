@@ -57,28 +57,31 @@ impl ServerInfo {
             let quest = self.world.quests.get(id).unwrap();
             let tx = self.get_connection(peer_addr).unwrap().tx.clone();
             if new_step == quest.goals.len() {
-                send_quest_finish_event(&quest.name, tx);
+                send_quest_finish_event(&quest, tx);
                 {
+                    let reward = quest.reward.clone();
                     let player = self.get_player_mut(peer_addr).unwrap();
+                    *player.inventory.entry(reward).or_insert(0) += 1;
                     player.finished_quest.insert(id.to_string());
                     player.quests_in_progress.remove(id);
                 }
             } else {
-                send_quest_update_event(quest.clone(), new_step, tx);
+                send_quest_update_event(&quest, new_step, tx);
             }
         }
     }
 }
 
-fn send_quest_update_event(quest: Quest, step: usize, tx: UnboundedSender<Message>) {
+fn send_quest_update_event(quest: &Quest, step: usize, tx: UnboundedSender<Message>) {
     let _ = tx.send(Message::Event(EventType::QUEST_UPDATE {
-        quest_name: quest.name,
+        quest_name: quest.name.clone(),
         goal: quest.goals[step].clone(),
     }));
 }
 
-fn send_quest_finish_event(quest_name: &str, tx: UnboundedSender<Message>) {
+fn send_quest_finish_event(quest: &Quest, tx: UnboundedSender<Message>) {
     let _ = tx.send(Message::Event(EventType::QUEST_FINISH {
-        quest_name: quest_name.to_string(),
+        quest_name: quest.name.clone(),
+        reward: quest.reward.clone(),
     }));
 }
