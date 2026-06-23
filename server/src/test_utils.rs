@@ -22,11 +22,7 @@ use crate::{
 };
 
 pub(crate) fn test_server() -> SharedServer {
-    let db = Arc::new(
-        Database::builder()
-            .create_with_backend(InMemoryBackend::new())
-            .expect("in-memory test db failed to create"),
-    );
+    let db = Arc::new(test_db());
     Arc::new(Mutex::new(ServerInfo::new(World::new(), db)))
 }
 
@@ -226,10 +222,12 @@ pub(crate) fn test_world() -> World {
 
 /// Serveur dont le monde est peuplé par [`test_world`].
 pub(crate) fn populated_server() -> SharedServer {
-    let db = Arc::new(
-        Database::builder()
-            .create_with_backend(InMemoryBackend::new())
-            .expect("in-memory test db failed to create"),
-    );
+    let db = Arc::new(test_db());
     Arc::new(Mutex::new(ServerInfo::new(test_world(), db)))
+}
+
+pub(crate) fn test_db() -> Database {
+    Database::builder()
+        .create_with_backend(InMemoryBackend::new())
+        .expect("in-memory test db failed to create")
 }

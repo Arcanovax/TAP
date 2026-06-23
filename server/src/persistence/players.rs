@@ -21,3 +21,31 @@ pub fn load_player(db: &Database, player_name: &str) -> Result<Option<Player>, r
     let player = table.get(player_name)?.map(|guard| guard.value());
     Ok(player)
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::test_utils::test_db;
+
+    #[test]
+    fn save_then_load_resturns_same_player() {
+        let db = test_db();
+
+        let mut player = Player::new("test".to_string());
+        player.max_hp = 30;
+        player.location = "room.test".to_string();
+
+        let _ = save_player(&db, &player);
+        let loaded = load_player(&db, &player.name).unwrap();
+
+        assert_eq!(Some(player), loaded);
+    }
+
+    #[test]
+    fn load_unknown_name_returns_none() {
+        let db = test_db();
+        let loaded = load_player(&db, "test").unwrap();
+
+        assert_eq!(loaded, None);
+    }
+}

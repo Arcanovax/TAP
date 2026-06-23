@@ -5,7 +5,7 @@ use std::collections::{HashMap, HashSet};
 
 use crate::structures::enums::state::State;
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, PartialEq)]
 pub struct Player {
     pub name: String,
     pub hp: u32,

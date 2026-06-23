@@ -37,8 +37,11 @@ fn cleanup_tcp_connection(
     mut write_half: OwnedWriteHalf,
 ) {
     let mut binding = server_info.lock().unwrap();
+    let _ = binding.try_leave_group(peer_addr);
     match binding.try_save_player(peer_addr) {
-        Ok(()) => {}
+        Ok(()) => {
+            info!("Player info saved");
+        }
         Err(code) => {
             let _ = write_half.write_all(
                 Message::Response {
@@ -51,7 +54,6 @@ fn cleanup_tcp_connection(
             return;
         }
     }
-    let _ = binding.try_leave_group(peer_addr);
     match binding.try_remove_player(peer_addr) {
         Ok(name) => info!("{} disconnected", name),
         Err(_) => {}
