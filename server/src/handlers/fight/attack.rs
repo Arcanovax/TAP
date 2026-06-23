@@ -9,14 +9,14 @@ use crate::{
 
 pub fn execute_attack<'a>(
     player_id: SocketAddr,
-    target_id: Vec<String>,
+    target_id: &str,
     world_mut: &mut ServerInfo,
 ) -> AttackRes<'a> {
     // let mut pre_world_mut = world.lock().unwrap();
     // let world_mut = &mut *world;
     let player = &mut world_mut.connections.get_mut(&player_id).unwrap().player;
-    let enemy = world_mut.world.npcs.get_mut(&target_id[0]).unwrap();
-    let fight = world_mut.fights.get_mut(&target_id[0]).unwrap();
+    let enemy = world_mut.world.npcs.get_mut(target_id).unwrap();
+    let fight = world_mut.fights.get_mut(target_id).unwrap();
 
     let mut curr_damages: u32 = 15;
     for id in player.inventory.keys() {
@@ -62,4 +62,3 @@ pub fn execute_attack<'a>(
     }
     AttackRes::Peace("Not an enemy")
 }
-

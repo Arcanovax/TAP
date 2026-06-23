@@ -2,7 +2,6 @@ pub mod chat;
 pub mod connect;
 pub mod drop;
 pub mod fight;
-pub mod global_func;
 pub mod group;
 pub mod handle_request;
 pub mod inventory;

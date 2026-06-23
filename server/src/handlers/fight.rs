@@ -1,9 +1,6 @@
 use crate::{
-    handlers::{
-        fight::{attack::execute_attack, enemy_attack::enemy_attack, is_it_my_turn::is_it_my_turn},
-        global_func::{
-            check_fight::check_fight, get_player::get_player_mut, is_he_there::is_he_there,
-        },
+    handlers::fight::{
+        attack::execute_attack, enemy_attack::enemy_attack, is_it_my_turn::is_it_my_turn,
     },
     protocol::Message,
     state::SharedServer,
@@ -13,6 +10,7 @@ use crate::{
             state::State, turn_res::TurnRes,
         },
         fight::Fight,
+        room::Room,
     },
 };
 use std::net::SocketAddr;
@@ -23,134 +21,155 @@ mod is_it_my_turn;
 #[cfg(test)]
 mod tests;
 
+fn is_he_there(name: &str, player_loc: &Room) -> bool {
+    if player_loc.npc.len() != 0 {
+        for npc in &player_loc.npc {
+            if npc == name {
+                return true;
+            }
+        }
+        return false;
+    } else {
+        return false;
+    };
+}
+
 pub fn fight_request(
     peer_addr: SocketAddr,
-    enn_name: &Vec<String>,
-    world: &SharedServer,
+    args: &Vec<String>,
+    server_info: &SharedServer,
 ) -> Message {
-    if enn_name.len() != 1 {
+    if args.len() != 1 {
         return Message::Response {
             error: ErrorCode::INVALID_ARGS,
             data: None,
         };
     }
-    let mut pre_world = world.lock().unwrap();
-    let world_mut = &mut *pre_world;
-    match get_player_mut(&mut world_mut.connections, &peer_addr) {
-        Ok(player) => {
-            if let Some(loc) = world_mut.world.rooms.get(&player.location) {
-                if !is_he_there(&enn_name[0], loc) {
-                    return Message::Response {
-                        error: ErrorCode::NPC_NOT_FOUND,
-                        data: Some(serde_json::to_value("This target isn't here.").unwrap()),
-                    };
-                }
-                if let NPCKind::Enemy { defeated, .. } = &world_mut.world.npcs[&enn_name[0]].kind {
-                    if *defeated {
-                        return Message::Response {
-                            error: ErrorCode::DEFEATED_ENEMY,
-                            data: Some(
-                                serde_json::to_value("This target has already been defeated")
-                                    .unwrap(),
-                            ),
-                        };
-                    }
-                } else {
-                    return Message::Response {
-                        error: ErrorCode::NPC_NOT_HOSTILE,
-                        data: Some(serde_json::to_value("This target isn't an enemy.").unwrap()),
-                    };
-                }
-                match &player.status {
-                    State::Idle => {
-                        if let Some(fight) = check_fight(&enn_name[0], &mut world_mut.fights) {
-                            fight.fighters.push(peer_addr);
-                        } else {
-                            world_mut.fights.insert(
-                                enn_name[0].to_string(),
-                                Fight {
-                                    fighters: vec![peer_addr],
-                                    turn: 0,
-                                    enemy_turn: false,
-                                },
-                            );
-                        }
-                        player.status = State::InFight {
-                            target_id: (enn_name[0].to_string()),
-                        };
-                        Message::Response {
-                            error: ErrorCode::SUCCESS,
-                            data: Some(
-                                serde_json::to_value(&format!(
-                                    "{} says: 'Hello there!'",
-                                    player.name
-                                ))
-                                .unwrap(),
-                            ),
-                        }
-                    }
-                    State::InFight { target_id: target } => {
-                        let fight = check_fight(&target, &mut world_mut.fights)
-                            .expect("There is no fight.");
 
-                        match is_it_my_turn(peer_addr, fight) {
-                            TurnRes::MyTurn => {
-                                match execute_attack(peer_addr, enn_name.clone(), world_mut) {
-                                    AttackRes::Hit(message) => {
-                                        if world_mut.fights.get(&enn_name[0]).unwrap().enemy_turn {
-                                            match enemy_attack(&enn_name[0], world_mut) {
-                                                EnnAttRes::Hit(msg)
-                                                | EnnAttRes::Kill(msg)
-                                                | EnnAttRes::KillAndWin(msg)
-                                                | EnnAttRes::Error(msg) => Message::Response {
-                                                    error: ErrorCode::SUCCESS,
-                                                    data: Some(
-                                                        serde_json::to_value(&format!(
-                                                            "{}\n{}",
-                                                            message, msg
-                                                        ))
-                                                        .unwrap(),
-                                                    ),
-                                                },
-                                            }
-                                        } else {
-                                            Message::Response {
-                                                error: ErrorCode::SUCCESS,
-                                                data: Some(serde_json::to_value(&message).unwrap()),
-                                            }
-                                        }
-                                    }
-                                    AttackRes::KillTarget(msg) => Message::Response {
+    let target_name = &args[0];
+    let mut binding = server_info.lock().unwrap();
+
+    let room = match binding.get_player_room(peer_addr) {
+        Ok(room) => room,
+        Err(code) => {
+            return Message::Response {
+                error: code,
+                data: None,
+            };
+        }
+    };
+
+    if !is_he_there(target_name, room) {
+        return Message::Response {
+            error: ErrorCode::NPC_NOT_FOUND,
+            data: None,
+        };
+    }
+
+    if let NPCKind::Enemy { defeated, .. } = binding.world.npcs.get(target_name).unwrap().kind {
+        if defeated {
+            return Message::Response {
+                error: ErrorCode::DEFEATED_ENEMY,
+                data: None,
+            };
+        }
+    } else {
+        return Message::Response {
+            error: ErrorCode::NPC_NOT_HOSTILE,
+            data: Some(serde_json::to_value("This target isn't an enemy.").unwrap()),
+        };
+    }
+
+    let player = match binding.get_player(peer_addr) {
+        Ok(player) => player,
+        Err(code) => {
+            return Message::Response {
+                error: code,
+                data: None,
+            };
+        }
+    };
+
+    match &player.status {
+        State::Idle => {
+            if let Some(fight) = binding.fights.get_mut(target_name) {
+                fight.fighters.push(peer_addr);
+            } else {
+                binding.fights.insert(
+                    target_name.to_string(),
+                    Fight {
+                        fighters: vec![peer_addr],
+                        turn: 0,
+                        enemy_turn: false,
+                    },
+                );
+            }
+            let player = binding.get_player_mut(peer_addr).unwrap();
+            player.status = State::InFight {
+                target_id: (target_name.to_string()),
+            };
+            return Message::Response {
+                error: ErrorCode::SUCCESS,
+                data: Some(
+                    serde_json::to_value(&format!("{} says: 'Hello there!'", player.name)).unwrap(),
+                ),
+            };
+        }
+        State::InFight { target_id: target } => {
+            let target = target.clone();
+            let fight = binding.fights.get_mut(&target).expect("There is no fight.");
+
+            match is_it_my_turn(peer_addr, fight) {
+                TurnRes::MyTurn => match execute_attack(peer_addr, target_name, &mut binding) {
+                    AttackRes::Hit(message) => {
+                        if binding.fights.get(target_name).unwrap().enemy_turn {
+                            match enemy_attack(&target_name, &mut binding) {
+                                EnnAttRes::Hit(msg)
+                                | EnnAttRes::Kill(msg)
+                                | EnnAttRes::KillAndWin(msg)
+                                | EnnAttRes::Error(msg) => {
+                                    return Message::Response {
                                         error: ErrorCode::SUCCESS,
-                                        data: Some(serde_json::to_value(&msg).unwrap()),
-                                    },
-                                    AttackRes::Peace(msg) => Message::Response {
-                                        error: ErrorCode::SUCCESS,
-                                        data: Some(serde_json::to_value(msg).unwrap()),
-                                    },
+                                        data: Some(
+                                            serde_json::to_value(&format!("{}\n{}", message, msg))
+                                                .unwrap(),
+                                        ),
+                                    };
                                 }
                             }
-                            TurnRes::NotMyTurn | TurnRes::EnemyTurn => Message::Response {
+                        } else {
+                            return Message::Response {
                                 error: ErrorCode::SUCCESS,
-                                data: Some(serde_json::to_value("It's not your turn!").unwrap()),
-                            },
+                                data: Some(serde_json::to_value(&message).unwrap()),
+                            };
                         }
                     }
-                    State::Discuss => Message::Response {
-                        error: ErrorCode::INVALID_COMMAND,
-                        data: Some(serde_json::to_value("You can't fight in your state.").unwrap()),
-                    },
-                }
-            } else {
-                Message::Response {
-                    error: ErrorCode::ROOM_NOT_FOUND,
-                    data: Some(serde_json::to_value("You're nowhere. I can't find you.").unwrap()),
+                    AttackRes::KillTarget(msg) => {
+                        return Message::Response {
+                            error: ErrorCode::SUCCESS,
+                            data: Some(serde_json::to_value(&msg).unwrap()),
+                        };
+                    }
+                    AttackRes::Peace(msg) => {
+                        return Message::Response {
+                            error: ErrorCode::SUCCESS,
+                            data: Some(serde_json::to_value(msg).unwrap()),
+                        };
+                    }
+                },
+                TurnRes::NotMyTurn | TurnRes::EnemyTurn => {
+                    return Message::Response {
+                        error: ErrorCode::SUCCESS,
+                        data: Some(serde_json::to_value("It's not your turn!").unwrap()),
+                    };
                 }
             }
         }
-        Err(msg) => Message::Response {
-            error: ErrorCode::PLAYER_NOT_FOUND,
-            data: Some(serde_json::to_value(msg).unwrap()),
-        },
+        State::Discuss => {
+            return Message::Response {
+                error: ErrorCode::INVALID_COMMAND,
+                data: Some(serde_json::to_value("You can't fight in your state.").unwrap()),
+            };
+        }
     }
 }
