@@ -107,16 +107,13 @@ pub fn execute_attack<'a>(
             target_hp: target_hp_after,
             damage: curr_damages,
             status: status,
-            enemy_attack: None,
             fighters: Some(fighters)
         };
     }
 
-    let enemy_atk = if trigger_enemy_attack {
-        Some(enemy_attack(target_id, world_mut))
-    } else {
-        None
-    };
+    if trigger_enemy_attack {
+        enemy_attack(target_id, world_mut)
+    }
 
     for fighter_name in &fighters_list {
         if let Some(fighter) = world_mut.connections.values().find(|c| &c.player.name == fighter_name){
@@ -130,93 +127,6 @@ pub fn execute_attack<'a>(
         target_hp: target_hp_after,
         damage: curr_damages,
         status: world_mut.connections.get(&player_id).unwrap().player.status.clone(),
-        enemy_attack: enemy_atk,
         fighters: Some(fighters)
     }
 }
-
-
-// pub fn execute_attack<'a>(
-//     player_id: SocketAddr,
-//     target_id: Vec<String>,
-//     world_mut: &mut ServerInfo,
-// ) -> Attack_Result {
-//     // let mut pre_world_mut = world.lock().unwrap();
-//     // let world_mut = &mut *world;
-//     let player = &mut world_mut.connections.get_mut(&player_id).unwrap().player;
-//     let enemy = world_mut.world.npcs.get_mut(&target_id[0]).unwrap();
-//     let fight = world_mut.fights.get_mut(&target_id[0]).unwrap();
-
-//     let mut curr_damages: u32 = 15;
-//     for id in player.inventory.keys() {
-//         if let Some(item) = world_mut.world.items.get(id) {
-//             if let ItemKind::Weapon { damages } = item.kind {
-//                 if curr_damages < damages {
-//                     curr_damages = damages;
-//                 }
-//             }
-//         }
-//     }
-
-//     if let NPCKind::Enemy {
-//         ref mut hp,
-//         ref loot,
-//         ref mut defeated,
-//         ..
-//     } = enemy.kind
-//     {
-//         if curr_damages < *hp {
-//             *hp -= curr_damages;
-//             if fight.turn == fight.fighters.len() as u32 - 1 {
-//                 // fight.enemy_turn = true;
-//                 fight.turn = 0;
-//                 Attack_Result {
-//                     attacker_hp: player.hp.clone(),
-//                     attacker_name: player.name.clone(),
-//                     target_hp: *hp,
-//                     damage: curr_damages,
-//                     status: FighterStatus::COMBAT,
-//                     enemy_attack: Some(enemy_attack(&target_id[0], world_mut))
-//                 }
-//             } else {
-//                 fight.turn += 1;
-//                 Attack_Result {
-//                     attacker_hp: player.hp.clone(),
-//                     attacker_name: player.name.clone(),
-//                     target_hp: *hp,
-//                     damage: curr_damages,
-//                     status: FighterStatus::COMBAT,
-//                     enemy_attack: None
-//                 }
-//             }
-//         } else {
-//             *hp = 0;
-//             *defeated = true;
-//             for pl_name in &mut fight.fighters {
-//                 let pl = &mut world_mut.connections.get_mut(pl_name).unwrap().player;
-//                 pl.status = State::Idle;
-//                 for loot_item in loot {
-//                     let amount = if loot_item == "item.gold" { 50 } else { 1 };
-//                     *pl.inventory.entry(loot_item.clone()).or_insert(1) += amount;
-//                 }
-//             }
-//             Attack_Result {
-//                     attacker_hp: player.hp.clone(),
-//                     attacker_name: player.name.clone(),
-//                     target_hp: *hp,
-//                     damage: curr_damages,
-//                     status: FighterStatus::COMBAT,
-//                     enemy_attack: None
-//                 }
-//         };
-//     }
-//     Attack_Result {
-//         attacker_hp: player.hp.clone(),
-//         attacker_name: player.name.clone(),
-//         target_hp: 0,
-//         damage: 0,
-//         status: FighterStatus::COMBAT,
-//         enemy_attack: None
-//     }
-// }
-

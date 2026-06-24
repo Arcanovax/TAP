@@ -1,4 +1,4 @@
-use std::{collections::{HashMap, VecDeque}, fs::OpenOptions, io::Write, process::Command};
+use std::{collections::{VecDeque}, fs::OpenOptions, io::Write};
 
 use serde_json::Value;
 
@@ -14,11 +14,9 @@ pub fn response_handling(world: &mut World, server: &ServerEvent) {
 						world.player.name = world.input.to_string();
 						world.input.clear();
 						let _ = world.tx_to_serv.try_send(String::from("ITEMS\n"));
-						// let _ = world.tx_to_serv.try_send(String::from("LOOK\n"));
 						// if let Ok(mut file) = OpenOptions::new().create(true).append(true).open("debug_network.txt") {
 						// 	let _ = writeln!(file, "ko (State {:?}) : {:#?}", world.state, res);}
 						world.action = PendingAction::Items;
-						// world.action = PendingAction::ClientLook;
 					}
 				},
 				States::Idle => {
@@ -54,15 +52,11 @@ pub fn response_handling(world: &mut World, server: &ServerEvent) {
 						}
 						PendingAction::GroupCreate(name) => {
 							world.group.in_group = true;
-							// world.group.name = name.to_string();
-							// world.group.grouplist.push_back(world.player.name.clone());
 							world.output.push_back(format!("{name} group successfully created."));
 							world.action = PendingAction::None;
 						}
 						PendingAction::GroupJoin(name) => {
 							world.group.in_group = true;
-							// world.group.name = name.to_string();
-							// world.group.grouplist.push_back(world.player.name.clone());
 							world.output.push_back(format!("{name} group successfully joined."));
 							world.action = PendingAction::None;
 						}
@@ -88,8 +82,8 @@ pub fn response_handling(world: &mut World, server: &ServerEvent) {
 							world.action = PendingAction::ClientLook;
 						}
 						PendingAction::Attack(name) => {
-							if let Ok(mut file) = OpenOptions::new().create(true).append(true).open("debug_network.txt") {
-								let _ = writeln!(file, "ko (State {:#?}) : {:#?}", name, server.data);}
+							// if let Ok(mut file) = OpenOptions::new().create(true).append(true).open("debug_network.txt") {
+							// 	let _ = writeln!(file, "ko (State {:#?}) : {:#?}", name, server.data);}
 							let result: Attack_Result = serde_json::from_value(server.data.clone().unwrap()).unwrap();
 							world.player.hp = result.attacker_hp;
 							let fight = &mut world.room.fight;

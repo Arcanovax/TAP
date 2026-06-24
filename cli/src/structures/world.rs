@@ -277,18 +277,15 @@ impl World<'_>{
 									response_handling(self, &server_event);
 								}
 								if server_event.event_type == "Event" {
-									if let Ok(mut file) = OpenOptions::new().create(true).append(true).open("debug_network.txt") {
-										let _ = writeln!(file, "Event (State {:?}) : {:#?}", self.state, server_event);}
+									// if let Ok(mut file) = OpenOptions::new().create(true).append(true).open("debug_network.txt") {
+									// 	let _ = writeln!(file, "Event (State {:?}) : {:#?}", self.state, server_event);}
 									if let Some(invite) = server_event.invite {
 										self.group.invitation.push(Invitation{sender: invite.sender, group_name: invite.group_name});
-										// self.chat.group_messages.push_back(format!("{} invites you in {} group. Send 'GROUP JOIN {}' if you want to join.", invite.sender, invite.group_name,invite.group_name));
 									}
 									if let Some(new_player) = server_event.join {
-										// self.group.grouplist.push_back(new);
 										self.chat.group_messages.push_back(format!("{new_player} join the group."));
 									}
 									if let Some(leaver) = server_event.leave {
-										// self.group.grouplist.retain(|x| x != &leaver);
 										self.chat.group_messages.push_back(format!("{leaver} leave the group."));
 									}
 									if let Some(enter) = server_event.enter {
@@ -305,7 +302,7 @@ impl World<'_>{
 									if let Some(enn_attack) = server_event.enn_attack {
 										self.output.push_back(format!(
 											"{} dealt {} damages to {}. {} has {} HP remaining.",
-											self.room.fight.target_name, enn_attack.damage, enn_attack.target, enn_attack.target, enn_attack.target_hp
+											self.room.fight.target_name, enn_attack.damages, enn_attack.target, enn_attack.target, enn_attack.target_hp
 										));
 										self.room.fight.fighters.insert(enn_attack.target.clone(), enn_attack.target_hp);
 										if enn_attack.target == self.player.name {

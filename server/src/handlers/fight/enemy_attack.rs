@@ -1,15 +1,12 @@
-use std::time::{SystemTime, UNIX_EPOCH};
+use std::{time::{SystemTime, UNIX_EPOCH}};
 
 use crate::{
-    handlers::fight, protocol::{EventType, Message}, state::ServerInfo, structures::{
-        attack_result::Enemy_Attack, enums::{enn_att_res::EnnAttRes, npc_kind::NPCKind, state::State}, fight::Fight, npc::NPC, player::Player,
+    protocol::{EventType, Message}, state::ServerInfo, structures::{
+        enums::{npc_kind::NPCKind, state::State}, player::Player,
     },
 };
 
-pub fn enemy_attack(opponent_id: &str, world: &mut ServerInfo) -> Enemy_Attack {
-    // let world = &mut *world_mut;
-    // let fight: &mut Fight = world.fights.get_mut(opponent_id).unwrap();
-    // let opponent: &NPC = world.world.npcs.get(opponent_id).unwrap();
+pub fn enemy_attack(opponent_id: &str, world: &mut ServerInfo) {
     let mut target_index: usize = 0;
     
     let (list_fighters, opponent_kind) = {
@@ -60,11 +57,11 @@ pub fn enemy_attack(opponent_id: &str, world: &mut ServerInfo) -> Enemy_Attack {
             unreachable!("No enemy here!");
         }
     };
+
     for fighter in list_fighters {
         if let Some(con) = world.connections.values().find(|c| c.player.name == fighter) {
             let _ = con.tx.send(Message::Event(EventType::ENEMY_ATTACK { target: target_name.clone(), damages: e_damages, target_hp }));
         }
     }
-    Enemy_Attack { damages: e_damages, target: target_name }
 }
 
