@@ -12,7 +12,7 @@ use crate::{
         handler_outcome::HandlerOutcome,
     },
 };
-use std::net::SocketAddr;
+use std::{fs::OpenOptions, net::SocketAddr, io::Write};
 
 use crate::{
     handlers::{

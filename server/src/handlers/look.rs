@@ -10,7 +10,7 @@ use tracing::info;
 #[cfg(test)]
 mod tests;
 
-#[derive(Serialize)]
+#[derive(Serialize, Debug)]
 struct RoomView<'a> {
     id: &'a String,
     name: &'a String,
@@ -18,7 +18,7 @@ struct RoomView<'a> {
     exits: &'a HashMap<Direction, String>,
 }
 
-#[derive(Serialize)]
+#[derive(Serialize, Debug)]
 struct LookView<'a> {
     room: RoomView<'a>,
     players: Vec<String>,

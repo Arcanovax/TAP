@@ -66,6 +66,24 @@ pub enum EventType {
         player_name: String,
         item: String,
     },
+	FIGHT_LEAVE {
+		player_name: String
+	},
+    ENTER_FIGHT {
+        player_name: String,
+        hp: u32
+    },
+    ATTACK {
+        player_name: String,
+        damages: u32,
+        enemy_hp: u32
+    },
+    ENEMY_ATTACK {
+        target: String,
+        damages: u32,
+        target_hp: u32,
+		target_killed: bool
+    }
 }
 
 #[derive(Serialize, Debug, PartialEq, Eq)]
@@ -139,6 +157,18 @@ impl Message {
                 }
                 EventType::ROOM_TAKE { player_name, item } => {
                     format!("EVT ROOM TAKE {player_name} {item}\n")
+                }
+				EventType::FIGHT_LEAVE { player_name } => {
+                    format!("EVT FIGHT LEAVE {player_name}\n")
+                }
+				EventType::ENTER_FIGHT { player_name, hp } => {
+                    format!("EVT ENTER FIGHT {player_name} {hp}\n")
+                }
+				EventType::ENEMY_ATTACK { target, target_hp, target_killed, damages } => {
+                    format!("EVT ENEMY ATTACK {target} {target_hp} {damages} {target_killed}\n")
+                }
+				EventType::ATTACK { player_name, damages, enemy_hp } => {
+                    format!("EVT ATTACK {player_name} {damages} {enemy_hp}\n")
                 }
                 EventType::ROOM_DROP { player_name, item } => {
                     format!("EVT ROOM DROP {player_name} {item}\n")
