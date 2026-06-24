@@ -1,4 +1,8 @@
-use crate::{protocol::Message, state::SharedServer, structures::enums::error::ErrorCode};
+use crate::{
+    protocol::{Message, Payload},
+    state::SharedServer,
+    structures::enums::error::ErrorCode,
+};
 use serde::Serialize;
 use std::net::SocketAddr;
 use tracing::info;
@@ -28,7 +32,7 @@ pub fn quests_request(server_info: &SharedServer, peer_addr: SocketAddr) -> Mess
         Err(code) => {
             return Message::Response {
                 error: code,
-                data: None,
+                payload: Payload::Empty,
             };
         }
     };
@@ -56,6 +60,6 @@ pub fn quests_request(server_info: &SharedServer, peer_addr: SocketAddr) -> Mess
 
     Message::Response {
         error: ErrorCode::SUCCESS,
-        data: Some(serde_json::to_value(quests).unwrap()),
+        payload: Payload::Json(serde_json::to_value(quests).unwrap()),
     }
 }

@@ -1,5 +1,5 @@
 use super::*;
-use crate::test_utils::{addr, connect, err, ok_data, populated_server, test_server};
+use crate::test_utils::{addr, connect, err, ok_pair, populated_server, test_server};
 
 #[test]
 fn move_without_connection_returns_invalid_command() {
@@ -55,7 +55,7 @@ fn move_through_valid_exit_succeeds_and_updates_location() {
     let server = populated_server();
     connect(&server, addr(1), "alice");
     let result = move_request(&server, addr(1), &vec!["North".to_string()]);
-    assert_eq!(result, ok_data(r#"{"room":"room.market"}"#));
+    assert_eq!(result, ok_pair("room", "room.market"));
 
     // la location du joueur a bien été mise à jour
     let guard = server.lock().unwrap();
@@ -69,7 +69,7 @@ fn move_direction_is_case_insensitive() {
     let server = populated_server();
     connect(&server, addr(1), "alice");
     let result = move_request(&server, addr(1), &vec!["north".to_string()]);
-    assert_eq!(result, ok_data(r#"{"room":"room.market"}"#));
+    assert_eq!(result, ok_pair("room", "room.market"));
 }
 
 #[test]
@@ -79,11 +79,11 @@ fn consecutive_moves_follow_exits_from_new_room() {
 
     // city_square --North--> market
     let first = move_request(&server, addr(1), &vec!["North".to_string()]);
-    assert_eq!(first, ok_data(r#"{"room":"room.market"}"#));
+    assert_eq!(first, ok_pair("room", "room.market"));
 
     // depuis market : --South--> city_square (prouve qu'on repart de la nouvelle salle)
     let second = move_request(&server, addr(1), &vec!["South".to_string()]);
-    assert_eq!(second, ok_data(r#"{"room":"room.city_square"}"#));
+    assert_eq!(second, ok_pair("room", "room.city_square"));
 
     let guard = server.lock().unwrap();
     assert_eq!(guard.get_player(addr(1)).unwrap().location, "room.city_square");

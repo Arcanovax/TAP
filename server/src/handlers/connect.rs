@@ -1,6 +1,6 @@
 use tracing::info;
 
-use crate::protocol::{EventType, Message};
+use crate::protocol::{EventType, Message, Payload};
 use crate::state::{SharedServer, Tx};
 use crate::structures::enums::error::ErrorCode;
 use std::net::SocketAddr;
@@ -17,7 +17,7 @@ pub(super) fn connect_request(
     if args.len() != 1 {
         return Message::Response {
             error: ErrorCode::INVALID_ARGS,
-            data: None,
+            payload: Payload::Empty,
         };
     }
     let name = args[0].to_string();

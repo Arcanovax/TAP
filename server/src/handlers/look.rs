@@ -1,10 +1,10 @@
 use crate::{
-    protocol::Message,
+    protocol::{Message, Payload},
     state::SharedServer,
-    structures::enums::{error::ErrorCode, exits::Exit},
+    structures::enums::{error::ErrorCode, exits::Direction},
 };
 use serde::Serialize;
-use std::net::SocketAddr;
+use std::{collections::HashMap, net::SocketAddr};
 use tracing::info;
 
 #[cfg(test)]
@@ -15,7 +15,7 @@ struct RoomView<'a> {
     id: &'a String,
     name: &'a String,
     description: &'a String,
-    exits: &'a [Exit],
+    exits: &'a HashMap<Direction, String>,
 }
 
 #[derive(Serialize)]
@@ -33,7 +33,7 @@ pub fn look_request(server_info: &SharedServer, peer_addr: SocketAddr) -> Messag
         Err(code) => {
             return Message::Response {
                 error: code,
-                data: None,
+                payload: Payload::Empty,
             };
         }
     };
@@ -44,7 +44,7 @@ pub fn look_request(server_info: &SharedServer, peer_addr: SocketAddr) -> Messag
         Err(code) => {
             return Message::Response {
                 error: code,
-                data: None,
+                payload: Payload::Empty,
             };
         }
     };
@@ -53,7 +53,7 @@ pub fn look_request(server_info: &SharedServer, peer_addr: SocketAddr) -> Messag
         Err(code) => {
             return Message::Response {
                 error: code,
-                data: None,
+                payload: Payload::Empty,
             };
         }
     };
@@ -76,6 +76,6 @@ pub fn look_request(server_info: &SharedServer, peer_addr: SocketAddr) -> Messag
     info!("Get room info");
     Message::Response {
         error: ErrorCode::SUCCESS,
-        data: Some(serde_json::to_value(&view).unwrap()),
+        payload: Payload::Json(serde_json::to_value(&view).unwrap()),
     }
 }

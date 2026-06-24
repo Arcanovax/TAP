@@ -21,6 +21,19 @@ impl Goal {
     }
 }
 
+impl Into<String> for Goal {
+    fn into(self) -> String {
+        match self {
+            Goal::Collect { item, amount } => format!("Collect {} {}", amount, item),
+            Goal::Talk { dialog } => {
+                let mut splitted = dialog.splitn(3, ".");
+                let npc = splitted.next().unwrap().to_owned() + splitted.next().unwrap();
+                format!("Talk to {}", npc)
+            }
+        }
+    }
+}
+
 #[derive(Debug, Deserialize, Serialize, PartialEq, Eq, Clone)]
 pub struct Quest {
     pub name: String,

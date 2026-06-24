@@ -12,6 +12,13 @@ pub fn inventory_request(server_info: &SharedServer, peer_addr: SocketAddr) -> M
         .lock()
         .unwrap()
         .get_player(peer_addr)
-        .map(|player| serde_json::to_value(&player.inventory).unwrap())
+        .map(|player| {
+            let items: Vec<String> = player
+                .inventory
+                .iter()
+                .flat_map(|(s, &n)| std::iter::repeat_n(s.clone(), n as usize))
+                .collect();
+            serde_json::to_value(items).unwrap()
+        })
         .into()
 }

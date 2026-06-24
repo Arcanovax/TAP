@@ -1,12 +1,10 @@
-use serde_json::json;
-use tracing::info;
-
 use crate::{
-    protocol::{EventType, Message},
+    protocol::{EventType, Message, Payload},
     state::SharedServer,
     structures::enums::error::ErrorCode,
 };
-use std::net::SocketAddr;
+use std::{collections::HashMap, net::SocketAddr};
+use tracing::info;
 
 #[cfg(test)]
 mod tests;
@@ -20,13 +18,13 @@ pub fn take_request(
     if !binding.is_connected(peer_addr) {
         return Message::Response {
             error: ErrorCode::INVALID_COMMAND,
-            data: None,
+            payload: Payload::Empty,
         };
     }
     if args.len() == 0 {
         return Message::Response {
             error: ErrorCode::INVALID_ARGS,
-            data: None,
+            payload: Payload::Empty,
         };
     }
 
@@ -36,23 +34,23 @@ pub fn take_request(
     }
     match binding.try_take_item(peer_addr, &item) {
         Ok(item) => {
-            info!("{} dropped", item);
+            info!("{} taken", item);
             let receivers = binding.get_room_receivers(peer_addr).unwrap();
             let player = binding.get_player(peer_addr).unwrap();
             for con in receivers {
-                let _ = con.tx.send(Message::Event(EventType::TAKE {
+                let _ = con.tx.send(Message::Event(EventType::ROOM_TAKE {
                     player_name: player.name.clone(),
                     item: item.clone(),
                 }));
             }
             Message::Response {
                 error: ErrorCode::SUCCESS,
-                data: Some(json!({ "taken": item })),
+                payload: Payload::Pair(HashMap::from([("taken".to_string(), item)])),
             }
         }
         Err(code) => Message::Response {
             error: code,
-            data: None,
+            payload: Payload::Empty,
         },
     }
 }

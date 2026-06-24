@@ -1,6 +1,10 @@
 use tracing::info;
 
-use crate::{protocol::Message, state::SharedServer, structures::enums::error::ErrorCode};
+use crate::{
+    protocol::{Message, Payload},
+    state::SharedServer,
+    structures::enums::error::ErrorCode,
+};
 
 #[cfg(test)]
 mod tests;
@@ -18,7 +22,7 @@ pub(super) fn item_request(server_info: &SharedServer, args: &Vec<String>) -> Me
         None => {
             return Message::Response {
                 error: ErrorCode::ITEM_NOT_FOUND,
-                data: None,
+                payload: Payload::Empty,
             };
         }
     };
@@ -27,7 +31,7 @@ pub(super) fn item_request(server_info: &SharedServer, args: &Vec<String>) -> Me
 
     Message::Response {
         error: ErrorCode::SUCCESS,
-        data: Some(serde_json::to_value(item).unwrap()),
+        payload: Payload::Json(serde_json::to_value(item).unwrap()),
     }
 }
 
@@ -35,6 +39,8 @@ pub(super) fn items_request(server_info: &SharedServer) -> Message {
     info!("Get all items info");
     Message::Response {
         error: ErrorCode::SUCCESS,
-        data: Some(serde_json::to_value(&server_info.lock().unwrap().world.items).unwrap()),
+        payload: Payload::Json(
+            serde_json::to_value(&server_info.lock().unwrap().world.items).unwrap(),
+        ),
     }
 }

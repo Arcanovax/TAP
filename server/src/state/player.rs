@@ -10,7 +10,7 @@ impl ServerInfo {
         name: String,
         peer_addr: SocketAddr,
         tx: &Tx,
-    ) -> Result<(), ErrorCode> {
+    ) -> Result<String, ErrorCode> {
         if self.connections.contains_key(&peer_addr) {
             return Err(ErrorCode::ALREADY_CONNECTED);
         }
@@ -37,7 +37,7 @@ impl ServerInfo {
             },
         );
         self.name_to_addr.insert(name, peer_addr);
-        Ok(())
+        Ok("connected".to_string())
     }
 
     pub fn try_remove_player(&mut self, peer_addr: SocketAddr) -> Result<String, ErrorCode> {
@@ -68,7 +68,9 @@ impl ServerInfo {
         let receivers = self.get_global_receivers(peer_addr);
 
         for con in receivers {
-            let _ = con.tx.send(Message::Event(EventType::PLAYERS { players }));
+            let _ = con
+                .tx
+                .send(Message::Event(EventType::STATS_PLAYERS { players }));
         }
     }
 

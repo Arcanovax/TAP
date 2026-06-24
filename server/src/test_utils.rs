@@ -1,8 +1,8 @@
 use crate::{
-    protocol::Message,
+    protocol::{Message, Payload},
     state::{ServerInfo, SharedServer, Tx},
     structures::{
-        enums::{error::ErrorCode, exits::Exit, item_kind::ItemKind, npc_kind::NPCKind},
+        enums::{error::ErrorCode, exits::Direction, item_kind::ItemKind, npc_kind::NPCKind},
         game::World,
         item::Item,
         npc::NPC,
@@ -44,7 +44,7 @@ pub(crate) fn connect(
 pub(crate) fn err(code: ErrorCode) -> Message {
     Message::Response {
         error: code,
-        data: None,
+        payload: Payload::Empty,
     }
 }
 
@@ -86,11 +86,27 @@ pub(crate) fn group_with(
     rxs
 }
 
-/// Réponse SUCCESS portant une `data` déjà sérialisée (cas des handlers qui renvoient du JSON).
+/// Réponse SUCCESS portant un payload JSON (cas des handlers qui renvoient du JSON).
 pub(crate) fn ok_data(data: &str) -> Message {
     Message::Response {
         error: ErrorCode::SUCCESS,
-        data: Some(serde_json::from_str(data).expect("ok_data: littéral JSON invalide")),
+        payload: Payload::Json(serde_json::from_str(data).expect("ok_data: littéral JSON invalide")),
+    }
+}
+
+/// Réponse SUCCESS au format `key=value` (ex: `OK room=loc.x`).
+pub(crate) fn ok_pair(key: &str, value: &str) -> Message {
+    Message::Response {
+        error: ErrorCode::SUCCESS,
+        payload: Payload::Pair(HashMap::from([(key.to_string(), value.to_string())])),
+    }
+}
+
+/// Réponse SUCCESS au format texte simple (ex: `OK connected`).
+pub(crate) fn ok_text(text: &str) -> Message {
+    Message::Response {
+        error: ErrorCode::SUCCESS,
+        payload: Payload::Text(text.to_string()),
     }
 }
 
@@ -102,16 +118,12 @@ pub(crate) fn tx_rx() -> (Tx, UnboundedReceiver<Message>) {
 /// Vérifie une réponse SUCCESS dont la `data` contient `needle`.
 /// Utile quand le JSON sérialisé n'est pas déterministe (HashMap/HashSet).
 pub(crate) fn assert_success_contains(msg: &Message, needle: &str) {
-    match msg {
-        Message::Response {
-            error: ErrorCode::SUCCESS,
-            data: Some(d),
-        } => assert!(
-            d.to_string().contains(needle),
-            "data {d:?} does not contain {needle:?}"
-        ),
-        other => panic!("expected SUCCESS with data containing {needle:?}, got {other:?}"),
-    }
+    let wire = msg.to_str();
+    assert!(wire.starts_with("OK"), "expected an OK response, got {wire:?}");
+    assert!(
+        wire.contains(needle),
+        "wire {wire:?} does not contain {needle:?}"
+    );
 }
 
 /// Extrait le code d'erreur d'une réponse (utile quand la `data` n'est pas vide,
@@ -136,9 +148,7 @@ pub(crate) fn test_world() -> World {
         "room.city_square".to_string(),
         Room {
             name: "room.city_square".to_string(),
-            exits: vec![Exit::North {
-                toward: "room.market".to_string(),
-            }],
+            exits: HashMap::from([(Direction::North, "room.market".to_string())]),
             description: "The city square".to_string(),
             npc: vec!["guard".to_string(), "goblin".to_string()],
             items: vec!["sword".to_string()],
@@ -149,9 +159,7 @@ pub(crate) fn test_world() -> World {
         "room.market".to_string(),
         Room {
             name: "room.market".to_string(),
-            exits: vec![Exit::South {
-                toward: "room.city_square".to_string(),
-            }],
+            exits: HashMap::from([(Direction::South, "room.city_square".to_string())]),
             description: "The market".to_string(),
             npc: Vec::new(),
             items: Vec::new(),

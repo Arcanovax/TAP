@@ -1,6 +1,6 @@
 use crate::config::load;
 use crate::handlers::handle_request::handle_request;
-use crate::protocol::Message;
+use crate::protocol::{Message, Payload};
 use crate::state::{ServerInfo, SharedServer};
 use redb::Database;
 use std::net::SocketAddr;
@@ -46,7 +46,7 @@ fn cleanup_tcp_connection(
             let _ = write_half.write_all(
                 Message::Response {
                     error: code,
-                    data: None,
+                    payload: Payload::Empty,
                 }
                 .to_str()
                 .as_bytes(),
@@ -84,7 +84,7 @@ pub async fn run(addr: String, port: String) -> Result<(), Box<dyn std::error::E
         tokio::spawn(
             async move {
                 if let Err(e) = socket
-                    .write_all("Server → Client: OK hello proto=1\n".as_bytes())
+                    .write_all("OK hello proto=1\n".as_bytes())
                     .await
                 {
                     error!(error = %e, "TCP connection failed");

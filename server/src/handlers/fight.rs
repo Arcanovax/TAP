@@ -2,7 +2,7 @@ use crate::{
     handlers::fight::{
         attack::execute_attack, enemy_attack::enemy_attack, is_it_my_turn::is_it_my_turn,
     },
-    protocol::Message,
+    protocol::{Message, Payload},
     state::SharedServer,
     structures::{
         enums::{
@@ -42,7 +42,7 @@ pub fn fight_request(
     if args.len() != 1 {
         return Message::Response {
             error: ErrorCode::INVALID_ARGS,
-            data: None,
+            payload: Payload::Empty,
         };
     }
 
@@ -54,7 +54,7 @@ pub fn fight_request(
         Err(code) => {
             return Message::Response {
                 error: code,
-                data: None,
+                payload: Payload::Empty,
             };
         }
     };
@@ -62,7 +62,7 @@ pub fn fight_request(
     if !is_he_there(target_name, room) {
         return Message::Response {
             error: ErrorCode::NPC_NOT_FOUND,
-            data: None,
+            payload: Payload::Empty,
         };
     }
 
@@ -70,13 +70,13 @@ pub fn fight_request(
         if defeated {
             return Message::Response {
                 error: ErrorCode::DEFEATED_ENEMY,
-                data: None,
+                payload: Payload::Empty,
             };
         }
     } else {
         return Message::Response {
             error: ErrorCode::NPC_NOT_HOSTILE,
-            data: Some(serde_json::to_value("This target isn't an enemy.").unwrap()),
+            payload: Payload::Json(serde_json::to_value("This target isn't an enemy.").unwrap()),
         };
     }
 
@@ -85,7 +85,7 @@ pub fn fight_request(
         Err(code) => {
             return Message::Response {
                 error: code,
-                data: None,
+                payload: Payload::Empty,
             };
         }
     };
@@ -110,7 +110,7 @@ pub fn fight_request(
             };
             return Message::Response {
                 error: ErrorCode::SUCCESS,
-                data: Some(
+                payload: Payload::Json(
                     serde_json::to_value(&format!("{} says: 'Hello there!'", player.name)).unwrap(),
                 ),
             };
@@ -130,7 +130,7 @@ pub fn fight_request(
                                 | EnnAttRes::Error(msg) => {
                                     return Message::Response {
                                         error: ErrorCode::SUCCESS,
-                                        data: Some(
+                                        payload: Payload::Json(
                                             serde_json::to_value(&format!("{}\n{}", message, msg))
                                                 .unwrap(),
                                         ),
@@ -140,27 +140,29 @@ pub fn fight_request(
                         } else {
                             return Message::Response {
                                 error: ErrorCode::SUCCESS,
-                                data: Some(serde_json::to_value(&message).unwrap()),
+                                payload: Payload::Json(serde_json::to_value(&message).unwrap()),
                             };
                         }
                     }
                     AttackRes::KillTarget(msg) => {
                         return Message::Response {
                             error: ErrorCode::SUCCESS,
-                            data: Some(serde_json::to_value(&msg).unwrap()),
+                            payload: Payload::Json(serde_json::to_value(&msg).unwrap()),
                         };
                     }
                     AttackRes::Peace(msg) => {
                         return Message::Response {
                             error: ErrorCode::SUCCESS,
-                            data: Some(serde_json::to_value(msg).unwrap()),
+                            payload: Payload::Json(serde_json::to_value(msg).unwrap()),
                         };
                     }
                 },
                 TurnRes::NotMyTurn | TurnRes::EnemyTurn => {
                     return Message::Response {
                         error: ErrorCode::SUCCESS,
-                        data: Some(serde_json::to_value("It's not your turn!").unwrap()),
+                        payload: Payload::Json(
+                            serde_json::to_value("It's not your turn!").unwrap(),
+                        ),
                     };
                 }
             }
@@ -168,7 +170,9 @@ pub fn fight_request(
         State::Discuss => {
             return Message::Response {
                 error: ErrorCode::INVALID_COMMAND,
-                data: Some(serde_json::to_value("You can't fight in your state.").unwrap()),
+                payload: Payload::Json(
+                    serde_json::to_value("You can't fight in your state.").unwrap(),
+                ),
             };
         }
     }

@@ -1,4 +1,4 @@
-use crate::protocol::{ChatScope, EventType, Message};
+use crate::protocol::{ChatScope, EventType, Message, Payload};
 use crate::state::SharedServer;
 use crate::structures::enums::error::ErrorCode;
 use std::net::SocketAddr;
@@ -15,13 +15,13 @@ pub(super) fn chat_request(
     if !server_info.lock().unwrap().is_connected(peer_addr) {
         return Message::Response {
             error: ErrorCode::INVALID_COMMAND,
-            data: None,
+            payload: Payload::Empty,
         };
     }
     if args.len() <= 1 {
         return Message::Response {
             error: ErrorCode::INVALID_ARGS,
-            data: None,
+            payload: Payload::Empty,
         };
     }
     let scope = &args[0];
@@ -33,7 +33,7 @@ pub(super) fn chat_request(
         Err(code) => {
             return Message::Response {
                 error: code,
-                data: None,
+                payload: Payload::Empty,
             };
         }
     };
@@ -45,7 +45,7 @@ pub(super) fn chat_request(
             Err(code) => {
                 return Message::Response {
                     error: code,
-                    data: None,
+                    payload: Payload::Empty,
                 };
             }
         },
@@ -54,14 +54,14 @@ pub(super) fn chat_request(
             Err(code) => {
                 return Message::Response {
                     error: code,
-                    data: None,
+                    payload: Payload::Empty,
                 };
             }
         },
         _ => {
             return Message::Response {
                 error: ErrorCode::INVALID_ARGS,
-                data: None,
+                payload: Payload::Empty,
             };
         }
     };
@@ -70,7 +70,7 @@ pub(super) fn chat_request(
         Err(code) => {
             return Message::Response {
                 error: code,
-                data: None,
+                payload: Payload::Empty,
             };
         }
     };
@@ -84,6 +84,6 @@ pub(super) fn chat_request(
     info!("Send {} scoped chat: {}", scope.to_uppercase(), body);
     return Message::Response {
         error: ErrorCode::SUCCESS,
-        data: None,
+        payload: Payload::Empty,
     };
 }

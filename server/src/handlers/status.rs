@@ -1,6 +1,6 @@
 use serde::Serialize;
 
-use crate::protocol::Message;
+use crate::protocol::{Message, Payload};
 use crate::state::SharedServer;
 use crate::structures::enums::error::ErrorCode;
 use crate::structures::enums::state::State;
@@ -20,7 +20,7 @@ pub(super) fn status_request(server_info: &SharedServer, peer_addr: SocketAddr) 
     match server_info.lock().unwrap().get_player(peer_addr) {
         Ok(player) => Message::Response {
             error: ErrorCode::SUCCESS,
-            data: Some(
+            payload: Payload::Json(
                 serde_json::to_value(StatusView {
                     hp: &player.hp,
                     max_hp: &player.max_hp,
@@ -31,7 +31,7 @@ pub(super) fn status_request(server_info: &SharedServer, peer_addr: SocketAddr) 
         },
         Err(code) => Message::Response {
             error: code,
-            data: None,
+            payload: Payload::Empty,
         },
     }
 }

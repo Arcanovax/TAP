@@ -9,7 +9,7 @@ fn npc_right_name_returns_success() {
         res,
         Message::Response {
             error: ErrorCode::SUCCESS,
-            data: Some(
+            payload: Payload::Json(
                 serde_json::to_value(NPCView {
                     name: "guard",
                     kind: NPCKindView::Citizen,
@@ -29,7 +29,7 @@ fn npc_wrong_name_returns_npc_not_found() {
         res,
         Message::Response {
             error: ErrorCode::NPC_NOT_FOUND,
-            data: None
+            payload: Payload::Empty
         }
     )
 }

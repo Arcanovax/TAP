@@ -1,6 +1,6 @@
 use super::*;
 use crate::handlers::take::take_request;
-use crate::test_utils::{addr, connect, err, ok_data, populated_server};
+use crate::test_utils::{addr, connect, err, ok_pair, populated_server};
 
 #[test]
 fn drop_without_connection_returns_invalid_command() {
@@ -25,7 +25,7 @@ fn drop_item_in_inventory_returns_it() {
     take_request(&server, addr(1), &vec!["sword".to_string()]);
 
     let result = drop_request(&server, addr(1), &vec!["sword".to_string()]);
-    assert_eq!(result, ok_data(r#"{"dropped":"sword"}"#));
+    assert_eq!(result, ok_pair("dropped", "sword"));
     // l'item n'est plus dans l'inventaire
     let guard = server.lock().unwrap();
     assert!(

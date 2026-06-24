@@ -1,6 +1,11 @@
+use serde_json::json;
 use tracing::info;
 
-use crate::{protocol::Message, state::SharedServer, structures::enums::error::ErrorCode};
+use crate::{
+    protocol::{Message, Payload},
+    state::SharedServer,
+    structures::{enums::error::ErrorCode, quest::Goal},
+};
 use std::net::SocketAddr;
 
 #[cfg(test)]
@@ -14,13 +19,13 @@ pub(super) fn quest_request(
     if !server_info.lock().unwrap().is_connected(peer_addr) {
         return Message::Response {
             error: ErrorCode::INVALID_COMMAND,
-            data: None,
+            payload: Payload::Empty,
         };
     }
     if args.len() == 0 {
         return Message::Response {
             error: ErrorCode::INVALID_ARGS,
-            data: None,
+            payload: Payload::Empty,
         };
     }
 
@@ -33,13 +38,26 @@ pub(super) fn quest_request(
     if !player_room.npc.iter().any(|npc| *npc == npc_ref) {
         return Message::Response {
             error: ErrorCode::NPC_NOT_FOUND,
-            data: None,
+            payload: Payload::Empty,
         }
         .into();
     }
-    let res = binding.try_accept_quest(peer_addr, &npc_ref);
-    if let Ok(_) = &res {
-        info!("Accepted {} quest", npc_ref);
-    };
-    res.into()
+    match binding.try_accept_quest(peer_addr, &npc_ref) {
+        Ok(quest) => {
+            info!("Accepted {} quest", npc_ref);
+            Message::Response {
+                error: ErrorCode::SUCCESS,
+                payload: Payload::Json(json!({
+                    "quest_id": &quest.name,
+                    "description": &<Goal as Into<String>>::into(quest.goals[0].clone()),
+                    "reward": &quest.reward,
+                    "status": "accepted"
+                })),
+            }
+        }
+        Err(code) => Message::Response {
+            error: code,
+            payload: Payload::Empty,
+        },
+    }
 }

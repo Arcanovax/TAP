@@ -3,7 +3,7 @@ use std::net::SocketAddr;
 use tracing::info;
 
 use crate::{
-    protocol::Message,
+    protocol::{Message, Payload},
     state::SharedServer,
     structures::{
         enums::{error::ErrorCode, game_event::GameEvent},
@@ -19,7 +19,7 @@ pub fn talk_request(
     if args.len() == 0 {
         return Message::Response {
             error: ErrorCode::INVALID_ARGS,
-            data: None,
+            payload: Payload::Empty,
         }
         .into();
     }
@@ -29,7 +29,7 @@ pub fn talk_request(
         Err(code) => {
             return Message::Response {
                 error: code,
-                data: None,
+                payload: Payload::Empty,
             }
             .into();
         }
@@ -43,7 +43,7 @@ pub fn talk_request(
     if !player_room.npc.iter().any(|npc| *npc == npc_ref) {
         return Message::Response {
             error: ErrorCode::NPC_NOT_FOUND,
-            data: None,
+            payload: Payload::Empty,
         }
         .into();
     }
@@ -52,7 +52,7 @@ pub fn talk_request(
         None => {
             return Message::Response {
                 error: ErrorCode::NPC_NOT_FOUND,
-                data: None,
+                payload: Payload::Empty,
             }
             .into();
         }
@@ -74,7 +74,7 @@ pub fn talk_request(
             None => {
                 return Message::Response {
                     error: ErrorCode::NO_DIALOG,
-                    data: None,
+                    payload: Payload::Empty,
                 }
                 .into();
             }
@@ -86,7 +86,7 @@ pub fn talk_request(
     HandlerOutcome {
         message: Message::Response {
             error: ErrorCode::SUCCESS,
-            data: Some(serde_json::to_value(dialogs).unwrap()),
+            payload: Payload::Text(dialogs.join("\\")),
         },
         event: Some(GameEvent::Talked {
             dialog: format!("{npc_ref}.dialog.{dialog_id}"),

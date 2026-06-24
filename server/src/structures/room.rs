@@ -1,10 +1,11 @@
-use crate::structures::enums::exits::Exit;
+use crate::structures::enums::exits::Direction;
 use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
 
 #[derive(Debug, PartialEq, Serialize, Deserialize)]
 pub struct Room {
     pub name: String,
-    pub exits: Vec<Exit>,
+    pub exits: HashMap<Direction, String>,
     pub description: String,
     #[serde(default)]
     pub npc: Vec<String>,
@@ -18,12 +19,7 @@ impl Room {
             .iter()
             .chain(self.items.iter())
             .map(|s| String::as_str(s))
-            .chain(self.exits.iter().map(|exit| match exit {
-                Exit::North { toward }
-                | Exit::South { toward }
-                | Exit::East { toward }
-                | Exit::West { toward } => toward.as_str(),
-            }))
+            .chain(self.exits.values().map(|str| str.as_str()))
             .collect()
     }
 }

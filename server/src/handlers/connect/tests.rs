@@ -1,5 +1,5 @@
 use super::*;
-use crate::test_utils::{addr, connect, err, populated_server, test_server, tx_rx};
+use crate::test_utils::{addr, connect, err, ok_text, populated_server, test_server, tx_rx};
 
 #[test]
 fn connect_without_args_returns_invalid_args() {
@@ -27,7 +27,7 @@ fn connect_valid_returns_success_and_registers_player() {
     let server = test_server();
     let (tx, _rx) = tx_rx();
     let result = connect_request(&vec!["alice".to_string()], &server, addr(1), &tx);
-    assert_eq!(result, err(ErrorCode::SUCCESS));
+    assert_eq!(result, ok_text("connected"));
     assert!(server.lock().unwrap().is_connected(addr(1)));
 }
 
@@ -79,7 +79,7 @@ fn connect_broadcasts_player_count_to_others() {
     // alice reçoit ROOM_JOIN puis PLAYERS : on vérifie la présence de l'event PLAYERS
     let events: Vec<_> = std::iter::from_fn(|| alice_rx.try_recv().ok()).collect();
     assert!(
-        events.contains(&Message::Event(EventType::PLAYERS { players: 2 })),
+        events.contains(&Message::Event(EventType::STATS_PLAYERS { players: 2 })),
         "alice devrait recevoir PLAYERS {{ players: 2 }}, reçu: {events:?}"
     );
 }
@@ -96,7 +96,7 @@ fn connect_does_not_send_player_count_to_self() {
     assert!(
         !events
             .iter()
-            .any(|e| matches!(e, Message::Event(EventType::PLAYERS { .. }))),
+            .any(|e| matches!(e, Message::Event(EventType::STATS_PLAYERS { .. }))),
         "bob ne devrait pas recevoir son propre event PLAYERS, reçu: {events:?}"
     );
 }

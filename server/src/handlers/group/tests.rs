@@ -150,7 +150,7 @@ fn group_invite_notifies_target() {
         rx_bob
             .try_recv()
             .expect("bob should receive the invitation"),
-        Message::Event(EventType::INVITE {
+        Message::Event(EventType::GROUP_INVITE {
             sender: "alice".to_string(),
             group_name: "alice's group".to_string(),
         })

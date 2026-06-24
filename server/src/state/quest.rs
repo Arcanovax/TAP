@@ -1,17 +1,15 @@
+use super::*;
 use crate::structures::{
     enums::{error::ErrorCode, game_event::GameEvent},
     quest::Quest,
 };
-
-use super::*;
-use serde_json::Value;
 
 impl ServerInfo {
     pub fn try_accept_quest(
         &mut self,
         peer_addr: SocketAddr,
         npc_name: &str,
-    ) -> Result<Value, ErrorCode> {
+    ) -> Result<&Quest, ErrorCode> {
         let npc = match self.world.npcs.get(npc_name) {
             Some(npc) => npc,
             None => return Err(ErrorCode::NPC_NOT_FOUND),
@@ -28,7 +26,7 @@ impl ServerInfo {
         }
         player.quests_in_progress.insert(quest_ref.clone(), 0);
         let quest = self.world.quests.get(&quest_ref).unwrap();
-        Ok(serde_json::to_value(quest).unwrap())
+        Ok(&quest)
     }
 
     pub fn advance_quests(&mut self, peer_addr: SocketAddr, event: Option<&GameEvent>) {

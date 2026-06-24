@@ -12,7 +12,7 @@ fn item_right_name_returns_success() {
         res,
         Message::Response {
             error: ErrorCode::SUCCESS,
-            data: Some(
+            payload: Payload::Json(
                 serde_json::to_value(Item {
                     name: String::from("sword"),
                     price: 10,
@@ -32,7 +32,7 @@ fn npc_wrong_name_returns_npc_not_found() {
         res,
         Message::Response {
             error: ErrorCode::ITEM_NOT_FOUND,
-            data: None
+            payload: Payload::Empty
         }
     )
 }

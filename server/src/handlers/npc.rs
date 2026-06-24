@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 
 use crate::{
-    protocol::Message,
+    protocol::{Message, Payload},
     state::SharedServer,
     structures::{
         enums::{error::ErrorCode, npc_kind::NPCKind},
@@ -70,7 +70,7 @@ pub(super) fn npc_request(server_info: &SharedServer, args: &Vec<String>) -> Mes
         None => {
             return Message::Response {
                 error: ErrorCode::NPC_NOT_FOUND,
-                data: None,
+                payload: Payload::Empty,
             };
         }
     };
@@ -79,7 +79,7 @@ pub(super) fn npc_request(server_info: &SharedServer, args: &Vec<String>) -> Mes
 
     Message::Response {
         error: ErrorCode::SUCCESS,
-        data: Some(serde_json::to_value::<NPCView>(npc.into()).unwrap()),
+        payload: Payload::Json(serde_json::to_value::<NPCView>(npc.into()).unwrap()),
     }
 }
 
@@ -95,6 +95,6 @@ pub(super) fn npcs_request(server_info: &SharedServer) -> Message {
 
     Message::Response {
         error: ErrorCode::SUCCESS,
-        data: Some(serde_json::to_value(npcs).unwrap()),
+        payload: Payload::Json(serde_json::to_value(npcs).unwrap()),
     }
 }

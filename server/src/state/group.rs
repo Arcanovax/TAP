@@ -1,6 +1,5 @@
 use super::*;
 use crate::structures::enums::error::ErrorCode;
-use serde_json::{Value, json};
 
 impl ServerInfo {
     fn create_new_group(&mut self, name: &str, group_leader: SocketAddr) -> Uuid {
@@ -14,7 +13,7 @@ impl ServerInfo {
         &mut self,
         peer_addr: SocketAddr,
         group_id: Uuid,
-    ) -> Result<Value, ErrorCode> {
+    ) -> Result<String, ErrorCode> {
         let con = self
             .connections
             .get(&peer_addr)
@@ -38,14 +37,14 @@ impl ServerInfo {
                 player_name: player_name.clone(),
             }));
         }
-        Ok(json!({ "group": group_id }))
+        Ok(group_id.to_string())
     }
 
     pub fn try_create_group(
         &mut self,
         peer_addr: SocketAddr,
         group_name: &str,
-    ) -> Result<Value, ErrorCode> {
+    ) -> Result<String, ErrorCode> {
         let con = self
             .connections
             .get(&peer_addr)
@@ -64,7 +63,7 @@ impl ServerInfo {
                 return Err(code);
             }
         };
-        Ok(json!({ "group": group_id }))
+        Ok(group_id.to_string())
     }
 
     pub fn cleanup_player_invitation(&mut self, peer_addr: SocketAddr, player_name: &str) {
@@ -166,7 +165,7 @@ impl ServerInfo {
             return Err(ErrorCode::ALREADY_INVITED);
         }
         invitations.insert(inviter_name.clone(), group_id);
-        let _ = receiver_tx.send(Message::Event(EventType::INVITE {
+        let _ = receiver_tx.send(Message::Event(EventType::GROUP_INVITE {
             sender: inviter_name,
             group_name: String::from(group_name),
         }));
@@ -177,7 +176,7 @@ impl ServerInfo {
         &mut self,
         peer_addr: SocketAddr,
         leader_name: String,
-    ) -> Result<Value, ErrorCode> {
+    ) -> Result<String, ErrorCode> {
         let group_id = *self
             .invitations
             .get(&peer_addr)

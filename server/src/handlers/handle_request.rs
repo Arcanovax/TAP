@@ -5,6 +5,7 @@ use crate::{
         quest::quest_request,
         quests::quests_request,
     },
+    protocol::Payload,
     state::{SharedServer, Tx},
     structures::{
         enums::{command::Command, error::ErrorCode},
@@ -34,7 +35,7 @@ pub fn handle_request(
             Some(Command::CONNECT) => connect_request(args, server_info, peer_addr, tx).into(),
             Some(Command::QUIT) => Message::Response {
                 error: ErrorCode::SUCCESS,
-                data: Some(serde_json::to_value("OK bye").unwrap()),
+                payload: Payload::Text("bye".to_string()),
             }
             .into(),
             Some(Command::WHO) => who_request(server_info).into(),
@@ -56,13 +57,13 @@ pub fn handle_request(
             Some(Command::QUESTS) => quests_request(server_info, peer_addr).into(),
             _ => Message::Response {
                 error: ErrorCode::INVALID_COMMAND,
-                data: None,
+                payload: Payload::Empty,
             }
             .into(),
         },
         _ => Message::Response {
             error: ErrorCode::INVALID_COMMAND,
-            data: None,
+            payload: Payload::Empty,
         }
         .into(),
     };

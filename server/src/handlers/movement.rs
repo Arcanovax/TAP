@@ -1,12 +1,10 @@
-use serde_json::json;
-use tracing::info;
-
 use crate::{
-    protocol::{EventType, Message},
+    protocol::{EventType, Message, Payload},
     state::SharedServer,
-    structures::enums::{error::ErrorCode, exits::Exit},
+    structures::enums::{error::ErrorCode, exits::Direction},
 };
-use std::{mem::discriminant, net::SocketAddr};
+use std::{collections::HashMap, net::SocketAddr};
+use tracing::info;
 
 #[cfg(test)]
 mod tests;
@@ -15,7 +13,7 @@ pub fn move_request(server: &SharedServer, peer_addr: SocketAddr, dest: &Vec<Str
     if dest.len() != 1 {
         return Message::Response {
             error: ErrorCode::INVALID_ARGS,
-            data: None,
+            payload: Payload::Empty,
         };
     }
     let destination = dest[0].clone();
@@ -23,30 +21,21 @@ pub fn move_request(server: &SharedServer, peer_addr: SocketAddr, dest: &Vec<Str
 
     let target = match server.get_player_room(peer_addr) {
         Ok(room) => {
-            let wanted: Exit = match destination.parse() {
+            let wanted: Direction = match destination.parse() {
                 Ok(exit) => exit,
                 Err(code) => {
                     return Message::Response {
                         error: code,
-                        data: None,
+                        payload: Payload::Empty,
                     };
                 }
             };
-            match room
-                .exits
-                .iter()
-                .find(|exit| discriminant(*exit) == discriminant(&wanted))
-            {
-                Some(
-                    Exit::North { toward }
-                    | Exit::South { toward }
-                    | Exit::East { toward }
-                    | Exit::West { toward },
-                ) => toward.clone(),
+            match room.exits.get(&wanted) {
+                Some(toward) => toward.clone(),
                 None => {
                     return Message::Response {
                         error: ErrorCode::NO_EXIT,
-                        data: None,
+                        payload: Payload::Empty,
                     };
                 }
             }
@@ -54,7 +43,7 @@ pub fn move_request(server: &SharedServer, peer_addr: SocketAddr, dest: &Vec<Str
         Err(code) => {
             return Message::Response {
                 error: code,
-                data: None,
+                payload: Payload::Empty,
             };
         }
     };
@@ -82,6 +71,6 @@ pub fn move_request(server: &SharedServer, peer_addr: SocketAddr, dest: &Vec<Str
     info!("{} moved from {} to {}", player.name, old_room, target);
     Message::Response {
         error: ErrorCode::SUCCESS,
-        data: Some(json!({ "room": target })),
+        payload: Payload::Pair(HashMap::from([("room".to_string(), target)])),
     }
 }

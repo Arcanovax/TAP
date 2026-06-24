@@ -54,4 +54,8 @@ impl ErrorCode {
             ErrorCode::SUCCESS => 0,
         }
     }
+
+    pub fn name(&self) -> String {
+        format!("{:?}", self)
+    }
 }

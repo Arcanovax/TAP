@@ -1,10 +1,9 @@
 use crate::{
-    protocol::{EventType, Message},
+    protocol::{EventType, Message, Payload},
     state::SharedServer,
     structures::enums::error::ErrorCode,
 };
-use serde_json::json;
-use std::net::SocketAddr;
+use std::{collections::HashMap, net::SocketAddr};
 use tracing::info;
 
 #[cfg(test)]
@@ -19,13 +18,13 @@ pub fn drop_request(
     if !binding.is_connected(peer_addr) {
         return Message::Response {
             error: ErrorCode::INVALID_COMMAND,
-            data: None,
+            payload: Payload::Empty,
         };
     }
     if args.len() == 0 {
         return Message::Response {
             error: ErrorCode::INVALID_ARGS,
-            data: None,
+            payload: Payload::Empty,
         };
     }
 
@@ -39,19 +38,19 @@ pub fn drop_request(
             let receivers = binding.get_room_receivers(peer_addr).unwrap();
             let player = binding.get_player(peer_addr).unwrap();
             for con in receivers {
-                let _ = con.tx.send(Message::Event(EventType::DROP {
+                let _ = con.tx.send(Message::Event(EventType::ROOM_DROP {
                     player_name: player.name.clone(),
                     item: item.clone(),
                 }));
             }
             Message::Response {
                 error: ErrorCode::SUCCESS,
-                data: Some(json!({ "dropped": item })),
+                payload: Payload::Pair(HashMap::from([("dropped".to_string(), item)])),
             }
         }
         Err(code) => Message::Response {
             error: code,
-            data: None,
+            payload: Payload::Empty,
         },
     }
 }

@@ -1,6 +1,7 @@
-use crate::protocol::Message;
+use crate::protocol::{Message, Payload};
 use crate::state::SharedServer;
 use crate::structures::enums::error::ErrorCode;
+use std::collections::HashMap;
 use std::net::SocketAddr;
 
 #[cfg(test)]
@@ -14,7 +15,7 @@ pub(super) fn group_request(
     if args.len() == 0 {
         return Message::Response {
             error: ErrorCode::INVALID_ARGS,
-            data: None,
+            payload: Payload::Empty,
         };
     }
 
@@ -26,7 +27,7 @@ pub(super) fn group_request(
         "LIST" => group_list_request(server_info, peer_addr),
         _ => Message::Response {
             error: ErrorCode::INVALID_ARGS,
-            data: None,
+            payload: Payload::Empty,
         },
     }
 }
@@ -43,7 +44,7 @@ fn group_create_request(
             Err(code) => {
                 return Message::Response {
                     error: code,
-                    data: None,
+                    payload: Payload::Empty,
                 };
             }
         };
@@ -51,11 +52,20 @@ fn group_create_request(
         group_name = args[1..].join(" ");
     }
 
-    server_info
+    match server_info
         .lock()
         .unwrap()
         .try_create_group(peer_addr, group_name.as_str())
-        .into()
+    {
+        Ok(gid) => Message::Response {
+            error: ErrorCode::SUCCESS,
+            payload: Payload::Pair(HashMap::from([("group".to_string(), gid)])),
+        },
+        Err(code) => Message::Response {
+            error: code,
+            payload: Payload::Empty,
+        },
+    }
 }
 
 fn group_leave_request(server_info: &SharedServer, peer_addr: SocketAddr) -> Message {
@@ -74,7 +84,7 @@ fn group_invite_request(
     if args.len() != 2 {
         return Message::Response {
             error: ErrorCode::INVALID_ARGS,
-            data: None,
+            payload: Payload::Empty,
         };
     }
 
@@ -93,14 +103,23 @@ fn group_join_request(
     if args.len() <= 1 {
         return Message::Response {
             error: ErrorCode::INVALID_ARGS,
-            data: None,
+            payload: Payload::Empty,
         };
     }
-    server_info
+    match server_info
         .lock()
         .unwrap()
         .try_join_group(peer_addr, args[1..].join(" "))
-        .into()
+    {
+        Ok(gid) => Message::Response {
+            error: ErrorCode::SUCCESS,
+            payload: Payload::Pair(HashMap::from([("group".to_string(), gid)])),
+        },
+        Err(code) => Message::Response {
+            error: code,
+            payload: Payload::Empty,
+        },
+    }
 }
 
 fn group_list_request(server_info: &SharedServer, peer_addr: SocketAddr) -> Message {

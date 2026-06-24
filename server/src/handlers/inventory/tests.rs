@@ -17,5 +17,5 @@ fn inventory_without_connection_returns_invalid_command() {
 fn inventory_when_empty_returns_empty_map() {
     let server = test_server();
     connect(&server, addr(1), "alice");
-    assert_eq!(inventory_request(&server, addr(1)), ok_data("{}"));
+    assert_eq!(inventory_request(&server, addr(1)), ok_data("[]"));
 }
