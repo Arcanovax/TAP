@@ -55,7 +55,6 @@ pub fn execute_attack<'a>(
                 *defeated = true;
                 target_hp_after = 0;
                 enemy_died = true;
-                
                 loot_list = loot.clone();
             }
         }

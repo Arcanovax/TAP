@@ -1,7 +1,7 @@
 use serde::Deserialize;
 use serde_json::Value;
 
-use crate::structures::{attack::Attack, chat_data::ChatData, enn_attack::EnnAttack, enter_fight::EnterFight, invite_data::InviteData};
+use crate::structures::{attack::Attack, chat_data::ChatData, enn_attack::EnnAttack, enter_fight::EnterFight, invite_data::InviteData, leave_fight::{FightLeave}};
 
 #[derive(Deserialize, Debug)]
 pub struct ServerEvent {
@@ -12,6 +12,8 @@ pub struct ServerEvent {
     pub invite: Option<InviteData>,
     #[serde(rename = "ENTER_FIGHT")]
     pub enter: Option<EnterFight>,
+    #[serde(rename = "FIGHT_LEAVE")]
+    pub fight_leave: Option<FightLeave>,
     #[serde(rename = "ATTACK")]
     pub attack: Option<Attack>,
     #[serde(rename = "ENEMY_ATTACK")]

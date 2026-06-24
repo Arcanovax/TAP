@@ -2,6 +2,9 @@ use crate::config::load;
 use crate::handlers::handle_request::handle_request;
 use crate::protocol::Message;
 use crate::state::{ServerInfo, SharedServer};
+use crate::structures::enums::state::State;
+use crate::structures::player;
+use std::{fs::OpenOptions, io::Write};
 use std::net::SocketAddr;
 use std::path::Path;
 use std::sync::{Arc, Mutex};
@@ -30,6 +33,20 @@ fn parse_command(line: &str) -> Message {
 
 fn cleanup_tcp_connection(server_info: &SharedServer, peer_addr: SocketAddr) {
     let _ = server_info.lock().unwrap().try_leave_group(peer_addr);
+	let player_res = server_info.lock().unwrap().get_player(peer_addr).cloned();
+
+	match player_res {
+		Ok(player) => {
+			match &player.status {
+				State::InFight { target_id } => {
+					let _ = server_info.lock().unwrap().try_leave_fight(peer_addr, target_id.clone());
+				},
+				_ => {}
+			}
+		},
+		Err(_code) => {}
+	}
+    
     match server_info.lock().unwrap().try_remove_player(peer_addr) {
         Ok(name) => info!("{} disconnected", name),
         Err(_) => {}

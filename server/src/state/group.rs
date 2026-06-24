@@ -1,4 +1,8 @@
+use std::{fs::OpenOptions, io::Write};
+
 use super::*;
+
+use crate::handlers::fight::enemy_attack::enemy_attack;
 use crate::structures::enums::error::ErrorCode;
 use serde_json::{Value, json};
 
@@ -76,6 +80,39 @@ impl ServerInfo {
             self.cleanup_group_invitation(group_id);
             info!("group({}) deleted", group_id);
         }
+    }
+
+	pub fn try_leave_fight(&mut self, peer_addr: SocketAddr, target: String) -> Result<(), ErrorCode> {
+        let con = {
+			let connection = self.get_connection(peer_addr)?;
+			connection
+		};
+
+        let player_name = con.player.name.clone();
+        let receivers = {
+			let fighters = &mut self.fights.get_mut(&target).unwrap().fighters;
+			fighters.retain(|f| f != &player_name);
+			fighters.clone()
+		};
+		let nb_receivers = receivers.len();
+		if let Ok(mut file) = OpenOptions::new().create(true).append(true).open("debug_network.txt") {
+				let _ = writeln!(file, "all (State {:?}) : {:#?}", receivers, player_name);}
+        for name in receivers {
+			if let Some(con) = self.connections.values().find(|pl_conn| pl_conn.player.name == name) {
+				let _ = con.tx.send(Message::Event(EventType::FIGHT_LEAVE { player_name: player_name.clone() }));
+			}
+        }
+
+		let fight_turn = {
+			let turn = self.fights.get(&target).unwrap().turn;
+			turn.clone()
+		};
+
+		if nb_receivers == fight_turn as usize {
+			enemy_attack(&target, self);
+			self.fights.get_mut(&target).unwrap().turn = 0;
+		}
+        Ok(())
     }
 
     pub fn try_leave_group(&mut self, peer_addr: SocketAddr) -> Result<(), ErrorCode> {

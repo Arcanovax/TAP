@@ -66,6 +66,9 @@ pub enum EventType {
         player_name: String,
         item: String,
     },
+	FIGHT_LEAVE {
+		player_name: String
+	},
     ENTER_FIGHT {
         player_name: String,
         hp: u32
@@ -78,7 +81,8 @@ pub enum EventType {
     ENEMY_ATTACK {
         target: String,
         damages: u32,
-        target_hp: u32
+        target_hp: u32,
+		target_killed: bool
     }
 }
 

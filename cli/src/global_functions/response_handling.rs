@@ -2,7 +2,7 @@ use std::{collections::{VecDeque}, fs::OpenOptions, io::Write};
 
 use serde_json::Value;
 
-use crate::{enums::{actions::PendingAction, focus::Focus, states::States}, structures::{attack_results::Attack_Result, room::Room, server_event::ServerEvent, world::World}};
+use crate::{enums::{actions::PendingAction, focus::Focus, npc_kind::NPCKind, states::States}, structures::{attack_results::Attack_Result, room::Room, server_event::ServerEvent, world::World}};
 
 pub fn response_handling(world: &mut World, server: &ServerEvent) {
 	if server.error == Some("SUCCESS".to_string()) {
@@ -88,13 +88,16 @@ pub fn response_handling(world: &mut World, server: &ServerEvent) {
 							world.player.hp = result.attacker_hp;
 							let fight = &mut world.room.fight;
 							if fight.target_name == "".to_string() {
-								fight.target_name = match world.list_npcs.get(name) {Some(npc) => npc.name.clone(), None => name.clone()}
+								fight.target_name = match world.list_npcs.get(name) {Some(npc) => npc.name.clone(), None => name.clone()};
+								// It works with our own server but if its not, the max_hp will be the hp at the moment we enter in fight, doesn't matter if the fight begin earlier.
+								fight.target_max_hp = match world.list_npcs.get(name) {Some(npc) => if let NPCKind::Enemy { max_hp, ..} = npc.kind {max_hp} else {result.target_hp}, None => result.target_hp};
 							}
 							match result.fighters {
 								Some(fighters) => fight.fighters = fighters,
 								None => {}
 							}
 							fight.target_hp = result.target_hp;
+							world.state = States::InFight { target_id: fight.target_name.clone() };
 						}
 						_ => {}
 				}
@@ -125,6 +128,7 @@ pub fn response_handling(world: &mut World, server: &ServerEvent) {
 					world.action = PendingAction::None;
 				}
 				_ => {
+					// world.output.push_back(format!("[Error] coucou"));
 					world.output.push_back(format!("[Error] {}", server.error.clone().unwrap_or("Unknown error".to_string())));
 					world.action = PendingAction::None;
 				}

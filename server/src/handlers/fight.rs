@@ -10,7 +10,7 @@ use crate::{
 use std::{collections::HashMap, fs::OpenOptions, net::SocketAddr, io::Write};
 
 mod attack;
-mod enemy_attack;
+pub mod enemy_attack;
 mod is_it_my_turn;
 #[cfg(test)]
 mod tests;
@@ -65,18 +65,18 @@ pub fn fight_request(
     };
 
     if !is_he_there(&args[0], loc) {
-        return Message::Response {
-            error: ErrorCode::NPC_NOT_FOUND,
+		return Message::Response {
+			error: ErrorCode::NPC_NOT_FOUND,
             data: Some(serde_json::to_value("This target isn't here.").unwrap()),
         };
     }
-
+	
     let (is_defeated, target_hp) = {
-        if let NPCKind::Enemy { defeated, hp, .. } = world_mut.world.npcs[&args[0]].kind {
-            (defeated, hp)
+		if let NPCKind::Enemy { defeated, hp, .. } = world_mut.world.npcs[&args[0]].kind {
+			(defeated, hp)
         } else {
-            return Message::Response {
-                error: ErrorCode::NPC_NOT_HOSTILE,
+			return Message::Response {
+				error: ErrorCode::NPC_NOT_HOSTILE,
                 data: Some(serde_json::to_value("This target isn't an enemy.").unwrap()),
             };
         }
@@ -126,8 +126,6 @@ pub fn fight_request(
             let mut fighters: HashMap<String, u32> = HashMap::new();
 
             for fighter_name in &world_mut.fights.get(&args[0]).unwrap().fighters {
-                // if let Ok(mut file) = OpenOptions::new().create(true).append(true).open("debug_network.txt") {
-                //     let _ = writeln!(file, "ko (State {:#?}) : {:#?}", world_mut.connections, fighter_name);}
                 if let Some(fighter) = world_mut.connections.values().find(|c| &c.player.name == fighter_name){
                     fighters.insert(fighter.player.name.clone(), fighter.player.hp);
                 }

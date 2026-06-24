@@ -17,11 +17,11 @@ use tokio::sync::mpsc::Sender;
 
 use crate::{
 	draw_functions::{
-		discuss::draw_room_discuss, login::login_draw, rooms::draw_room, wait_server::draw_wait
+		discuss::draw_room_discuss, fights::draw_room_fight, login::login_draw, rooms::draw_room, wait_server::draw_wait
 	}, enums::{
 		actions::PendingAction, channels::Channels, exits::Exits, focus::Focus, states::States
 	}, global_functions::{find_action::find_action, response_handling::response_handling}, structures::{
-		chat::Chat, enn_attack::EnnAttack, group::{Group, Invitation}, items::Item, npc::NPC, player::Player, room::Room, server_event::ServerEvent
+		chat::Chat, enn_attack::EnnAttack, fight::Fight, group::{Group, Invitation}, items::Item, npc::NPC, player::Player, room::Room, server_event::ServerEvent
 	}
 };
 
@@ -88,6 +88,10 @@ impl World<'_>{
 				// 	let _ = writeln!(file, "RECU (State {:?}) : {:#?}", self.state, self.player.name);}
 				draw_room(self, frame);
 			},
+			States::InFight { .. } => {
+				self.room.focus = Focus::COMMAND;
+				draw_room_fight(self, frame);
+			}
 			States::InDiscuss(name, sentence) => {
 				draw_room_discuss(self, frame, name.to_string(), sentence.to_string());
 			}
@@ -114,7 +118,8 @@ impl World<'_>{
 								_ => {}
 							}
 						},
-						States::Idle => {
+						States::Idle
+						| States::InFight { .. } => {
 							if self.room.focus == Focus::COMMAND && key.code != KeyCode::Tab && key.code != KeyCode::Enter{
 									self.room.text_area.input(key);
 							} else {
@@ -282,33 +287,66 @@ impl World<'_>{
 									if let Some(invite) = server_event.invite {
 										self.group.invitation.push(Invitation{sender: invite.sender, group_name: invite.group_name});
 									}
+
 									if let Some(new_player) = server_event.join {
 										self.chat.group_messages.push_back(format!("{new_player} join the group."));
 									}
+
 									if let Some(leaver) = server_event.leave {
 										self.chat.group_messages.push_back(format!("{leaver} leave the group."));
 									}
+
 									if let Some(enter) = server_event.enter {
+										self.output.push_back("".to_string());
 										self.output.push_back(format!("{} says: 'Hello there!'.", enter.player_name));
 										self.room.fight.fighters.insert(enter.player_name, enter.hp);
+										self.room.output_scroll_pos.scroll_to_bottom();
 									}
+
+									if let Some(name) = server_event.fight_leave {
+										self.output.push_back("".to_string());
+										self.output.push_back(format!(
+											"{} leave the fight. Coward!!", name.player_name
+										));
+										self.room.fight.fighters.remove(&name.player_name);
+									}
+
 									if let Some(attack) = server_event.attack {
+										self.output.push_back("".to_string());
 										self.output.push_back(format!(
 											"{} dealt {} damages to the enemy. {} has {} HP remaining.",
 											attack.player_name, attack.damages, self.room.fight.target_name, attack.enemy_hp
 										));
 										self.room.fight.target_hp = attack.enemy_hp;
+										self.room.output_scroll_pos.scroll_to_bottom();
 									}
+
 									if let Some(enn_attack) = server_event.enn_attack {
-										self.output.push_back(format!(
-											"{} dealt {} damages to {}. {} has {} HP remaining.",
-											self.room.fight.target_name, enn_attack.damages, enn_attack.target, enn_attack.target, enn_attack.target_hp
-										));
-										self.room.fight.fighters.insert(enn_attack.target.clone(), enn_attack.target_hp);
+										self.output.push_back("".to_string());
+										if enn_attack.target_killed {
+											self.output.push_back(format!(
+											"{} dealt {} damages to {}. {} is dead. What a shame!",
+											self.room.fight.target_name, enn_attack.damages, enn_attack.target, enn_attack.target
+											));
+											if enn_attack.target == self.player.name {
+												self.state = States::Idle;
+												self.room.fight = Fight::new();
+											} else {
+												self.room.fight.fighters.remove(&enn_attack.target);
+											}
+										} else {
+											self.output.push_back(format!(
+												"{} dealt {} damages to {}. {} has {} HP remaining.",
+												self.room.fight.target_name, enn_attack.damages, enn_attack.target, enn_attack.target, enn_attack.target_hp
+											));
+											self.room.fight.fighters.insert(enn_attack.target.clone(), enn_attack.target_hp);
+										}
 										if enn_attack.target == self.player.name {
 											self.player.hp = enn_attack.target_hp;
 										}
+										self.room.output_scroll_pos.scroll_to_bottom();
 									}
+
 									if let Some(msg) = server_event.chat {
 										let channel = match msg.scope.as_str(){
 										"ROOM" => &mut self.chat.room_messages,
