@@ -53,9 +53,9 @@ impl ServerInfo {
                 }));
             }
         }
+        self.cleanup_player_invitation(peer_addr, &name);
         self.connections.remove(&peer_addr);
         self.name_to_addr.remove(&name);
-        self.cleanup_player_invitation(peer_addr);
         Ok(name)
     }
 
@@ -135,7 +135,7 @@ impl ServerInfo {
         let db = self.db.clone();
         match save_player(&db, &player) {
             Ok(()) => {}
-            Err(_) => return Err(ErrorCode::DECONNECTION_FAIL),
+            Err(_) => return Err(ErrorCode::DISCONNECTION_FAIL),
         };
         Ok(())
     }

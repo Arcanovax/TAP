@@ -6,6 +6,7 @@ pub enum ErrorCode {
     NAME_IN_USE,
     NO_EXIT,
     NOT_IN_GROUP,
+    NOT_GROUP_LEADER,
     ALREADY_IN_GROUP,
     ITEM_NOT_FOUND,
     ITEM_NOT_IN_INVENTORY,
@@ -22,7 +23,8 @@ pub enum ErrorCode {
     ALREADY_CONNECTED,
     NO_DIALOG,
     SUCCESS,
-    DECONNECTION_FAIL,
+    DISCONNECTION_FAIL,
+    ALREADY_INVITED,
 }
 
 impl ErrorCode {
@@ -33,6 +35,8 @@ impl ErrorCode {
             ErrorCode::NO_DIALOG => 302,
             ErrorCode::NOT_IN_GROUP => 401,
             ErrorCode::ALREADY_IN_GROUP => 402,
+            ErrorCode::NOT_GROUP_LEADER => 403,
+            ErrorCode::ALREADY_INVITED => 407,
             ErrorCode::ITEM_NOT_FOUND
             | ErrorCode::PLAYER_NOT_FOUND
             | ErrorCode::ROOM_NOT_FOUND
@@ -46,7 +50,7 @@ impl ErrorCode {
             ErrorCode::INVALID_ARGS => 902,
             ErrorCode::INVALID_COMMAND => 903,
             ErrorCode::ALREADY_CONNECTED => 904,
-            ErrorCode::DECONNECTION_FAIL => 905,
+            ErrorCode::DISCONNECTION_FAIL => 905,
             ErrorCode::SUCCESS => 0,
         }
     }

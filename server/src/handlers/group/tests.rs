@@ -129,7 +129,7 @@ fn group_invite_self_returns_invalid_args() {
         &server,
         addr(1),
     );
-    assert_eq!(result, err(ErrorCode::INVALID_ARGS));
+    assert_eq!(result, err(ErrorCode::ALREADY_IN_GROUP));
 }
 
 #[test]
@@ -163,7 +163,11 @@ fn group_invite_notifies_target() {
 fn group_join_without_invitation_returns_invalid_command() {
     let server = test_server();
     connect(&server, addr(1), "alice");
-    let result = group_join_request(&server, addr(1));
+    let result = group_join_request(
+        &server,
+        addr(1),
+        &vec!["JOIN".to_string(), "test".to_string()],
+    );
     assert_eq!(result, err(ErrorCode::INVALID_COMMAND));
 }
 
@@ -179,7 +183,11 @@ fn group_join_notifies_existing_members() {
         addr(1),
     );
 
-    let result = group_join_request(&server, addr(2));
+    let result = group_join_request(
+        &server,
+        addr(2),
+        &vec!["JOIN".to_string(), "alice".to_string()],
+    );
 
     assert_success_contains(&result, "group");
     assert_eq!(

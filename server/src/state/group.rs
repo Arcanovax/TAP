@@ -3,8 +3,8 @@ use crate::structures::enums::error::ErrorCode;
 use serde_json::{Value, json};
 
 impl ServerInfo {
-    fn create_new_group(&mut self, name: &str) -> Uuid {
-        let group = Group::new(name);
+    fn create_new_group(&mut self, name: &str, group_leader: SocketAddr) -> Uuid {
+        let group = Group::new(name, group_leader);
         let group_id = group.id.clone();
         self.groups.insert(group.id, group);
         group_id
@@ -55,27 +55,42 @@ impl ServerInfo {
         }
 
         let name = con.player.name.clone();
-        let group_id = self.create_new_group(group_name);
+        let group_id = self.create_new_group(group_name, peer_addr);
         info!("{} created group({}:{})", name, group_name, group_id);
-        self.try_add_player_to_group(peer_addr, group_id)?;
+        match self.try_add_player_to_group(peer_addr, group_id) {
+            Ok(_) => {}
+            Err(code) => {
+                self.try_delete_group(group_id);
+                return Err(code);
+            }
+        };
         Ok(json!({ "group": group_id }))
     }
 
-    pub fn cleanup_player_invitation(&mut self, peer_addr: SocketAddr) {
+    pub fn cleanup_player_invitation(&mut self, peer_addr: SocketAddr, player_name: &str) {
         self.invitations.remove_entry(&peer_addr);
+        self.invitations.retain(|_, invites| {
+            invites.retain(|name, _| *name != player_name);
+            !invites.is_empty()
+        });
     }
 
     fn cleanup_group_invitation(&mut self, group_id: Uuid) {
-        self.invitations.retain(|_, gid| *gid != group_id);
+        self.invitations.retain(|_, invites| {
+            invites.retain(|_, gid| *gid != group_id);
+            !invites.is_empty()
+        });
     }
 
-    fn try_delete_group(&mut self, group_id: Uuid) {
-        let group = self.groups.get(&group_id).ok_or(()).unwrap();
+    fn try_delete_group(&mut self, group_id: Uuid) -> bool {
+        let group = self.groups.get(&group_id).unwrap();
         if group.get_group_size() == 0 {
             self.groups.remove(&group_id);
             self.cleanup_group_invitation(group_id);
             info!("group({}) deleted", group_id);
+            return true;
         }
+        return false;
     }
 
     pub fn try_leave_group(&mut self, peer_addr: SocketAddr) -> Result<(), ErrorCode> {
@@ -101,7 +116,16 @@ impl ServerInfo {
             .retain(|&addr| addr != con.addr);
         info!("{} leaved group({})", con.player.name, group_id);
         con.player.group_id = None;
-        self.try_delete_group(group_id);
+        let group_leader = self.groups.get(&group_id).unwrap().group_leader;
+        let is_deleted = self.try_delete_group(group_id);
+        if !is_deleted && group_leader == peer_addr {
+            let group = self.groups.get_mut(&group_id).unwrap();
+            info!(
+                "{}({}) leadership switched to {}",
+                group.name, group.id, group.players[0]
+            );
+            group.group_leader = group.players[0];
+        }
         Ok(())
     }
 
@@ -116,15 +140,32 @@ impl ServerInfo {
         }
         let inviter_name = con.player.name.clone();
         let group_id = con.player.group_id.unwrap();
-        let group_name = &self.groups.get(&group_id).unwrap().name;
+        let (group_name, group_leader) = {
+            let group = &self.groups.get(&group_id).unwrap();
+            (group.name.clone(), group.group_leader)
+        };
+
+        if group_leader != peer_addr {
+            return Err(ErrorCode::NOT_GROUP_LEADER);
+        }
 
         let receiver_con = self.get_connection(*self.get_name_addr(receiver_name)?)?;
+
+        if receiver_con.player.group_id.is_some() {
+            return Err(ErrorCode::ALREADY_IN_GROUP);
+        }
+
         let receiver_addr = receiver_con.addr;
         let receiver_tx = receiver_con.tx.clone();
-        if peer_addr == receiver_addr {
-            return Err(ErrorCode::INVALID_ARGS);
+
+        let invitations = self
+            .invitations
+            .entry(receiver_addr)
+            .or_insert_with(HashMap::new);
+        if invitations.get(&inviter_name) == Some(&group_id) {
+            return Err(ErrorCode::ALREADY_INVITED);
         }
-        self.invitations.insert(receiver_addr, group_id);
+        invitations.insert(inviter_name.clone(), group_id);
         let _ = receiver_tx.send(Message::Event(EventType::INVITE {
             sender: inviter_name,
             group_name: String::from(group_name),
@@ -132,10 +173,16 @@ impl ServerInfo {
         Ok(())
     }
 
-    pub fn try_join_group(&mut self, peer_addr: SocketAddr) -> Result<Value, ErrorCode> {
+    pub fn try_join_group(
+        &mut self,
+        peer_addr: SocketAddr,
+        leader_name: String,
+    ) -> Result<Value, ErrorCode> {
         let group_id = *self
             .invitations
             .get(&peer_addr)
+            .ok_or(ErrorCode::INVALID_COMMAND)?
+            .get(&leader_name)
             .ok_or(ErrorCode::INVALID_COMMAND)?;
         match self.try_add_player_to_group(peer_addr, group_id) {
             Ok(value) => {

@@ -31,7 +31,7 @@ pub struct ServerInfo {
     pub connections: HashMap<SocketAddr, Connection>,
     name_to_addr: HashMap<String, SocketAddr>,
     groups: HashMap<Uuid, Group>,
-    invitations: HashMap<SocketAddr, Uuid>,
+    invitations: HashMap<SocketAddr, HashMap<String, Uuid>>,
     pub fights: HashMap<String, Fight>,
     pub world: World,
     pub db: Arc<Database>,

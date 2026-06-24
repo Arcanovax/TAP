@@ -1,13 +1,3 @@
-use std::{
-    net::SocketAddr,
-    sync::{Arc, Mutex},
-};
-
-use redb::{Database, backends::InMemoryBackend};
-use tokio::sync::mpsc::{self, UnboundedReceiver};
-
-use std::collections::HashMap;
-
 use crate::{
     protocol::Message,
     state::{ServerInfo, SharedServer, Tx},
@@ -20,6 +10,13 @@ use crate::{
         room::Room,
     },
 };
+use redb::{Database, backends::InMemoryBackend};
+use std::collections::HashMap;
+use std::{
+    net::SocketAddr,
+    sync::{Arc, Mutex},
+};
+use tokio::sync::mpsc::{self, UnboundedReceiver};
 
 pub(crate) fn test_server() -> SharedServer {
     let db = Arc::new(test_db());
@@ -78,7 +75,7 @@ pub(crate) fn group_with(
             server
                 .lock()
                 .unwrap()
-                .try_join_group(member.0)
+                .try_join_group(member.0, members[0].1.to_string())
                 .expect("Failed to join group");
         }
     }

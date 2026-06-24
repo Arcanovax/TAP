@@ -22,7 +22,7 @@ pub(super) fn group_request(
         "CREATE" => group_create_request(server_info, peer_addr, args),
         "LEAVE" => group_leave_request(server_info, peer_addr),
         "INVITE" => group_invite_request(args, server_info, peer_addr),
-        "JOIN" => group_join_request(server_info, peer_addr),
+        "JOIN" => group_join_request(server_info, peer_addr, args),
         "LIST" => group_list_request(server_info, peer_addr),
         _ => Message::Response {
             error: ErrorCode::INVALID_ARGS,
@@ -85,8 +85,22 @@ fn group_invite_request(
         .into()
 }
 
-fn group_join_request(server_info: &SharedServer, peer_addr: SocketAddr) -> Message {
-    server_info.lock().unwrap().try_join_group(peer_addr).into()
+fn group_join_request(
+    server_info: &SharedServer,
+    peer_addr: SocketAddr,
+    args: &Vec<String>,
+) -> Message {
+    if args.len() <= 1 {
+        return Message::Response {
+            error: ErrorCode::INVALID_ARGS,
+            data: None,
+        };
+    }
+    server_info
+        .lock()
+        .unwrap()
+        .try_join_group(peer_addr, args[1..].join(" "))
+        .into()
 }
 
 fn group_list_request(server_info: &SharedServer, peer_addr: SocketAddr) -> Message {
