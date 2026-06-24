@@ -1,7 +1,7 @@
 use std::{collections::HashMap, fs::OpenOptions, net::SocketAddr, io::Write};
 
 use crate::{
-    handlers::fight::enemy_attack::enemy_attack, protocol::{EventType, Message}, state::ServerInfo, structures::{attack_result::Attack_Result, enums::{
+    handlers::fight::enemy_attack::enemy_attack, protocol::{EventType, Message}, state::ServerInfo, structures::{attack_result::AttackResult, enums::{
         item_kind::ItemKind, npc_kind::NPCKind, state::State,
     }},
 };
@@ -10,7 +10,7 @@ pub fn execute_attack<'a>(
     player_id: SocketAddr,
     target_id: &str,
     world_mut: &mut ServerInfo,
-) -> Attack_Result {
+) -> AttackResult {
     
     let (curr_damages, player_hp, player_name) = {
         let player = &world_mut.connections.get(&player_id).unwrap().player;
@@ -100,7 +100,7 @@ pub fn execute_attack<'a>(
             }
         }
 
-        return Attack_Result {
+        return AttackResult {
             attacker_hp: player_hp,
             attacker_name: player_name,
             target_hp: target_hp_after,
@@ -120,7 +120,7 @@ pub fn execute_attack<'a>(
         }
     }
 
-    Attack_Result {
+    AttackResult {
         attacker_hp: player_hp,
         attacker_name: player_name,
         target_hp: target_hp_after,

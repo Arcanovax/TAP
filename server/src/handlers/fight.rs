@@ -2,7 +2,7 @@ use crate::{
     handlers::fight::{
         attack::execute_attack, is_it_my_turn::is_it_my_turn,
     }, protocol::{EventType, Message, Payload}, state::SharedServer, structures::{
-        attack_result::Attack_Result, enums::{error::ErrorCode, npc_kind::NPCKind,
+        attack_result::AttackResult, enums::{error::ErrorCode, npc_kind::NPCKind,
             state::State, turn_res::TurnRes,
         }, fight::Fight, room::Room,
     },
@@ -133,7 +133,7 @@ pub fn fight_request(
             Message::Response {
                 error: ErrorCode::SUCCESS,
                 payload: Payload::Json(
-                    serde_json::to_value(Attack_Result{
+                    serde_json::to_value(AttackResult{
                         attacker_hp: p_hp,
                         attacker_name: p_name,
                         target_hp,
