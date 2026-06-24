@@ -106,8 +106,7 @@ pub async fn run(addr: String, port: String) -> Result<(), Box<dyn std::error::E
                                 Ok(_) => {}
                                 Err(_) => break,
                             }
-                            let request = parse_command(line.as_str()); // DEV TEST
-                            // let request = Message::parse(line)?; // PROD
+                            let request = parse_command(line.as_str());
                             let response = handle_request(&request, &server_info_copy, peer_addr, &tx);
                             let _ = write_half.write_all(response.to_str().as_bytes()).await;
                             line.clear();
