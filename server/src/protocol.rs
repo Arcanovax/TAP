@@ -162,13 +162,13 @@ impl Message {
                     format!("EVT FIGHT LEAVE {player_name}\n")
                 }
 				EventType::ENTER_FIGHT { player_name, hp } => {
-                    format!("EVT ENTER FIGHT {player_name} {hp}\n")
+                    format!("EVT FIGHT ENTER {player_name} {hp}\n")
                 }
 				EventType::ENEMY_ATTACK { target, target_hp, target_killed, damages } => {
-                    format!("EVT ENEMY ATTACK {target} {target_hp} {damages} {target_killed}\n")
+                    format!("EVT FIGHT ENEMY {target} {target_hp} {damages} {target_killed}\n")
                 }
 				EventType::ATTACK { player_name, damages, enemy_hp } => {
-                    format!("EVT ATTACK {player_name} {damages} {enemy_hp}\n")
+                    format!("EVT FIGHT ATTACK {player_name} {damages} {enemy_hp}\n")
                 }
                 EventType::ROOM_DROP { player_name, item } => {
                     format!("EVT ROOM DROP {player_name} {item}\n")

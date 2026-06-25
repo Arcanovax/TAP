@@ -62,7 +62,9 @@ fn cleanup_tcp_connection(
 
 	match player_res {
 		Ok(player) => {
-			match &player.status {
+			// if let Ok(mut file) = OpenOptions::new().create(true).append(true).open("debug_network.txt") {
+			// 	let _ = writeln!(file, "real (State {:?}) : {:#?}", player.status, player);}
+			match player.status {
 				State::InFight { target_id } => {
 					let _ = binding.try_leave_fight(peer_addr, target_id.clone());
 				},

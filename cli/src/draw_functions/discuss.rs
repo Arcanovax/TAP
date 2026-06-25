@@ -85,9 +85,9 @@ pub fn draw_room_discuss(world: &mut World, frame: &mut Frame, name: String, sen
 
 	frame.render_widget(id, left_layout[0]);
 
-	// CITY DESCRIPTION
+	// CITY.room DESCRIPTION
 	let city_block = Block::bordered()
-		.title(world.room.room_view.name.as_str())
+		.title(world.room.room.name.as_str())
 		.title_style(Color::Green)
 		.bold()
 		.title_alignment(Alignment::Center);
@@ -95,11 +95,11 @@ pub fn draw_room_discuss(world: &mut World, frame: &mut Frame, name: String, sen
 	let inner_city = right_layout[0].inner(Margin { horizontal: 1, vertical: 1 });
 	let mut content_width = inner_city.width;
 
-	let mut content_height = textwrap::wrap(world.room.room_view.description.as_str(), content_width as usize).len() as u16;
+	let mut content_height = textwrap::wrap(world.room.room.description.as_str(), content_width as usize).len() as u16;
 
 	let mut scroll_output = ScrollView::new(Size::new(content_width, content_height));
 
-	let city_name: Paragraph = Paragraph::new(Text::from(Text::from(world.room.room_view.description.as_str())))
+	let city_name: Paragraph = Paragraph::new(Text::from(Text::from(world.room.room.description.as_str())))
 	.centered()
 	.wrap(Wrap { trim: true });
 
@@ -166,14 +166,15 @@ pub fn draw_room_discuss(world: &mut World, frame: &mut Frame, name: String, sen
 	frame.render_stateful_widget(scroll_output, inner_discuss, &mut world.room.discuss_scroll_pos);
 
 	// EXITS
-	let exits_items: Vec<ListItem> = world.room.room_view.exits.iter()
-	.map(|exit| {
-		match exit {
-			Exits::East { toward } => ListItem::new(Line::from("East => ".to_string() + toward).alignment(Alignment::Center)),
-			Exits::North { toward } => ListItem::new(Line::from("North => ".to_string() + toward).alignment(Alignment::Center)),
-			Exits::West { toward } => ListItem::new(Line::from("West => ".to_string() + toward).alignment(Alignment::Center)),
-			Exits::South { toward } => ListItem::new(Line::from("South => ".to_string() + toward).alignment(Alignment::Center))
-		}
+	let exits_items: Vec<ListItem> = world.room.room.exits.iter()
+	.map(|(dir, dest)| {
+		ListItem::new(Line::from(format!("{dir} => {dest}")).alignment(Alignment::Center))
+		// match exit {
+		// 	Exits::East { toward } => ListItem::new(Line::from("East => ".to_string() + toward).alignment(Alignment::Center)),
+		// 	Exits::North { toward } => ListItem::new(Line::from("North => ".to_string() + toward).alignment(Alignment::Center)),
+		// 	Exits::West { toward } => ListItem::new(Line::from("West => ".to_string() + toward).alignment(Alignment::Center)),
+		// 	Exits::South { toward } => ListItem::new(Line::from("South => ".to_string() + toward).alignment(Alignment::Center))
+		// }
 		})
 	.collect();
 

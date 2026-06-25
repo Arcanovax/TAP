@@ -109,8 +109,8 @@ impl ServerInfo {
 			fighters.clone()
 		};
 		let nb_receivers = receivers.len();
-		if let Ok(mut file) = OpenOptions::new().create(true).append(true).open("debug_network.txt") {
-				let _ = writeln!(file, "all (State {:?}) : {:#?}", receivers, player_name);}
+		// if let Ok(mut file) = OpenOptions::new().create(true).append(true).open("debug_network.txt") {
+		// 		let _ = writeln!(file, "all (State {:?}) : {:#?}", receivers, player_name);}
         for name in receivers {
 			if let Some(con) = self.connections.values().find(|pl_conn| pl_conn.player.name == name) {
 				let _ = con.tx.send(Message::Event(EventType::FIGHT_LEAVE { player_name: player_name.clone() }));

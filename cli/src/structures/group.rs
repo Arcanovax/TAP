@@ -1,8 +1,7 @@
 use std::collections::VecDeque;
 
 pub struct Invitation {
-	pub sender: String,
-	pub group_name: String
+	pub sender: String
 }
 
 pub struct Group {

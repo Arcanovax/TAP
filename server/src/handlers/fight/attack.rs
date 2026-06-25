@@ -72,8 +72,8 @@ pub fn execute_attack<'a>(
                 }));
             // }
         } else {
-            if let Ok(mut file) = OpenOptions::new().create(true).append(true).open("debug_network.txt") {
-                let _ = writeln!(file, "coucou");}
+            // if let Ok(mut file) = OpenOptions::new().create(true).append(true).open("debug_network.txt") {
+            //     let _ = writeln!(file, "coucou");}
         }
     }
 
