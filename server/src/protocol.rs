@@ -66,24 +66,25 @@ pub enum EventType {
         player_name: String,
         item: String,
     },
-	FIGHT_LEAVE {
-		player_name: String
-	},
+    FIGHT_LEAVE {
+        player_name: String,
+    },
     ENTER_FIGHT {
         player_name: String,
-        hp: u32
+        hp: u32,
     },
     ATTACK {
         player_name: String,
         damages: u32,
-        enemy_hp: u32
+        enemy_hp: u32,
     },
     ENEMY_ATTACK {
         target: String,
         damages: u32,
         target_hp: u32,
-		target_killed: bool
-    }
+        target_killed: bool,
+    },
+    SERVER_RESET,
 }
 
 #[derive(Serialize, Debug, PartialEq, Eq)]
@@ -149,7 +150,11 @@ impl Message {
                 EventType::GROUP_INVITE { sender, .. } => {
                     format!("EVT GROUP INVITE {sender}\n")
                 }
-                EventType::CHAT { scope, sender, body } => {
+                EventType::CHAT {
+                    scope,
+                    sender,
+                    body,
+                } => {
                     format!("EVT {scope:?} CHAT {sender} {body}\n")
                 }
                 EventType::STATS_PLAYERS { players } => {
@@ -158,21 +163,31 @@ impl Message {
                 EventType::ROOM_TAKE { player_name, item } => {
                     format!("EVT ROOM TAKE {player_name} {item}\n")
                 }
-				EventType::FIGHT_LEAVE { player_name } => {
+                EventType::FIGHT_LEAVE { player_name } => {
                     format!("EVT FIGHT LEAVE {player_name}\n")
                 }
-				EventType::ENTER_FIGHT { player_name, hp } => {
+                EventType::ENTER_FIGHT { player_name, hp } => {
                     format!("EVT FIGHT ENTER {player_name} {hp}\n")
                 }
-				EventType::ENEMY_ATTACK { target, target_hp, target_killed, damages } => {
+                EventType::ENEMY_ATTACK {
+                    target,
+                    target_hp,
+                    target_killed,
+                    damages,
+                } => {
                     format!("EVT FIGHT ENEMY {target} {target_hp} {damages} {target_killed}\n")
                 }
-				EventType::ATTACK { player_name, damages, enemy_hp } => {
+                EventType::ATTACK {
+                    player_name,
+                    damages,
+                    enemy_hp,
+                } => {
                     format!("EVT FIGHT ATTACK {player_name} {damages} {enemy_hp}\n")
                 }
                 EventType::ROOM_DROP { player_name, item } => {
                     format!("EVT ROOM DROP {player_name} {item}\n")
                 }
+                EventType::SERVER_RESET => format!("EVT SERVER RESET\n"),
                 EventType::QUEST_UPDATE { quest_name, goal } => {
                     let data = serde_json::json!({ "quest": quest_name, "goal": goal });
                     format!("EVT QUEST UPDATE {data}\n")

@@ -2,7 +2,7 @@ use crate::structures::enums::exits::Direction;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
-#[derive(Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct Room {
     pub name: String,
     pub exits: HashMap<Direction, String>,

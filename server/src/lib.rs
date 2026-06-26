@@ -2,15 +2,17 @@ use crate::config::load;
 use crate::handlers::handle_request::handle_request;
 use crate::protocol::{Message, Payload};
 use crate::state::{ServerInfo, SharedServer};
-use redb::Database;
 use crate::structures::enums::state::State;
+use redb::Database;
 use std::net::SocketAddr;
 use std::path::Path;
 use std::sync::{Arc, Mutex};
+use std::time::Duration;
 use tokio::io::{AsyncBufReadExt, AsyncWriteExt, BufReader};
 use tokio::net::TcpListener;
 use tokio::net::tcp::OwnedWriteHalf;
-use tracing::{Instrument, error, info};
+use tokio::time::interval;
+use tracing::{Instrument, debug, error, info};
 
 mod config;
 mod handlers;
@@ -40,19 +42,17 @@ fn cleanup_tcp_connection(
     let mut binding = server_info.lock().unwrap();
     let _ = binding.try_leave_group(peer_addr);
 
-	let player_res = binding.get_player(peer_addr).cloned();
+    let player_res = binding.get_player(peer_addr).cloned();
 
-	match player_res {
-		Ok(player) => {
-			match player.status {
-				State::InFight { target_id } => {
-					let _ = binding.try_leave_fight(peer_addr, target_id.clone());
-				},
-				_ => {}
-			}
-		},
-		Err(_code) => {}
-	}
+    match player_res {
+        Ok(player) => match player.status {
+            State::InFight { target_id } => {
+                let _ = binding.try_leave_fight(peer_addr, target_id.clone());
+            }
+            _ => {}
+        },
+        Err(_code) => {}
+    }
 
     match binding.try_save_player(peer_addr) {
         Ok(()) => {
@@ -71,7 +71,6 @@ fn cleanup_tcp_connection(
         }
     }
 
-
     match binding.try_remove_player(peer_addr) {
         Ok(name) => info!("{} disconnected", name),
         Err(_) => {}
@@ -84,14 +83,26 @@ pub async fn run(addr: String, port: String) -> Result<(), Box<dyn std::error::E
     tracing_subscriber::fmt()
         .with_env_filter(
             tracing_subscriber::EnvFilter::try_from_default_env()
-                .unwrap_or_else(|_| tracing_subscriber::EnvFilter::new("info")),
+                .unwrap_or_else(|_| tracing_subscriber::EnvFilter::new("debug")),
         )
         .init();
 
     let world = load(Path::new("config.yaml"))?;
+    let base_world = world.clone();
     let db = Arc::new(Database::create("game.redb")?);
     let server_info: SharedServer = Arc::new(Mutex::new(ServerInfo::new(world, db)));
     let listener = TcpListener::bind(format!("{}:{}", addr, port)).await?;
+
+    let server_info_copy = Arc::clone(&server_info);
+    let mut ticker = interval(Duration::from_secs(600));
+    tokio::spawn(async move {
+        loop {
+            ticker.tick().await;
+            debug!("Server reset started");
+            server_info_copy.lock().unwrap().reset(&base_world);
+            debug!("Server reset done");
+        }
+    });
 
     loop {
         let (mut socket, peer_addr) = listener.accept().await?;
