@@ -1,5 +1,5 @@
 use std::{
-	any::type_name, collections::{HashMap, VecDeque}, fs::OpenOptions, io::{self, Write}, sync::mpsc::{
+	collections::{HashMap, VecDeque}, fs::OpenOptions, io::{self, Write}, sync::mpsc::{
 		Receiver,
 		TryRecvError
 	}
@@ -12,16 +12,15 @@ use ratatui::{
 		self, Event, KeyCode, MouseButton, MouseEventKind
 	},
 };
-use serde_json::Deserializer;
 use tokio::sync::mpsc::Sender;
 
 use crate::{
 	draw_functions::{
 		discuss::draw_room_discuss, fights::draw_room_fight, login::login_draw, rooms::draw_room, wait_server::draw_wait
 	}, enums::{
-		actions::PendingAction, channels::Channels, exits::Exits, focus::Focus, states::States
-	}, global_functions::{discuss_event::discuss_event, event_handling::event_handling, find_action::find_action, idle_event::idle_event, login_event::login_event, response_handling::response_handling}, structures::{
-		chat::Chat, enn_attack::EnnAttack, fight::Fight, group::{Group, Invitation}, items::Item, npc::NPC, player::Player, room::Room, server_event::ServerEvent
+		actions::PendingAction, focus::Focus, states::States
+	}, global_functions::{discuss_event::discuss_event, event_handling::event_handling, idle_event::idle_event, login_event::login_event, response_handling::response_handling}, structures::{
+		chat::Chat, group::{Group}, items::Item, npc::NPC, player::Player, room::Room
 	}
 };
 

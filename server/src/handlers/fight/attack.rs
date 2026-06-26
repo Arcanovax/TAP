@@ -31,7 +31,7 @@ pub fn execute_attack<'a>(
     let mut trigger_enemy_attack = false;
     let mut enemy_died = false;
     let mut target_hp_after = 0;
-    let mut fighters_list = Vec::new();
+    let fighters_list;
     let mut loot_list = Vec::new();
 
     {

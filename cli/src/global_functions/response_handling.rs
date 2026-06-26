@@ -23,7 +23,8 @@ pub fn response_handling(world: &mut World, answers: Vec<&str>) {
 						world.action = PendingAction::Items;
 					}
 				},
-			States::Idle => {
+			States::Idle
+			| States::InFight { .. } => {
 				match &world.action {
 					PendingAction::Look
 					| PendingAction::ClientLook => {
