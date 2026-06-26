@@ -9,6 +9,8 @@ npc:
       default:
         - "Stay safe, traveler."
         - "The roads can be dangerous."
+      quest.test.2:
+        - "Thank you for retrieving Beer"
     kind: Citizen
     quest: "quest.test"
 

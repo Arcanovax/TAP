@@ -1,7 +1,7 @@
 use super::*;
 use crate::structures::{
     enums::{error::ErrorCode, game_event::GameEvent},
-    quest::Quest,
+    quest::{Goal, Quest},
 };
 
 impl ServerInfo {
@@ -52,8 +52,18 @@ impl ServerInfo {
                 *step += 1;
                 *step
             };
-            let quest = self.world.quests.get(id).unwrap();
+            let quest = self.world.quests.get(id).unwrap().clone();
             let tx = self.get_connection(peer_addr).unwrap().tx.clone();
+            match &quest.goals[new_step - 1] {
+                Goal::Retrieve { item, amount, .. } => {
+                    let (item, amount) = (item.clone(), *amount);
+                    let player = self.get_player_mut(peer_addr).unwrap();
+                    if let Some(qty) = player.inventory.get_mut(&item) {
+                        *qty -= amount;
+                    }
+                }
+                _ => {}
+            }
             if new_step == quest.goals.len() {
                 send_quest_finish_event(&quest, tx);
                 {
