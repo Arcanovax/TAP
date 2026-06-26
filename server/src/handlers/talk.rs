@@ -3,7 +3,6 @@ use std::net::SocketAddr;
 use tracing::info;
 
 use crate::{
-    handlers::quest,
     protocol::{Message, Payload},
     state::SharedServer,
     structures::{
@@ -95,11 +94,11 @@ pub fn talk_request(
 
     info!("{} talked", npc_ref);
 
-    let dialog_id = dialogs.clone().unwrap().1;
+    let (lines, dialog_id) = dialogs.unwrap();
     HandlerOutcome {
         message: Message::Response {
             error: ErrorCode::SUCCESS,
-            payload: Payload::Text(dialogs.unwrap().0.join("\\")),
+            payload: Payload::Text(lines.join("\\")),
         },
         event: Some(GameEvent::Talked {
             dialog: format!("{npc_ref}.dialog.{}", dialog_id),
