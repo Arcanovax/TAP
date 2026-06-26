@@ -1,6 +1,4 @@
-pub mod attack_res;
 pub mod command;
-pub mod enn_att_res;
 pub mod error;
 pub mod exits;
 pub mod game_event;

@@ -21,6 +21,7 @@ mod world;
 pub type Tx = UnboundedSender<Message>;
 pub type SharedServer = Arc<Mutex<ServerInfo>>;
 
+#[derive(Debug)]
 pub struct Connection {
     pub addr: SocketAddr,
     pub tx: Tx,

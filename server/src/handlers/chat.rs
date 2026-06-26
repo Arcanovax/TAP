@@ -37,7 +37,6 @@ pub(super) fn chat_request(
             };
         }
     };
-
     let receivers = match scope.to_uppercase().as_str() {
         "GLOBAL" => binding.get_global_receivers(peer_addr),
         "GROUP" => match binding.get_group_receivers(peer_addr) {
@@ -65,6 +64,8 @@ pub(super) fn chat_request(
             };
         }
     };
+    // if let Ok(mut file) = OpenOptions::new().create(true).append(true).open("debug_network.txt") {
+    //         let _ = writeln!(file, "ok (State {:#?}", receivers);}
     let chat_scope = match scope.parse::<ChatScope>() {
         Ok(scope) => scope,
         Err(code) => {

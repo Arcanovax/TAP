@@ -8,3 +8,4 @@ pub mod npc;
 pub mod player;
 pub mod quest;
 pub mod room;
+pub mod attack_result;
