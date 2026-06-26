@@ -18,7 +18,7 @@ use ratatui::{
 };
 use tui_widgets::scrollview::{ScrollView};
 
-use crate::{enums::{channels::Channels, exits::Exits, focus::Focus}, structures::world::World};
+use crate::{enums::{channels::{Channels}, focus::Focus}, structures::world::World};
 
 pub fn draw_room(world: &mut World, frame: &mut Frame) {
 
@@ -180,12 +180,6 @@ pub fn draw_room(world: &mut World, frame: &mut Frame) {
 	let exits_items: Vec<ListItem> = world.room.room.exits.iter()
 	.map(|(dir, dest)| {
 		ListItem::new(Line::from(format!("{dir} => {dest}")).alignment(Alignment::Center))
-		// match exit {
-		// 	Exits::East { toward } => ListItem::new(Line::from("East => ".to_string() + toward).alignment(Alignment::Center)),
-		// 	Exits::North { toward } => ListItem::new(Line::from("North => ".to_string() + toward).alignment(Alignment::Center)),
-		// 	Exits::West { toward } => ListItem::new(Line::from("West => ".to_string() + toward).alignment(Alignment::Center)),
-		// 	Exits::South { toward } => ListItem::new(Line::from("South => ".to_string() + toward).alignment(Alignment::Center))
-		// }
 		})
 	.collect();
 

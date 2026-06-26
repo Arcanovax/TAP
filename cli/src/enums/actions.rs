@@ -18,6 +18,7 @@ pub enum PendingAction {
 	ClientLook,
 	Look,
 	Status,
+	ClientStatus,
 	Move,
 	Who,
 	Attack(String),

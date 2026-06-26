@@ -64,13 +64,11 @@ pub fn execute_attack<'a>(
     //             let _ = writeln!(file, "coucou {:#?}", fighters_list);}
     for fighter in &fighters_list {
         if let Some(con) = world_mut.connections.values().find(|c| c.player.name == *fighter) {
-            // if con.player.name != player_name {
-                let _ = con.tx.send(Message::Event(EventType::ATTACK {
-                    player_name: player_name.clone(),
-                    damages: curr_damages,
-                    enemy_hp: target_hp_after 
-                }));
-            // }
+			let _ = con.tx.send(Message::Event(EventType::ATTACK {
+				player_name: player_name.clone(),
+				damages: curr_damages,
+				enemy_hp: target_hp_after 
+			}));
         } else {
             // if let Ok(mut file) = OpenOptions::new().create(true).append(true).open("debug_network.txt") {
             //     let _ = writeln!(file, "coucou");}
@@ -92,7 +90,6 @@ pub fn execute_attack<'a>(
                 }
             }
         }
-
 
         for fighter_name in &fighters_list {
             if let Some(fighter) = world_mut.connections.values().find(|c| &c.player.name == fighter_name){

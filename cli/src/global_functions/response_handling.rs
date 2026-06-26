@@ -1,6 +1,6 @@
-use std::{collections::{VecDeque}, fs::OpenOptions, io::Write};
+use std::{collections::VecDeque, fs::OpenOptions, io::Write, os::linux::raw::stat};
 
-use crate::{enums::{actions::PendingAction, focus::Focus, npc_kind::NPCKind, states::States}, structures::{attack_results::Attack_Result, room::Room, server_event::ServerEvent, world::World}};
+use crate::{enums::{actions::PendingAction, focus::Focus, npc_kind::NPCKind, states::States}, structures::{attack_results::Attack_Result, room::Room, server_event::ServerEvent, status_view::StatusView, world::World}};
 
 pub fn response_handling(world: &mut World, answers: Vec<&str>) {
 	// if let Ok(mut file) = OpenOptions::new().create(true).append(true).open("debug_network.txt") {
@@ -32,8 +32,21 @@ pub fn response_handling(world: &mut World, answers: Vec<&str>) {
 							let room = serde_json::from_str::<Room>(&real_answer).unwrap_or(Room::new());
 							world.output.push_back(format!("[Server response] {}", room.room));
 						}
+						let _ = world.tx_to_serv.try_send(String::from("STATUS\n"));
+						world.action = PendingAction::ClientStatus;
+					},
+
+					PendingAction::Status
+					| PendingAction::ClientStatus => {
+						let status: StatusView = serde_json::from_str::<StatusView>(&real_answer).unwrap();
+						if world.action == PendingAction::Status {
+							world.output.push_back(format!("[Server response] {}", status));
+						}
+						world.player.hp = status.hp;
+						world.state = status.status;
 						world.action = PendingAction::None;
 					},
+
 					PendingAction::Items => {
 						// if let Ok(mut file) = OpenOptions::new().create(true).append(true).open("debug_network.txt") {
 						// 	let _ = writeln!(file, "answer (State {:#?})", real_answer);}
@@ -41,16 +54,17 @@ pub fn response_handling(world: &mut World, answers: Vec<&str>) {
 						let _ = world.tx_to_serv.try_send(String::from("NPCS\n"));
 						world.action = PendingAction::Npcs;
 					},
+
 					PendingAction::Npcs => {
 						world.list_npcs = serde_json::from_str(&real_answer).unwrap();
 						let _ = world.tx_to_serv.try_send(String::from("LOOK\n"));
 						world.action = PendingAction::ClientLook;
 					}
+
 					PendingAction::Talk(name) => {
 						for sentence in real_answer.split("\\") {
 							world.room.dialogs.push_back(sentence.to_string());
 						}
-						// world.room.dialogs = serde_json::from_str(real_answer.split("\\")).unwrap();
 						if let Some(npc) = world.list_npcs.get(name) {
 							world.state = States::InDiscuss(npc.name.clone(), world.room.dialogs.pop_front().unwrap_or("".to_string()));
 						} else {
@@ -58,20 +72,24 @@ pub fn response_handling(world: &mut World, answers: Vec<&str>) {
 						}
 						world.room.npc_list_state.select(None);
 					}
+
 					PendingAction::GroupCreate(name) => {
 						world.group.in_group = true;
 						world.output.push_back(format!("{name} group successfully created."));
 						world.action = PendingAction::None;
 					}
+
 					PendingAction::GroupJoin(name) => {
 						world.group.in_group = true;
 						world.output.push_back(format!("{name} group successfully joined."));
 						world.action = PendingAction::None;
 					}
+
 					PendingAction::GroupInvite(name) => {
 						world.output.push_back(format!("Invitation successfully sended to {name}."));
 						world.action = PendingAction::None;
 					}
+
 					PendingAction::SendChat(command, args) => {
 						match command.to_uppercase().as_str() {
 							"CHAT GLOBAL" => world.chat.global_messages.push_back(format!("[me] {}", args.clone())),
@@ -84,6 +102,7 @@ pub fn response_handling(world: &mut World, answers: Vec<&str>) {
 						}
 						world.action = PendingAction::None;
 					},
+
 					PendingAction::Move => {
 						world.chat.room_messages = VecDeque::new();
 						let _ = world.tx_to_serv.try_send(String::from("LOOK\n"));

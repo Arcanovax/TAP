@@ -41,6 +41,23 @@ fn cleanup_tcp_connection(
 ) {
     let mut binding = server_info.lock().unwrap();
     let _ = binding.try_leave_group(peer_addr);
+
+	let player_res = binding.get_player(peer_addr).cloned();
+
+	match player_res {
+		Ok(player) => {
+			// if let Ok(mut file) = OpenOptions::new().create(true).append(true).open("debug_network.txt") {
+			// 	let _ = writeln!(file, "real (State {:?}) : {:#?}", player.status, player);}
+			match player.status {
+				State::InFight { target_id } => {
+					let _ = binding.try_leave_fight(peer_addr, target_id.clone());
+				},
+				_ => {}
+			}
+		},
+		Err(_code) => {}
+	}
+
     match binding.try_save_player(peer_addr) {
         Ok(()) => {
             info!("Player info saved");
@@ -58,21 +75,6 @@ fn cleanup_tcp_connection(
         }
     }
 
-	let player_res = binding.get_player(peer_addr).cloned();
-
-	match player_res {
-		Ok(player) => {
-			// if let Ok(mut file) = OpenOptions::new().create(true).append(true).open("debug_network.txt") {
-			// 	let _ = writeln!(file, "real (State {:?}) : {:#?}", player.status, player);}
-			match player.status {
-				State::InFight { target_id } => {
-					let _ = binding.try_leave_fight(peer_addr, target_id.clone());
-				},
-				_ => {}
-			}
-		},
-		Err(_code) => {}
-	}
 
     match binding.try_remove_player(peer_addr) {
         Ok(name) => info!("{} disconnected", name),

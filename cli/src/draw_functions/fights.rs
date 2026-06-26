@@ -145,9 +145,10 @@ pub fn draw_room_fight(world: &mut World, frame: &mut Frame) {
 	// 			let _ = writeln!(file, "ok (State {:?}) : {:#?} et {}", world.room.fight.target_hp, world.room.fight.target_max_hp, percent);}
 	hp_bar = Gauge::default()
 	.block(
-		Block::new()
-		.borders(Borders::ALL)
+		Block::bordered()
 		.title(format!("{} : {}/{}HP", world.room.fight.target_name, world.room.fight.target_hp, world.room.fight.target_max_hp))
+		.title_style(Color::Red)
+		.bold()
 	.title_alignment(Center))
 	.gauge_style(Style::new().fg(gauge_color).on_blue().italic())
 	.percent(percent as u16);
@@ -168,9 +169,10 @@ pub fn draw_room_fight(world: &mut World, frame: &mut Frame) {
 
 		hp_bar = Gauge::default()
 		.block(
-			Block::new()
-			.borders(Borders::ALL)
+			Block::bordered()
 			.title(format!("{} : {}/{}HP", name, *hp, 100))
+			.title_style(Color::Green)
+			.bold()
 		.title_alignment(Center))
 		.gauge_style(Style::new().fg(gauge_color).on_blue().italic())
 		.percent(*hp as u16);
@@ -182,12 +184,6 @@ pub fn draw_room_fight(world: &mut World, frame: &mut Frame) {
 	let exits_items: Vec<ListItem> = world.room.room.exits.iter()
 	.map(|(dir, dest)| {
 		ListItem::new(Line::from(format!("{dir} => {dest}")).alignment(Alignment::Center))
-		// match exit {
-		// 	Exits::East { toward } => ListItem::new(Line::from("East => ".to_string() + toward).alignment(Alignment::Center)),
-		// 	Exits::North { toward } => ListItem::new(Line::from("North => ".to_string() + toward).alignment(Alignment::Center)),
-		// 	Exits::West { toward } => ListItem::new(Line::from("West => ".to_string() + toward).alignment(Alignment::Center)),
-		// 	Exits::South { toward } => ListItem::new(Line::from("South => ".to_string() + toward).alignment(Alignment::Center))
-		// }
 		})
 	.collect();
 
