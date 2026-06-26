@@ -1,9 +1,9 @@
-use std::{fs::OpenOptions, io::Write};
 
 use super::*;
 
 use crate::handlers::fight::enemy_attack::enemy_attack;
 use crate::structures::enums::error::ErrorCode;
+use crate::structures::enums::state::State;
 
 impl ServerInfo {
     fn create_new_group(&mut self, name: &str, group_leader: SocketAddr) -> Uuid {
@@ -97,34 +97,37 @@ impl ServerInfo {
     }
 
 	pub fn try_leave_fight(&mut self, peer_addr: SocketAddr, target: String) -> Result<(), ErrorCode> {
-        let con = {
-			let connection = self.get_connection(peer_addr)?;
-			connection
+        let player_name = {
+			let connection = self.get_connection_mut(peer_addr)?;
+			connection.player.status = State::Idle;
+			connection.player.name.clone()
 		};
 
-        let player_name = con.player.name.clone();
         let receivers = {
 			let fighters = &mut self.fights.get_mut(&target).unwrap().fighters;
 			fighters.retain(|f| f != &player_name);
 			fighters.clone()
 		};
 		let nb_receivers = receivers.len();
-		// if let Ok(mut file) = OpenOptions::new().create(true).append(true).open("debug_network.txt") {
-		// 		let _ = writeln!(file, "all (State {:?}) : {:#?}", receivers, player_name);}
-        for name in receivers {
-			if let Some(con) = self.connections.values().find(|pl_conn| pl_conn.player.name == name) {
-				let _ = con.tx.send(Message::Event(EventType::FIGHT_LEAVE { player_name: player_name.clone() }));
+
+		if nb_receivers > 0 {
+			for name in receivers {
+				if let Some(con) = self.connections.values().find(|pl_conn| pl_conn.player.name == name) {
+					let _ = con.tx.send(Message::Event(EventType::FIGHT_LEAVE { player_name: player_name.clone() }));
+				}
 			}
-        }
-
-		let fight_turn = {
-			let turn = self.fights.get(&target).unwrap().turn;
-			turn.clone()
-		};
-
-		if nb_receivers == fight_turn as usize {
-			enemy_attack(&target, self);
-			self.fights.get_mut(&target).unwrap().turn = 0;
+	
+			let fight_turn = {
+				let turn = self.fights.get(&target).unwrap().turn;
+				turn.clone()
+			};
+	
+			if nb_receivers == fight_turn  as usize {
+				enemy_attack(&target, self);
+				self.fights.get_mut(&target).unwrap().turn = 0;
+			}
+		} else {
+			self.fights.remove(&target);
 		}
         Ok(())
     }

@@ -7,7 +7,7 @@ use crate::{
         }, fight::Fight, room::Room,
     },
 };
-use std::{collections::HashMap, fs::OpenOptions, net::SocketAddr, io::Write};
+use std::{collections::HashMap, net::SocketAddr};
 
 mod attack;
 pub mod enemy_attack;
