@@ -1,6 +1,7 @@
 use crate::{
     handlers::{
         buy::buy_request,
+        gold::gold_request,
         item::{item_request, items_request},
         npc::{npc_request, npcs_request},
         quest::quest_request,
@@ -59,6 +60,7 @@ pub fn handle_request(
             Some(Command::QUESTS) => quests_request(server_info, peer_addr).into(),
             Some(Command::BUY) => buy_request(args, server_info, peer_addr).into(),
             Some(Command::SELL) => sell_request(args, server_info, peer_addr).into(),
+            Some(Command::GOLD) => gold_request(server_info, peer_addr).into(),
             _ => Message::Response {
                 error: ErrorCode::INVALID_COMMAND,
                 payload: Payload::Empty,
