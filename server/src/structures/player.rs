@@ -17,6 +17,7 @@ pub struct Player {
     pub group_id: Option<Uuid>,
     pub finished_quest: HashSet<String>,
     pub quests_in_progress: HashMap<String, usize>,
+    pub gold: u32,
 }
 
 impl Player {
@@ -32,6 +33,7 @@ impl Player {
             group_id: None,
             finished_quest: HashSet::new(),
             quests_in_progress: HashMap::new(),
+            gold: 0,
         }
     }
 }

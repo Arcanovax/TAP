@@ -13,7 +13,6 @@ pub enum ErrorCode {
     NPC_NOT_FOUND,
     NPC_NOT_HOSTILE,
     ROOM_NOT_FOUND,
-    PLAYER_NOT_FOUND,
     DEFEATED_ENEMY,
     NOT_YOUR_TURN,
     DEFEATED_FIGHTER,
@@ -27,6 +26,7 @@ pub enum ErrorCode {
     SUCCESS,
     DISCONNECTION_FAIL,
     ALREADY_INVITED,
+    NOT_ENOUGH_GOLD,
 }
 
 impl ErrorCode {
@@ -40,7 +40,6 @@ impl ErrorCode {
             ErrorCode::NOT_GROUP_LEADER => 403,
             ErrorCode::ALREADY_INVITED => 407,
             ErrorCode::ITEM_NOT_FOUND
-            | ErrorCode::PLAYER_NOT_FOUND
             | ErrorCode::ROOM_NOT_FOUND
             | ErrorCode::DEFEATED_ENEMY
             | ErrorCode::NOT_YOUR_TURN
@@ -49,6 +48,7 @@ impl ErrorCode {
             | ErrorCode::NPC_NOT_FOUND => 404,
             ErrorCode::NPC_NOT_HOSTILE => 405,
             ErrorCode::NO_QUEST_AVAILABLE => 406,
+            ErrorCode::NOT_ENOUGH_GOLD => 408,
             ErrorCode::CONNECTION_FAILED => 900,
             ErrorCode::SEND_FAILED => 901,
             ErrorCode::INVALID_ARGS => 902,
