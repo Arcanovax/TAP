@@ -16,7 +16,9 @@ mod tests;
 
 #[derive(Serialize)]
 enum NPCKindView {
-    Merchant,
+    Merchant {
+        inventory: Vec<String>,
+    },
     Enemy {
         hp: u32,
         max_hp: u32,
@@ -34,18 +36,20 @@ struct NPCView<'a> {
 
 impl<'a> From<&'a NPC> for NPCView<'a> {
     fn from(npc: &'a NPC) -> Self {
-        let kind = match npc.kind {
+        let kind = match &npc.kind {
             NPCKind::Citizen => NPCKindView::Citizen,
-            NPCKind::Merchant { .. } => NPCKindView::Merchant,
+            NPCKind::Merchant { inventory, .. } => NPCKindView::Merchant {
+                inventory: inventory.clone(),
+            },
             NPCKind::Enemy {
                 hp,
                 max_hp,
                 defeated,
                 ..
             } => NPCKindView::Enemy {
-                hp,
-                max_hp,
-                defeated,
+                hp: *hp,
+                max_hp: *max_hp,
+                defeated: *defeated,
             },
         };
 
