@@ -13,6 +13,14 @@ pub async fn handle_events(game: &mut Game, answer: Vec<&str>){
 		channel.push(text);
 	}
 
+	if answer[1] == "STATS" {
+		if let Some(val_str) = answer[2].strip_prefix("players=") {
+			if let Ok(val) = val_str.parse::<i32>() {
+				game.nb_players = val;
+			}
+		}
+	}
+
 
 	if answer[1] == "GROUP"{
 		match answer[2] {
@@ -29,8 +37,28 @@ pub async fn handle_events(game: &mut Game, answer: Vec<&str>){
 		}
 	}
 
+	if answer[1] == "QUEST"{
+		match answer[2] {
+			"UPDATE" => {
+				match serde_json::from_str::<QuestUpdateEvent>(answer[3..].join(" ").as_str()) {
+					Ok(quest_upt) => {
+						for quest in &mut game.quests{
+							if quest.quest_id == quest_upt.quest{
+								quest.goal = Some(quest_upt.goal);
+								break;
+							}
+						}
+					}
+					Err(e) => {
+						println!("EVT QUEST error parsing: {}", e);
+					}
+				}
+			}
+			_ => return
+		}
+	}
+
 	if answer[1] == "ROOM"{
-		println!("PRESENCEEEEEE");
 		match answer[2] {
 			"PRESENCE" => {
 				let name: String =answer[4..].join(" ");
@@ -67,22 +95,8 @@ pub async fn handle_events(game: &mut Game, answer: Vec<&str>){
 	// 	// 	game.quests.retain(|quest| quest.name != quest_finish.quest_name);
 	// 	// }
 
-	// 	if let Some(leave) = server_event.room_leave {
-	// 		if let Some(ref mut map_data) = game.map_data{
-	// 			if leave.player_name != game.player.name{
-	// 				map_data.players.retain(|x| x != &leave.player_name);
-	// 			}
-	// 		}
-	// 	}
-	// 	if let Some(join) = server_event.room_join {
-	// 		if let Some(ref mut map_data) = game.map_data{
-	// 			map_data.players.push(join.player_name);
-	// 			game.map_data = None
-	// 		}
-	// 	}
-	// 	if let Some(players) = server_event.players {
-	// 		game.nb_players = players.players;
-	// 	}
+
+
 	// 	if let Some(take) = server_event.take {
 	// 		if let Some(ref mut map_data) = game.map_data {
 	// 			if let Some(pos) = map_data.items.iter().position(|x| x == &take.item) {
@@ -143,7 +157,7 @@ pub struct Players {
 
 #[derive(Deserialize, Debug)]
 pub struct QuestUpdateEvent {
-	pub quest_name: String,
+	pub quest: String,
 	pub goal: Goal
 }
 
