@@ -25,86 +25,86 @@ pub enum PendingAction {
 }
 
 
-pub async fn handle_response(game: &mut Game, server_event: ServerEvent, msg: String){
+pub async fn handle_response(game: &mut Game, answer: &str, state: &str){
 	match &game.pending_action {
-		PendingAction::GroupList => {
-			if msg.contains("SUCCESS"){
-				if let Some(data_val) = server_event.data {
-					let data_str = data_val.to_string();
-					match serde_json::from_str::<Vec<String>>(&data_str) {
-						Ok(players) => {
-							game.group.grouplist = players;
-						}
-						Err(e) => {
-							println!("Error JSON: {}", e);
-						}
-					}
-				}
-				else if msg.contains("NOT_IN_GROUP") {
-					game.group.in_group = false;
-				}
-			}
-		}
+		// PendingAction::GroupList => {
+		// 	if msg.contains("SUCCESS"){
+		// 		if let Some(data_val) = server_event.data {
+		// 			let data_str = data_val.to_string();
+		// 			match serde_json::from_str::<Vec<String>>(&data_str) {
+		// 				Ok(players) => {
+		// 					game.group.grouplist = players;
+		// 				}
+		// 				Err(e) => {
+		// 					println!("Error JSON: {}", e);
+		// 				}
+		// 			}
+		// 		}
+		// 		else if msg.contains("NOT_IN_GROUP") {
+		// 			game.group.in_group = false;
+		// 		}
+		// 	}
+		// }
 		PendingAction::Auth => {
-			if msg.contains("SUCCESS") {
+			if state =="OK"{
 				game.is_auth = true;
-			} else if msg.contains("NAME_IN_USE") {
+			} else {
 				println!("already use")
 			}
 		}
-		PendingAction::GroupCreate(group_name) => {
-			if msg.contains("SUCCESS") {
-				game.group.in_group = true;
-				if group_name.is_empty(){
-					let name: String = format!("{}'s Group ",game.player.name.clone());
-					game.group.name = name;}
-				else{
-					let name: String = format!("Group {}",group_name);
-					game.group.name = name;
-				}
-			}
-			else{
-				println!("Failed group create");
-			}
-		}
-		PendingAction::GroupJoin(sender, group_name) => {
-			if msg.contains("SUCCESS") {
-				game.group.in_group = true;
-				if sender == group_name{
-					let name: String = format!("{}'s Group ",sender);
-					game.group.name = name;}
-				else{
-					let name: String = format!("{}",group_name);
-					game.group.name = name;
-				}
-			} else{
-				println!("Failed join");
-			}
-		}
-		PendingAction::GroupLeave => {
-			if msg.contains("SUCCESS") {
-				game.group.in_group = false;
-				game.group.name = String::new();
-				game.group.grouplist = Vec::new();
-			}
-		}
-		PendingAction::GroupInvite(name) => {
-			if msg.contains("SUCCESS") {
-				let rp: String = format!("{} invited", name);
-				game.group.invite_info = Some(InviteInfo{
-					state: rp,
-					color: GREEN,
-					time: get_time()
-				});
-			} else{
-				let rp: String = format!("{} is offline", name);
-				game.group.invite_info = Some(InviteInfo{
-					state: rp,
-					color: RED,
-					time: get_time()
-				});
-			}
-		}
+		// PendingAction::GroupCreate(group_name) => {
+		// 	if msg.contains("SUCCESS") {
+		// 		game.group.in_group = true;
+		// 		if group_name.is_empty(){
+		// 			let name: String = format!("{}'s Group ",game.player.name.clone());
+		// 			game.group.name = name;}
+		// 		else{
+		// 			let name: String = format!("Group {}",group_name);
+		// 			game.group.name = name;
+		// 		}
+		// 	}
+		// 	else{
+		// 		println!("Failed group create");
+		// 	}
+		// }
+		// PendingAction::GroupJoin(sender, group_name) => {
+		// 	if msg.contains("SUCCESS") {
+		// 		game.group.in_group = true;
+		// 		if sender == group_name{
+		// 			let name: String = format!("{}'s Group ",sender);
+		// 			game.group.name = name;}
+		// 		else{
+		// 			let name: String = format!("{}",group_name);
+		// 			game.group.name = name;
+		// 		}
+		// 	} else{
+		// 		println!("Failed join");
+		// 	}
+		// }
+		// PendingAction::GroupLeave => {
+		// 	if msg.contains("SUCCESS") {
+		// 		game.group.in_group = false;
+		// 		game.group.name = String::new();
+		// 		game.group.grouplist = Vec::new();
+		// 	}
+		// }
+		// PendingAction::GroupInvite(name) => {
+		// 	if msg.contains("SUCCESS") {
+		// 		let rp: String = format!("{} invited", name);
+		// 		game.group.invite_info = Some(InviteInfo{
+		// 			state: rp,
+		// 			color: GREEN,
+		// 			time: get_time()
+		// 		});
+		// 	} else{
+		// 		let rp: String = format!("{} is offline", name);
+		// 		game.group.invite_info = Some(InviteInfo{
+		// 			state: rp,
+		// 			color: RED,
+		// 			time: get_time()
+		// 		});
+		// 	}
+		// }
 		PendingAction::SendChat(channel, text) => {
 			let channel = match channel.as_str(){
 				"Room" => &mut game.chat.room_messages,
@@ -115,13 +115,11 @@ pub async fn handle_response(game: &mut Game, server_event: ServerEvent, msg: St
 						return;
 					}
 				};
-			if msg.contains("SUCCESS") {
+			if state =="OK" {
 				channel.push(text.to_string());
 			} else{
-				if let Some(error) = server_event.error{
-					let rp: String = format!("[Error] {}", error);
-					channel.push(rp);
-				}
+				let rp: String = format!("[Error] {}", answer);
+				channel.push(rp);
 			}
 		}
 		PendingAction::Command(channel, cmd) => {
@@ -134,38 +132,30 @@ pub async fn handle_response(game: &mut Game, server_event: ServerEvent, msg: St
 						return;
 					}
 				};
-			channel.push(cmd.to_string());
-			if msg.contains("SUCCESS") {
-				if let Some(data) = server_event.data{
-						let rp: String = format!("[Server] {}", data);
-						channel.push(rp);
-					}
+				channel.push(cmd.to_string());
+				if state =="OK" {
+					let rp: String = format!("[Server] {}", answer);
+					channel.push(rp);
 				}
-			else {
-				if let Some(error) = server_event.error{
-						let rp: String = format!("[Server] {}", error);
-						channel.push(rp);
-					}
+				else{
+					let rp: String = format!("[Error] {}", answer);
+					channel.push(rp);
 				}
 			}
 		PendingAction::Look => {
-			if let Some(data_val) = &server_event.data {
-				let data_str = data_val.to_string();
-				match serde_json::from_str::<LookData>(&data_str) {
-					Ok(look_data) => {
-						game.map_data = Some(look_data);
-					}
-					Err(e) => {
-					eprintln!("LOOK error: {}", e);
-					}
-				}
 
+			match serde_json::from_str::<LookData>(answer) {
+				Ok(look_data) => {
+					game.map_data = Some(look_data);
+				}
+				Err(e) => {
+				eprintln!("LOOK error: {}", e);
+				}
 			}
 		}
+
 		PendingAction::Items => {
-			if let Some(data_val) = &server_event.data {
-				let data_str = data_val.to_string();
-				match serde_json::from_str::<HashMap<String, ItemData>>(&data_str) {
+			match serde_json::from_str::<HashMap<String, ItemData>>(answer) {
 					Ok(items_data) => {
 						for (item_id, item_data) in items_data{
 							let texture: Texture2D = get_item_texture(&item_id).await;
@@ -182,14 +172,12 @@ pub async fn handle_response(game: &mut Game, server_event: ServerEvent, msg: St
 					Err(e) => {
 					eprintln!("Items error: {}", e);
 					}
-				}
-
 			}
 		}
+
+
 		PendingAction::Npcs => {
-			if let Some(data_val) = &server_event.data {
-				let data_str = data_val.to_string();
-				match serde_json::from_str::<HashMap<String, NpcData>>(&data_str) {
+			match serde_json::from_str::<HashMap<String, NpcData>>(answer) {
 					Ok(npcs_data) => {
 						for (npc_id , npc_data) in npcs_data{
 							let texture: Texture2D = get_npc_texture(&npc_id).await;
@@ -210,46 +198,37 @@ pub async fn handle_response(game: &mut Game, server_event: ServerEvent, msg: St
 				}
 
 			}
-		}
 		PendingAction::Status => {
-			if let Some(data_val) = &server_event.data {
-				let data_str = data_val.to_string();
-				match serde_json::from_str::<PlayerState>(&data_str) {
-					Ok(state) => {
-						game.player.state = Some(state)
-					}
-					Err(e) => {
-					eprintln!("STATUS error: {}", e);
-					}
+			match serde_json::from_str::<PlayerState>(answer) {
+				Ok(state) => {
+					game.player.state = Some(state)
 				}
-
+				Err(e) => {
+				eprintln!("STATUS error: {}", e);
+				}
 			}
 		}
 		PendingAction::Who => {
-			if let Some(data_val) = &server_event.data {
-				let data_str = data_val.to_string();
-				match serde_json::from_str::<Players>(&data_str) {
-					Ok(players) => {
-						game.nb_players =players.players;
+			if let Some(val_str) = answer.strip_prefix("players=") {
+				match val_str.trim().parse::<i32>() {
+					Ok(nb) => {
+						game.nb_players = nb;
 					}
 					Err(e) => {
-					eprintln!("Who error: {}", e);
+						println!("Who error parsing: {}", e);
 					}
 				}
-
 			}
 		}
 		PendingAction::Move(new_spawn) => {
-
-			if msg.contains("SUCCESS") && game.player.new_spawn == Spawn::None{
-				if let Some(data_val) = server_event.data{
-					let data_str = data_val.to_string();
-					match serde_json::from_str::<MoveData>(&data_str) {
-						Ok(parsed_map_data) => {
+			if state =="OK" && game.player.new_spawn == Spawn::None{
+				if let Some(val_str) = answer.strip_prefix("room=") {
+					match val_str.trim().parse::<String>() {
+						Ok(spawn) => {
 							game.player.new_spawn = new_spawn.clone();
 							if let Some(ref mut mapdata) = game.map_data{
 
-								mapdata.room.id = parsed_map_data.room;
+								mapdata.room.id =spawn.to_string();
 							}
 						}
 						Err(e) => {
@@ -259,107 +238,97 @@ pub async fn handle_response(game: &mut Game, server_event: ServerEvent, msg: St
 				}
 			}
 		}
-		PendingAction::Talk(ref npc_id) => {
 
-			if msg.contains("SUCCESS"){
-				if let Some(data_val) = server_event.data{
-					let data_str = data_val.to_string();
-					match serde_json::from_str::<Vec<String>>(&data_str) {
-						Ok(texts) => {
-							if let Some(npc) = game.loaded_npcs.get_mut(npc_id){
-								npc.npc_talk = Some(NpcTalk{
-								texts: texts,
-								text_i: 0
-							})
-							}
-						}
-						Err(e) => {
-							eprintln!("Talk error: {}", e);
-						}
-					}
-				}
-			}
-		}
-		PendingAction::Quest(ref npc_id) => {
-			if msg.contains("SUCCESS"){
-				if let Some(data_val) = server_event.data{
-					let data_str = data_val.to_string();
-					match serde_json::from_str::<QuestData>(&data_str) {
-						Ok(quest) => {
-							game.quests.push(Quest {
-								npc_id: npc_id.to_string(),
-								name: quest.name,
-								description: quest.description,
-								reward: quest.reward,
-								goals: quest.goals
-							});
-						}
-						Err(e) => {
-							eprintln!("QUEST error: {}", e);
-						}
-					}
-				}
-			}
-		}
-		PendingAction::Attack(ref npc_id) => {
 
-			if msg.contains("SUCCESS"){
-				if let Some(ref mut state) = game.player.state{
-							state.status= Status::InFight { target_id: npc_id.to_string()}
-					};
+		// PendingAction::Talk(ref npc_id) => {
 
-			}
-		}
+		// 	if msg.contains("SUCCESS"){
+		// 		if let Some(data_val) = server_event.data{
+		// 			let data_str = data_val.to_string();
+		// 			match serde_json::from_str::<Vec<String>>(&data_str) {
+		// 				Ok(texts) => {
+		// 					if let Some(npc) = game.loaded_npcs.get_mut(npc_id){
+		// 						npc.npc_talk = Some(NpcTalk{
+		// 						texts: texts,
+		// 						text_i: 0
+		// 					})
+		// 					}
+		// 				}
+		// 				Err(e) => {
+		// 					eprintln!("Talk error: {}", e);
+		// 				}
+		// 			}
+		// 		}
+		// 	}
+		// }
+		// PendingAction::Quest(ref npc_id) => {
+		// 	if msg.contains("SUCCESS"){
+		// 		if let Some(data_val) = server_event.data{
+		// 			let data_str = data_val.to_string();
+		// 			match serde_json::from_str::<QuestData>(&data_str) {
+		// 				Ok(quest) => {
+		// 					game.quests.push(Quest {
+		// 						npc_id: npc_id.to_string(),
+		// 						name: quest.name,
+		// 						description: quest.description,
+		// 						reward: quest.reward,
+		// 						goals: quest.goals
+		// 					});
+		// 				}
+		// 				Err(e) => {
+		// 					eprintln!("QUEST error: {}", e);
+		// 				}
+		// 			}
+		// 		}
+		// 	}
+		// }
+		// PendingAction::Attack(ref npc_id) => {
+
+		// 	if msg.contains("SUCCESS"){
+		// 		if let Some(ref mut state) = game.player.state{
+		// 					state.status= Status::InFight { target_id: npc_id.to_string()}
+		// 			};
+
+		// 	}
+		// }
 
 		PendingAction::Take => {
-			if let Some(data_val) = server_event.data{
-				let data_str = data_val.to_string();
-				if !data_str.is_empty(){
-
-					match serde_json::from_str::<Value>(&data_str) {
-						Ok(json) => {
-							let taken: String = json["taken"].as_str().unwrap_or("").to_string();
-							if let Some(ref mut map_data) = game.map_data {
-								if let Some(pos) = map_data.items.iter().position(|x| x == &taken) {
-									map_data.items.remove(pos);
-								}
-								let current_count = game.player.inventory.data.get(&taken).copied().unwrap_or(0);
-								game.player.inventory.data.insert(taken, current_count + 1);
+			if let Some(val_str) = answer.strip_prefix("taken=") {
+				match val_str.trim().parse::<String>() {
+					Ok(taken) => {
+						if let Some(ref mut map_data) = game.map_data {
+							if let Some(pos) = map_data.items.iter().position(|x| x == &taken) {
+								map_data.items.remove(pos);
 							}
-						}
-						Err(e) => {
-							println!("Take JSON: {}", e);
+							let current_count = game.player.inventory.data.get(&taken).copied().unwrap_or(0);
+							game.player.inventory.data.insert(taken, current_count + 1);
 						}
 					}
-
+					Err(e) => {
+						println!("TAKE error parsing: {}", e);
+					}
 				}
 			}
-
 		}
 		PendingAction::Drop => {
-			if let Some(data_val) = server_event.data{
-				let data_str = data_val.to_string();
-				if !data_str.is_empty(){
-					match serde_json::from_str::<Value>(&data_str) {
-						Ok(json) => {
-							let dropped: String = json["dropped"].as_str().unwrap_or("").to_string();
-							if let Some(ref mut map_data) = game.map_data {
-								let current_count = game.player.inventory.data.get(&dropped).copied().unwrap_or(0);
-								if current_count > 0 {
-									let new_count = current_count - 1;
-									if new_count <= 0 {
-										game.player.inventory.data.remove(&dropped);
-									} else {
-										game.player.inventory.data.insert(dropped.clone(), new_count);
-									}
+			if let Some(val_str) = answer.strip_prefix("dropped=") {
+				match val_str.trim().parse::<String>() {
+					Ok(dropped) => {
+						if let Some(ref mut map_data) = game.map_data {
+							let current_count = game.player.inventory.data.get(&dropped).copied().unwrap_or(0);
+							if current_count > 0 {
+								let new_count = current_count - 1;
+								if new_count <= 0 {
+									game.player.inventory.data.remove(&dropped);
+								} else {
+									game.player.inventory.data.insert(dropped.clone(), new_count);
 								}
-
-								map_data.items.push(dropped);
 							}
+							map_data.items.push(dropped);
 						}
-						Err(e) => {
-							println!("Error JSON: {}", e);
-						}
+					}
+					Err(e) => {
+						println!("DROP error parsing: {}", e);
 					}
 				}
 			}
@@ -389,11 +358,6 @@ pub struct NpcData {
 }
 
 
-#[derive(Deserialize, Debug)]
-pub struct MoveData {
-	pub room: String,
-}
-
 
 #[derive(Deserialize, Debug)]
 pub struct QuestData {
@@ -414,13 +378,20 @@ pub struct LookData {
     pub npcs: Vec<String>,
 }
 
+#[derive(Deserialize, Debug, Clone, Hash, Eq, PartialEq)]
+pub enum Direction {
+    North,
+    South,
+    East,
+    West,
+}
 
 #[derive(Deserialize, Debug, Clone)]
 pub struct RoomData {
     pub id: String,
     pub name: String,
 	pub description: String,
-    pub exits: Vec<Exit>,
+    pub exits: HashMap<Direction, String>,
 
 }
 

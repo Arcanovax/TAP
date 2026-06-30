@@ -3,13 +3,18 @@ use macroquad::{prelude::*};
 
 #[derive(Deserialize, Clone, PartialEq, Debug)]
 pub enum NPCKind {
-    Merchant,
-    Citizen,
-    Enemy {
-        hp: u32,
-        max_hp: u32,
-        defeated: bool
-    },
+	Merchant {
+		inventory: Vec<String>,
+		gold: Option<u32>
+	},
+	Enemy {
+		hp: u32,
+		max_hp: u32,
+		damages: Option<u32>,
+		loot: Option<Vec<String>>,
+		defeated: bool
+	},
+	Citizen
 }
 
 
@@ -64,7 +69,7 @@ pub fn handle_npc_interactions(game: &mut Game, place: Vec2, npc: Npc){
 	draw_flat_triangle(place.x + 8.0, place.y);
 	let w_pos: Vec2 = vec2(place.x, place.y);
 	let s_pos = world_to_screen_pos(w_pos);
-	
+
 	set_default_camera();
 
 	if let Some(npc_talk) = npc.npc_talk.clone() {

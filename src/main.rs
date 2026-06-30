@@ -46,15 +46,6 @@ use serde::Deserialize;
 
 
 
-#[derive(Deserialize, Debug, Clone)]
-pub enum Exit {
-    North { toward: String },
-    South { toward: String },
-    East { toward: String },
-    West { toward: String },
-}
-
-
 
 
 #[derive(Clone, Debug, PartialEq, Hash, Eq)]
@@ -261,13 +252,14 @@ async fn main() {
 		while let Ok(msg) = game.rx_from_serv.try_recv() {
 			println!("Send: {:?}", game.pending_action);
             println!("GET: {}", msg);
-			if let Ok(server_event) = serde_json::from_str::<ServerEvent>(&msg) {
-				if server_event.event_type == "Event" {
-					handle_events(&mut game, server_event).await;
-				}
-				else if server_event.event_type == "Response"{
-					handle_response(&mut game, server_event, msg).await;
-				}
+			let parts: Vec<&str> = msg.split_whitespace().collect();
+			let answer = parts[1..].join(" ");
+			let state: &str = parts[0];
+			if parts.is_empty() { return; }
+			match state {
+				"OK" | "ERR" => handle_response(&mut game, answer.as_str(), state).await,
+				// "EVT" => handle_events(&mut game, parts).await,
+				_ => {}
 			}
 			game.pending_action = PendingAction::None;
 
@@ -487,11 +479,11 @@ async fn main() {
 					set_default_camera();
 					let info: Rect = Rect::new(10.0, 10.0, 350.0, 120.0);
 					draw_rectangle(info.x, info.y, info.w, info.h, Color::new(0.0, 0.0, 0.0, 0.5));
-					
+
 
 					let frame = Rect::new(info.x+10.0, info.y+10.0, 100.0, 100.0);
 					draw_rectangle(frame.x, frame.y, frame.w, frame.h,BLACK);
-					
+
 					let cut_sheet_head = DrawTextureParams {
 						source: Some(Rect::new(0.0, 0.0, sprite_width, 20.0)),
 						dest_size: Some(vec2(75.0, 100.0 )),
@@ -522,16 +514,16 @@ async fn main() {
 					// if let Some(state) = game.player.state.as_ref(){
 					// 	let rect_info: Rect =get_rect_right(vec2(100.0, 60.0), 0.0);
 					// 	draw_rectangle(rect_info.x, rect_info.y, rect_info.w, rect_info.h, BLACK);
-					// 
+					//
 					// 	draw_text_bottom(rect_info, &hp_info.to_string(), 30, 0.0);
 					// }
 
 
-					
-					
+
+
 					display_quests(&mut game);
-	
-					
+
+
 
 					if game.focus == InputFocus::Game {
 						while get_char_pressed().is_some() {}
