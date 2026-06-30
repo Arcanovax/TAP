@@ -1,4 +1,5 @@
-use std::{collections::VecDeque, fs::OpenOptions, io::Write, os::linux::raw::stat};
+use core::num;
+use std::{collections::{HashMap, VecDeque}, fmt::format, fs::OpenOptions, io::Write, os::linux::raw::stat};
 
 use crate::{enums::{actions::PendingAction, focus::Focus, npc_kind::NPCKind, states::States}, structures::{attack_results::Attack_Result, room::Room, server_event::ServerEvent, status_view::StatusView, world::World}};
 
@@ -53,8 +54,6 @@ pub fn response_handling(world: &mut World, answers: Vec<&str>) {
 					},
 					
 					PendingAction::Npcs => {
-						// if let Ok(mut file) = OpenOptions::new().create(true).append(true).open("debug_network.txt") {
-						// 	let _ = writeln!(file, "real (State {:?}) : {:#?}", world.state, real_answer);}
 						world.list_npcs = serde_json::from_str(&real_answer).unwrap();
 						let _ = world.tx_to_serv.try_send(String::from("LOOK\n"));
 						world.action = PendingAction::ClientLook;
@@ -63,14 +62,36 @@ pub fn response_handling(world: &mut World, answers: Vec<&str>) {
 					PendingAction::Flee => {
 						world.output.push_back(format!("[Server response] {}", real_answer));
 						world.state = States::Idle;
-						let _ = world.tx_to_serv.try_send("INVENTORY\n".to_string());
-						world.action = PendingAction::Inventory;
+						let _ = world.tx_to_serv.try_send("GOLD\n".to_string());
+						world.action = PendingAction::Gold;
+					},
+					
+					PendingAction::Gold => {
+						// if let Ok(mut file) = OpenOptions::new().create(true).append(true).open("debug_network.txt") {
+						// 	let _ = writeln!(file, "real (State {:?}) : {:#?}", world.state, real_answer);}
+						let gold: Vec<&str> = real_answer.split("=").collect();
+						world.player.inventory.insert("item.gold".to_string(), gold[1].parse().unwrap());
+						world.action = PendingAction::None;
 					},
 					
 					PendingAction::Inventory => {
-						if let Ok(mut file) = OpenOptions::new().create(true).append(true).open("debug_network.txt") {
-							let _ = writeln!(file, "Inventory (State {:#?})", real_answer);}
-						
+						let mut item: &str = "";
+						let mut count = 1;
+						for (i, line) in real_answer.lines().enumerate() {
+							if item != line {
+								if i > 0 {
+									world.player.inventory.insert(item.to_string(), count);
+								}
+								item = line;
+								count = 1;
+							} else {
+								count += 1;
+							}
+						}
+						world.player.inventory.insert(item.to_string(), count);
+						for (item, number) in &world.player.inventory {
+							world.output.push_back(format!("{} x{}", item, number));
+						}
 						world.action = PendingAction::None;
 					},
 

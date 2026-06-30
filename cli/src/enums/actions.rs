@@ -5,6 +5,7 @@ use crate::enums::channels::Channels;
 pub enum PendingAction {
     None,
     GroupList,
+    Gold,
 	Npcs,
 	Flee,
     Talk(String),

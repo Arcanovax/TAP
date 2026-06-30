@@ -31,8 +31,17 @@ pub fn handle_mouse(event: MouseEvent, world: &mut World) {
 								let _ = world.tx_to_serv.try_send(format!("ATTACK {}\n", target));
 								world.action = PendingAction::Attack(target_id.clone());
 							},
+							"FLEE" => {
+								let mut target = target_id;
+								for (name, npc) in &world.list_npcs {
+									if npc.name == *target_id {
+										target = name;
+									}
+								}
+								let _ = world.tx_to_serv.try_send(format!("FLEE {}\n", target));
+								world.action = PendingAction::Flee;
+							},
 							"BAG" => {todo!()},
-							"FLEE" => {todo!()},
 							_ => {}
 						}
 					}

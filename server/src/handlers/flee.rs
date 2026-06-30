@@ -1,4 +1,4 @@
-use std::net::SocketAddr;
+use std::{fs::OpenOptions,io::Write, net::SocketAddr};
 
 use crate::{protocol::{Message, Payload}, state::SharedServer, structures::enums::{error::ErrorCode, state::State}};
 
@@ -25,12 +25,7 @@ pub fn flee(
                 }
             }
         };
-		if player.inventory.contains_key("item.gold") {
-			let gold = player.inventory.get("item.gold").unwrap();
-			if *gold >= 10 {
-				player.inventory.insert("item.gold".to_string(), gold - 10);
-			}
-		}
+		player.gold = player.gold.saturating_sub(10);
         player.status.clone()
     };
 
