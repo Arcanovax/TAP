@@ -161,7 +161,7 @@ npc:
         defeated: false
 
   h:
-    name: "Sansabrix"
+    name: "Pulapix"
     dialog:
       default:
         - "Stay safe, traveler."

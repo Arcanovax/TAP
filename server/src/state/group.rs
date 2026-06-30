@@ -127,6 +127,15 @@ impl ServerInfo {
 				self.fights.get_mut(&target).unwrap().turn = 0;
 			}
 		} else {
+			let enemy = self.world.npcs.get_mut(&target).unwrap();
+
+			if let NPCKind::Enemy {
+				ref mut hp,
+				max_hp,
+				..
+			} = enemy.kind {
+				*hp = max_hp;
+			}
 			self.fights.remove(&target);
 		}
         Ok(())
