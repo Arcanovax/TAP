@@ -15,7 +15,6 @@ mod fight;
 mod quest;
 
 use fight::*;
-use macroquad::input::KeyCode::S;
 use player::*;
 use items::*;
 use server_event::*;
@@ -23,7 +22,6 @@ use camera::*;
 use response::*;
 use quest::*;
 
-use serde_json::Value;
 use utils::*;
 use npc::*;
 use std::collections::HashMap;
@@ -258,7 +256,7 @@ async fn main() {
 			if parts.is_empty() { return; }
 			match state {
 				"OK" | "ERR" => handle_response(&mut game, answer.as_str(), state).await,
-				// "EVT" => handle_events(&mut game, parts).await,
+				"EVT" => handle_events(&mut game, parts).await,
 				_ => {}
 			}
 			game.pending_action = PendingAction::None;

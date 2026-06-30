@@ -7,7 +7,6 @@ const RECT_ICON: Vec2 = vec2(70.0, 40.0);
 
 pub struct Invitation {
 	pub sender: String,
-	pub group_name: String
 }
 
 
@@ -85,16 +84,16 @@ pub fn draw_group(game: &mut Game){
 
 		if let Some(invitation) = game.group.invitation.as_ref(){
 			let invit_rect: Rect = Rect::new(rect.x ,rect.y+ 100.0, rect.w, 60.0);
-			let text: String = format!("{} invate you in {}",invitation.sender, invitation.group_name);
+			let text: String = format!("{} invate you in his group",invitation.sender);
 			draw_text_center(invit_rect, &text, 18);
 			let btn_weight = 100.0;
 			let space: f32 = 15.0;
 			let join_btn: Rect = Rect::new(invit_rect.x + space,invit_rect.y + 50.0, btn_weight, 20.0);
 			let deny_btn: Rect = Rect::new(invit_rect.x + invit_rect.w - btn_weight - space ,invit_rect.y + 50.0, btn_weight, 20.0);
 			if get_button(join_btn, "Join", 20,GREEN, mouse) {
-				let rq: String = format!("GROUP JOIN {}\n",invitation.group_name);
+				let rq: String = format!("GROUP JOIN {}\n",invitation.sender);
 				game.tx_to_serv.try_send(rq).ok();
-				game.pending_action = PendingAction::GroupJoin(invitation.sender.clone(), invitation.group_name.clone());
+				game.pending_action = PendingAction::GroupJoin(invitation.sender.clone());
 				game.group.invitation = None;
 			}
 			if get_button(deny_btn, "Deny", 20, RED, mouse) {

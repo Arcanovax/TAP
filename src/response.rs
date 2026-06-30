@@ -6,7 +6,7 @@ pub enum PendingAction {
     GroupList,
 	Auth,
 	GroupCreate(String),
-	GroupJoin(String, String),
+	GroupJoin(String),
 	GroupInvite(String),
 	GroupLeave,
 	SendChat(String, String),
@@ -65,16 +65,12 @@ pub async fn handle_response(game: &mut Game, answer: &str, state: &str){
 				println!("Failed group create");
 			}
 		}
-		PendingAction::GroupJoin(sender, group_name) => {
+		PendingAction::GroupJoin(sender) => {
 			if state =="OK" {
 				game.group.in_group = true;
-				if sender == group_name{
-					let name: String = format!("{}'s Group ",sender);
-					game.group.name = name;}
-				else{
-					let name: String = format!("{}",group_name);
-					game.group.name = name;
-				}
+				let name: String = format!("{}'s Group ",sender);
+				game.group.name = name;
+
 			} else{
 				println!("Failed join");
 			}
@@ -95,7 +91,7 @@ pub async fn handle_response(game: &mut Game, answer: &str, state: &str){
 					time: get_time()
 				});
 			} else{
-				let rp: String = format!("{} is offline", name);
+				let rp: String = format!("cannot invite {}", name);
 				game.group.invite_info = Some(InviteInfo{
 					state: rp,
 					color: RED,
