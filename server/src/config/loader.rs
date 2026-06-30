@@ -1,12 +1,30 @@
 use crate::{
     config::ConfigError,
-    structures::{game::World, item::Item, npc::NPC, quest::Quest, room::Room},
+    structures::{
+        enums::exits::Direction,
+        game::World,
+        item::Item,
+        npc::NPC,
+        quest::Quest,
+        room::{OwnedItem, Room},
+    },
 };
 use serde::Deserialize;
 use std::{
     collections::{HashMap, HashSet},
     path::{Path, PathBuf},
 };
+
+#[derive(Deserialize, Debug)]
+struct ConfigRoom {
+    name: String,
+    exits: HashMap<Direction, String>,
+    description: String,
+    #[serde(default)]
+    npc: Vec<String>,
+    #[serde(default)]
+    items: Vec<String>,
+}
 
 #[derive(Deserialize, Debug)]
 struct ConfigFile {
@@ -17,7 +35,7 @@ struct ConfigFile {
     #[serde(default)]
     item: HashMap<String, Item>,
     #[serde(default)]
-    room: HashMap<String, Room>,
+    room: HashMap<String, ConfigRoom>,
     #[serde(default)]
     quest: HashMap<String, Quest>,
 }
@@ -99,7 +117,16 @@ impl Loader {
         }
         for (name, room) in parsed.room {
             let id = format!("room.{}", name);
-            self.world.rooms.insert(id.clone(), room);
+            self.world.rooms.insert(
+                id.clone(),
+                Room {
+                    name: room.name,
+                    exits: room.exits,
+                    description: room.description,
+                    npc: room.npc,
+                    items: room.items.into_iter().map(OwnedItem::from).collect(),
+                },
+            );
             if let Some(file_a) = self.definer.insert(id.clone(), path.clone()) {
                 return Err(ConfigError::Conflict {
                     id,
