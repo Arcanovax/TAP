@@ -18,3 +18,4 @@ pub mod who;
 pub mod sell;
 pub mod buy;
 pub mod gold;
+pub mod slot_machine;
