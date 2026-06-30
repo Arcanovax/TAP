@@ -49,18 +49,30 @@ pub fn response_handling(world: &mut World, answers: Vec<&str>) {
 					},
 
 					PendingAction::Items => {
-						// if let Ok(mut file) = OpenOptions::new().create(true).append(true).open("debug_network.txt") {
-						// 	let _ = writeln!(file, "answer (State {:#?})", real_answer);}
 						world.list_items = serde_json::from_str(&real_answer).unwrap();
 						let _ = world.tx_to_serv.try_send(String::from("NPCS\n"));
 						world.action = PendingAction::Npcs;
 					},
-
+					
 					PendingAction::Npcs => {
 						world.list_npcs = serde_json::from_str(&real_answer).unwrap();
 						let _ = world.tx_to_serv.try_send(String::from("LOOK\n"));
 						world.action = PendingAction::ClientLook;
-					}
+					},
+					
+					PendingAction::Flee => {
+						world.output.push_back(format!("[Server response] {}", real_answer));
+						world.state = States::Idle;
+						let _ = world.tx_to_serv.try_send("INVENTORY\n".to_string());
+						world.action = PendingAction::Inventory;
+					},
+					
+					PendingAction::Inventory => {
+						if let Ok(mut file) = OpenOptions::new().create(true).append(true).open("debug_network.txt") {
+							let _ = writeln!(file, "Inventory (State {:#?})", real_answer);}
+						
+						world.action = PendingAction::None;
+					},
 
 					PendingAction::Talk(name) => {
 						for sentence in real_answer.split("\\") {
@@ -72,24 +84,24 @@ pub fn response_handling(world: &mut World, answers: Vec<&str>) {
 							world.state = States::InDiscuss(name.clone(), world.room.dialogs.pop_front().unwrap_or("".to_string()));
 						}
 						world.room.npc_list_state.select(None);
-					}
+					},
 
 					PendingAction::GroupCreate(name) => {
 						world.group.in_group = true;
 						world.output.push_back(format!("{name} group successfully created."));
 						world.action = PendingAction::None;
-					}
+					},
 
 					PendingAction::GroupJoin(name) => {
 						world.group.in_group = true;
 						world.output.push_back(format!("{name} group successfully joined."));
 						world.action = PendingAction::None;
-					}
+					},
 
 					PendingAction::GroupInvite(name) => {
 						world.output.push_back(format!("Invitation successfully sended to {name}."));
 						world.action = PendingAction::None;
-					}
+					},
 
 					PendingAction::SendChat(command, args) => {
 						match command.to_uppercase().as_str() {

@@ -1,16 +1,7 @@
 use crate::{
     handlers::{
-        buy::buy_request,
-        gold::gold_request,
-        item::{item_request, items_request},
-        npc::{npc_request, npcs_request},
-        quest::quest_request,
-        quests::quests_request,
-        sell::sell_request,
-    },
-    protocol::Payload,
-    state::{SharedServer, Tx},
-    structures::{
+        buy::buy_request, flee::flee, gold::gold_request, item::{item_request, items_request}, npc::{npc_request, npcs_request}, quest::quest_request, quests::quests_request, sell::sell_request,
+    }, protocol::Payload, state::{SharedServer, Tx}, structures::{
         enums::{command::Command, error::ErrorCode},
         handler_outcome::HandlerOutcome,
     },
@@ -48,6 +39,8 @@ pub fn handle_request(
             Some(Command::MOVE) => move_request(server_info, peer_addr, args).into(),
             Some(Command::TALK) => talk_request(peer_addr, args, server_info),
             Some(Command::ATTACK) => fight_request(peer_addr, args, server_info).into(),
+            Some(Command::FLEE) => flee(peer_addr, args, server_info).into(),
+            Some(Command::BAG) => fight_request(peer_addr, args, server_info).into(),
             Some(Command::LOOK) => look_request(server_info, peer_addr).into(),
             Some(Command::DROP) => drop_request(server_info, peer_addr, args).into(),
             Some(Command::TAKE) => take_request(server_info, peer_addr, args).into(),
