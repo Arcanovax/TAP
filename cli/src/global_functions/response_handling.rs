@@ -49,22 +49,28 @@ pub fn response_handling(world: &mut World, answers: Vec<&str>) {
 					},
 
 					PendingAction::Items => {
-						// if let Ok(mut file) = OpenOptions::new().create(true).append(true).open("debug_network.txt") {
-						// 	let _ = writeln!(file, "answer (State {:#?})", real_answer);}
 						world.list_items = serde_json::from_str(&real_answer).unwrap();
 						let _ = world.tx_to_serv.try_send(String::from("NPCS\n"));
 						world.action = PendingAction::Npcs;
 					},
-
+					
 					PendingAction::Npcs => {
 						world.list_npcs = serde_json::from_str(&real_answer).unwrap();
 						let _ = world.tx_to_serv.try_send(String::from("LOOK\n"));
 						world.action = PendingAction::ClientLook;
 					},
-
+					
 					PendingAction::Flee => {
 						world.output.push_back(format!("[Server response] {}", real_answer));
 						world.state = States::Idle;
+						let _ = world.tx_to_serv.try_send("INVENTORY\n".to_string());
+						world.action = PendingAction::Inventory;
+					},
+					
+					PendingAction::Inventory => {
+						if let Ok(mut file) = OpenOptions::new().create(true).append(true).open("debug_network.txt") {
+							let _ = writeln!(file, "Inventory (State {:#?})", real_answer);}
+						
 						world.action = PendingAction::None;
 					},
 
