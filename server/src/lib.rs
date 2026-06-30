@@ -1,8 +1,11 @@
 use crate::config::load;
 use crate::handlers::handle_request::handle_request;
+use crate::persistence::players::save_player;
+use crate::persistence::world::{load_world, save_world};
 use crate::protocol::{Message, Payload};
 use crate::state::{ServerInfo, SharedServer};
 use crate::structures::enums::state::State;
+use crate::structures::room::Owner;
 use redb::Database;
 use std::net::SocketAddr;
 use std::path::Path;
@@ -11,6 +14,7 @@ use std::time::Duration;
 use tokio::io::{AsyncBufReadExt, AsyncWriteExt, BufReader};
 use tokio::net::TcpListener;
 use tokio::net::tcp::OwnedWriteHalf;
+use tokio::signal::unix::{SignalKind, signal};
 use tokio::time::interval;
 use tracing::{Instrument, debug, error, info};
 
@@ -87,74 +91,127 @@ pub async fn run(addr: String, port: String) -> Result<(), Box<dyn std::error::E
         )
         .init();
 
-    let world = load(Path::new("config.yaml"))?;
-    let base_world = world.clone();
+    let mut sigint = signal(SignalKind::interrupt())?;
+    let mut sigterm = signal(SignalKind::terminate())?;
+
     let db = Arc::new(Database::create("game.redb")?);
-    let server_info: SharedServer = Arc::new(Mutex::new(ServerInfo::new(world, db)));
+    let mut world = load(Path::new("config.yaml"))?;
+    let base_world = world.clone();
+
+    if let Ok(Some(saved)) = load_world(&db) {
+        for (id, room) in &mut world.rooms {
+            if let Some(saved_room) = saved.rooms.get(id) {
+                room.items.extend(
+                    saved_room
+                        .items
+                        .iter()
+                        .filter(|item| item.owner == Owner::Player)
+                        .cloned(),
+                );
+            }
+        }
+    }
+
+    let server_info: SharedServer =
+        Arc::new(Mutex::new(ServerInfo::new(world.clone(), db.clone())));
     let listener = TcpListener::bind(format!("{}:{}", addr, port)).await?;
 
     let server_info_copy = Arc::clone(&server_info);
+    let db_copy = Arc::clone(&db);
     let mut ticker = interval(Duration::from_secs(600));
     tokio::spawn(async move {
         loop {
             ticker.tick().await;
+            let mut binding = server_info_copy.lock().unwrap();
             debug!("Server reset started");
-            server_info_copy.lock().unwrap().reset(&base_world);
+            binding.reset(&base_world);
             debug!("Server reset done");
+
+            info!("Saving world...");
+            let _ = save_world(&db_copy, &binding.world);
+            info!("World saved");
         }
     });
 
     loop {
-        let (mut socket, peer_addr) = listener.accept().await?;
-        let span = tracing::info_span!("connection", %peer_addr);
+        tokio::select! {
+            res = listener.accept() => {
+            let (mut socket, peer_addr) = res?;
+            let span = tracing::info_span!("connection", %peer_addr);
 
-        let server_info_copy = Arc::clone(&server_info);
+            let server_info_copy = Arc::clone(&server_info);
 
-        tokio::spawn(
-            async move {
-                if let Err(e) = socket
-                    .write_all("OK hello proto=1\n".as_bytes())
-                    .await
-                {
-                    error!(error = %e, "TCP connection failed");
-                    return Err(e);
-                }
+            tokio::spawn(
+                async move {
+                    if let Err(e) = socket
+                        .write_all("OK hello proto=1\n".as_bytes())
+                        .await
+                    {
+                        error!(error = %e, "TCP connection failed");
+                        return Err(e);
+                    }
 
-                info!("TCP connection established");
-                let (read_half, mut write_half) = socket.into_split();
-                let mut reader = BufReader::new(read_half);
-                let mut line = String::new();
+                    info!("TCP connection established");
+                    let (read_half, mut write_half) = socket.into_split();
+                    let mut reader = BufReader::new(read_half);
+                    let mut line = String::new();
 
-                let (tx, mut rx) = tokio::sync::mpsc::unbounded_channel::<Message>();
+                    let (tx, mut rx) = tokio::sync::mpsc::unbounded_channel::<Message>();
 
-                loop {
-                    tokio::select! {
-                        result = reader.read_line(&mut line) => {
-                            match result {
-                                Ok(0) => break,
-                                Ok(_) => {}
-                                Err(_) => break,
-                            }
-                            let request = parse_command(line.as_str());
-                            let response = handle_request(&request, &server_info_copy, peer_addr, &tx);
-                            let _ = write_half.write_all(response.to_str().as_bytes()).await;
-                            line.clear();
-                            if let Message::Command { name, .. } = &request {
-                                if name.to_uppercase() == "QUIT" {
-                                    break;
+                    loop {
+                        tokio::select! {
+                            result = reader.read_line(&mut line) => {
+                                match result {
+                                    Ok(0) => break,
+                                    Ok(_) => {}
+                                    Err(_) => break,
+                                }
+                                let request = parse_command(line.as_str());
+                                let response = handle_request(&request, &server_info_copy, peer_addr, &tx);
+                                let _ = write_half.write_all(response.to_str().as_bytes()).await;
+                                line.clear();
+                                if let Message::Command { name, .. } = &request {
+                                    if name.to_uppercase() == "QUIT" {
+                                        break;
+                                    }
                                 }
                             }
-                        }
-                        Some(event) = rx.recv() => {
-                            let _ = write_half.write_all(event.to_str().as_bytes()).await;
+                            Some(event) = rx.recv() => {
+                                let _ = write_half.write_all(event.to_str().as_bytes()).await;
+                            }
                         }
                     }
-                }
 
-                cleanup_tcp_connection(&server_info_copy, peer_addr, write_half);
-                Ok::<(), std::io::Error>(())
-            }
-            .instrument(span),
-        );
+                    cleanup_tcp_connection(&server_info_copy, peer_addr, write_half);
+                    Ok::<(), std::io::Error>(())
+                }
+                .instrument(span),
+            );
+        }
+        _ = sigint.recv() => {
+            server_shutdown(&db, &server_info);
+            break Ok(());
+        }
+        _ = sigterm.recv() => {
+            server_shutdown(&db, &server_info);
+            break Ok(());
+        }
+        }
     }
+}
+
+fn server_shutdown(db: &Database, server_info: &SharedServer) {
+    info!("Server closing...");
+    let binding = server_info.lock().unwrap();
+
+    info!("Saving world...");
+    let _ = save_world(db, &binding.world);
+    info!("World saved");
+
+    info!("Saving players...");
+    for (_, con) in &binding.connections {
+        let _ = save_player(db, &con.player);
+    }
+    info!("Players saved");
+    info!("Server is shuting down now");
 }

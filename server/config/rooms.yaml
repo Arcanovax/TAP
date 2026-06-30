@@ -16,6 +16,8 @@ room:
       - "npc.h"
     items:
       - "item.ale"
+      - "item.orange"
+      - "item.shield"
 
   tavern:
     name: "The Awesome Pub"
