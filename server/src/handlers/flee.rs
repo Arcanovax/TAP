@@ -1,4 +1,4 @@
-use std::{fs::OpenOptions,io::Write, net::SocketAddr};
+use std::{net::SocketAddr};
 
 use crate::{protocol::{Message, Payload}, state::SharedServer, structures::enums::{error::ErrorCode, state::State}};
 
@@ -31,9 +31,6 @@ pub fn flee(
 
 	match p_status {
         State::InFight { .. } => {
-            // let fight = world_mut.fights.get_mut(&target)
-            //         .expect("There is no fight.");
-            // fight.fighters.retain(|f| *f != p_name);
 			match world_mut.try_leave_fight(peer_addr, args[0].clone()) {
 				Ok(()) => {
 					Message::Response { 
