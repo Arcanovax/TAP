@@ -124,6 +124,7 @@ pub fn response_handling(world: &mut World, answers: Vec<&str>) {
 						}
 						fight.target_hp = result.target_hp;
 						world.state = States::InFight { target_id: fight.target_name.clone() };
+						world.room.focus = Focus::COMMAND;
 					}
 					_ => {}
 			}

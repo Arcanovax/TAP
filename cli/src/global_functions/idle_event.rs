@@ -1,6 +1,6 @@
 use ratatui::crossterm::event::{KeyCode, KeyEvent};
 
-use crate::{enums::{actions::PendingAction, channels::Channels, focus::Focus}, global_functions::find_action::find_action, structures::world::World};
+use crate::{enums::{actions::PendingAction, channels::Channels, focus::Focus, npc_kind::NPCKind}, global_functions::find_action::find_action, structures::world::World};
 
 pub fn idle_event(key: KeyEvent, world: &mut World) {
 	if world.room.focus == Focus::COMMAND && key.code != KeyCode::Tab && key.code != KeyCode::Enter{
@@ -54,12 +54,12 @@ pub fn idle_event(key: KeyEvent, world: &mut World) {
 				}
 			}
 			KeyCode::Tab => {
-				let current_index = Focus::iterator()
+				let current_index = Focus::iterator(&world.state)
 				.position(|f|f == &world.room.focus)
 				.unwrap_or(0);
 				
-				let next_index = (current_index + 1) % Focus::iterator().len();
-				world.room.focus = Focus::iterator().nth(next_index).unwrap().clone();
+				let next_index = (current_index + 1) % Focus::iterator(&world.state).len();
+				world.room.focus = Focus::iterator(&world.state).nth(next_index).unwrap().clone();
 				world.room.exits_list_state.select(None);
 				world.room.inventory_list_state.select(None);
 				world.room.npc_list_state.select(None);
@@ -97,9 +97,21 @@ pub fn idle_event(key: KeyEvent, world: &mut World) {
 					Focus::NPC => {
 						if let Some(index) = world.room.npc_list_state.selected_mut() {
 							if let Some(selected_npc) = world.room.npcs.get(*index) {
-								let _ = world.tx_to_serv.try_send(format!("TALK {}\n", selected_npc));
-								world.action = PendingAction::Talk(selected_npc.clone());
+								if let Some(npc) = world.list_npcs.get(selected_npc) {
+									match npc.kind {
+										NPCKind::Enemy { .. } => {
+											let _ = world.tx_to_serv.try_send(format!("attack {}\n", selected_npc));
+											world.action = PendingAction::Attack(selected_npc.clone());
+										}
+										NPCKind::Citizen => {
+											let _ = world.tx_to_serv.try_send(format!("TALK {}\n", selected_npc));
+											world.action = PendingAction::Talk(selected_npc.clone());
+										}
+										NPCKind::Merchant => {todo!()}
+									}
+								}
 							}
+							world.room.npc_list_state.select(None);
 						}
 					}
 					Focus::INVENTORY => {todo!()}

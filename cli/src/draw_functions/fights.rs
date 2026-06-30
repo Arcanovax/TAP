@@ -6,7 +6,7 @@ use ratatui::{
 		{
 			Horizontal,
 			Vertical
-		}, HorizontalAlignment::Center, Layout, Margin, Rect, Size
+		}, Flex, HorizontalAlignment::Center, Layout, Margin, Rect, Size, VerticalAlignment
 	}, style::{
 		Color, Modifier, Style, Stylize
 	}, text::{
@@ -64,13 +64,22 @@ pub fn draw_room_fight(world: &mut World, frame: &mut Frame) {
     .constraints(vec![
         Length(10),
         Fill(1),
+		Length(1),
         Fill(1),
-        Length(6)
+        Length(5)
     ])
     .split(layout[1]);
 
-	let nb_fighters = world.room.fight.fighters.len();
-	let fighters_layout = Layout::horizontal(vec![Constraint::Fill(1); nb_fighters]).split(right_layout[2]);
+	let inner_buttons = right_layout[4].inner(Margin { horizontal: 1, vertical: 1 });
+
+	let buttons_layout = Layout::default()
+    .direction(Horizontal)
+    .constraints(vec![
+        Fill(1);
+		3
+    ])
+	.spacing(1)
+    .split(inner_buttons);
 
 	// ID
 	let mut lines = vec![
@@ -155,49 +164,103 @@ pub fn draw_room_fight(world: &mut World, frame: &mut Frame) {
 
 	frame.render_widget(hp_bar, right_layout[1]);
 
+	//VS
+	let vs = Paragraph::new(Text::from("VERSUS")).centered();
+	frame.render_widget(vs, right_layout[2]);
 
 	//FIGHTERS
+	let nb_fighters = world.room.fight.fighters.len();
 	let mut counter = 0;
-	for (name, hp) in &world.room.fight.fighters {
-		gauge_color = if *hp < 30 {
-			Color::Red
-		} else if *hp < 50 {
-			Color::Yellow
-		} else {
-			Color::Green
-		};
-
-		hp_bar = Gauge::default()
-		.block(
-			Block::bordered()
-			.title(format!("{} : {}/{}HP", name, *hp, 100))
-			.title_style(Color::Green)
-			.bold()
-		.title_alignment(Center))
-		.gauge_style(Style::new().fg(gauge_color).on_blue().italic())
-		.percent(*hp as u16);
-
-		frame.render_widget(hp_bar, fighters_layout[counter]);
-		counter += 1;
+	let fighters_on_raw = 2;
+	let mut raw_counter = 0;
+	if nb_fighters > fighters_on_raw {
+		let nb_raws = nb_fighters.div_ceil(fighters_on_raw);
+		let fighters_raws = Layout::vertical(vec![Constraint::Fill(1); nb_raws]).split(right_layout[3]);
+		let mut copy_nb_fighters = nb_fighters.clone();
+		while raw_counter < nb_raws {
+			let fighters_layout = Layout::horizontal(vec![Constraint::Fill(1); copy_nb_fighters.min(fighters_on_raw)]).split(fighters_raws[raw_counter]);
+			for x in 0..copy_nb_fighters.min(fighters_on_raw) {
+				let (name, hp) = world.room.fight.fighters.iter().nth(counter).unwrap();
+				gauge_color = if *hp < 30 {
+					Color::Red
+				} else if *hp < 50 {
+					Color::Yellow
+				} else {
+					Color::Green
+				};
+		
+				hp_bar = Gauge::default()
+				.block(
+					Block::bordered()
+					.title(format!("{} : {}/{}HP", name, *hp, 100))
+					.title_style(Color::Green)
+					.bold()
+				.title_alignment(Center))
+				.gauge_style(Style::new().fg(gauge_color).on_blue().italic())
+				.percent(*hp as u16);
+				frame.render_widget(hp_bar, fighters_layout[x]);
+				counter += 1;
+				}
+			copy_nb_fighters = copy_nb_fighters.saturating_sub(fighters_on_raw);
+			raw_counter += 1;
+		}
+	} else {
+		let fighters_layout = Layout::horizontal(vec![Constraint::Fill(1); nb_fighters]).split(right_layout[3]);
+		for (name, hp) in &world.room.fight.fighters {
+			gauge_color = if *hp < 30 {
+				Color::Red
+			} else if *hp < 50 {
+				Color::Yellow
+			} else {
+				Color::Green
+			};
+	
+			hp_bar = Gauge::default()
+			.block(
+				Block::bordered()
+				.title(format!("{} : {}/{}HP", name, *hp, 100))
+				.title_style(Color::Green)
+				.bold()
+			.title_alignment(Center))
+			.gauge_style(Style::new().fg(gauge_color).on_blue().italic())
+			.percent(*hp as u16);
+	
+			frame.render_widget(hp_bar, fighters_layout[counter]);
+			counter += 1;
+		}
 	}
-	// EXITS
-	let exits_items: Vec<ListItem> = world.room.room.exits.iter()
-	.map(|(dir, dest)| {
-		ListItem::new(Line::from(format!("{dir} => {dest}")).alignment(Alignment::Center))
-		})
-	.collect();
 
-	let exits_list = List::new(exits_items)
-	.block(
-		Block::bordered()
-		.title("You can move to:")
+	//BUTTONS
+	let buttons_block = Block::bordered()
+		.title("Allowed actions (on click):")
 		.title_alignment(Alignment::Center)
 		.title_style(Color::Green)
-		.bold())
-	.style(Color::LightCyan)
-	.highlight_style(Modifier::REVERSED);
+		.bold();
 
-	frame.render_stateful_widget(exits_list, right_layout[3], &mut world.room.exits_list_state);
+	frame.render_widget(buttons_block, right_layout[4]);
+
+	let buttons = ["ATTACK", "BAG", "FLEE"];
+	for (i, button) in buttons.iter().enumerate() {
+		let button_block = Block::new()
+		.bg(match *button {
+				"ATTACK" => Color::Red,
+				"BAG" => Color::LightBlue,
+				"FLEE" => Color::Gray,
+				_ => {Color::White}
+			});
+		
+		let [text_button] = Layout::vertical([Constraint::Length(1)])
+		.flex(Flex::Center)
+		.areas(buttons_layout[i]);
+
+		let par = Paragraph::new(
+			Text::from(*button)
+			.centered())
+		;
+		world.room.fight.buttons.insert(button.to_string(), buttons_layout[i]);
+		frame.render_widget(button_block, buttons_layout[i]);
+		frame.render_widget(par, text_button);
+	}
 
 	// CHAT
 	let messages = match world.chat.channel {
@@ -208,6 +271,7 @@ pub fn draw_room_fight(world: &mut World, frame: &mut Frame) {
 
 	let chat = Block::new()
 	.borders(Borders::ALL)
+	.border_style(if world.room.focus == Focus::CHAT {Color::LightBlue} else {Color::White})
 	.title("Chat")
 	.title_alignment(Alignment::Center)
 	.title_style(Color::Green);
@@ -266,6 +330,7 @@ pub fn draw_room_fight(world: &mut World, frame: &mut Frame) {
 
 	let output = Block::new()
 	.borders(Borders::ALL)
+	.border_style(if world.room.focus == Focus::OUTPUT {Color::LightBlue} else {Color::White})
 	.title("Output")
 	.title_alignment(Alignment::Center)
 	.title_style(Color::Green);

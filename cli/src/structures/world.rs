@@ -19,8 +19,8 @@ use crate::{
 		discuss::draw_room_discuss, fights::draw_room_fight, login::login_draw, rooms::draw_room, wait_server::draw_wait
 	}, enums::{
 		actions::PendingAction, focus::Focus, states::States
-	}, global_functions::{discuss_event::discuss_event, event_handling::event_handling, idle_event::idle_event, login_event::login_event, response_handling::response_handling}, structures::{
-		chat::Chat, group::{Group}, items::Item, npc::NPC, player::Player, room::Room
+	}, global_functions::{discuss_event::discuss_event, event_handling::event_handling, handle_mouse::handle_mouse, idle_event::idle_event, login_event::login_event, response_handling::response_handling}, structures::{
+		chat::Chat, group::Group, items::Item, npc::NPC, player::Player, room::Room
 	}
 };
 
@@ -88,7 +88,7 @@ impl World<'_>{
 				draw_room(self, frame);
 			},
 			States::InFight { .. } => {
-				self.room.focus = Focus::COMMAND;
+				// self.room.focus = Focus::COMMAND;
 				draw_room_fight(self, frame);
 			}
 			States::InDiscuss(name, sentence) => {
@@ -118,10 +118,7 @@ impl World<'_>{
 				}
 			}
 			Event::Mouse(event) => {
-				if event.kind == MouseEventKind::Down(MouseButton::Left) {
-					self.click = !self.click;
-					self.error = false;
-				}
+				handle_mouse(event, self);
 			}
 			_ => {}
 		}
@@ -137,8 +134,8 @@ impl World<'_>{
 					for answer in answers {
 						let parts: Vec<&str> = answer.split_whitespace().collect();
 						if parts.is_empty() { return; }
-						if let Ok(mut file) = OpenOptions::new().create(true).append(true).open("debug_network.txt") {
-									let _ = writeln!(file, "all (State {:?}) : {:#?}", parts, msg);}
+						// if let Ok(mut file) = OpenOptions::new().create(true).append(true).open("debug_network.txt") {
+						// 			let _ = writeln!(file, "all (State {:?}) : {:#?}", parts, msg);}
 						match parts[0] {
 							"OK" | "ERR" => response_handling(self, parts),
 							"EVT" => event_handling(self, parts),

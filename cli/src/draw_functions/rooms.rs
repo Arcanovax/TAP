@@ -18,7 +18,7 @@ use ratatui::{
 };
 use tui_widgets::scrollview::{ScrollView};
 
-use crate::{enums::{channels::{Channels}, focus::Focus}, structures::world::World};
+use crate::{enums::{channels::Channels, focus::Focus, npc_kind::NPCKind}, structures::world::World};
 
 pub fn draw_room(world: &mut World, frame: &mut Frame) {
 
@@ -137,15 +137,25 @@ pub fn draw_room(world: &mut World, frame: &mut Frame) {
 	frame.render_widget(hp_bar, left_layout[1]);
 
 	// NPCS
-	let mut npc_items: Vec<ListItem> = vec![ListItem::new(Line::from("Nobody").alignment(Alignment::Center))];
+	let mut npcs_list: Vec<ListItem> = vec![ListItem::new(Line::from("Nobody").alignment(Alignment::Center))];
 
 	if world.room.npcs.len() > 0 {
-		npc_items = world.room.npcs.iter()
-		.map(|npc| ListItem::new(Line::from(if let Some(npc) = world.list_npcs.get(npc.as_str()) {&npc.name} else {npc.as_str()} ).alignment(Alignment::Center)))
-		.collect();
+		npcs_list = Vec::new();
+		for elem in &world.room.npcs {
+			if let Some(npc) = world.list_npcs.get(elem){
+				npcs_list.push(ListItem::new(
+					Line::from(npc.name.clone())
+					.alignment(Alignment::Center)
+					.style(match npc.kind {NPCKind::Citizen => {Color::White}, NPCKind::Enemy { .. } => {Color::Red}, NPCKind::Merchant => {Color::Yellow}} )));
+			} else {
+				npcs_list.push(ListItem::new(
+					Line::from(elem.clone())
+					.alignment(Alignment::Center)));
+			}
+		}
 	}
 
-	let npc_list = List::new(npc_items)
+	let npc_list = List::new(npcs_list)
 	.block(
 		Block::bordered()
 		.border_style(if world.room.focus == Focus::NPC {Color::LightBlue} else {Color::White})
