@@ -27,6 +27,9 @@ impl ServerInfo {
                     player.location = self.world.rooms.keys().next().unwrap().clone();
                 }
                 player
+                    .inventory
+                    .retain(|item, _| self.world.items.contains_key(item));
+                player
             }
             Ok(None) => Player::new(name.clone()),
             Err(_) => return Err(ErrorCode::CONNECTION_FAILED),

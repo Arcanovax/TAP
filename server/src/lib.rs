@@ -105,7 +105,9 @@ pub async fn run(addr: String, port: String) -> Result<(), Box<dyn std::error::E
                     saved_room
                         .items
                         .iter()
-                        .filter(|item| item.owner == Owner::Player)
+                        .filter(|item| {
+                            item.owner == Owner::Player && world.items.contains_key(&item.item)
+                        })
                         .cloned(),
                 );
             }
