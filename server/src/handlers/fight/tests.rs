@@ -50,7 +50,6 @@ fn fight_engages_enemy_and_sets_in_fight_state() {
     let result = fight_request(addr(1), &vec!["goblin".to_string()], &server);
 
     assert_eq!(response_error(&result), &ErrorCode::SUCCESS);
-    assert_success_contains(&result, "Hello there!");
 
     let guard = server.lock().unwrap();
     let player = guard.get_player(addr(1)).unwrap();

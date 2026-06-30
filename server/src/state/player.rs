@@ -21,8 +21,11 @@ impl ServerInfo {
         }
         let db = self.db.clone();
         let player = match load_player(&db, name.as_str()) {
-            Ok(Some(player)) => {
+            Ok(Some(mut player)) => {
                 info!("{} player data loaded", name);
+                if !self.world.rooms.contains_key(&player.location) {
+                    player.location = self.world.rooms.keys().next().unwrap().clone();
+                }
                 player
             }
             Ok(None) => Player::new(name.clone()),
@@ -88,7 +91,7 @@ impl ServerInfo {
         item: &str,
     ) -> Result<String, ErrorCode> {
         if !self.connections.contains_key(&peer_addr) {
-            return Err(ErrorCode::PLAYER_NOT_FOUND);
+            return Err(ErrorCode::INVALID_COMMAND);
         }
         let con = self.connections.get_mut(&peer_addr).unwrap();
         match con.player.inventory.get_mut(item) {
@@ -118,7 +121,7 @@ impl ServerInfo {
         item: &str,
     ) -> Result<String, ErrorCode> {
         if !self.connections.contains_key(&peer_addr) {
-            return Err(ErrorCode::PLAYER_NOT_FOUND);
+            return Err(ErrorCode::INVALID_COMMAND);
         }
         let con = self.connections.get_mut(&peer_addr).unwrap();
         let room = match self.world.rooms.get_mut(&con.player.location) {

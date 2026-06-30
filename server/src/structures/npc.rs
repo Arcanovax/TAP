@@ -3,7 +3,7 @@ use std::collections::HashMap;
 use crate::structures::enums::npc_kind::NPCKind;
 use serde::{Deserialize, Serialize};
 
-#[derive(Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct NPC {
     pub name: String,
     #[serde(default)]

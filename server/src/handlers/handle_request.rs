@@ -1,9 +1,12 @@
 use crate::{
     handlers::{
+        buy::buy_request,
+        gold::gold_request,
         item::{item_request, items_request},
         npc::{npc_request, npcs_request},
         quest::quest_request,
         quests::quests_request,
+        sell::sell_request,
     },
     protocol::Payload,
     state::{SharedServer, Tx},
@@ -12,7 +15,7 @@ use crate::{
         handler_outcome::HandlerOutcome,
     },
 };
-use std::{fs::OpenOptions, net::SocketAddr, io::Write};
+use std::net::SocketAddr;
 
 use crate::{
     handlers::{
@@ -55,6 +58,9 @@ pub fn handle_request(
             Some(Command::ITEM) => item_request(server_info, args).into(),
             Some(Command::ITEMS) => items_request(server_info).into(),
             Some(Command::QUESTS) => quests_request(server_info, peer_addr).into(),
+            Some(Command::BUY) => buy_request(args, server_info, peer_addr).into(),
+            Some(Command::SELL) => sell_request(args, server_info, peer_addr).into(),
+            Some(Command::GOLD) => gold_request(server_info, peer_addr).into(),
             _ => Message::Response {
                 error: ErrorCode::INVALID_COMMAND,
                 payload: Payload::Empty,

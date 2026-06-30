@@ -4,8 +4,18 @@ use crate::structures::{enums::game_event::GameEvent, player::Player};
 
 #[derive(Debug, Deserialize, Serialize, PartialEq, Eq, Clone)]
 pub enum Goal {
-    Collect { item: String, amount: u32 },
-    Talk { dialog: String },
+    Collect {
+        item: String,
+        amount: u32,
+    },
+    Talk {
+        dialog: String,
+    },
+    Retrieve {
+        item: String,
+        amount: u32,
+        dialog: String,
+    },
 }
 
 impl Goal {
@@ -16,6 +26,14 @@ impl Goal {
             }
             Goal::Talk { dialog } => {
                 matches!(event, Some(GameEvent::Talked { dialog: d }) if d == dialog)
+            }
+            Goal::Retrieve {
+                item,
+                amount,
+                dialog,
+            } => {
+                player.inventory.get(item).copied().unwrap_or(0) >= *amount
+                    && matches!(event, Some(GameEvent::Talked { dialog: d }) if d == dialog)
             }
         }
     }
@@ -29,6 +47,15 @@ impl Into<String> for Goal {
                 let mut splitted = dialog.splitn(3, ".");
                 let npc = splitted.next().unwrap().to_owned() + splitted.next().unwrap();
                 format!("Talk to {}", npc)
+            }
+            Goal::Retrieve {
+                item,
+                amount,
+                dialog,
+            } => {
+                let mut splitted = dialog.splitn(3, ".");
+                let npc = splitted.next().unwrap().to_owned() + splitted.next().unwrap();
+                format!("Gave {} {} to {}", amount, item, npc)
             }
         }
     }
@@ -49,6 +76,9 @@ impl Quest {
             match goal {
                 Goal::Collect { item, .. } => refs.push(item.as_str()),
                 Goal::Talk { dialog } => refs.push(dialog.as_str()),
+                Goal::Retrieve { item, dialog, .. } => {
+                    refs.extend([item.as_str(), dialog.as_str()])
+                }
             }
         }
         refs

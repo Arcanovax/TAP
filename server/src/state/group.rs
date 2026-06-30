@@ -1,4 +1,3 @@
-use std::{fs::OpenOptions, io::Write};
 
 use super::*;
 
@@ -110,8 +109,7 @@ impl ServerInfo {
 			fighters.clone()
 		};
 		let nb_receivers = receivers.len();
-		// if let Ok(mut file) = OpenOptions::new().create(true).append(true).open("debug_network.txt") {
-		// 		let _ = writeln!(file, "all (State {:?}) : {:#?}", receivers, player_name);}
+
 		if nb_receivers > 0 {
 			for name in receivers {
 				if let Some(con) = self.connections.values().find(|pl_conn| pl_conn.player.name == name) {
@@ -124,14 +122,13 @@ impl ServerInfo {
 				turn.clone()
 			};
 	
-			if nb_receivers == fight_turn as usize {
+			if nb_receivers == fight_turn  as usize {
 				enemy_attack(&target, self);
 				self.fights.get_mut(&target).unwrap().turn = 0;
 			}
 		} else {
 			self.fights.remove(&target);
 		}
-
         Ok(())
     }
 

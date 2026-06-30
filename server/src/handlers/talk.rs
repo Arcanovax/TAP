@@ -58,38 +58,50 @@ pub fn talk_request(
         }
     };
 
-    let step_entry = match &npc.quest {
-        Some(quest_ref) => player
-            .quests_in_progress
-            .get(quest_ref)
-            .map(|step| step.to_string())
-            .and_then(|key| npc.dialog.get(&key).map(|d| (key, d))),
-        None => None,
-    };
+    let mut dialogs = None;
+    for (quest_id, step) in &player.quests_in_progress {
+        let key = format!("{quest_id}.{step}");
+        let quest = binding.world.quests.get(quest_id).unwrap();
+        if !quest.goals[*step].is_satisfied(
+            player,
+            Some(&GameEvent::Talked {
+                dialog: format!("{npc_ref}.dialog.{key}"),
+            }),
+        ) {
+            continue;
+        }
+        if let Some(dialog) = npc.dialog.get(&key) {
+            dialogs = Some((dialog.to_vec(), key));
+            break;
+        }
+    }
 
-    let (dialog_id, dialogs): (String, Vec<String>) = match step_entry {
-        Some((key, d)) => (key, d.to_vec()),
-        None => match npc.dialog.get("default") {
-            Some(d) => ("default".to_string(), d.to_vec()),
-            None => {
-                return Message::Response {
-                    error: ErrorCode::NO_DIALOG,
-                    payload: Payload::Empty,
-                }
-                .into();
-            }
-        },
-    };
+    if dialogs.is_none() {
+        if let Some(dialog) = npc.dialog.get("default") {
+            dialogs = Some((dialog.to_vec(), "default".to_string()));
+        }
+    }
+
+    if dialogs.is_none() {
+        return HandlerOutcome {
+            message: Message::Response {
+                error: ErrorCode::NO_DIALOG,
+                payload: Payload::Empty,
+            },
+            event: None,
+        };
+    }
 
     info!("{} talked", npc_ref);
 
+    let (lines, dialog_id) = dialogs.unwrap();
     HandlerOutcome {
         message: Message::Response {
             error: ErrorCode::SUCCESS,
-            payload: Payload::Text(dialogs.join("\\")),
+            payload: Payload::Text(lines.join("\\")),
         },
         event: Some(GameEvent::Talked {
-            dialog: format!("{npc_ref}.dialog.{dialog_id}"),
+            dialog: format!("{npc_ref}.dialog.{}", dialog_id),
         }),
     }
 }

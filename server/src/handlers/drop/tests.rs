@@ -25,7 +25,7 @@ fn drop_item_in_inventory_returns_it() {
     take_request(&server, addr(1), &vec!["sword".to_string()]);
 
     let result = drop_request(&server, addr(1), &vec!["sword".to_string()]);
-    assert_eq!(result, ok_pair("dropped", "sword"));
+    assert_eq!(result, ok_pair(&[("dropped", "sword")]));
     // l'item n'est plus dans l'inventaire
     let guard = server.lock().unwrap();
     assert!(

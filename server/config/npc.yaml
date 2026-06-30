@@ -9,10 +9,8 @@ npc:
       default:
         - "Stay safe, traveler."
         - "The roads can be dangerous."
-      0:
-        - "test quest step 0"
-      1:
-        - "test quest step 1"
+      quest.test.2:
+        - "Thank you for retrieving Beer"
     kind: Citizen
     quest: "quest.test"
 
@@ -22,6 +20,8 @@ npc:
       default:
         - "Stay safe, traveler."
         - "The roads can be dangerous."
+      quest.test.1:
+        - "Multi npc quest"
     kind:
       Merchant:
         gold: 45
@@ -161,7 +161,7 @@ npc:
         defeated: false
 
   h:
-    name: "Pulapix"
+    name: "Sansabrix"
     dialog:
       default:
         - "Stay safe, traveler."

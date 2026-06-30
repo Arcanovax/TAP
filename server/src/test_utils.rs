@@ -90,15 +90,23 @@ pub(crate) fn group_with(
 pub(crate) fn ok_data(data: &str) -> Message {
     Message::Response {
         error: ErrorCode::SUCCESS,
-        payload: Payload::Json(serde_json::from_str(data).expect("ok_data: littéral JSON invalide")),
+        payload: Payload::Json(
+            serde_json::from_str(data).expect("ok_data: littéral JSON invalide"),
+        ),
     }
 }
 
-/// Réponse SUCCESS au format `key=value` (ex: `OK room=loc.x`).
-pub(crate) fn ok_pair(key: &str, value: &str) -> Message {
+/// Réponse SUCCESS au format `key=value`, une ou plusieurs paires
+/// (ex: `ok_pair(&[("room", "loc.x")])` ou `ok_pair(&[("bought", "sword"), ("amount", "1")])`).
+pub(crate) fn ok_pair(pairs: &[(&str, &str)]) -> Message {
     Message::Response {
         error: ErrorCode::SUCCESS,
-        payload: Payload::Pair(HashMap::from([(key.to_string(), value.to_string())])),
+        payload: Payload::Pair(
+            pairs
+                .iter()
+                .map(|(k, v)| (k.to_string(), v.to_string()))
+                .collect(),
+        ),
     }
 }
 
@@ -119,7 +127,10 @@ pub(crate) fn tx_rx() -> (Tx, UnboundedReceiver<Message>) {
 /// Utile quand le JSON sérialisé n'est pas déterministe (HashMap/HashSet).
 pub(crate) fn assert_success_contains(msg: &Message, needle: &str) {
     let wire = msg.to_str();
-    assert!(wire.starts_with("OK"), "expected an OK response, got {wire:?}");
+    assert!(
+        wire.starts_with("OK"),
+        "expected an OK response, got {wire:?}"
+    );
     assert!(
         wire.contains(needle),
         "wire {wire:?} does not contain {needle:?}"
@@ -136,11 +147,12 @@ pub(crate) fn response_error(msg: &Message) -> &ErrorCode {
 }
 
 /// Un `World` peuplé pour les handlers qui dépendent du monde.
-/// - room `room.city_square` (= location par défaut d'un joueur) avec `guard`, `goblin`, `sword`
-///   et une sortie Nord vers `room.market`
+/// - room `room.city_square` (= location par défaut d'un joueur) avec `guard`, `goblin`, `merchant`,
+///   `sword` et une sortie Nord vers `room.market`
 /// - room `room.market` (sortie Sud retour vers `room.city_square`)
-/// - npc `guard` (Citizen, porteur de `quest.fetch`), `goblin` (Enemy non vaincu), `villager` (Citizen sans quête)
-/// - item `sword`, quête `quest.fetch`
+/// - npc `guard` (Citizen, porteur de `quest.fetch`), `goblin` (Enemy non vaincu),
+///   `merchant` (Merchant, vend `sword`, 100 gold), `villager` (Citizen sans quête)
+/// - item `sword` (prix 10), quête `quest.fetch`
 pub(crate) fn test_world() -> World {
     let mut world = World::new();
 
@@ -186,6 +198,18 @@ pub(crate) fn test_world() -> World {
             dialog: HashMap::new(),
             kind: NPCKind::Citizen,
             quest: Some("quest.fetch".to_string()),
+        },
+    );
+    world.npcs.insert(
+        "merchant".to_string(),
+        NPC {
+            name: "merchant".to_string(),
+            dialog: HashMap::new(),
+            kind: NPCKind::Merchant {
+                inventory: vec!["sword".to_string()],
+                gold: 100,
+            },
+            quest: None,
         },
     );
     world.npcs.insert(
@@ -239,4 +263,24 @@ pub(crate) fn test_db() -> Database {
     Database::builder()
         .create_with_backend(InMemoryBackend::new())
         .expect("in-memory test db failed to create")
+}
+
+pub fn give_gold(server: &crate::state::SharedServer, addr: std::net::SocketAddr, gold: u32) {
+    server.lock().unwrap().get_player_mut(addr).unwrap().gold = gold;
+}
+
+/// Place `amount` exemplaires de `item` dans l'inventaire du joueur.
+pub fn give_item(
+    server: &crate::state::SharedServer,
+    addr: std::net::SocketAddr,
+    item: &str,
+    amount: u32,
+) {
+    server
+        .lock()
+        .unwrap()
+        .get_player_mut(addr)
+        .unwrap()
+        .inventory
+        .insert(item.to_string(), amount);
 }

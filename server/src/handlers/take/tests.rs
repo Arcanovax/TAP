@@ -21,7 +21,7 @@ fn take_existing_item_moves_it_to_inventory() {
     let server = populated_server();
     connect(&server, addr(1), "alice");
     let result = take_request(&server, addr(1), &vec!["sword".to_string()]);
-    assert_eq!(result, ok_pair("taken", "sword"));
+    assert_eq!(result, ok_pair(&[("taken", "sword")]));
     // l'item est bien passé dans l'inventaire
     let guard = server.lock().unwrap();
     let player = guard.get_player(addr(1)).unwrap();

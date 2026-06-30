@@ -1,7 +1,7 @@
 use crate::structures::{item::Item, npc::NPC, quest::Quest, room::Room};
 use std::collections::HashMap;
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct World {
     pub rooms: HashMap<String, Room>,
     pub npcs: HashMap<String, NPC>,

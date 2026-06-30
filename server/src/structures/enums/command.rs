@@ -21,6 +21,9 @@ pub enum Command {
     NPC,
     QUESTS,
     NPCS,
+    BUY,
+    SELL,
+    GOLD,
 }
 
 impl Command {
@@ -45,6 +48,9 @@ impl Command {
             "NPC" => Some(Command::NPC),
             "NPCS" => Some(Command::NPCS),
             "QUESTS" => Some(Command::QUESTS),
+            "BUY" => Some(Command::BUY),
+            "SELL" => Some(Command::SELL),
+            "GOLD" => Some(Command::GOLD),
             _ => None,
         }
     }

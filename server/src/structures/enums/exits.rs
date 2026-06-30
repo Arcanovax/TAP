@@ -3,7 +3,7 @@ use std::str::FromStr;
 
 use crate::structures::enums::error::ErrorCode;
 
-#[derive(Debug, PartialEq, Serialize, Deserialize, Hash, Eq)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Hash, Eq, Clone)]
 pub enum Direction {
     North,
     South,
