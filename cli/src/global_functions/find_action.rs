@@ -22,6 +22,7 @@ pub fn find_action(command: Vec<&str>, world: &mut World) {
 		"status" => world.action = PendingAction::Status,
 		"attack" => world.action = PendingAction::Attack(command[1..].join(" ")),
 		"inventory" => world.action = PendingAction::Inventory,
+		"flee" => world.action = PendingAction::Flee,
 		"quest" => world.action = PendingAction::Quest,
 		_ => {}
 	}

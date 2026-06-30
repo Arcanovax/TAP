@@ -13,7 +13,7 @@ use tracing::info;
 use uuid::Uuid;
 
 mod broadcast;
-mod group;
+pub mod group;
 mod player;
 mod quest;
 mod world;
