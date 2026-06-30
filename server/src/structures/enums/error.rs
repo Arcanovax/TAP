@@ -27,6 +27,7 @@ pub enum ErrorCode {
     DISCONNECTION_FAIL,
     ALREADY_INVITED,
     NOT_ENOUGH_GOLD,
+    GAME_LOSE,
 }
 
 impl ErrorCode {
@@ -49,6 +50,7 @@ impl ErrorCode {
             ErrorCode::NPC_NOT_HOSTILE => 405,
             ErrorCode::NO_QUEST_AVAILABLE => 406,
             ErrorCode::NOT_ENOUGH_GOLD => 408,
+            ErrorCode::GAME_LOSE => 409,
             ErrorCode::CONNECTION_FAILED => 900,
             ErrorCode::SEND_FAILED => 901,
             ErrorCode::INVALID_ARGS => 902,

@@ -10,7 +10,6 @@ pub enum Owner {
 }
 
 #[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
-#[serde(from = "String")]
 pub struct OwnedItem {
     pub item: String,
     #[serde(default)]
