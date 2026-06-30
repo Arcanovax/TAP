@@ -40,7 +40,7 @@ pub fn handle_request(
             Some(Command::TALK) => talk_request(peer_addr, args, server_info),
             Some(Command::ATTACK) => fight_request(peer_addr, args, server_info).into(),
             Some(Command::FLEE) => flee(peer_addr, args, server_info).into(),
-            Some(Command::BAG) => fight_request(peer_addr, args, server_info).into(),
+            Some(Command::CONSUME) => fight_request(peer_addr, args, server_info).into(),
             Some(Command::LOOK) => look_request(server_info, peer_addr).into(),
             Some(Command::DROP) => drop_request(server_info, peer_addr, args).into(),
             Some(Command::TAKE) => take_request(server_info, peer_addr, args).into(),

@@ -31,9 +31,6 @@ pub fn flee(
 
 	match p_status {
         State::InFight { .. } => {
-            // let fight = world_mut.fights.get_mut(&target)
-            //         .expect("There is no fight.");
-            // fight.fighters.retain(|f| *f != p_name);
 			match world_mut.try_leave_fight(peer_addr, args[0].clone()) {
 				Ok(()) => {
 					Message::Response { 

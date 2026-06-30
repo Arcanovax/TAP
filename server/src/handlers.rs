@@ -6,6 +6,7 @@ pub mod group;
 pub mod handle_request;
 pub mod inventory;
 pub mod item;
+pub mod consume;
 pub mod look;
 pub mod movement;
 pub mod flee;

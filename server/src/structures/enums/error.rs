@@ -9,6 +9,8 @@ pub enum ErrorCode {
     NOT_GROUP_LEADER,
     ALREADY_IN_GROUP,
     ITEM_NOT_FOUND,
+    NOT_AN_ITEM,
+	UNUSABLE_ITEM,
     ITEM_NOT_IN_INVENTORY,
     NPC_NOT_FOUND,
     NPC_NOT_HOSTILE,
@@ -40,7 +42,9 @@ impl ErrorCode {
             ErrorCode::NOT_GROUP_LEADER => 403,
             ErrorCode::ALREADY_INVITED => 407,
             ErrorCode::ITEM_NOT_FOUND
+            | ErrorCode::NOT_AN_ITEM
             | ErrorCode::ROOM_NOT_FOUND
+            | ErrorCode::UNUSABLE_ITEM
             | ErrorCode::DEFEATED_ENEMY
             | ErrorCode::NOT_YOUR_TURN
             | ErrorCode::DEFEATED_FIGHTER
