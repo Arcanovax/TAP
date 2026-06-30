@@ -1,6 +1,6 @@
 use std::net::SocketAddr;
 
-use crate::{protocol::{Message, Payload}, state::SharedServer, structures::enums::{error::ErrorCode, npc_kind::NPCKind, state::State}};
+use crate::{protocol::{Message, Payload}, state::SharedServer, structures::enums::{error::ErrorCode, state::State}};
 
 pub fn flee(
     peer_addr: SocketAddr,
@@ -15,12 +15,12 @@ pub fn flee(
     }
     let mut pre_world = server_info.lock().unwrap();
     let world_mut = &mut *pre_world;
-    let (p_status, p_name) = {
+    let p_status = {
         let player = match world_mut.get_player_mut(peer_addr) {
             Ok(p) => p,
             Err(msg) => {
                 return Message::Response {
-                    error: ErrorCode::PLAYER_NOT_FOUND,
+                    error: ErrorCode::INVALID_COMMAND,
                     payload: Payload::Json(serde_json::to_value(msg).unwrap()),
                 }
             }
@@ -31,11 +31,11 @@ pub fn flee(
 				player.inventory.insert("item.gold".to_string(), gold - 10);
 			}
 		}
-        (player.status.clone(), player.name.clone())
+        player.status.clone()
     };
 
 	match p_status {
-        State::InFight { target_id: target } => {
+        State::InFight { .. } => {
             // let fight = world_mut.fights.get_mut(&target)
             //         .expect("There is no fight.");
             // fight.fighters.retain(|f| *f != p_name);
