@@ -76,21 +76,24 @@ pub async fn handle_events(game: &mut Game, answer: Vec<&str>){
 					}
 				}
 			}
-
+			"TAKE" => {
+				if let Some(ref mut map_data) = game.map_data {
+					if let Some(pos) = map_data.items.iter().position(|x| x == &answer[4..].join(" ")) {
+						map_data.items.remove(pos);
+					}
+				}
+			}
+			"DROP" => {
+				if let Some(ref mut map_data) = game.map_data {
+					map_data.items.push(answer[4..].join(" "));
+				}
+			}
 			_ => return
 		}
 
 	}
 
 
-	// 	// if let Some(quest_upt) = server_event.quest_update {
-	// 	// 	for quest in &mut game.quests{
-	// 	// 		if quest.name == quest_upt.quest_name{
-	// 	// 			quest.goals = vec![quest_upt.goal];
-	// 	// 			break;
-	// 	// 		}
-	// 	// 	}
-	// 	// }
 	// 	// if let Some(quest_finish) = server_event.quest_finish {
 	// 	// 	game.quests.retain(|quest| quest.name != quest_finish.quest_name);
 	// 	// }
@@ -98,16 +101,10 @@ pub async fn handle_events(game: &mut Game, answer: Vec<&str>){
 
 
 	// 	if let Some(take) = server_event.take {
-	// 		if let Some(ref mut map_data) = game.map_data {
-	// 			if let Some(pos) = map_data.items.iter().position(|x| x == &take.item) {
-	// 				map_data.items.remove(pos);
-	// 			}
-	// 		}
+	//
 	// 	}
 	// 	if let Some(drop) = server_event.drop {
-	// 		if let Some(ref mut map_data) = game.map_data {
-	// 			map_data.items.push(drop.item);
-	// 		}
+	//
 	// 	}
 	// }
 }
