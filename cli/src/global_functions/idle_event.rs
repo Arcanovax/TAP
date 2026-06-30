@@ -107,7 +107,7 @@ pub fn idle_event(key: KeyEvent, world: &mut World) {
 											let _ = world.tx_to_serv.try_send(format!("TALK {}\n", selected_npc));
 											world.action = PendingAction::Talk(selected_npc.clone());
 										}
-										NPCKind::Merchant => {todo!()}
+										NPCKind::Merchant { .. } => {todo!()}
 									}
 								}
 							}

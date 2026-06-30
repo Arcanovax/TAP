@@ -2,7 +2,9 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Debug, PartialEq, Serialize, Deserialize)]
 pub enum NPCKind {
-    Merchant,
+	Merchant {
+        inventory: Vec<String>,
+    },
     Enemy {
         hp: u32,
         max_hp: u32,

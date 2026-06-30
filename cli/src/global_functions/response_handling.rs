@@ -6,8 +6,6 @@ pub fn response_handling(world: &mut World, answers: Vec<&str>) {
 	// if let Ok(mut file) = OpenOptions::new().create(true).append(true).open("debug_network.txt") {
 	// 	let _ = writeln!(file, "ko (State {:?}) : {:#?}", world.state, answers);}
 	let real_answer = answers[1..].join(" ");
-	// if let Ok(mut file) = OpenOptions::new().create(true).append(true).open("debug_network.txt") {
-	// 	let _ = writeln!(file, "real (State {:?}) : {:#?}", world.state, real_answer);}
 	if answers[0] == "OK" {
 		match world.state {
 			States::ServerWait => {
@@ -15,14 +13,14 @@ pub fn response_handling(world: &mut World, answers: Vec<&str>) {
 			}
 			States::Login => {
 				if world.action == PendingAction::Auth{
-						world.state = States::Idle;
-						world.message = String::new();
-						world.player.name = world.input.to_string();
-						world.input.clear();
-						let _ = world.tx_to_serv.try_send(String::from("ITEMS\n"));
-						world.action = PendingAction::Items;
-					}
-				},
+					world.state = States::Idle;
+					world.message = String::new();
+					world.player.name = world.input.to_string();
+					world.input.clear();
+					let _ = world.tx_to_serv.try_send(String::from("ITEMS\n"));
+					world.action = PendingAction::Items;
+				}
+			},
 			States::Idle
 			| States::InFight { .. } => {
 				match &world.action {
@@ -36,7 +34,7 @@ pub fn response_handling(world: &mut World, answers: Vec<&str>) {
 						let _ = world.tx_to_serv.try_send(String::from("STATUS\n"));
 						world.action = PendingAction::ClientStatus;
 					},
-
+					
 					PendingAction::Status
 					| PendingAction::ClientStatus => {
 						let status: StatusView = serde_json::from_str::<StatusView>(&real_answer).unwrap();
@@ -47,7 +45,7 @@ pub fn response_handling(world: &mut World, answers: Vec<&str>) {
 						world.state = status.status;
 						world.action = PendingAction::None;
 					},
-
+					
 					PendingAction::Items => {
 						world.list_items = serde_json::from_str(&real_answer).unwrap();
 						let _ = world.tx_to_serv.try_send(String::from("NPCS\n"));
@@ -55,6 +53,8 @@ pub fn response_handling(world: &mut World, answers: Vec<&str>) {
 					},
 					
 					PendingAction::Npcs => {
+						// if let Ok(mut file) = OpenOptions::new().create(true).append(true).open("debug_network.txt") {
+						// 	let _ = writeln!(file, "real (State {:?}) : {:#?}", world.state, real_answer);}
 						world.list_npcs = serde_json::from_str(&real_answer).unwrap();
 						let _ = world.tx_to_serv.try_send(String::from("LOOK\n"));
 						world.action = PendingAction::ClientLook;

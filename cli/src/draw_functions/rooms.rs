@@ -146,7 +146,7 @@ pub fn draw_room(world: &mut World, frame: &mut Frame) {
 				npcs_list.push(ListItem::new(
 					Line::from(npc.name.clone())
 					.alignment(Alignment::Center)
-					.style(match npc.kind {NPCKind::Citizen => {Color::White}, NPCKind::Enemy { .. } => {Color::Red}, NPCKind::Merchant => {Color::Yellow}} )));
+					.style(match npc.kind {NPCKind::Citizen => {Color::White}, NPCKind::Enemy { .. } => {Color::Red}, NPCKind::Merchant { .. } => {Color::Yellow}} )));
 			} else {
 				npcs_list.push(ListItem::new(
 					Line::from(elem.clone())
