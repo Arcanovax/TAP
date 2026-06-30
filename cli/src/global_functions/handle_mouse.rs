@@ -26,8 +26,8 @@ pub fn handle_mouse(event: MouseEvent, world: &mut World) {
 										target = name;
 									}
 								}
-								if let Ok(mut file) = OpenOptions::new().create(true).append(true).open("debug_draw.txt") {
-									let _ = writeln!(file, "target (State {:?}) : {:#?}", target, target_id);}
+								// if let Ok(mut file) = OpenOptions::new().create(true).append(true).open("debug_draw.txt") {
+								// 	let _ = writeln!(file, "target (State {:?}) : {:#?}", target, target_id);}
 								let _ = world.tx_to_serv.try_send(format!("ATTACK {}\n", target));
 								world.action = PendingAction::Attack(target_id.clone());
 							},
