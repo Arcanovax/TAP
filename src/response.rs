@@ -27,24 +27,22 @@ pub enum PendingAction {
 
 pub async fn handle_response(game: &mut Game, answer: &str, state: &str){
 	match &game.pending_action {
-		// PendingAction::GroupList => {
-		// 	if msg.contains("SUCCESS"){
-		// 		if let Some(data_val) = server_event.data {
-		// 			let data_str = data_val.to_string();
-		// 			match serde_json::from_str::<Vec<String>>(&data_str) {
-		// 				Ok(players) => {
-		// 					game.group.grouplist = players;
-		// 				}
-		// 				Err(e) => {
-		// 					println!("Error JSON: {}", e);
-		// 				}
-		// 			}
-		// 		}
-		// 		else if msg.contains("NOT_IN_GROUP") {
-		// 			game.group.in_group = false;
-		// 		}
-		// 	}
-		// }
+		PendingAction::GroupList => {
+			if state =="OK"{
+					match serde_json::from_str::<Vec<String>>(answer) {
+						Ok(players) => {
+							game.group.grouplist = players;
+						}
+						Err(e) => {
+							println!("Error JSON: {}", e);
+						}
+					}
+				}
+				else{
+					game.group.in_group = false;
+				}
+		}
+
 		PendingAction::Auth => {
 			if state =="OK"{
 				game.is_auth = true;
@@ -52,59 +50,59 @@ pub async fn handle_response(game: &mut Game, answer: &str, state: &str){
 				println!("already use")
 			}
 		}
-		// PendingAction::GroupCreate(group_name) => {
-		// 	if msg.contains("SUCCESS") {
-		// 		game.group.in_group = true;
-		// 		if group_name.is_empty(){
-		// 			let name: String = format!("{}'s Group ",game.player.name.clone());
-		// 			game.group.name = name;}
-		// 		else{
-		// 			let name: String = format!("Group {}",group_name);
-		// 			game.group.name = name;
-		// 		}
-		// 	}
-		// 	else{
-		// 		println!("Failed group create");
-		// 	}
-		// }
-		// PendingAction::GroupJoin(sender, group_name) => {
-		// 	if msg.contains("SUCCESS") {
-		// 		game.group.in_group = true;
-		// 		if sender == group_name{
-		// 			let name: String = format!("{}'s Group ",sender);
-		// 			game.group.name = name;}
-		// 		else{
-		// 			let name: String = format!("{}",group_name);
-		// 			game.group.name = name;
-		// 		}
-		// 	} else{
-		// 		println!("Failed join");
-		// 	}
-		// }
-		// PendingAction::GroupLeave => {
-		// 	if msg.contains("SUCCESS") {
-		// 		game.group.in_group = false;
-		// 		game.group.name = String::new();
-		// 		game.group.grouplist = Vec::new();
-		// 	}
-		// }
-		// PendingAction::GroupInvite(name) => {
-		// 	if msg.contains("SUCCESS") {
-		// 		let rp: String = format!("{} invited", name);
-		// 		game.group.invite_info = Some(InviteInfo{
-		// 			state: rp,
-		// 			color: GREEN,
-		// 			time: get_time()
-		// 		});
-		// 	} else{
-		// 		let rp: String = format!("{} is offline", name);
-		// 		game.group.invite_info = Some(InviteInfo{
-		// 			state: rp,
-		// 			color: RED,
-		// 			time: get_time()
-		// 		});
-		// 	}
-		// }
+		PendingAction::GroupCreate(group_name) => {
+			if state =="OK"{
+				game.group.in_group = true;
+				if group_name.is_empty(){
+					let name: String = format!("{}'s Group ",game.player.name.clone());
+					game.group.name = name;}
+				else{
+					let name: String = format!("Group {}",group_name);
+					game.group.name = name;
+				}
+			}
+			else{
+				println!("Failed group create");
+			}
+		}
+		PendingAction::GroupJoin(sender, group_name) => {
+			if state =="OK" {
+				game.group.in_group = true;
+				if sender == group_name{
+					let name: String = format!("{}'s Group ",sender);
+					game.group.name = name;}
+				else{
+					let name: String = format!("{}",group_name);
+					game.group.name = name;
+				}
+			} else{
+				println!("Failed join");
+			}
+		}
+		PendingAction::GroupLeave => {
+			if state =="OK"{
+				game.group.in_group = false;
+				game.group.name = String::new();
+				game.group.grouplist = Vec::new();
+			}
+		}
+		PendingAction::GroupInvite(name) => {
+			if state =="OK" {
+				let rp: String = format!("{} invited", name);
+				game.group.invite_info = Some(InviteInfo{
+					state: rp,
+					color: GREEN,
+					time: get_time()
+				});
+			} else{
+				let rp: String = format!("{} is offline", name);
+				game.group.invite_info = Some(InviteInfo{
+					state: rp,
+					color: RED,
+					time: get_time()
+				});
+			}
+		}
 		PendingAction::SendChat(channel, text) => {
 			let channel = match channel.as_str(){
 				"Room" => &mut game.chat.room_messages,
@@ -240,57 +238,43 @@ pub async fn handle_response(game: &mut Game, answer: &str, state: &str){
 		}
 
 
-		// PendingAction::Talk(ref npc_id) => {
+		PendingAction::Talk(ref npc_id) => {
+		if state =="OK"{
+			if let Some(npc) = game.loaded_npcs.get_mut(npc_id){
+							npc.npc_talk = Some(NpcTalk{
+							texts: answer.to_string(),
+							text_i: 0
+						})
+					}
+			}
+		}
+		PendingAction::Quest(ref npc_id) => {
+			if  state =="OK"{
+				match serde_json::from_str::<QuestData>(answer) {
+					Ok(quest) => {
+						game.quests.push(Quest {
+							npc_id: npc_id.to_string(),
+							quest_id: quest.quest_id,
+							description: quest.description,
+							reward: quest.reward,
+							goal: None
+						});
+					}
+					Err(e) => {
+						eprintln!("QUEST error: {}", e);
+					}
+				}
+			}
+		}
+		PendingAction::Attack(ref npc_id) => {
 
-		// 	if msg.contains("SUCCESS"){
-		// 		if let Some(data_val) = server_event.data{
-		// 			let data_str = data_val.to_string();
-		// 			match serde_json::from_str::<Vec<String>>(&data_str) {
-		// 				Ok(texts) => {
-		// 					if let Some(npc) = game.loaded_npcs.get_mut(npc_id){
-		// 						npc.npc_talk = Some(NpcTalk{
-		// 						texts: texts,
-		// 						text_i: 0
-		// 					})
-		// 					}
-		// 				}
-		// 				Err(e) => {
-		// 					eprintln!("Talk error: {}", e);
-		// 				}
-		// 			}
-		// 		}
-		// 	}
-		// }
-		// PendingAction::Quest(ref npc_id) => {
-		// 	if msg.contains("SUCCESS"){
-		// 		if let Some(data_val) = server_event.data{
-		// 			let data_str = data_val.to_string();
-		// 			match serde_json::from_str::<QuestData>(&data_str) {
-		// 				Ok(quest) => {
-		// 					game.quests.push(Quest {
-		// 						npc_id: npc_id.to_string(),
-		// 						name: quest.name,
-		// 						description: quest.description,
-		// 						reward: quest.reward,
-		// 						goals: quest.goals
-		// 					});
-		// 				}
-		// 				Err(e) => {
-		// 					eprintln!("QUEST error: {}", e);
-		// 				}
-		// 			}
-		// 		}
-		// 	}
-		// }
-		// PendingAction::Attack(ref npc_id) => {
+			if state =="OK"{
+				if let Some(ref mut state) = game.player.state{
+							state.status= Status::InFight { target_id: npc_id.to_string()}
+					};
 
-		// 	if msg.contains("SUCCESS"){
-		// 		if let Some(ref mut state) = game.player.state{
-		// 					state.status= Status::InFight { target_id: npc_id.to_string()}
-		// 			};
-
-		// 	}
-		// }
+			}
+		}
 
 		PendingAction::Take => {
 			if let Some(val_str) = answer.strip_prefix("taken=") {
@@ -361,10 +345,10 @@ pub struct NpcData {
 
 #[derive(Deserialize, Debug)]
 pub struct QuestData {
-	pub name: String,
+	pub quest_id: String,
     pub description: String,
     pub reward: String,
-    pub goals: Vec<Goal>,
+    pub status: String,
 }
 
 

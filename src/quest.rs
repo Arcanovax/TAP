@@ -3,10 +3,10 @@ use crate::*;
 #[derive(Deserialize, Debug, PartialEq)]
 pub struct Quest{
     pub npc_id: String,
-	pub name: String,
+	pub quest_id: String,
     pub description: String,
     pub reward: String,
-    pub goals: Vec<Goal>,
+    pub goal: Option<Goal>,
 }
 
 #[derive(Debug, Deserialize, PartialEq, Eq, Clone)]
@@ -26,22 +26,22 @@ pub fn display_quests(game: &mut Game){
     let mut pos_y = title_quest_pos.y + 30.0;
 
     for quest in game.quests.iter(){
-        let quest_info = format!("- {}: {}", quest.name, quest.description);
+        let quest_info = format!("- {}", quest.description);
         draw_text(quest_info, title_quest_pos.x, pos_y, 25.0, YELLOW);
-        pos_y += 20.0;
-        for goals in quest.goals.iter(){
-            let quest_goal = match goals {
-                Goal::Collect { item, amount } => {
-                    format!("- Collect {} x{}", item, amount)
-                }
-                Goal::Talk { dialog } => {
-                    format!("- Talk to {}", dialog)
-                }
-            };
-            draw_text(&quest_goal, title_quest_pos.x + 20.0, pos_y, 20.0, WHITE);
-            pos_y += 15.0;
-        }
+        // pos_y += 20.0;
+        // for goals in quest.goals.iter(){
+        //     let quest_goal = match goals {
+        //         Goal::Collect { item, amount } => {
+        //             format!("- Collect {} x{}", item, amount)
+        //         }
+        //         Goal::Talk { dialog } => {
+        //             format!("- Talk to {}", dialog)
+        //         }
+        //     };
+        //     draw_text(&quest_goal, title_quest_pos.x + 20.0, pos_y, 20.0, WHITE);
+        //     pos_y += 15.0;
+        // }
         pos_y += 10.0;
-       
+
     }
 }
