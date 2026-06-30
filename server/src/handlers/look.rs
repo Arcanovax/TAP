@@ -71,7 +71,7 @@ pub fn look_request(server_info: &SharedServer, peer_addr: SocketAddr) -> Messag
         },
         players,
         npcs: &room.npc,
-        items: &room.items,
+        items: &room.items.iter().map(|item| item.item.clone()).collect(),
     };
     info!("Get room info");
     Message::Response {

@@ -97,6 +97,17 @@ pub async fn run(addr: String, port: String) -> Result<(), Box<dyn std::error::E
     let server_info: SharedServer = Arc::new(Mutex::new(ServerInfo::new(world, db)));
     let listener = TcpListener::bind(format!("{}:{}", addr, port)).await?;
 
+    let server_info_copy = Arc::clone(&server_info);
+    let mut ticker = interval(Duration::from_secs(10));
+    tokio::spawn(async move {
+        loop {
+            ticker.tick().await;
+            debug!("Server reset started");
+            server_info_copy.lock().unwrap().reset(&base_world);
+            debug!("Server reset done");
+        }
+    });
+
     loop {
         let (mut socket, peer_addr) = listener.accept().await?;
         let span = tracing::info_span!("connection", %peer_addr);

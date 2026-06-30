@@ -150,8 +150,12 @@ pub(crate) fn test_world() -> World {
             name: "room.city_square".to_string(),
             exits: HashMap::from([(Direction::North, "room.market".to_string())]),
             description: "The city square".to_string(),
-            npc: vec!["guard".to_string(), "goblin".to_string()],
-            items: vec!["sword".to_string()],
+            npc: vec![
+                "guard".to_string(),
+                "goblin".to_string(),
+                "merchant".to_string(),
+            ],
+            items: vec!["sword".to_string().into()],
         },
     );
 

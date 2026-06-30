@@ -1,6 +1,13 @@
 use crate::{
     protocol::{EventType, Message},
-    structures::{fight::Fight, game::World, group::Group, player::Player, room::Room},
+    structures::{
+        enums::npc_kind::NPCKind,
+        fight::Fight,
+        game::World,
+        group::Group,
+        player::Player,
+        room::{Owner, Room},
+    },
 };
 use redb::Database;
 use std::{
@@ -48,6 +55,34 @@ impl ServerInfo {
             fights: HashMap::new(),
             world: world,
             db: db,
+        }
+    }
+
+    pub fn reset(&mut self, base_world: &World) {
+        for (id, room) in &mut self.world.rooms {
+            if let Some(base_room) = base_world.rooms.get(id) {
+                room.items.retain(|item| item.owner == Owner::Player);
+                room.items.extend(base_room.items.clone());
+            }
+        }
+
+        for (id, npc) in &mut self.world.npcs {
+            if let Some(base_npc) = base_world.npcs.get(id) {
+                match &npc.kind {
+                    NPCKind::Merchant { .. } => *npc = base_npc.clone(),
+                    NPCKind::Enemy { defeated, .. } => {
+                        if !*defeated {
+                            continue;
+                        }
+                        *npc = base_npc.clone();
+                    }
+                    _ => {}
+                }
+            }
+        }
+
+        for con in self.connections.values() {
+            let _ = con.tx.send(Message::Event(EventType::SERVER_RESET));
         }
     }
 }
