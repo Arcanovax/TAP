@@ -45,7 +45,7 @@ pub fn event_handling(world: &mut World, answer: Vec<&str>) {
 					world.output.push_back("".to_string());
 					world.output.push_back(format!("{} says: 'Hello there!'.", answer[3]));
 					world.room.fight.fighters.insert(answer[3].to_string(), answer[4].parse::<u32>().unwrap_or(100));
-					world.room.output_scroll_pos.scroll_to_bottom();
+					// world.room.output_scroll_pos.scroll_to_bottom();
 				}
 				"LEAVE" => {
 					world.output.push_back("".to_string());
@@ -78,7 +78,7 @@ pub fn event_handling(world: &mut World, answer: Vec<&str>) {
 					if target == world.player.name {
 						world.player.hp = target_hp.parse::<u32>().unwrap();
 					}
-					world.room.output_scroll_pos.scroll_to_bottom();
+					// world.room.output_scroll_pos.scroll_to_bottom();
 				}
 				"ATTACK" => {
 					let ( player_name, damages, enn_hp) = ( answer[3], answer[4],answer[5] );
@@ -88,10 +88,10 @@ pub fn event_handling(world: &mut World, answer: Vec<&str>) {
 						player_name, damages, world.room.fight.target_name, enn_hp
 					));
 					world.room.fight.target_hp = enn_hp.parse::<u32>().unwrap();
-					world.room.output_scroll_pos.scroll_to_bottom();
 				}
 				_ => {}
 			}
+			world.room.output_scroll_pos.scroll_to_bottom();
 		},
 		"QUEST" => {},
 		_ => {}
