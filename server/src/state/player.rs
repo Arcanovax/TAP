@@ -1,7 +1,7 @@
 use super::*;
 use crate::{
     persistence::players::{load_player, save_player},
-    structures::enums::error::ErrorCode,
+    structures::{enums::error::ErrorCode, room::OwnedItem},
 };
 
 impl ServerInfo {
@@ -108,7 +108,10 @@ impl ServerInfo {
             .get_mut(&con.player.location)
             .unwrap()
             .items
-            .push(String::from(item));
+            .push(OwnedItem {
+                item: item.to_string(),
+                owner: Owner::Player,
+            });
         Ok(String::from(item))
     }
 
@@ -126,7 +129,7 @@ impl ServerInfo {
             None => return Err(ErrorCode::ROOM_NOT_FOUND),
         };
         for (i, value) in room.items.iter().enumerate() {
-            if item == value {
+            if item == value.item {
                 room.items.remove(i);
                 *con.player.inventory.entry(item.to_string()).or_insert(0) += 1;
                 return Ok(String::from(item));

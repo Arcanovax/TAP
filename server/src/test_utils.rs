@@ -167,7 +167,7 @@ pub(crate) fn test_world() -> World {
                 "goblin".to_string(),
                 "merchant".to_string(),
             ],
-            items: vec!["sword".to_string()],
+            items: vec!["sword".to_string().into()],
         },
     );
 

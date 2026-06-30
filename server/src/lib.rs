@@ -94,7 +94,7 @@ pub async fn run(addr: String, port: String) -> Result<(), Box<dyn std::error::E
     let listener = TcpListener::bind(format!("{}:{}", addr, port)).await?;
 
     let server_info_copy = Arc::clone(&server_info);
-    let mut ticker = interval(Duration::from_secs(600));
+    let mut ticker = interval(Duration::from_secs(10));
     tokio::spawn(async move {
         loop {
             ticker.tick().await;

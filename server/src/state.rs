@@ -1,8 +1,12 @@
 use crate::{
     protocol::{EventType, Message},
     structures::{
-        enums::npc_kind::NPCKind, fight::Fight, game::World, group::Group, player::Player,
-        room::Room,
+        enums::npc_kind::NPCKind,
+        fight::Fight,
+        game::World,
+        group::Group,
+        player::Player,
+        room::{Owner, Room},
     },
 };
 use redb::Database;
@@ -55,7 +59,12 @@ impl ServerInfo {
     }
 
     pub fn reset(&mut self, base_world: &World) {
-        self.world.rooms = base_world.rooms.clone();
+        for (id, room) in &mut self.world.rooms {
+            if let Some(base_room) = base_world.rooms.get(id) {
+                room.items.retain(|item| item.owner == Owner::Player);
+                room.items.extend(base_room.items.clone());
+            }
+        }
 
         for (id, npc) in &mut self.world.npcs {
             if let Some(base_npc) = base_world.npcs.get(id) {
