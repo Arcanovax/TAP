@@ -8,6 +8,7 @@ pub enum PendingAction {
     Gold,
 	Npcs,
 	Flee,
+	Consume(String),
     Talk(String),
     Drop,
     Take,
@@ -25,6 +26,7 @@ pub enum PendingAction {
 	Who,
 	Attack(String),
 	Inventory,
+	ClientInventory,
 	Quest,
 	Items
 }

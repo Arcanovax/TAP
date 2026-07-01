@@ -8,19 +8,19 @@ pub struct Player {
     pub hp: u32,
     pub max_hp: u32,
     pub inventory: HashMap<String, u32>,
+	pub gold: u32,
     pub available_quests: Vec<String>
 }
 
 impl Player {
     pub fn new() -> Self {
-        let mut p = Player {
+        Player {
             name: "".to_string(),
             hp: 100,
             max_hp: 100,
             inventory: HashMap::new(),
+			gold: 0,
             available_quests: Vec::new()
-        };
-		p.inventory.insert("item.gold".to_string(), 50);
-		p
+        }
     }
 }

@@ -6,19 +6,19 @@ use ratatui::{
 		{
 			Horizontal,
 			Vertical
-		}, Flex, HorizontalAlignment::Center, Layout, Margin, Rect, Size, VerticalAlignment
+		}, Flex, HorizontalAlignment::Center, Layout, Margin, Rect, Size
 	}, style::{
-		Color, Modifier, Style, Stylize
+		Color, Style, Stylize
 	}, text::{
 		Line,
 		Span, Text
 	}, widgets::{
-		Block, Borders, Gauge, List, ListItem, Paragraph, Wrap
+		Block, Borders, Clear, Gauge, List, ListItem, Paragraph, Wrap
 	}
 };
-use tui_widgets::scrollview::{ScrollView};
+use tui_widgets::{scrollview::ScrollView};
 
-use crate::{enums::{channels::Channels, exits::Exits, focus::Focus}, structures::world::World};
+use crate::{enums::{channels::Channels, focus::Focus, item_kind::ItemKind}, structures::world::World};
 
 pub fn draw_room_fight(world: &mut World, frame: &mut Frame) {
 
@@ -150,24 +150,22 @@ pub fn draw_room_fight(world: &mut World, frame: &mut Frame) {
 	};
 	
 	let percent = world.room.fight.target_hp * 100 / world.room.fight.target_max_hp;
-	// if let Ok(mut file) = OpenOptions::new().create(true).append(true).open("debug_network.txt") {
-	// 			let _ = writeln!(file, "ok (State {:?}) : {:#?} et {}", world.room.fight.target_hp, world.room.fight.target_max_hp, percent);}
 	hp_bar = Gauge::default()
 	.block(
 		Block::bordered()
 		.title(format!("{} : {}/{}HP", world.room.fight.target_name, world.room.fight.target_hp, world.room.fight.target_max_hp))
 		.title_style(Color::Red)
 		.bold()
-	.title_alignment(Center))
-	.gauge_style(Style::new().fg(gauge_color).on_blue().italic())
-	.percent(percent as u16);
-
+		.title_alignment(Center))
+		.gauge_style(Style::new().fg(gauge_color).on_blue().italic())
+		.percent(percent as u16);
+	
 	frame.render_widget(hp_bar, right_layout[1]);
-
+	
 	//VS
 	let vs = Paragraph::new(Text::from("VERSUS")).centered();
 	frame.render_widget(vs, right_layout[2]);
-
+	
 	//FIGHTERS
 	let nb_fighters = world.room.fight.fighters.len();
 	let mut counter = 0;
@@ -188,19 +186,19 @@ pub fn draw_room_fight(world: &mut World, frame: &mut Frame) {
 				} else {
 					Color::Green
 				};
-		
+				
 				hp_bar = Gauge::default()
 				.block(
 					Block::bordered()
 					.title(format!("{} : {}/{}HP", name, *hp, 100))
 					.title_style(Color::Green)
 					.bold()
-				.title_alignment(Center))
-				.gauge_style(Style::new().fg(gauge_color).on_blue().italic())
-				.percent(*hp as u16);
+					.title_alignment(Center))
+					.gauge_style(Style::new().fg(gauge_color).on_blue().italic())
+					.percent(*hp as u16);
 				frame.render_widget(hp_bar, fighters_layout[x]);
 				counter += 1;
-				}
+			}
 			copy_nb_fighters = copy_nb_fighters.saturating_sub(fighters_on_raw);
 			raw_counter += 1;
 		}
@@ -214,17 +212,17 @@ pub fn draw_room_fight(world: &mut World, frame: &mut Frame) {
 			} else {
 				Color::Green
 			};
-	
+
 			hp_bar = Gauge::default()
 			.block(
 				Block::bordered()
 				.title(format!("{} : {}/{}HP", name, *hp, 100))
 				.title_style(Color::Green)
 				.bold()
-			.title_alignment(Center))
+				.title_alignment(Center))
 			.gauge_style(Style::new().fg(gauge_color).on_blue().italic())
 			.percent(*hp as u16);
-	
+
 			frame.render_widget(hp_bar, fighters_layout[counter]);
 			counter += 1;
 		}
@@ -243,11 +241,11 @@ pub fn draw_room_fight(world: &mut World, frame: &mut Frame) {
 	for (i, button) in buttons.iter().enumerate() {
 		let button_block = Block::new()
 		.bg(match *button {
-				"ATTACK" => Color::Red,
-				"BAG" => Color::LightBlue,
-				"FLEE" => Color::Gray,
-				_ => {Color::White}
-			});
+			"ATTACK" => Color::Red,
+			"BAG" => Color::LightBlue,
+			"FLEE" => Color::Gray,
+			_ => {Color::White}
+		});
 		
 		let [text_button] = Layout::vertical([Constraint::Length(1)])
 		.flex(Flex::Center)
@@ -302,10 +300,10 @@ pub fn draw_room_fight(world: &mut World, frame: &mut Frame) {
 	// CHANNELS
 	let global_channel= Paragraph::new("Global")
 	.fg(if world.chat.channel == Channels::GLOBAL { Color::LightBlue } else { Color::White })
-    .block(
-        Block::new()
-            .borders(Borders::ALL)
-    );
+	.block(
+		Block::new()
+		.borders(Borders::ALL)
+	);
 
 	let room_channel = Paragraph::new("Room")
 	.fg(if world.chat.channel == Channels::ROOM { Color::LightBlue } else { Color::White })
@@ -367,5 +365,53 @@ pub fn draw_room_fight(world: &mut World, frame: &mut Frame) {
 
 
 	frame.render_widget(&world.room.text_area, main_layout[1]);
-	
+
+	//BAG
+	if world.room.fight.bag {
+		world.room.focus = Focus::BAG;
+		let bag_area = frame.area().centered(
+			Percentage(30),
+			Length(10)
+		);
+		let border_bag = Block::new()
+		.borders(Borders::ALL)
+		.border_style(Color::LightBlue)
+		.title("You can use :")
+		.title_alignment(Alignment::Center)
+		.title_style(Color::Green);
+
+		let mut bag_content: Vec<ListItem> = Vec::new();
+		world.room.bag = Vec::new();
+
+		for (item, _) in &world.player.inventory {
+			let item_kind =  {
+				// if let Ok(mut file) = OpenOptions::new().create(true).append(true).open("debug_network.txt") {
+				// 	let _ = writeln!(file, "ok (State {:#?}) :", item);}
+				let item_name = world.list_items.get(&format!("item.{}", item)).unwrap();
+				item_name.kind.clone()
+			};
+			match item_kind {
+				ItemKind::Potion { .. } => {
+					bag_content.push(ListItem::new(Line::from(item.as_str()).alignment(Alignment::Center)));
+					world.room.bag.push(item.clone());
+				},
+				_ => {}
+			}
+		}
+		let content_size = bag_content.len();
+		
+		if content_size == 0 {
+			frame.render_widget(Clear, bag_area);
+			frame.render_widget(
+				Paragraph::new(Text::from("Nothing to use (Enter to quit)").alignment(Alignment::Center)).block(border_bag), bag_area
+			);
+		} else {
+			let bag = List::new(bag_content)
+			.block(border_bag)
+			.highlight_symbol(">> ");
+			frame.render_widget(Clear, bag_area);
+			frame.render_stateful_widget(bag, bag_area, &mut world.room.bag_state);
+		}
+	}
+
 }

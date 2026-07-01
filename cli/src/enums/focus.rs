@@ -13,7 +13,8 @@ pub enum Focus {
     DESCR,
 	NPC,
 	INVENTORY,
-	EXITS
+	EXITS,
+	BAG
 }
 
 impl Focus {

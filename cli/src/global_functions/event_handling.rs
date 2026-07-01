@@ -43,14 +43,14 @@ pub fn event_handling(world: &mut World, answer: Vec<&str>) {
 			match answer[2] {
 				"ENTER" => {
 					world.output.push_back("".to_string());
-					world.output.push_back(format!("{} says: 'Hello there!'.", answer[3]));
+					world.output.push_back(format!("[FIGHT] {} says: 'Hello there!'.", answer[3]));
 					world.room.fight.fighters.insert(answer[3].to_string(), answer[4].parse::<u32>().unwrap_or(100));
 					// world.room.output_scroll_pos.scroll_to_bottom();
 				}
 				"LEAVE" => {
 					world.output.push_back("".to_string());
 					world.output.push_back(format!(
-						"{} leave the fight. Coward!!", answer[3]
+						"[FIGHT] {} leave the fight. Coward!!", answer[3]
 					));
 					world.room.fight.fighters.remove(answer[3]);
 				}
@@ -59,7 +59,7 @@ pub fn event_handling(world: &mut World, answer: Vec<&str>) {
 					world.output.push_back("".to_string());
 					if target_killed.to_lowercase() == "true" {
 						world.output.push_back(format!(
-							"{} dealt {} damages to {}. {} is dead. What a shame!",
+							"[FIGHT] {} dealt {} damages to {}. {} is dead. What a shame!",
 							world.room.fight.target_name, damages, target, target
 						));
 						if target == world.player.name {
@@ -70,7 +70,7 @@ pub fn event_handling(world: &mut World, answer: Vec<&str>) {
 						}
 					} else {
 						world.output.push_back(format!(
-							"{} dealt {} damages to {}. {} has {} HP remaining.",
+							"[FIGHT] {} dealt {} damages to {}. {} has {} HP remaining.",
 							world.room.fight.target_name, damages, target, target, target_hp
 						));
 						world.room.fight.fighters.insert(target.to_string(), target_hp.parse::<u32>().unwrap());
@@ -78,16 +78,30 @@ pub fn event_handling(world: &mut World, answer: Vec<&str>) {
 					if target == world.player.name {
 						world.player.hp = target_hp.parse::<u32>().unwrap();
 					}
-					// world.room.output_scroll_pos.scroll_to_bottom();
 				}
 				"ATTACK" => {
 					let ( player_name, damages, enn_hp) = ( answer[3], answer[4],answer[5] );
 					world.output.push_back("".to_string());
 					world.output.push_back(format!(
-						"{} dealt {} damages to the enemy. {} has {} HP remaining.",
+						"[FIGHT] {} dealt {} damages to the enemy. {} has {} HP remaining.",
 						player_name, damages, world.room.fight.target_name, enn_hp
 					));
 					world.room.fight.target_hp = enn_hp.parse::<u32>().unwrap();
+				}
+				"HEALING" => {
+					let ( player_name, heal) = ( answer[3], answer[4]);
+					world.output.push_back("".to_string());
+					world.output.push_back(format!(
+						"[FIGHT] {} healed himself for {} HP.",
+						player_name, heal
+					));
+
+					let quantity = world.room.fight.fighters.entry(player_name.to_string()).or_insert(0);
+					*quantity += heal.parse::<u32>().unwrap();
+
+					if player_name == world.player.name {
+						world.player.hp += heal.parse::<u32>().unwrap();
+					}
 				}
 				_ => {}
 			}

@@ -1,6 +1,6 @@
 use std::collections::VecDeque;
 
-use ratatui::widgets::ListState;
+use ratatui::widgets::{ListItem, ListState};
 use ratatui_textarea::TextArea;
 use serde::Deserialize;
 use tui_widgets::scrollview::ScrollViewState;
@@ -17,11 +17,15 @@ pub struct Room<'a> {
 	#[serde(skip)]
 	pub focus: Focus,
 	#[serde(skip)]
+	pub bag: Vec<String>,
+	#[serde(skip)]
 	pub fight: Fight,
 	#[serde(skip)]
 	pub dialogs: VecDeque<String>,
 	#[serde(skip)]
 	pub chat_scroll_pos: ScrollViewState,
+	#[serde(skip)]
+	pub bag_state: ListState,
 	#[serde(skip)]
 	pub discuss_scroll_pos: ScrollViewState,
 	#[serde(skip)]
@@ -44,6 +48,7 @@ impl Room<'_> {
 			room: RoomView::new(),
 			npcs: Vec::new(),
 			items: Vec::new(),
+			bag: Vec::new(),
 			fight: Fight::new(),
 			dialogs: VecDeque::new(),
 			players: Vec::new(),
@@ -51,6 +56,7 @@ impl Room<'_> {
 			chat_scroll_pos: ScrollViewState::new(),
 			discuss_scroll_pos: ScrollViewState::new(),
 			output_scroll_pos: ScrollViewState::new(),
+			bag_state: ListState::default(),
 			descr_scroll_pos: ScrollViewState::new(),
 			npc_list_state: ListState::default(),
 			inventory_list_state: ListState::default(),

@@ -17,7 +17,7 @@ pub fn handle_mouse(event: MouseEvent, world: &mut World) {
 				let (x, y) = (event.column, event.row);
 				let position = Position::new(x, y);
 				for (action, button) in &world.room.fight.buttons {
-					if button.contains(position) {
+					if button.contains(position) && !world.room.fight.bag{
 						match action.as_str() {
 							"ATTACK" => {
 								let mut target = target_id;
@@ -41,7 +41,10 @@ pub fn handle_mouse(event: MouseEvent, world: &mut World) {
 								let _ = world.tx_to_serv.try_send(format!("FLEE {}\n", target));
 								world.action = PendingAction::Flee;
 							},
-							"BAG" => {todo!()},
+							"BAG" => {
+								world.room.fight.bag = true;
+								world.room.bag_state.select_first();
+							},
 							_ => {}
 						}
 					}

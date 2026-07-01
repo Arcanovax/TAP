@@ -15,6 +15,7 @@ pub fn idle_event(key: KeyEvent, world: &mut World) {
 					Focus::NPC => world.room.npc_list_state.select_next(),
 					Focus::INVENTORY => world.room.inventory_list_state.select_next(),
 					Focus::EXITS => world.room.exits_list_state.select_next(),
+					Focus::BAG => world.room.bag_state.select_next(),
 					_ => {}
 				}
 				}
@@ -26,6 +27,7 @@ pub fn idle_event(key: KeyEvent, world: &mut World) {
 					Focus::NPC => world.room.npc_list_state.select_previous(),
 					Focus::INVENTORY => world.room.inventory_list_state.select_previous(),
 					Focus::EXITS => world.room.exits_list_state.select_previous(),
+					Focus::BAG => world.room.bag_state.select_previous(),
 					_ => {}
 				}
 			}
@@ -114,7 +116,30 @@ pub fn idle_event(key: KeyEvent, world: &mut World) {
 							world.room.npc_list_state.select(None);
 						}
 					}
-					Focus::INVENTORY => {todo!()}
+					Focus::INVENTORY
+					| Focus::BAG => {
+						if world.room.focus == Focus::BAG && world.room.bag.len() == 0 {
+							world.room.fight.bag = false;
+						} else {
+							let item_name = {
+								if world.room.focus == Focus::INVENTORY {
+									let index = world.room.inventory_list_state.selected().unwrap();
+									world.player.inventory.keys().nth(index)
+								} else {
+									let index = world.room.bag_state.selected().unwrap();
+									world.room.fight.bag = false;
+									world.room.bag.iter().nth(index)
+								}
+							};
+							match item_name {
+								Some(item) => {
+									let _ = world.tx_to_serv.try_send(format!("CONSUME {}\n", item));
+									world.action = PendingAction::Consume(item.clone());
+								},
+								None => {world.output.push_back("An error occurs, impossible to find your selected object.".to_string());}
+							}
+						}
+					}
 					_ => {}
 				}
 			}

@@ -84,7 +84,7 @@ pub fn draw_room(world: &mut World, frame: &mut Frame) {
 
 	lines.push(Line::from(vec![
 		Span::styled("Gold:", Style::default().fg(Color::Yellow)),
-		Span::raw(world.player.inventory.get("item.gold").unwrap_or(&0).to_string()),
+		Span::raw(world.player.gold.to_string()),
 	]));
 
 	let id: Paragraph = Paragraph::new(Text::from(Text::from(lines)))
@@ -115,7 +115,7 @@ pub fn draw_room(world: &mut World, frame: &mut Frame) {
 	frame.render_widget(city_block, right_layout[0]);
 	scroll_output.render_widget(city_name, Rect::new(0, 0, content_width, content_height));
 	frame.render_stateful_widget(scroll_output, inner_city, &mut world.room.descr_scroll_pos);
-
+	
 	// HP
 	let gauge_color = if world.player.hp < 30 {
 		Color::Red
@@ -124,7 +124,9 @@ pub fn draw_room(world: &mut World, frame: &mut Frame) {
 	} else {
 		Color::Green
 	};
-
+	
+	// if let Ok(mut file) = OpenOptions::new().create(true).append(true).open("debug_network.txt") {
+	// 			let _ = writeln!(file, "ok (State {:?}) :", world.player.hp);}
 	let hp_bar = Gauge::default()
 	.block(
 		Block::new()
@@ -169,9 +171,12 @@ pub fn draw_room(world: &mut World, frame: &mut Frame) {
 	frame.render_stateful_widget(npc_list, lists_layout[0], &mut world.room.npc_list_state);
 
 	// INVENTORY
-	let inventory_items: Vec<ListItem> = world.player.inventory.iter()
-		.map(|item| ListItem::new(Line::from(format!("{} x{}", item.0.trim_start_matches("item."), item.1)).alignment(Alignment::Center)))
+	let mut inventory_items: Vec<ListItem> = world.player.inventory.iter()
+		.map(|item| ListItem::new(Line::from(format!("{} x{}", item.0, item.1)).alignment(Alignment::Center)))
 		.collect();
+	if inventory_items.len() == 0 {
+		inventory_items.push(ListItem::new(Line::from("Nothing in your bag").alignment(Alignment::Center)));
+	}
 
 	let items_list = List::new(inventory_items)
 	.block(
@@ -325,8 +330,6 @@ pub fn draw_room(world: &mut World, frame: &mut Frame) {
 		.bold()
 		.border_style(if world.room.focus == Focus::COMMAND {Color::LightBlue} else {Color::White}));
 
-	// if let Ok(mut file) = OpenOptions::new().create(true).append(true).open("debug_network.txt") {
-	// 			let _ = writeln!(file, "ok (State {:?}) : {:#?}", world.state, world.room.focus);}
 
 	frame.render_widget(&world.room.text_area, main_layout[1]);
 	

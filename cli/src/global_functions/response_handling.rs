@@ -1,7 +1,7 @@
 use core::num;
 use std::{collections::{HashMap, VecDeque}, fmt::format, fs::OpenOptions, io::Write, os::linux::raw::stat};
 
-use crate::{enums::{actions::PendingAction, focus::Focus, npc_kind::NPCKind, states::States}, structures::{attack_results::Attack_Result, room::Room, server_event::ServerEvent, status_view::StatusView, world::World}};
+use crate::{enums::{actions::PendingAction, focus::Focus, item_kind::ItemKind, npc_kind::NPCKind, states::States}, structures::{attack_results::Attack_Result, room::Room, server_event::ServerEvent, status_view::StatusView, world::World}};
 
 pub fn response_handling(world: &mut World, answers: Vec<&str>) {
 	// if let Ok(mut file) = OpenOptions::new().create(true).append(true).open("debug_network.txt") {
@@ -44,7 +44,8 @@ pub fn response_handling(world: &mut World, answers: Vec<&str>) {
 						}
 						world.player.hp = status.hp;
 						world.state = status.status;
-						world.action = PendingAction::None;
+						let _ = world.tx_to_serv.try_send(String::from("INVENTORY\n"));
+						world.action = PendingAction::Inventory;
 					},
 					
 					PendingAction::Items => {
@@ -67,17 +68,17 @@ pub fn response_handling(world: &mut World, answers: Vec<&str>) {
 					},
 					
 					PendingAction::Gold => {
-						// if let Ok(mut file) = OpenOptions::new().create(true).append(true).open("debug_network.txt") {
-						// 	let _ = writeln!(file, "real (State {:?}) : {:#?}", world.state, real_answer);}
 						let gold: Vec<&str> = real_answer.split("=").collect();
-						world.player.inventory.insert("item.gold".to_string(), gold[1].parse().unwrap());
+						world.player.gold = gold[1].parse().unwrap();
 						world.action = PendingAction::None;
 					},
-					
-					PendingAction::Inventory => {
+
+					PendingAction::Inventory
+					| PendingAction::ClientInventory => {
 						let mut item: &str = "";
 						let mut count = 1;
-						for (i, line) in real_answer.lines().enumerate() {
+						let list_items: Vec<String> = serde_json::from_str(&real_answer).unwrap();
+						for (i, line) in list_items.iter().enumerate() {
 							if item != line {
 								if i > 0 {
 									world.player.inventory.insert(item.to_string(), count);
@@ -88,13 +89,20 @@ pub fn response_handling(world: &mut World, answers: Vec<&str>) {
 								count += 1;
 							}
 						}
-						world.player.inventory.insert(item.to_string(), count);
-						for (item, number) in &world.player.inventory {
-							world.output.push_back(format!("{} x{}", item, number));
+						if item != "" {
+							world.player.inventory.insert(item.to_string(), count);
 						}
-						world.action = PendingAction::None;
-					},
 
+						if world.action == PendingAction::ClientInventory {
+							for (item, number) in &world.player.inventory {
+								world.output.push_back(format!("{} x{}", item, number));
+							}
+						}
+						let _ = world.tx_to_serv.try_send(String::from("GOLD\n"));
+						
+						world.action = PendingAction::Gold;
+					},
+					
 					PendingAction::Talk(name) => {
 						for sentence in real_answer.split("\\") {
 							world.room.dialogs.push_back(sentence.to_string());
@@ -105,6 +113,35 @@ pub fn response_handling(world: &mut World, answers: Vec<&str>) {
 							world.state = States::InDiscuss(name.clone(), world.room.dialogs.pop_front().unwrap_or("".to_string()));
 						}
 						world.room.npc_list_state.select(None);
+					},
+					
+					PendingAction::Consume(item) => {
+						// if let Ok(mut file) = OpenOptions::new().create(true).append(true).open("debug_network.txt") {
+						// 	let _ = writeln!(file, "real (State {:?}) : {:#?}", count, line);}
+						let quantity = world.player.inventory.get(item).unwrap();
+						if *quantity > 1 {
+							world.player.inventory.insert(item.clone(), quantity - 1);
+						} else {
+							world.player.inventory.remove(item);
+						}
+						if world.state == States::Idle {
+							world.output.push_back(format!("[server response] You have successfully used {}.", item));
+						}
+						let heal = {
+							let item_name = world.list_items.get(&format!("item.{}", item));
+							match item_name {
+								Some(it) => {
+									if let ItemKind::Potion { healing } = it.kind {
+										healing
+									} else {0 as u32}
+								},
+								None => 0 as u32
+							}
+						};
+						// if let Ok(mut file) = OpenOptions::new().create(true).append(true).open("debug_network.txt") {
+						// 		let _ = writeln!(file, "real (State {:#?}) :", heal);}
+						world.player.hp = world.player.hp.saturating_add(heal).min(100);
+						world.action = PendingAction::None;
 					},
 
 					PendingAction::GroupCreate(name) => {
