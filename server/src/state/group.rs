@@ -124,7 +124,6 @@ impl ServerInfo {
 	
 			if nb_receivers == fight_turn  as usize {
 				enemy_attack(&target, self);
-				self.fights.get_mut(&target).unwrap().turn = 0;
 			}
 		} else {
 			let enemy = self.world.npcs.get_mut(&target).unwrap();

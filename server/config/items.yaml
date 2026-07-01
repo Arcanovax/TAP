@@ -25,7 +25,7 @@ item:
     price: 5
     kind:
       Potion:
-        healing: 10
+        healing: 20
 
   orange:
     name: "Orange"

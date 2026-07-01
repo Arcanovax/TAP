@@ -10,7 +10,7 @@ pub fn enemy_attack(opponent_id: &str, world: &mut ServerInfo) {
     let mut target_index: usize = 0;
     
     let (list_fighters, opponent_kind) = {
-        (world.fights.get_mut(opponent_id).unwrap().fighters.clone(), world.world.npcs.get_mut(opponent_id).unwrap().kind.clone())
+        (world.fights.get(opponent_id).unwrap().fighters.clone(), world.world.npcs.get(opponent_id).unwrap().kind.clone())
     };
     
     let nb_fighters = list_fighters.len();
@@ -69,5 +69,8 @@ pub fn enemy_attack(opponent_id: &str, world: &mut ServerInfo) {
             let _ = con.tx.send(Message::Event(EventType::ENEMY_ATTACK { target: target_name.clone(), damages: e_damages, target_hp, target_killed}));
         }
     }
+	if let Some(fight) = world.fights.get_mut(opponent_id) {
+		fight.turn = 0;
+	}
 }
 

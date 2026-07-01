@@ -1,6 +1,6 @@
 use std::{net::SocketAddr};
 
-use crate::{protocol::{EventType, Message, Payload}, state::SharedServer, structures::{enums::{error::ErrorCode, item_kind::ItemKind, state::State}}};
+use crate::{handlers::fight::enemy_attack::enemy_attack, protocol::{EventType, Message, Payload}, state::SharedServer, structures::enums::{error::ErrorCode, item_kind::ItemKind, state::State}};
 
 pub fn consume(
     peer_addr: SocketAddr,
@@ -69,9 +69,10 @@ pub fn consume(
 
 		match p_status {
 			State::InFight { target_id } => {
-				let fighters = {
-					let fight = world_mut.fights.get(&target_id).unwrap();
-					fight.fighters.clone()
+				let (fighters, turn) = {
+					let fight = world_mut.fights.get_mut(&target_id).unwrap();
+					fight.turn += 1;
+					(fight.fighters.clone(), fight.turn)
 				};
 				for fighter in &fighters {
 					if let Some(con) = world_mut
@@ -83,6 +84,9 @@ pub fn consume(
 						}));
 					} else {}
 				};
+				if turn == fighters.len() as u32 {
+					enemy_attack(&target_id, world_mut);
+				}
 			},
 			_ => {}
 		}
