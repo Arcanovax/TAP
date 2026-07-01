@@ -31,7 +31,7 @@ impl ServerInfo {
                     .retain(|item, _| self.world.items.contains_key(item));
                 player
             }
-            Ok(None) => Player::new(name.clone()),
+            Ok(None) => Player::new(name.clone(), self.world.spawn_room.clone()),
             Err(_) => return Err(ErrorCode::CONNECTION_FAILED),
         };
         self.connections.insert(
