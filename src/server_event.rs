@@ -42,7 +42,7 @@ pub async fn handle_events(game: &mut Game, answer: Vec<&str>){
 			"UPDATE" => {
 				match serde_json::from_str::<QuestUpdateEvent>(answer[3..].join(" ").as_str()) {
 					Ok(quest_upt) => {
-						for quest in &mut game.quests{
+						for quest in &mut game.quests.all{
 							if quest.quest_id == quest_upt.quest{
 								quest.goal = Some(quest_upt.goal);
 								break;

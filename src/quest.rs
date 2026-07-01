@@ -9,6 +9,12 @@ pub struct Quest{
     pub goal: Option<Goal>,
 }
 
+pub struct Quests{
+    pub all: Vec<Quest>,
+	pub is_load: bool
+}
+
+
 #[derive(Debug, Deserialize, PartialEq, Eq, Clone)]
 pub enum Goal {
     Collect { item: String, amount: u32 },
@@ -27,7 +33,7 @@ pub fn display_quests(game: &mut Game){
 
     let mut pos_y = title_quest_pos.y + 30.0;
 
-    for quest in game.quests.iter(){
+    for quest in game.quests.all.iter(){
         let quest_info = format!("- {}", quest.description);
         draw_text(quest_info, title_quest_pos.x, pos_y, 25.0, YELLOW);
         // pos_y += 20.0;

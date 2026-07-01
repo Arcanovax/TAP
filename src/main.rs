@@ -109,7 +109,7 @@ struct Game {
 	pub nb_players: i32,
 	pub config: GameConfig,
 	pub active_fight: Option<Fight>,
-	pub quests: Vec<Quest>
+	pub quests: Quests
 }
 
 
@@ -227,7 +227,7 @@ async fn main() {
 			camera: Camera2D::default()
 		},
 		active_fight: None,
-		quests: Vec::new()
+		quests: Quests { all: Vec::new(), is_load: false}
     };
 
 
@@ -297,6 +297,11 @@ async fn main() {
 			else if !game.player.inventory.is_load && game.pending_action == PendingAction::None{
 				game.tx_to_serv.try_send("INVENTORY \n".to_string()).ok();
 				game.pending_action = PendingAction::Inventory;
+			}
+
+			else if !game.quests.is_load && game.pending_action == PendingAction::None{
+				game.tx_to_serv.try_send("QUESTS \n".to_string()).ok();
+				game.pending_action = PendingAction::Quests;
 			}
 
 			else{
