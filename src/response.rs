@@ -21,7 +21,8 @@ pub enum PendingAction {
 	Npcs,
 	Talk(String),
 	Attack(String),
-	Quest(String)
+	Quest(String),
+	Inventory
 }
 
 
@@ -289,6 +290,22 @@ pub async fn handle_response(game: &mut Game, answer: &str, state: &str){
 					}
 				}
 			}
+		}
+		PendingAction::Inventory => {
+			if state =="OK"{
+					match serde_json::from_str::<Vec<String>>(answer) {
+						Ok(inventory) => {
+							game.player.inventory.is_load = true;
+							game.player.inventory.data = count_items(inventory);
+						}
+						Err(e) => {
+							println!("Error JSON: {}", e);
+						}
+					}
+				}
+				else{
+					game.group.in_group = false;
+				}
 		}
 		PendingAction::Drop => {
 			if let Some(val_str) = answer.strip_prefix("dropped=") {

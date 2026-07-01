@@ -9,17 +9,23 @@ const ITEM_INFO: Vec2 = vec2(100.0, 120.0);
 
 pub struct Inventory {
     pub data: HashMap<String, i32>,
-	pub equiped: Equiped,
+	pub is_load: bool,
 	pub is_active: bool
 }
 
+use std::collections::HashMap;
 
-pub struct Equiped {
-	chestplate:String,
-	helmet:String,
-	weapon:String,
-	shield:String
+pub fn count_items(items: Vec<String>) -> HashMap<String, i32> {
+    let mut items_map = HashMap::new();
+
+    for item in items {
+        *items_map.entry(item.to_string()).or_insert(0) += 1;
+    }
+
+    return items_map
 }
+
+
 
 fn get_inv_rect() -> Rect {
     let center_x = screen_width() / 2.0;
@@ -49,12 +55,7 @@ impl Inventory {
     pub fn new() -> Self {
         Self {
             data: HashMap::new(),
-            equiped: Equiped{
-				chestplate:"basic".to_string(),
-				helmet:"basic".to_string(),
-				weapon:"basic".to_string(),
-				shield:"basic".to_string()
-			},
+            is_load: false,
             is_active: false,
         }
     }

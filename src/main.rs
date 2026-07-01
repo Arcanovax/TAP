@@ -294,6 +294,11 @@ async fn main() {
 				game.pending_action = PendingAction::Status;
 			}
 
+			else if !game.player.inventory.is_load && game.pending_action == PendingAction::None{
+				game.tx_to_serv.try_send("INVENTORY \n".to_string()).ok();
+				game.pending_action = PendingAction::Inventory;
+			}
+
 			else{
 				if let Some(mut state) = game.player.state.clone() {
 					if state.status != Status::Idle{
