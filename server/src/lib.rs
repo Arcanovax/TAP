@@ -19,6 +19,7 @@ use tokio::time::interval;
 use tracing::{Instrument, debug, error, info};
 
 mod config;
+mod dungeon;
 mod handlers;
 mod persistence;
 pub mod protocol;
