@@ -39,7 +39,7 @@ item:
     price: 25
     kind:
       Weapon:
-        damages: 10
+        damages: 30
 
   shield:
     name: "You_shall_not_pass"

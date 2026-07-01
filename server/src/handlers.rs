@@ -9,6 +9,7 @@ pub mod item;
 pub mod look;
 pub mod movement;
 pub mod flee;
+pub mod consume;
 pub mod npc;
 pub mod quest;
 pub mod quests;
