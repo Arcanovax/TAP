@@ -25,6 +25,7 @@ pub enum ConfigError {
         ref_id: String,
         defined_in: PathBuf,
     },
+    MissingSpawnPoint,
 }
 
 impl fmt::Display for ConfigError {
@@ -42,15 +43,23 @@ impl fmt::Display for ConfigError {
                 file_a.display(),
                 file_b.display()
             ),
-            ConfigError::DanglingRef { from_id, missing_ref } => write!(
+            ConfigError::DanglingRef {
+                from_id,
+                missing_ref,
+            } => write!(
                 f,
                 "`{from_id}` references `{missing_ref}`, which does not exist"
             ),
-            ConfigError::ScopeViolation { from_id, ref_id, defined_in } => write!(
+            ConfigError::ScopeViolation {
+                from_id,
+                ref_id,
+                defined_in,
+            } => write!(
                 f,
                 "`{from_id}` uses `{ref_id}` (defined in {}) without importing that file",
                 defined_in.display()
             ),
+            ConfigError::MissingSpawnPoint => write!(f, "spawn_point key is missing"),
         }
     }
 }

@@ -9,6 +9,7 @@ pub struct World {
     pub items: HashMap<String, Item>,
     pub quests: HashMap<String, Quest>,
     pub name_to_ref: HashMap<String, String>,
+    pub spawn_room: String,
 }
 
 impl World {
@@ -19,6 +20,7 @@ impl World {
             items: HashMap::new(),
             quests: HashMap::new(),
             name_to_ref: HashMap::new(),
+            spawn_room: String::new(),
         }
     }
 }
