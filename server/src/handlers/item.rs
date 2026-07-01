@@ -17,7 +17,7 @@ pub(super) fn item_request(server_info: &SharedServer, args: &Vec<String>) -> Me
         item_ref = reference.clone();
     }
 
-    let item = match binding.world.items.get(&item_ref) {
+    let item = match binding.resolve_item(&item_ref) {
         Some(item) => item,
         None => {
             return Message::Response {

@@ -52,7 +52,7 @@ pub(super) fn buy_request(
         }
     }
 
-    match binding.world.npcs.get(&npc_ref) {
+    match binding.resolve_npc(&npc_ref) {
         Some(npc) => {
             match &npc.kind {
                 NPCKind::Merchant { inventory, .. } => {
@@ -79,7 +79,7 @@ pub(super) fn buy_request(
         }
     }
 
-    let price = match binding.world.items.get(&item_ref) {
+    let price = match binding.resolve_item(&item_ref) {
         Some(item) => item.price * amount,
         None => {
             return Message::Response {

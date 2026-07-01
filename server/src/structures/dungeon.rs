@@ -14,16 +14,16 @@ pub struct Dungeon {
 
 pub fn parse_dungeon_id(id: &str) -> Option<Uuid> {
     match id.split('_').collect::<Vec<_>>().as_slice() {
-        [prefix, gid, _] => match Uuid::parse_str(gid) {
-            Ok(uuid) if *prefix == "room.dg" => Some(uuid),
+        [prefix, gid, _] => match prefix.split_once('.') {
+            Some((_, "dg")) => Uuid::parse_str(gid).ok(),
             _ => None,
         },
         _ => None,
     }
 }
 
-pub fn format_dungeon_id(gid: Uuid, n: u8) -> String {
-    format!("room.dg_{gid}_{n}")
+pub fn format_dungeon_id(category: &str, gid: Uuid, n: u8) -> String {
+    format!("{category}.dg_{gid}_{n}")
 }
 
 #[cfg(test)]
@@ -34,7 +34,7 @@ mod tests {
     #[test]
     fn round_trip_dungeon_success() {
         let gid = Uuid::new_v4();
-        let format = format_dungeon_id(gid, 2);
+        let format = format_dungeon_id("room", gid, 2);
         let parsed_gid = parse_dungeon_id(&format);
         assert_eq!(parsed_gid, Some(gid))
     }

@@ -10,7 +10,7 @@ impl ServerInfo {
         peer_addr: SocketAddr,
         npc_name: &str,
     ) -> Result<&Quest, ErrorCode> {
-        let npc = match self.world.npcs.get(npc_name) {
+        let npc = match self.resolve_npc(npc_name) {
             Some(npc) => npc,
             None => return Err(ErrorCode::NPC_NOT_FOUND),
         };

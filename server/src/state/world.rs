@@ -37,7 +37,7 @@ impl ServerInfo {
     pub fn get_player_room(&self, peer_addr: SocketAddr) -> Result<&Room, ErrorCode> {
         let room_name = &self.get_player(peer_addr)?.location;
 
-        let room = match self.world.rooms.get(room_name) {
+        let room = match self.resolve_room(room_name) {
             Some(room) => room,
             None => return Err(ErrorCode::ROOM_NOT_FOUND),
         };

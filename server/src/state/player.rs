@@ -97,6 +97,7 @@ impl ServerInfo {
             return Err(ErrorCode::INVALID_COMMAND);
         }
         let con = self.connections.get_mut(&peer_addr).unwrap();
+        let location = con.player.location.clone();
         match con.player.inventory.get_mut(item) {
             Some(count) => {
                 *count -= 1;
@@ -106,9 +107,7 @@ impl ServerInfo {
             }
             None => return Err(ErrorCode::ITEM_NOT_IN_INVENTORY),
         }
-        self.world
-            .rooms
-            .get_mut(&con.player.location)
+        self.resolve_room_mut(&location)
             .unwrap()
             .items
             .push(OwnedItem {
@@ -126,19 +125,27 @@ impl ServerInfo {
         if !self.connections.contains_key(&peer_addr) {
             return Err(ErrorCode::INVALID_COMMAND);
         }
-        let con = self.connections.get_mut(&peer_addr).unwrap();
-        let room = match self.world.rooms.get_mut(&con.player.location) {
+        let location = self
+            .connections
+            .get(&peer_addr)
+            .unwrap()
+            .player
+            .location
+            .clone();
+        let room = match self.resolve_room_mut(&location) {
             Some(room) => room,
             None => return Err(ErrorCode::ROOM_NOT_FOUND),
         };
-        for (i, value) in room.items.iter().enumerate() {
-            if item == value.item {
+        let pos = room.items.iter().position(|value| value.item == item);
+        match pos {
+            Some(i) => {
                 room.items.remove(i);
-                *con.player.inventory.entry(item.to_string()).or_insert(0) += 1;
-                return Ok(String::from(item));
             }
+            None => return Err(ErrorCode::ITEM_NOT_FOUND),
         }
-        Err(ErrorCode::ITEM_NOT_FOUND)
+        let con = self.connections.get_mut(&peer_addr).unwrap();
+        *con.player.inventory.entry(item.to_string()).or_insert(0) += 1;
+        Ok(String::from(item))
     }
 
     pub fn try_save_player(&self, peer_addr: SocketAddr) -> Result<(), ErrorCode> {
