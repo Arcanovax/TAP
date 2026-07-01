@@ -1,6 +1,6 @@
 use macroquad::prelude::*;
 
-pub fn get_rect_center(container: Rect, size: Vec2, y:f32) -> Rect {
+pub fn get_rect_center_x(container: Rect, size: Vec2, y:f32) -> Rect {
 		let pos_x: f32 = container.x + (container.w - size.x) / 2.0;
 		let pos_y: f32 = container.y + y;
 
@@ -10,7 +10,19 @@ pub fn get_rect_center(container: Rect, size: Vec2, y:f32) -> Rect {
 			size.x,
 			size.y,
 		)
-	}
+}
+
+pub fn get_center_rect(size: Vec2) -> Rect {
+    let center_x = screen_width() / 2.0;
+    let center_y = screen_height() / 2.0;
+
+    Rect::new(
+        center_x - (size.x / 2.0),
+        center_y - (size.y / 2.0),
+        size.x,
+        size.y,
+    )
+}
 
 pub fn get_rect_bottom(size: Vec2, x: f32) -> Rect {
 		let max_y = screen_height();

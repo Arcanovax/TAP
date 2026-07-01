@@ -110,7 +110,8 @@ struct Game {
 	pub nb_players: i32,
 	pub config: GameConfig,
 	pub active_fight: Option<Fight>,
-	pub quests: Quests
+	pub quests: Quests,
+	pub npc_shop: NpcShop
 }
 
 
@@ -229,7 +230,8 @@ async fn main() {
 			camera: Camera2D::default()
 		},
 		active_fight: None,
-		quests: Quests { all: Vec::new(), is_load: false}
+		quests: Quests { all: Vec::new(), is_load: false},
+		npc_shop: NpcShop { is_active: false }
     };
 
 
@@ -475,6 +477,10 @@ async fn main() {
 					if let Some((place, npc)) = active_npc {
 						handle_npc_interactions(&mut game, place, npc);
 					}
+					else{
+						game.npc_shop.is_active = false;
+					}
+
 
 					if let Some(builds_texture) = builds.as_ref() {
 						let builds_params = DrawTextureParams {

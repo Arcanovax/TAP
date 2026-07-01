@@ -110,7 +110,7 @@ fn get_item_slot_inv(slot_rect: Rect, game: &mut Game, item: &Item, amount: &i32
 }
 
 
-fn draw_item_center(rect: Rect, item: &Item){
+pub fn draw_item_center(rect: Rect, item: &Item){
 	let texture_param = DrawTextureParams {
         dest_size: Some(vec2(ITEM_SIZE, ITEM_SIZE)),
         ..Default::default()
