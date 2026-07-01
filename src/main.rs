@@ -69,7 +69,8 @@ struct Player {
 	inventory: Inventory,
     name: String,
 	new_spawn:Spawn,
-	state: Option<PlayerState>
+	state: Option<PlayerState>,
+	gold: Option<i32>
 }
 
 #[derive(Deserialize, Debug, Clone)]
@@ -208,7 +209,8 @@ async fn main() {
 			inventory: Inventory::new(),
             name:"".to_string(),
 			new_spawn: Spawn::Center,
-			state: None
+			state: None,
+			gold: None
         },
         skins: Vec::new(),
 		tx_to_serv: tx_to_serv,
@@ -302,6 +304,11 @@ async fn main() {
 			else if !game.quests.is_load && game.pending_action == PendingAction::None{
 				game.tx_to_serv.try_send("QUESTS \n".to_string()).ok();
 				game.pending_action = PendingAction::Quests;
+			}
+
+			else if game.player.gold.is_none() && game.pending_action == PendingAction::None{
+				game.tx_to_serv.try_send("GOLD \n".to_string()).ok();
+				game.pending_action = PendingAction::Gold;
 			}
 
 			else{
@@ -507,7 +514,12 @@ async fn main() {
 
 
 					draw_text(&game.player.name, frame.x + frame.w + 5.0, frame.y + 30.0, 40.0, WHITE);
-					let lifebar = Rect::new(frame.x + frame.w + 5.0, frame.y + 40.0, 200.0, 25.0);
+					if let Some(gold) = game.player.gold{
+						let text_gold = format!("Gold: {}", gold);
+						draw_text(&text_gold, frame.x + frame.w + 5.0, frame.y + 60.0, 30.0, YELLOW);
+					}
+
+					let lifebar = Rect::new(frame.x + frame.w + 5.0, frame.y + 70.0, 200.0, 25.0);
 					draw_rectangle(lifebar.x, lifebar.y, lifebar.w, lifebar.h,BLACK);
 					let hp_ratio: f32 = state.hp as f32 / state.max_hp as f32;
 					draw_rectangle(lifebar.x, lifebar.y+2.5, lifebar.w * hp_ratio, 20.0,RED);

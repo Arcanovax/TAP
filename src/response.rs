@@ -23,7 +23,8 @@ pub enum PendingAction {
 	Attack(String),
 	Quest(String),
 	Inventory,
-	Quests
+	Quests,
+	Gold
 }
 
 
@@ -336,9 +337,9 @@ pub async fn handle_response(game: &mut Game, answer: &str, state: &str){
 			if state =="OK"{
 				game.quests.is_load = true;
 					match serde_json::from_str::<Vec<String>>(answer) {
-						Ok(inventory) => {
+						Ok(quests) => {
 							
-							// game.player.inventory.data = count_items(inventory);
+							// game.quests.all = quests;
 						}
 						Err(e) => {
 							println!("Error JSON: {}", e);
@@ -348,6 +349,18 @@ pub async fn handle_response(game: &mut Game, answer: &str, state: &str){
 				else{
 					game.group.in_group = false;
 				}
+		}
+		PendingAction::Gold => {
+			if let Some(val_str) = answer.strip_prefix("gold=") {
+				match val_str.trim().parse::<i32>() {
+					Ok(nb) => {
+						game.player.gold = Some(nb);
+					}
+					Err(e) => {
+						println!("Who error parsing: {}", e);
+					}
+				}
+			}
 		}
 		_ => {
 			game.pending_action = PendingAction::None;

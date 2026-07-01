@@ -6,7 +6,9 @@ const ALLOWED_COMMANDS: &[&str] = &[
 	"/STATUS",
 	"/QUESTS",
 	"/INVENTORY",
-	"/QUESTS"
+	"/QUESTS",
+	"/GOLD",
+	"/BUY"
 ];
 use crate::*;
 
