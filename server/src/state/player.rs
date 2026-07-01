@@ -24,14 +24,14 @@ impl ServerInfo {
             Ok(Some(mut player)) => {
                 info!("{} player data loaded", name);
                 if !self.world.rooms.contains_key(&player.location) {
-                    player.location = self.world.rooms.keys().next().unwrap().clone();
+                    player.location = self.world.spawn_room.clone();
                 }
                 player
                     .inventory
                     .retain(|item, _| self.world.items.contains_key(item));
                 player
             }
-            Ok(None) => Player::new(name.clone()),
+            Ok(None) => Player::new(name.clone(), self.world.spawn_room.clone()),
             Err(_) => return Err(ErrorCode::CONNECTION_FAILED),
         };
 

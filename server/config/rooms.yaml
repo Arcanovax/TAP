@@ -2,6 +2,8 @@ import:
   - "npc.yaml"
   - "items.yaml"
 
+spawn_point: "room.city_square"
+
 room:
   city_square:
     name: "The Answer Place"

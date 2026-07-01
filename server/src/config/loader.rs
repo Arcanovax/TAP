@@ -15,6 +15,8 @@ use std::{
     path::{Path, PathBuf},
 };
 
+const SPAWN_POINT: &str = "spawn_point";
+
 #[derive(Deserialize, Debug)]
 struct ConfigRoom {
     name: String,
@@ -38,6 +40,8 @@ struct ConfigFile {
     room: HashMap<String, ConfigRoom>,
     #[serde(default)]
     quest: HashMap<String, Quest>,
+    #[serde(default)]
+    spawn_point: String,
 }
 
 #[derive(Debug)]
@@ -77,6 +81,16 @@ impl Loader {
                 path: path.clone(),
                 source,
             })?;
+        if !parsed.spawn_point.is_empty() {
+            if let Some(file_a) = self.definer.insert(SPAWN_POINT.to_string(), path.clone()) {
+                return Err(ConfigError::Conflict {
+                    id: SPAWN_POINT.to_string(),
+                    file_a,
+                    file_b: path,
+                });
+            }
+            self.world.spawn_room = parsed.spawn_point;
+        }
         for file in &parsed.import {
             let dep = path.parent().unwrap_or(Path::new(".")).join(file);
             let dep = dep.canonicalize().map_err(|source| ConfigError::Io {
@@ -188,6 +202,14 @@ impl Loader {
                 })?;
             }
         }
+
+        self.definer
+            .get(&self.world.spawn_room)
+            .ok_or(ConfigError::DanglingRef {
+                from_id: SPAWN_POINT.to_string(),
+                missing_ref: self.world.spawn_room.clone(),
+            })?;
+
         Ok(())
     }
 
@@ -257,6 +279,18 @@ impl Loader {
                 }
             }
         }
+
+        let f = &self.definer[SPAWN_POINT];
+        let visibles = self.get_visible_file(&f);
+        let g = &self.definer[&self.world.spawn_room];
+        if !visibles.contains(g) {
+            return Err(ConfigError::ScopeViolation {
+                from_id: SPAWN_POINT.to_string(),
+                ref_id: self.world.spawn_room.clone(),
+                defined_in: g.to_path_buf(),
+            });
+        }
+
         Ok(())
     }
 
@@ -268,6 +302,9 @@ impl Loader {
 pub(super) fn load(entry: &Path) -> Result<World, ConfigError> {
     let mut loader = Loader::new();
     loader.load_file(entry)?;
+    if loader.world.spawn_room.is_empty() {
+        return Err(ConfigError::MissingSpawnPoint);
+    }
     loader.check_refs()?;
     loader.check_scope()?;
     Ok(loader.finish())

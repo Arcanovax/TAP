@@ -21,12 +21,12 @@ pub struct Player {
 }
 
 impl Player {
-    pub fn new(name: String) -> Self {
+    pub fn new(name: String, spawn_point: String) -> Self {
         Player {
             name,
             hp: 100,
             max_hp: 100,
-            location: String::from("room.city_square"),
+            location: spawn_point,
             status: State::Idle,
             inventory: HashMap::new(),
             available_quests: Vec::new(),
