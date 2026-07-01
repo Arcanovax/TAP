@@ -31,7 +31,7 @@ mod tests {
     fn save_then_load_resturns_same_player() {
         let db = test_db();
 
-        let mut player = Player::new("test".to_string());
+        let mut player = Player::new("test".to_string(), String::new());
         player.max_hp = 30;
         player.location = "room.test".to_string();
 

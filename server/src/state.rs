@@ -1,6 +1,7 @@
 use crate::{
     protocol::{EventType, Message},
     structures::{
+        dungeon::Dungeon,
         enums::npc_kind::NPCKind,
         fight::Fight,
         game::World,
@@ -43,6 +44,7 @@ pub struct ServerInfo {
     pub fights: HashMap<String, Fight>,
     pub world: World,
     pub db: Arc<Database>,
+    pub dungeons: HashMap<Uuid, Dungeon>,
 }
 
 impl ServerInfo {
@@ -53,6 +55,7 @@ impl ServerInfo {
             groups: HashMap::new(),
             invitations: HashMap::new(),
             fights: HashMap::new(),
+            dungeons: HashMap::new(),
             world: world,
             db: db,
         }
