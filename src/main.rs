@@ -417,8 +417,12 @@ async fn main() {
 							cut_sheet.clone());
 
 						let screen_pos = world_to_screen_pos(*coords);
+						let sprite_rect = world_to_screen_pos(vec2(sprite_width, sprite_height));
 						set_default_camera();
-						draw_text(player_name, screen_pos.x, screen_pos.y, 20.0, WHITE);
+						let rect_width = 80.0;
+    					let rect_height = 15.0;
+						let rect = Rect::new(screen_pos.x + (sprite_rect.x / 2.0) - (rect_width / 2.0), screen_pos.y-rect_height, rect_width, rect_height);
+						draw_text_center(rect, player_name, 20);
 						camera_handler(&mut game);
 						}
 					}
@@ -498,40 +502,7 @@ async fn main() {
 					}
 
 					set_default_camera();
-					let info: Rect = Rect::new(10.0, 10.0, 350.0, 120.0);
-					draw_rectangle(info.x, info.y, info.w, info.h, Color::new(0.0, 0.0, 0.0, 0.5));
-
-
-					let frame = Rect::new(info.x+10.0, info.y+10.0, 100.0, 100.0);
-					draw_rectangle(frame.x, frame.y, frame.w, frame.h,BLACK);
-
-					let cut_sheet_head = DrawTextureParams {
-						source: Some(Rect::new(0.0, 0.0, sprite_width, 20.0)),
-						dest_size: Some(vec2(75.0, 100.0 )),
-						..Default::default()
-					};
-					draw_texture_ex(
-						&current_skin_texture,
-					 	frame.x+12.5, frame.y,
-						WHITE,
-						cut_sheet_head
-					);
-					draw_rectangle_lines(frame.x, frame.y, frame.w, frame.h, 10.0, Color::new(0.53, 0.31, 0.16, 1.0));
-
-
-					draw_text(&game.player.name, frame.x + frame.w + 5.0, frame.y + 30.0, 40.0, WHITE);
-					if let Some(gold) = game.player.gold{
-						let text_gold = format!("Gold: {}", gold);
-						draw_text(&text_gold, frame.x + frame.w + 5.0, frame.y + 60.0, 30.0, YELLOW);
-					}
-
-					let lifebar = Rect::new(frame.x + frame.w + 5.0, frame.y + 70.0, 200.0, 25.0);
-					draw_rectangle(lifebar.x, lifebar.y, lifebar.w, lifebar.h,BLACK);
-					let hp_ratio: f32 = state.hp as f32 / state.max_hp as f32;
-					draw_rectangle(lifebar.x, lifebar.y+2.5, lifebar.w * hp_ratio, 20.0,RED);
-					let hp_info = format!("{}/{}",state.hp,state.max_hp);
-					draw_text_center(lifebar, &hp_info, 20);
-					draw_rectangle_lines(lifebar.x, lifebar.y, lifebar.w, lifebar.h, 5.0, GRAY);
+					draw_player_info(&mut game, state);
 
 					// let text_player = format!("Total players: {}",game.nb_players.clone());
 					// draw_text(map_data.room.name.clone(), 5.0, 30.0, 30.0, WHITE);

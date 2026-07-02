@@ -268,11 +268,35 @@ pub async fn handle_response(game: &mut Game, answer: &str, state: &str){
 		PendingAction::Attack(ref npc_id) => {
 
 			if state =="OK"{
-				if let Some(ref mut state) = game.player.state{
-							state.status= Status::InFight { target_id: npc_id.to_string()}
-					};
+				match serde_json::from_str::<FightData>(answer) {
+					Ok(fight) => {
+						if let Some(ref mut state) = game.player.state{
+							state.status= fight.status;
+							state.hp = fight.attacker_hp;
+							game.active_fight = Some(Fight{
+								enemy: game.loaded_npcs[npc_id].clone(),
+								players: fight.fighters
+							});
 
+						}
+					}
+					Err(e) => {
+						eprintln!("Attack error: {}", e);
+					}
+
+				}
 			}
+			else {
+				if answer.contains("405"){
+					if let Some(npc) = game.loaded_npcs.get_mut(npc_id){
+							npc.npc_talk = Some(NpcTalk{
+							texts: "I am not Hostile".to_string(),
+							text_i: 0
+						});
+					}
+				}
+			}
+
 		}
 
 		PendingAction::Take => {
@@ -293,7 +317,7 @@ pub async fn handle_response(game: &mut Game, answer: &str, state: &str){
 				}
 			}
 		}
-		
+
 		PendingAction::Drop => {
 			if let Some(val_str) = answer.strip_prefix("dropped=") {
 				match val_str.trim().parse::<String>() {
@@ -338,7 +362,7 @@ pub async fn handle_response(game: &mut Game, answer: &str, state: &str){
 				game.quests.is_load = true;
 					match serde_json::from_str::<Vec<String>>(answer) {
 						Ok(quests) => {
-							
+
 							// game.quests.all = quests;
 						}
 						Err(e) => {
@@ -396,6 +420,15 @@ pub struct QuestData {
     pub status: String,
 }
 
+#[derive(Deserialize, Debug)]
+pub struct FightData {
+	pub attacker_hp: i32,
+    pub attacker_name: String,
+	pub damage: i32,
+    pub fighters: HashMap<String,i32>,
+    pub status: Status,
+	pub target_hp: i32
+}
 
 
 

@@ -121,7 +121,7 @@ pub fn handle_npc_interactions(game: &mut Game, place: Vec2, npc: Npc){
 	if let NPCKind::Merchant { inventory, gold } = &npc.kind {
 		let btn_buy = get_rect_center_x(rect, vec2(125.0, 25.0), 120.0);
 		if get_button(btn_buy, "Shop", 25, WHITE, mouse){
-			game.npc_shop.is_active = !game.npc_shop.is_active 
+			game.npc_shop.is_active = !game.npc_shop.is_active
 		}
 		if game.npc_shop.is_active {
 			let shop_rect = get_center_rect(vec2(400.0, 250.0));
@@ -148,7 +148,7 @@ pub fn handle_npc_interactions(game: &mut Game, place: Vec2, npc: Npc){
 			}
 		}
 	}
-	
+
 	camera_handler(game);
 
 }
@@ -158,7 +158,8 @@ pub async fn get_npc_texture(item_id: &str) -> Texture2D {
     let path = match item_id {
         "npc.city_gard" => "assets/npc/city_gard.png",
 		"npc.goblins" => "assets/npc/goblin.png",
-        _ => return Texture2D::empty(),
+		"npc.h" => "assets/npc/goblin.png",
+        _ => "assets/npc/black-smith.png",
     };
 
     load_texture(path).await.unwrap()

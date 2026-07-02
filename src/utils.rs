@@ -145,3 +145,5 @@ pub fn draw_flat_triangle(x: f32, y: f32){
 	draw_triangle(top_left_point, top_right_point, bottom_point, WHITE);
 	draw_triangle_lines(top_left_point, top_right_point, bottom_point, 0.5, BLACK);
 }
+
+

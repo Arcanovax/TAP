@@ -58,6 +58,24 @@ pub async fn handle_events(game: &mut Game, answer: Vec<&str>){
 		}
 	}
 
+	if answer[1] == "FIGHT"{
+		match answer[2] {
+			"ENTER" => {
+				if let Some(ref mut fight) = game.active_fight{
+					if let Ok(life_val) = answer[4].parse::<i32>() {
+						fight.players.insert(answer[3].to_string(), life_val);
+					}
+				}
+			}
+			"LEAVE" => {
+				if let Some(ref mut fight) = game.active_fight{
+						fight.players.remove(answer[3]);
+					}
+			}
+			_ => return
+		}
+	}
+
 	if answer[1] == "ROOM"{
 		match answer[2] {
 			"PRESENCE" => {
