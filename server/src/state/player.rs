@@ -20,7 +20,7 @@ impl ServerInfo {
             }
         }
         let db = self.db.clone();
-        let player = match load_player(&db, name.as_str()) {
+        let mut player = match load_player(&db, name.as_str()) {
             Ok(Some(mut player)) => {
                 info!("{} player data loaded", name);
                 if !self.world.rooms.contains_key(&player.location) {
@@ -34,6 +34,11 @@ impl ServerInfo {
             Ok(None) => Player::new(name.clone(), self.world.spawn_room.clone()),
             Err(_) => return Err(ErrorCode::CONNECTION_FAILED),
         };
+
+		//For the tests
+		player.inventory.insert("strawberry".to_string(), 2);
+		player.inventory.insert("pint".to_string(), 2);
+		player.inventory.insert("sword".to_string(), 2);
 
         self.connections.insert(
             peer_addr,

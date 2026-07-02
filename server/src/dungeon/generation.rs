@@ -42,13 +42,13 @@ impl From<(i8, i8)> for Coord {
 }
 
 pub fn generate_dungeon(world: &World, gid: Uuid) -> Dungeon {
-    let rooms = generate_rooms(world.spawn_room, gid);
+    let rooms = generate_rooms(world.spawn_room.clone(), gid);
 
     Dungeon {
         rooms,
-        npcs: (),
-        items: (),
-        name_to_ref: (),
+        npcs: HashMap::new(),
+        items: HashMap::new(),
+        name_to_ref: HashMap::new(),
     }
 }
 
