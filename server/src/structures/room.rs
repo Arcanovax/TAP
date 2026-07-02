@@ -37,6 +37,16 @@ pub struct Room {
 }
 
 impl Room {
+    pub fn new(name: &str) -> Self {
+        Room {
+            name: name.to_string(),
+            exits: HashMap::new(),
+            description: String::new(),
+            npc: Vec::new(),
+            items: Vec::new(),
+        }
+    }
+
     pub fn references(&self) -> Vec<&str> {
         self.npc
             .iter()

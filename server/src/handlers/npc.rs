@@ -69,7 +69,7 @@ pub(super) fn npc_request(server_info: &SharedServer, args: &Vec<String>) -> Mes
         npc_ref = reference.clone();
     }
 
-    let npc = match binding.world.npcs.get(&npc_ref) {
+    let npc = match binding.resolve_npc(&npc_ref) {
         Some(npc) => npc,
         None => {
             return Message::Response {

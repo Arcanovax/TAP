@@ -37,10 +37,9 @@ pub fn execute_attack<'a>(
     let fighters_list;
     let mut loot_list = Vec::new();
 
+    let mut advance_turn = false;
     {
-        let enemy = world_mut.world.npcs.get_mut(target_id).unwrap();
-        let fight = world_mut.fights.get_mut(target_id).unwrap();
-        fighters_list = fight.fighters.clone();
+        let enemy = world_mut.resolve_npc_mut(target_id).unwrap();
 
         if let NPCKind::Enemy {
             ref mut hp,
@@ -52,19 +51,27 @@ pub fn execute_attack<'a>(
             if curr_damages < *hp {
                 *hp -= curr_damages;
                 target_hp_after = *hp;
-
-                if fight.turn == fight.fighters.len() as u32 - 1 {
-                    fight.turn = 0;
-                    trigger_enemy_attack = true;
-                } else {
-                    fight.turn += 1;
-                }
+                advance_turn = true;
             } else {
                 *hp = 0;
                 *defeated = true;
                 target_hp_after = 0;
                 enemy_died = true;
                 loot_list = loot.clone();
+            }
+        }
+    }
+
+    {
+        let fight = world_mut.fights.get_mut(target_id).unwrap();
+        fighters_list = fight.fighters.clone();
+
+        if advance_turn {
+            if fight.turn == fight.fighters.len() as u32 - 1 {
+                fight.turn = 0;
+                trigger_enemy_attack = true;
+            } else {
+                fight.turn += 1;
             }
         }
     }

@@ -1,4 +1,3 @@
-
 use super::*;
 
 use crate::handlers::fight::enemy_attack::enemy_attack;
@@ -96,19 +95,23 @@ impl ServerInfo {
         return false;
     }
 
-	pub fn try_leave_fight(&mut self, peer_addr: SocketAddr, target: String) -> Result<(), ErrorCode> {
+    pub fn try_leave_fight(
+        &mut self,
+        peer_addr: SocketAddr,
+        target: String,
+    ) -> Result<(), ErrorCode> {
         let player_name = {
-			let connection = self.get_connection_mut(peer_addr)?;
-			connection.player.status = State::Idle;
-			connection.player.name.clone()
-		};
+            let connection = self.get_connection_mut(peer_addr)?;
+            connection.player.status = State::Idle;
+            connection.player.name.clone()
+        };
 
         let receivers = {
-			let fighters = &mut self.fights.get_mut(&target).unwrap().fighters;
-			fighters.retain(|f| f != &player_name);
-			fighters.clone()
-		};
-		let nb_receivers = receivers.len();
+            let fighters = &mut self.fights.get_mut(&target).unwrap().fighters;
+            fighters.retain(|f| f != &player_name);
+            fighters.clone()
+        };
+        let nb_receivers = receivers.len();
 
 		if nb_receivers > 0 {
 			for name in receivers {
@@ -128,15 +131,14 @@ impl ServerInfo {
 		} else {
 			let enemy = self.world.npcs.get_mut(&target).unwrap();
 
-			if let NPCKind::Enemy {
-				ref mut hp,
-				max_hp,
-				..
-			} = enemy.kind {
-				*hp = max_hp;
-			}
-			self.fights.remove(&target);
-		}
+            if let NPCKind::Enemy {
+                ref mut hp, max_hp, ..
+            } = enemy.kind
+            {
+                *hp = max_hp;
+            }
+            self.fights.remove(&target);
+        }
         Ok(())
     }
 

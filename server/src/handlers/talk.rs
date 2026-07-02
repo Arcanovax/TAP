@@ -47,7 +47,7 @@ pub fn talk_request(
         }
         .into();
     }
-    let npc = match binding.world.npcs.get(&npc_ref) {
+    let npc = match binding.resolve_npc(&npc_ref) {
         Some(npc) => npc,
         None => {
             return Message::Response {

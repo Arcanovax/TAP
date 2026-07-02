@@ -249,6 +249,7 @@ pub(crate) fn test_world() -> World {
             }],
         },
     );
+    world.spawn_room = "room.city_square".to_string();
 
     world
 }

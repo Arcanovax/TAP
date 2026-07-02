@@ -33,7 +33,7 @@ impl Player {
             group_id: None,
             finished_quest: HashSet::new(),
             quests_in_progress: HashMap::new(),
-            gold: 50,
+            gold: 0,
         }
     }
 }

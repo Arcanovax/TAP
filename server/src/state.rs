@@ -1,10 +1,13 @@
 use crate::{
     protocol::{EventType, Message},
     structures::{
+        dungeon::{Dungeon, parse_dungeon_id},
         enums::npc_kind::NPCKind,
         fight::Fight,
         game::World,
         group::Group,
+        item::Item,
+        npc::NPC,
         player::Player,
         room::{Owner, Room},
     },
@@ -43,6 +46,7 @@ pub struct ServerInfo {
     pub fights: HashMap<String, Fight>,
     pub world: World,
     pub db: Arc<Database>,
+    pub dungeons: HashMap<Uuid, Dungeon>,
 }
 
 impl ServerInfo {
@@ -53,6 +57,7 @@ impl ServerInfo {
             groups: HashMap::new(),
             invitations: HashMap::new(),
             fights: HashMap::new(),
+            dungeons: HashMap::new(),
             world: world,
             db: db,
         }
@@ -83,6 +88,66 @@ impl ServerInfo {
 
         for con in self.connections.values() {
             let _ = con.tx.send(Message::Event(EventType::SERVER_RESET));
+        }
+    }
+
+    pub fn resolve_room(&self, id: &str) -> Option<&Room> {
+        match parse_dungeon_id(id) {
+            Some(gid) => match self.dungeons.get(&gid) {
+                Some(dungeon) => dungeon.rooms.get(id),
+                None => None,
+            },
+            None => self.world.rooms.get(id),
+        }
+    }
+
+    pub fn resolve_item(&self, id: &str) -> Option<&Item> {
+        match parse_dungeon_id(id) {
+            Some(gid) => match self.dungeons.get(&gid) {
+                Some(dungeon) => dungeon.items.get(id),
+                None => None,
+            },
+            None => self.world.items.get(id),
+        }
+    }
+
+    pub fn resolve_npc(&self, id: &str) -> Option<&NPC> {
+        match parse_dungeon_id(id) {
+            Some(gid) => match self.dungeons.get(&gid) {
+                Some(dungeon) => dungeon.npcs.get(id),
+                None => None,
+            },
+            None => self.world.npcs.get(id),
+        }
+    }
+
+    pub fn resolve_room_mut(&mut self, id: &str) -> Option<&mut Room> {
+        match parse_dungeon_id(id) {
+            Some(gid) => match self.dungeons.get_mut(&gid) {
+                Some(dungeon) => dungeon.rooms.get_mut(id),
+                None => None,
+            },
+            None => self.world.rooms.get_mut(id),
+        }
+    }
+
+    pub fn resolve_item_mut(&mut self, id: &str) -> Option<&mut Item> {
+        match parse_dungeon_id(id) {
+            Some(gid) => match self.dungeons.get_mut(&gid) {
+                Some(dungeon) => dungeon.items.get_mut(id),
+                None => None,
+            },
+            None => self.world.items.get_mut(id),
+        }
+    }
+
+    pub fn resolve_npc_mut(&mut self, id: &str) -> Option<&mut NPC> {
+        match parse_dungeon_id(id) {
+            Some(gid) => match self.dungeons.get_mut(&gid) {
+                Some(dungeon) => dungeon.npcs.get_mut(id),
+                None => None,
+            },
+            None => self.world.npcs.get_mut(id),
         }
     }
 }
