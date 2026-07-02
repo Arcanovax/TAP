@@ -6,6 +6,7 @@ pub struct Fight{
 	pub enemy: Npc,
 	pub players: HashMap<String, i32>,
 	pub enemy_hp: i32,
+	pub chat: Vec<String>
 }
 
 pub fn draw_enemy_info(game: &mut Game, npc: Npc){
@@ -48,12 +49,11 @@ pub fn handle_fight(game: &mut Game, floor: &Texture2D) {
 
 	camera_handler(game);
 
-	let (enemy, players) = match &game.active_fight {
-        Some(fight) => (fight.enemy.clone(), fight.players.clone()),
-        None => return,
-    };
+	let (enemy, players, chat) = match &game.active_fight {
+		Some(fight) => (fight.enemy.clone(), fight.players.clone(), fight.chat.clone()),
+		None => return,
+	};
 
-	let Some(fight) = &game.active_fight else { return };
 
     floor.set_filter(FilterMode::Nearest);
     draw_texture_ex(
@@ -81,7 +81,7 @@ pub fn handle_fight(game: &mut Game, floor: &Texture2D) {
         },
     );
 
-	let players_len = fight.players.len();
+	let players_len = players.len();
 	let spacing = 40.0;
 
 	let total_width = if players_len > 1 { (players_len - 1) as f32 * spacing } else { 0.0 };
@@ -145,6 +145,12 @@ pub fn handle_fight(game: &mut Game, floor: &Texture2D) {
 			let rq: String = format!("FLEE {}\n",enemy.id);
 			game.tx_to_serv.try_send(rq).ok();
 			game.pending_action = PendingAction::Flee;
+		}
+
+		let chat_rect = get_center_rect_x(vec2(400.0, 250.0), 125.0);
+		draw_rectangle(chat_rect.x, chat_rect.y, chat_rect.w, chat_rect.h, Color::new(0.0, 0.0, 0.0, 0.75));
+		for (i, msg) in chat.iter().enumerate(){
+			draw_text(msg, chat_rect.x + 10.0 , chat_rect.y + (20 + (i* 20))as f32, 20.0, WHITE);
 		}
 	}
 }

@@ -1,3 +1,5 @@
+use std::vec;
+
 use crate::*;
 
 #[derive(Debug, Clone, PartialEq)]
@@ -274,14 +276,16 @@ pub async fn handle_response(game: &mut Game, answer: &str, state: &str){
 						if let Some(ref mut state) = game.player.state{
 							state.hp = fight_data.attacker_hp;
 							if let Some(ref mut fight) = &mut game.active_fight{
-								fight.enemy_hp = fight_data.target_hp
+								fight.enemy_hp = fight_data.target_hp;
+								// fight.chat.push(format!("{} attack and deal {} damage", fight_data.attacker_name, fight_data.damage));
 							}
 							else{
 								state.status= fight_data.status;
 								game.active_fight = Some(Fight{
-								enemy: game.loaded_npcs[npc_id].clone(),
-								players: fight_data.fighters,
-								enemy_hp: fight_data.target_hp
+									enemy: game.loaded_npcs[npc_id].clone(),
+									players: fight_data.fighters,
+									enemy_hp: fight_data.target_hp,
+									chat:Vec::new()
 								});
 							}
 
@@ -294,7 +298,7 @@ pub async fn handle_response(game: &mut Game, answer: &str, state: &str){
 				}
 			}
 			else {
-				if answer.contains("405"){
+				if answer.contains("NPC_NOT_HOSTILE"){
 					if let Some(npc) = game.loaded_npcs.get_mut(npc_id){
 							npc.npc_talk = Some(NpcTalk{
 							texts: String::new(),
@@ -311,6 +315,13 @@ pub async fn handle_response(game: &mut Game, answer: &str, state: &str){
 							info: "You already lost".to_string()
 						});
 					}
+				}
+				if answer.contains("NOT_YOUR_TURN"){
+
+					let Some(ref mut fight) = game.active_fight else { return };
+					fight.chat.push("Wait for your turn".to_string());
+
+
 				}
 			}
 

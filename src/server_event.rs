@@ -66,18 +66,22 @@ pub async fn handle_events(game: &mut Game, answer: Vec<&str>){
 				if let Some(ref mut fight) = game.active_fight{
 					if let Ok(life_val) = answer[4].parse::<i32>() {
 						fight.players.insert(answer[3].to_string(), life_val);
+						let text: String = format!("{} join the fight", answer[3].to_string());
+						fight.chat.push(text);
 					}
 				}
 			}
 			"LEAVE" => {
 				if let Some(ref mut fight) = game.active_fight{
 						fight.players.remove(answer[5]);
+						fight.chat.push(format!("{} left the fight", answer[3].to_string()));
 					}
 			}
 			"ATTACK" => {
 				if let Some(ref mut fight) = game.active_fight{
-					if let Ok(damage) = answer[5].parse::<i32>() {
-						fight.enemy_hp = damage;
+					if let Ok(new_life) = answer[5].parse::<i32>() {
+						fight.enemy_hp = new_life;
+						fight.chat.push(format!("{} attack and deal {} damage", answer[3], answer[4]));
 					}
 				}
 			}
@@ -87,21 +91,31 @@ pub async fn handle_events(game: &mut Game, answer: Vec<&str>){
 					if answer[6] == "false"{
 						if let Ok(damage) = answer[5].parse::<i32>() {
 							if answer[3] == game.player.name{
-							state.hp -= damage;
+								state.hp -= damage;
 							}
 							if let Some(player_hp) = fight.players.get_mut(answer[3]) {
                 			*player_hp -= damage;
             				}
+							let text: String = format!("{} attack {} and deal {} damage", fight.enemy.name, answer[3], damage);
+							fight.chat.push(text);
 						}
 
 					}
 					else{
 						if answer[3] == game.player.name{
+							if let Some(npc) = game.loaded_npcs.get_mut(&fight.enemy.id){
+								npc.npc_talk = Some(NpcTalk{
+									texts: String::new(),
+									text_i: 0,
+									info: "You lost".to_string()
+								});
+							}
 							game.active_fight = None;
 							game.player.state = None;
 						}
 						else {
 							fight.players.remove(answer[3]);
+							fight.chat.push(format!("{} killed {}",fight.enemy.name, answer[3]));
 						}
 
 
