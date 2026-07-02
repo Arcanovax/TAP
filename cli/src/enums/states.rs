@@ -24,7 +24,6 @@ impl Display for States {
 			States::InFight { .. } => "InFight",
 			States::InDiscuss(..) => "InDiscuss",
 			States::Respawn => "Respawn",
-			_ => "None"
 		};
 		write!(f, "{status}")
 	}

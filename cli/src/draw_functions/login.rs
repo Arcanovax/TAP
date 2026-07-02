@@ -1,9 +1,9 @@
 use std::{fs::OpenOptions, io::Write};
 
-use ratatui::{Frame, layout::{Constraint::{Length, Percentage}, Direction::Vertical, Layout}, style::Style, widgets::{Block, Paragraph, Wrap}};
+use ratatui::{Frame, layout::{Constraint::{Length, Percentage}, Direction::Vertical, Layout}, style::Style, text::Text, widgets::{Block, Clear, Paragraph, Wrap}};
 use ratatui::prelude::Stylize;
 use tui_widgets::big_text::{BigText, PixelSize};
-use crate::{draw_functions::popup::pop_popup, structures::{world::World}};
+use crate::{global_functions::estimate_height::estimate_height, structures::world::World};
 
 pub fn login_draw(world: &mut World, frame:&mut Frame) {
     let layout = Layout::default()
@@ -63,13 +63,34 @@ pub fn login_draw(world: &mut World, frame:&mut Frame) {
     frame.render_widget(title, layout[0]);
     frame.render_widget(presentation, layout[1]);
     frame.render_widget(username, username_area);
+	
+    if world.click {
+		let content = match world.error {
+			true => world.message_error.as_str(),
+			false => "You don't need to click anywhere (except to remove this pop-up). Just write your name and press enter.
+			You can do it. I believe in you adventurer!"
+		};
 
-    if world.click && !world.error{
-		pop_popup(world, "You don't need to click anywhere (except to remove this pop-up). Just write your name and press enter.
-		You can do it. I believe in you adventurer!", frame);
-	}
+		let popup_area = frame.area().centered(
+			Percentage(50),
+			Length(estimate_height(frame.area(), content)));
 
-	if world.error {
-		pop_popup(world, &world.message_error.clone(), frame);
+		let block_popup = Block::bordered()
+			.border_style(Style::new().yellow());
+		
+		frame.render_widget(Clear, popup_area);
+
+		if !world.error{
+			frame.render_widget(Paragraph::new(
+				Text::from("You don't need to click anywhere (except to remove this pop-up). Just write your name and press enter.
+			You can do it. I believe in you adventurer!")
+			).block(block_popup)
+			.wrap(Wrap { trim: true })
+			.centered(), popup_area);
+		} else {
+			frame.render_widget(Paragraph::new(
+				Text::from(world.message_error.as_str())
+			).block(block_popup), popup_area);
+		}
 	}
 }

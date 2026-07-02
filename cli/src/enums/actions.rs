@@ -1,10 +1,6 @@
-use crate::enums::channels::Channels;
-
-
 #[derive(Debug, Clone, PartialEq)]
 pub enum PendingAction {
     None,
-    GroupList,
     Gold,
 	Npcs,
 	Flee,

@@ -1,6 +1,6 @@
 use std::collections::VecDeque;
 
-use ratatui::widgets::{ListItem, ListState};
+use ratatui::widgets::{ListState};
 use ratatui_textarea::TextArea;
 use serde::Deserialize;
 use tui_widgets::scrollview::ScrollViewState;
