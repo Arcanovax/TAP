@@ -91,10 +91,10 @@ impl World<'_>{
 						if instant.elapsed() >= Duration::from_secs(2) {
 							self.state = *prev_state.clone();
 						} else {
-							escape_handling(self, frame, step.clone(), *prev_state.clone(), cancelled_instant.clone());
+							escape_handling(self, frame, step.clone(), cancelled_instant.clone());
 						}
 					}
-					None => escape_handling(self, frame, step.clone(), *prev_state.clone(), cancelled_instant.clone()),
+					None => escape_handling(self, frame, step.clone(), cancelled_instant.clone()),
 				}
 			} 
 			_ => {}
@@ -106,8 +106,12 @@ impl World<'_>{
 			match event::read()? {
 				Event::Key(key) => {
 					if key.code == KeyCode::Esc {
+						// if let Ok(mut file) = OpenOptions::new().create(true).append(true).open("debug_network.txt") {
+						// 		let _ = writeln!(file, "all (State {:?}) : {:#?}", self.room.focus, self.state);}
 						if self.room.focus == Focus::BAG {
 							self.room.fight.bag = false;
+							self.room.focus = Focus::COMMAND;
+							self.room.bag = Vec::new();
 						} else {
 							match &self.state {
 								States::Quit(step, prev_state, cancelled_instant) => self.state = States::Quit(*step + 1, Box::new(*prev_state.clone()), *cancelled_instant),
@@ -146,8 +150,6 @@ impl World<'_>{
 					for answer in answers {
 						let parts: Vec<&str> = answer.split_whitespace().collect();
 						if parts.is_empty() { return; }
-						// if let Ok(mut file) = OpenOptions::new().create(true).append(true).open("debug_network.txt") {
-						// 			let _ = writeln!(file, "all (State {:?}) : {:#?}", parts, msg);}
 						match parts[0] {
 							"OK" | "ERR" => response_handling(self, parts),
 							"EVT" => event_handling(self, parts),
