@@ -1,6 +1,6 @@
 use macroquad::prelude::*;
 
-pub fn get_rect_center_x(container: Rect, size: Vec2, y:f32) -> Rect {
+pub fn get_rect_centered_x(container: Rect, size: Vec2, y:f32) -> Rect {
 		let pos_x: f32 = container.x + (container.w - size.x) / 2.0;
 		let pos_y: f32 = container.y + y;
 
@@ -19,6 +19,17 @@ pub fn get_center_rect(size: Vec2) -> Rect {
     Rect::new(
         center_x - (size.x / 2.0),
         center_y - (size.y / 2.0),
+        size.x,
+        size.y,
+    )
+}
+
+pub fn get_center_rect_x(size: Vec2, y:f32) -> Rect {
+    let center_x = screen_width() / 2.0;
+
+    Rect::new(
+        center_x - (size.x / 2.0),
+        y,
         size.x,
         size.y,
     )

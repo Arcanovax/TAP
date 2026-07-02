@@ -317,9 +317,10 @@ async fn main() {
 				if let Some(mut state) = game.player.state.clone() {
 					if state.status != Status::Idle{
 						handle_fight(&mut game, &floor);
+
 						if is_key_pressed(KeyCode::C){
 							break;
-					}
+						}
 					}
 					else{
 

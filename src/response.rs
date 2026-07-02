@@ -242,7 +242,8 @@ pub async fn handle_response(game: &mut Game, answer: &str, state: &str){
 			if let Some(npc) = game.loaded_npcs.get_mut(npc_id){
 							npc.npc_talk = Some(NpcTalk{
 							texts: answer.to_string(),
-							text_i: 0
+							text_i: 0,
+							info: String::new()
 						})
 					}
 			}
@@ -290,8 +291,9 @@ pub async fn handle_response(game: &mut Game, answer: &str, state: &str){
 				if answer.contains("405"){
 					if let Some(npc) = game.loaded_npcs.get_mut(npc_id){
 							npc.npc_talk = Some(NpcTalk{
-							texts: "I am not Hostile".to_string(),
-							text_i: 0
+							texts: String::new(),
+							text_i: 0,
+							info: "I am not Hostile".to_string()
 						});
 					}
 				}

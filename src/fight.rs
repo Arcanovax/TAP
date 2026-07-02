@@ -117,10 +117,39 @@ pub fn handle_fight(game: &mut Game, floor: &Texture2D) {
 		draw_text_center(rect, hp_text.as_str(), 20);
 	}
 
-	if let Some(state) = game.player.state.clone() {
+	if let Some(mut state) = game.player.state.clone() {
 		set_default_camera();
-		draw_player_info(game, state);
-		draw_enemy_info(game, enemy)
+		draw_player_info(game, state.clone());
+		draw_enemy_info(game, enemy);
+		let rect = get_center_rect_x(vec2(1100.0, 75.0), screen_height()-85.0);
+		draw_rectangle(rect.x, rect.y, rect.w, rect.h, Color::new(0.0, 0.0, 0.0, 0.5));
+		let btn_size = vec2(300.0, 55.0);
+		let spacing = 30.0;
+		let mouse = mouse_position();
+
+		let total_width = (3.0 as f32 * btn_size.x) + ((3 - 1) as f32 * spacing);
+
+		let rect_center_x = rect.x + (rect.w / 2.0);
+		let start_x = rect_center_x - (total_width / 2.0);
+		let pos_y = rect.y + (rect.h / 2.0) - (btn_size.y / 2.0);
+
+		let pos_attack = vec2(start_x, pos_y);
+		let btn_attack = Rect::new(pos_attack.x, pos_attack.y, btn_size.x, btn_size.y);
+		if get_button(btn_attack, "Attack", 25, WHITE, mouse) {
+
+		}
+
+		let btn_skill = Rect::new(start_x + (1.0 * (btn_size.x + spacing)), pos_y, btn_size.x, btn_size.y);
+		if get_button(btn_skill, "Consume", 25, WHITE, mouse) {
+
+		}
+
+		let btn_flee = Rect::new(start_x + (2.0 * (btn_size.x + spacing)), pos_y, btn_size.x, btn_size.y);
+		if get_button(btn_flee, "Flee", 25, WHITE, mouse) {
+			println!("EXIITT");
+			state.status = Status::Idle;
+			game.player.state = Some(state)
+		}
 	}
 }
 
