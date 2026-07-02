@@ -71,24 +71,40 @@ pub async fn handle_events(game: &mut Game, answer: Vec<&str>){
 			}
 			"LEAVE" => {
 				if let Some(ref mut fight) = game.active_fight{
-						fight.players.remove(answer[3]);
-						println!("removing");
+						fight.players.remove(answer[5]);
 					}
+			}
+			"ATTACK" => {
+				if let Some(ref mut fight) = game.active_fight{
+					if let Ok(damage) = answer[5].parse::<i32>() {
+						fight.enemy_hp = damage;
+					}
+				}
 			}
 			"ENEMY" => {
 				let Some(ref mut state) = game.player.state else { return };
 				if let Some(ref mut fight) = game.active_fight{
 					if answer[6] == "false"{
-						if answer[3] == game.player.name{
-							if let Ok(life_val) = answer[5].parse::<i32>() {
-								state.hp -= life_val;
+						if let Ok(damage) = answer[5].parse::<i32>() {
+							if answer[3] == game.player.name{
+							state.hp -= damage;
 							}
-
+							if let Some(player_hp) = fight.players.get_mut(answer[3]) {
+                			*player_hp -= damage;
+            				}
 						}
+
 					}
 					else{
-						game.player.state = None;
-						game.active_fight = None;
+						if answer[3] == game.player.name{
+							game.active_fight = None;
+							game.player.state = None;
+						}
+						else {
+							fight.players.remove(answer[3]);
+						}
+
+
 					}
 
 				}

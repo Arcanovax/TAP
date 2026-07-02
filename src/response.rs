@@ -303,6 +303,15 @@ pub async fn handle_response(game: &mut Game, answer: &str, state: &str){
 						});
 					}
 				}
+				if answer.contains("DEFEATED_FIGHTER"){
+					if let Some(npc) = game.loaded_npcs.get_mut(npc_id){
+							npc.npc_talk = Some(NpcTalk{
+							texts: String::new(),
+							text_i: 0,
+							info: "You already lost".to_string()
+						});
+					}
+				}
 			}
 
 		}
