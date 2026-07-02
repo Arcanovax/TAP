@@ -9,7 +9,6 @@ pub struct Player {
     pub max_hp: u32,
     pub inventory: HashMap<String, u32>,
 	pub gold: u32,
-    pub available_quests: Vec<String>
 }
 
 impl Player {
@@ -20,7 +19,6 @@ impl Player {
             max_hp: 100,
             inventory: HashMap::new(),
 			gold: 0,
-            available_quests: Vec::new()
         }
     }
 }

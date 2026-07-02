@@ -1,6 +1,6 @@
 use std::{collections::{VecDeque}};
 
-use crate::{enums::{actions::PendingAction, focus::Focus, item_kind::ItemKind, npc_kind::NPCKind, states::States}, structures::{attack_results::Attack_Result, room::Room, status_view::StatusView, world::World}};
+use crate::{enums::{actions::PendingAction, focus::Focus, item_kind::ItemKind, npc_kind::NPCKind, states::States}, structures::{attack_results::AttackResult, room::Room, status_view::StatusView, world::World}};
 
 pub fn response_handling(world: &mut World, answers: Vec<&str>) {
 	// if let Ok(mut file) = OpenOptions::new().create(true).append(true).open("debug_network.txt") {
@@ -179,7 +179,7 @@ pub fn response_handling(world: &mut World, answers: Vec<&str>) {
 						world.action = PendingAction::ClientLook;
 					}
 					PendingAction::Attack(name) => {
-						let result: Attack_Result = serde_json::from_str(&real_answer).unwrap();
+						let result: AttackResult = serde_json::from_str(&real_answer).unwrap();
 						world.player.hp = result.attacker_hp;
 						let fight = &mut world.room.fight;
 						if fight.target_name == "".to_string() {

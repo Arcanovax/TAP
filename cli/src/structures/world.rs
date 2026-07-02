@@ -20,7 +20,7 @@ use crate::{
 	}, enums::{
 		actions::PendingAction, focus::Focus, states::States
 	}, global_functions::{discuss_event::discuss_event, escape_handling::escape_handling, event_handling::event_handling, handle_mouse::handle_mouse, idle_event::idle_event, login_event::login_event, response_handling::response_handling}, structures::{
-		chat::Chat, group::Group, items::Item, npc::NPC, player::Player, room::Room, world
+		chat::Chat, group::Group, items::Item, npc::NPC, player::Player, room::Room
 	}
 };
 

@@ -4,7 +4,7 @@ use std::{time::Instant};
 
 use ratatui::{Frame, layout::{Constraint::{Length, Percentage}, Direction::Vertical, Layout, Margin, Rect}, style::{Color, Style}, text::{Line, Text}, widgets::{Block, Clear, Gauge, Paragraph, Wrap}};
 
-use crate::{enums::{states::States}, structures::world::World};
+use crate::{structures::world::World};
 
 pub fn escape_handling(world: &mut World, frame: &mut Frame, step: u32, cancelled_instant: Option<Instant>) {
 

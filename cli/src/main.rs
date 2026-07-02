@@ -7,7 +7,7 @@ use std::io::{Error, stdout};
 use std::sync::mpsc;
 use ratatui::crossterm::event::{DisableMouseCapture, EnableMouseCapture};
 use ratatui::crossterm::execute;
-use tokio::io::{AsyncBufReadExt, AsyncReadExt, AsyncWriteExt, BufReader};
+use tokio::io::{AsyncBufReadExt, AsyncWriteExt, BufReader};
 use tokio::net::TcpStream;
 use crate::enums::states::States;
 use crate::structures::world::World;
