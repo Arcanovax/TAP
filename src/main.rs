@@ -314,7 +314,7 @@ async fn main() {
 			}
 
 			else{
-				if let Some(mut state) = game.player.state.clone() {
+				if let Some(state) = game.player.state.clone() {
 					if state.status != Status::Idle{
 						handle_fight(&mut game, &floor);
 

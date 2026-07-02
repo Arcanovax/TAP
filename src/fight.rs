@@ -6,7 +6,8 @@ pub struct Fight{
 	pub enemy: Npc,
 	pub players: HashMap<String, i32>,
 	pub enemy_hp: i32,
-	pub chat: Vec<String>
+	pub chat: Vec<String>,
+	pub consume_is_act: bool
 }
 
 pub fn draw_enemy_info(game: &mut Game, npc: Npc){
@@ -109,7 +110,7 @@ pub fn handle_fight(game: &mut Game, floor: &Texture2D) {
 		draw_text_center(rect, hp_text.as_str(), 20);
 	}
 
-	if let Some(mut state) = game.player.state.clone() {
+	if let Some(state) = game.player.state.clone() {
 		set_default_camera();
 		draw_player_info(game, state.clone());
 		draw_enemy_info(game, enemy.clone());
@@ -137,7 +138,7 @@ pub fn handle_fight(game: &mut Game, floor: &Texture2D) {
 
 		let btn_skill = Rect::new(start_x + (1.0 * (btn_size.x + spacing)), pos_y, btn_size.x, btn_size.y);
 		if get_button(btn_skill, "Consume", 25, WHITE, mouse) {
-
+			consume_is_act
 		}
 
 		let btn_flee = Rect::new(start_x + (2.0 * (btn_size.x + spacing)), pos_y, btn_size.x, btn_size.y);

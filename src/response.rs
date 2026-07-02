@@ -1,5 +1,3 @@
-use std::vec;
-
 use crate::*;
 
 #[derive(Debug, Clone, PartialEq)]
@@ -317,11 +315,8 @@ pub async fn handle_response(game: &mut Game, answer: &str, state: &str){
 					}
 				}
 				if answer.contains("NOT_YOUR_TURN"){
-
 					let Some(ref mut fight) = game.active_fight else { return };
 					fight.chat.push("Wait for your turn".to_string());
-
-
 				}
 			}
 

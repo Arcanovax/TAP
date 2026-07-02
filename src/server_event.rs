@@ -1,7 +1,5 @@
-use std::os::linux::raw::stat;
-
 use serde::Deserialize;
-use crate::{Status::Idle, *};
+use crate::*;
 
 pub async fn handle_events(game: &mut Game, answer: Vec<&str>){
 	if answer[2] == "CHAT" {
