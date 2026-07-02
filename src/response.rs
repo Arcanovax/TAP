@@ -24,7 +24,8 @@ pub enum PendingAction {
 	Quest(String),
 	Inventory,
 	Quests,
-	Gold
+	Gold,
+	Flee
 }
 
 
@@ -267,17 +268,22 @@ pub async fn handle_response(game: &mut Game, answer: &str, state: &str){
 			}
 		}
 		PendingAction::Attack(ref npc_id) => {
-
 			if state =="OK"{
-				match serde_json::from_str::<FightData>(answer) {
-					Ok(fight) => {
+				match serde_json::from_str::<fight_data>(answer) {
+					Ok(fight_data) => {
 						if let Some(ref mut state) = game.player.state{
-							state.status= fight.status;
-							state.hp = fight.attacker_hp;
-							game.active_fight = Some(Fight{
+							state.hp = fight_data.attacker_hp;
+							if let Some(ref mut fight) = &mut game.active_fight{
+								fight.enemy_hp = fight_data.target_hp
+							}
+							else{
+								state.status= fight_data.status;
+								game.active_fight = Some(Fight{
 								enemy: game.loaded_npcs[npc_id].clone(),
-								players: fight.fighters
-							});
+								players: fight_data.fighters,
+								enemy_hp: fight_data.target_hp
+								});
+							}
 
 						}
 					}
@@ -383,9 +389,15 @@ pub async fn handle_response(game: &mut Game, answer: &str, state: &str){
 						game.player.gold = Some(nb);
 					}
 					Err(e) => {
-						println!("Who error parsing: {}", e);
+						println!("GOLD error parsing: {}", e);
 					}
 				}
+			}
+		}
+		PendingAction::Flee => {
+			if state=="OK"{
+				game.player.state = None;
+				game.active_fight = None;
 			}
 		}
 		_ => {
@@ -423,7 +435,7 @@ pub struct QuestData {
 }
 
 #[derive(Deserialize, Debug)]
-pub struct FightData {
+pub struct fight_data {
 	pub attacker_hp: i32,
     pub attacker_name: String,
 	pub damage: i32,

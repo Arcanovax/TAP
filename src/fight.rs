@@ -5,22 +5,11 @@ const PLAYER_POS: Vec2 = vec2(85.0,140.0);
 pub struct Fight{
 	pub enemy: Npc,
 	pub players: HashMap<String, i32>,
-
-}
-
-fn get_npc(game: &Game) -> Option<Npc> {
-    let state = game.player.state.as_ref()?;
-
-	let target_id = match &state.status {
-		Status::InFight { target_id } => target_id,
-		_ => return None,
-	};
-
-    return game.loaded_npcs.get(target_id).cloned()
+	pub enemy_hp: i32,
 }
 
 pub fn draw_enemy_info(game: &mut Game, npc: Npc){
-
+	let Some(fight) = &game.active_fight else { return };
 	let mut info: Rect = get_rect_right(vec2(350.0, 120.0), 10.0);
 	info.x -= 10.0;
 	draw_rectangle(info.x, info.y, info.w, info.h, Color::new(0.0, 0.0, 0.0, 0.5));
@@ -44,15 +33,18 @@ pub fn draw_enemy_info(game: &mut Game, npc: Npc){
 
 
 	draw_text(&npc.name, frame.x + frame.w + 5.0, frame.y + 30.0, 40.0, WHITE);
-
+	let lifebar = Rect::new(frame.x + frame.w + 5.0, frame.y + 70.0, 200.0, 25.0);
+	draw_rectangle(lifebar.x, lifebar.y, lifebar.w, lifebar.h,BLACK);
+	let hp_ratio: f32 = fight.enemy_hp as f32 / 2000 as f32;
+	draw_rectangle(lifebar.x, lifebar.y+2.5, lifebar.w * hp_ratio, 20.0,RED);
+	let hp_info = format!("{}/{}",fight.enemy_hp,2000);
+	draw_text_center(lifebar, &hp_info, 20);
+	draw_rectangle_lines(lifebar.x, lifebar.y, lifebar.w, lifebar.h, 5.0, GRAY);
 
 
 }
 
 pub fn handle_fight(game: &mut Game, floor: &Texture2D) {
-
-
-
 
 	camera_handler(game);
 
@@ -120,7 +112,9 @@ pub fn handle_fight(game: &mut Game, floor: &Texture2D) {
 	if let Some(mut state) = game.player.state.clone() {
 		set_default_camera();
 		draw_player_info(game, state.clone());
-		draw_enemy_info(game, enemy);
+		draw_enemy_info(game, enemy.clone());
+
+
 		let rect = get_center_rect_x(vec2(1100.0, 75.0), screen_height()-85.0);
 		draw_rectangle(rect.x, rect.y, rect.w, rect.h, Color::new(0.0, 0.0, 0.0, 0.5));
 		let btn_size = vec2(300.0, 55.0);
@@ -136,7 +130,9 @@ pub fn handle_fight(game: &mut Game, floor: &Texture2D) {
 		let pos_attack = vec2(start_x, pos_y);
 		let btn_attack = Rect::new(pos_attack.x, pos_attack.y, btn_size.x, btn_size.y);
 		if get_button(btn_attack, "Attack", 25, WHITE, mouse) {
-
+			let rq: String = format!("ATTACK {}\n",enemy.id);
+			game.tx_to_serv.try_send(rq).ok();
+			game.pending_action = PendingAction::Attack(enemy.id.clone());
 		}
 
 		let btn_skill = Rect::new(start_x + (1.0 * (btn_size.x + spacing)), pos_y, btn_size.x, btn_size.y);
@@ -146,9 +142,9 @@ pub fn handle_fight(game: &mut Game, floor: &Texture2D) {
 
 		let btn_flee = Rect::new(start_x + (2.0 * (btn_size.x + spacing)), pos_y, btn_size.x, btn_size.y);
 		if get_button(btn_flee, "Flee", 25, WHITE, mouse) {
-			println!("EXIITT");
-			state.status = Status::Idle;
-			game.player.state = Some(state)
+			let rq: String = format!("FLEE {}\n",enemy.id);
+			game.tx_to_serv.try_send(rq).ok();
+			game.pending_action = PendingAction::Flee;
 		}
 	}
 }

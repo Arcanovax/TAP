@@ -1,5 +1,7 @@
+use std::os::linux::raw::stat;
+
 use serde::Deserialize;
-use crate::*;
+use crate::{Status::Idle, *};
 
 pub async fn handle_events(game: &mut Game, answer: Vec<&str>){
 	if answer[2] == "CHAT" {
@@ -70,7 +72,26 @@ pub async fn handle_events(game: &mut Game, answer: Vec<&str>){
 			"LEAVE" => {
 				if let Some(ref mut fight) = game.active_fight{
 						fight.players.remove(answer[3]);
+						println!("removing");
 					}
+			}
+			"ENEMY" => {
+				let Some(ref mut state) = game.player.state else { return };
+				if let Some(ref mut fight) = game.active_fight{
+					if answer[6] == "false"{
+						if answer[3] == game.player.name{
+							if let Ok(life_val) = answer[5].parse::<i32>() {
+								state.hp -= life_val;
+							}
+
+						}
+					}
+					else{
+						game.player.state = None;
+						game.active_fight = None;
+					}
+
+				}
 			}
 			_ => return
 		}
