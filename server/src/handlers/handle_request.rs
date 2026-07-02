@@ -1,20 +1,7 @@
-use rand::RngExt;
-
 use crate::{
     handlers::{
-        flee::flee,
-        buy::buy_request,
-        gold::gold_request,
-        item::{item_request, items_request},
-        npc::{npc_request, npcs_request},
-        quest::quest_request,
-        quests::quests_request,
-        sell::sell_request,
-        slot_machine::slot_machine_request,
-    },
-    protocol::Payload,
-    state::{SharedServer, Tx},
-    structures::{
+        buy::buy_request, consume::consume, flee::flee, gold::gold_request, item::{item_request, items_request}, npc::{npc_request, npcs_request}, quest::quest_request, quests::quests_request, sell::sell_request,
+    }, protocol::Payload, state::{SharedServer, Tx}, structures::{
         enums::{command::Command, error::ErrorCode},
         handler_outcome::HandlerOutcome,
     },
@@ -53,7 +40,7 @@ pub fn handle_request(
             Some(Command::TALK) => talk_request(peer_addr, args, server_info),
             Some(Command::ATTACK) => fight_request(peer_addr, args, server_info).into(),
             Some(Command::FLEE) => flee(peer_addr, args, server_info).into(),
-            Some(Command::BAG) => fight_request(peer_addr, args, server_info).into(),
+            Some(Command::CONSUME) => consume(peer_addr, args, server_info).into(),
             Some(Command::LOOK) => look_request(server_info, peer_addr).into(),
             Some(Command::DROP) => drop_request(server_info, peer_addr, args).into(),
             Some(Command::TAKE) => take_request(server_info, peer_addr, args).into(),
@@ -67,25 +54,6 @@ pub fn handle_request(
             Some(Command::BUY) => buy_request(args, server_info, peer_addr).into(),
             Some(Command::SELL) => sell_request(args, server_info, peer_addr).into(),
             Some(Command::GOLD) => gold_request(server_info, peer_addr).into(),
-            Some(Command::SLOT_MACHINE) => {
-                let pool: Vec<String> = server_info
-                    .lock()
-                    .unwrap()
-                    .world
-                    .items
-                    .keys()
-                    .cloned()
-                    .collect();
-                let roll = move || {
-                    let mut rng = rand::rng();
-                    if rng.random_bool(1.0 / 10.0) {
-                        Some(pool[rng.random_range(0..pool.len())].clone())
-                    } else {
-                        None
-                    }
-                };
-                slot_machine_request(server_info, peer_addr, roll).into()
-            }
             _ => Message::Response {
                 error: ErrorCode::INVALID_COMMAND,
                 payload: Payload::Empty,

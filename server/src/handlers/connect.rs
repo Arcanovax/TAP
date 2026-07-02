@@ -8,11 +8,6 @@ use std::net::SocketAddr;
 #[cfg(test)]
 mod tests;
 
-// #[derive(Serialize)]
-// struct LoginResponse<'a> {
-// 	player: &'a Player,
-// 	room: &'a Room
-// }
 
 pub(super) fn connect_request(
     args: &Vec<String>,

@@ -113,30 +113,23 @@ impl ServerInfo {
         };
         let nb_receivers = receivers.len();
 
-        if nb_receivers > 0 {
-            for name in receivers {
-                if let Some(con) = self
-                    .connections
-                    .values()
-                    .find(|pl_conn| pl_conn.player.name == name)
-                {
-                    let _ = con.tx.send(Message::Event(EventType::FIGHT_LEAVE {
-                        player_name: player_name.clone(),
-                    }));
-                }
-            }
-
-            let fight_turn = {
-                let turn = self.fights.get(&target).unwrap().turn;
-                turn.clone()
-            };
-
-            if nb_receivers == fight_turn as usize {
-                enemy_attack(&target, self);
-                self.fights.get_mut(&target).unwrap().turn = 0;
-            }
-        } else {
-            let enemy = self.resolve_npc_mut(&target).unwrap();
+		if nb_receivers > 0 {
+			for name in receivers {
+				if let Some(con) = self.connections.values().find(|pl_conn| pl_conn.player.name == name) {
+					let _ = con.tx.send(Message::Event(EventType::FIGHT_LEAVE { player_name: player_name.clone() }));
+				}
+			}
+	
+			let fight_turn = {
+				let turn = self.fights.get(&target).unwrap().turn;
+				turn.clone()
+			};
+	
+			if nb_receivers == fight_turn  as usize {
+				enemy_attack(&target, self);
+			}
+		} else {
+			let enemy = self.world.npcs.get_mut(&target).unwrap();
 
             if let NPCKind::Enemy {
                 ref mut hp, max_hp, ..

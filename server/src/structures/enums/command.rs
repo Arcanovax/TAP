@@ -1,7 +1,6 @@
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Serialize, Deserialize, PartialEq)]
-#[allow(non_camel_case_types)]
 pub enum Command {
     CONNECT,
     QUIT,
@@ -13,7 +12,7 @@ pub enum Command {
     TALK,
     ATTACK,
     FLEE,
-    BAG,
+    CONSUME,
     LOOK,
     DROP,
     TAKE,
@@ -27,7 +26,6 @@ pub enum Command {
     BUY,
     SELL,
     GOLD,
-    SLOT_MACHINE,
 }
 
 impl Command {
@@ -43,7 +41,7 @@ impl Command {
             "TALK" => Some(Command::TALK),
             "ATTACK" => Some(Command::ATTACK),
             "FLEE" => Some(Command::FLEE),
-            "BAG" => Some(Command::BAG),
+            "CONSUME" => Some(Command::CONSUME),
             "LOOK" => Some(Command::LOOK),
             "DROP" => Some(Command::DROP),
             "TAKE" => Some(Command::TAKE),
@@ -57,7 +55,6 @@ impl Command {
             "BUY" => Some(Command::BUY),
             "SELL" => Some(Command::SELL),
             "GOLD" => Some(Command::GOLD),
-            "SLOT_MACHINE" => Some(Command::SLOT_MACHINE),
             _ => None,
         }
     }

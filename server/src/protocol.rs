@@ -73,6 +73,10 @@ pub enum EventType {
         player_name: String,
         hp: u32,
     },
+	HEALING {
+        player_name: String,
+        heal: u32,
+    },
     ATTACK {
         player_name: String,
         damages: u32,
@@ -168,6 +172,9 @@ impl Message {
                 }
                 EventType::ENTER_FIGHT { player_name, hp } => {
                     format!("EVT FIGHT ENTER {player_name} {hp}\n")
+                }
+				EventType::HEALING { player_name, heal } => {
+                    format!("EVT FIGHT HEALING {player_name} {heal}\n")
                 }
                 EventType::ENEMY_ATTACK {
                     target,

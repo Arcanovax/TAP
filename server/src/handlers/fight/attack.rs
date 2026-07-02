@@ -20,7 +20,7 @@ pub fn execute_attack<'a>(
         let mut dmg: u32 = 15;
 
         for id in player.inventory.keys() {
-            if let Some(item) = world_mut.resolve_item(id) {
+            if let Some(item) = world_mut.world.items.get(&format!("item.{}", id)) {
                 if let ItemKind::Weapon { damages } = item.kind {
                     if dmg < damages {
                         dmg = damages;

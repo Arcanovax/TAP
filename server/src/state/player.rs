@@ -34,6 +34,7 @@ impl ServerInfo {
             Ok(None) => Player::new(name.clone(), self.world.spawn_room.clone()),
             Err(_) => return Err(ErrorCode::CONNECTION_FAILED),
         };
+
         self.connections.insert(
             peer_addr,
             Connection {
