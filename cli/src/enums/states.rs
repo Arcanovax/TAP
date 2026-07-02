@@ -1,9 +1,9 @@
-use std::fmt::Display;
+use std::{fmt::Display, time::Instant};
 
 use serde::{Deserialize, Serialize};
 
 
-#[derive(PartialEq, Debug, Serialize, Deserialize)]
+#[derive(PartialEq, Debug, Serialize, Deserialize, Clone)]
 pub enum States {
 	Login,
 	ServerWait,
@@ -11,7 +11,7 @@ pub enum States {
 	Idle,
 	InFight {target_id: String},
 	InDiscuss(String, String),
-	Respawn
+	Quit(u32, Box<States>, #[serde(skip)] Option<Instant>)
 }
 
 impl Display for States {
@@ -23,7 +23,7 @@ impl Display for States {
 			States::Idle => "Idle",
 			States::InFight { .. } => "InFight",
 			States::InDiscuss(..) => "InDiscuss",
-			States::Respawn => "Respawn",
+			States::Quit(..) => "Quit",
 		};
 		write!(f, "{status}")
 	}

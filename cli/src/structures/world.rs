@@ -2,14 +2,14 @@ use std::{
 	collections::{HashMap, VecDeque}, fs::OpenOptions, io::{self, Write}, sync::mpsc::{
 		Receiver,
 		TryRecvError
-	}
+	}, time::{Duration, Instant}
 };
 
 use ratatui::{
 	DefaultTerminal,
 	Frame,
 	crossterm::event::{
-		self, Event, KeyCode, MouseButton, MouseEventKind
+		self, Event, KeyCode
 	},
 };
 use tokio::sync::mpsc::Sender;
@@ -18,9 +18,9 @@ use crate::{
 	draw_functions::{
 		discuss::draw_room_discuss, fights::draw_room_fight, login::login_draw, rooms::draw_room, wait_server::draw_wait
 	}, enums::{
-		actions::PendingAction, states::States
-	}, global_functions::{discuss_event::discuss_event, event_handling::event_handling, handle_mouse::handle_mouse, idle_event::idle_event, login_event::login_event, response_handling::response_handling}, structures::{
-		chat::Chat, group::Group, items::Item, npc::NPC, player::Player, room::Room
+		actions::PendingAction, focus::Focus, states::States
+	}, global_functions::{discuss_event::discuss_event, escape_handling::escape_handling, event_handling::event_handling, handle_mouse::handle_mouse, idle_event::idle_event, login_event::login_event, response_handling::response_handling}, structures::{
+		chat::Chat, group::Group, items::Item, npc::NPC, player::Player, room::Room, world
 	}
 };
 
@@ -82,18 +82,21 @@ impl World<'_>{
 		match &self.state {
 			States::ServerWait => draw_wait(frame),
 			States::Login => login_draw(self, frame),
-			States::Idle => {
-				// if let Ok(mut file) = OpenOptions::new().create(true).append(true).open("debug_draw.txt") {
-				// 	let _ = writeln!(file, "RECU (State {:?}) : {:#?}", self.state, self.player.name);}
-				draw_room(self, frame);
-			},
-			States::InFight { .. } => {
-				// self.room.focus = Focus::COMMAND;
-				draw_room_fight(self, frame);
-			}
-			States::InDiscuss(name, sentence) => {
-				draw_room_discuss(self, frame, name.to_string(), sentence.to_string());
-			}
+			States::Idle => draw_room(self, frame),
+			States::InFight { .. } => draw_room_fight(self, frame),
+			States::InDiscuss(name, sentence) => draw_room_discuss(self, frame, name.to_string(), sentence.to_string()),
+			States::Quit(step, prev_state, cancelled_instant) => {
+				match cancelled_instant {
+					Some(instant) => {
+						if instant.elapsed() >= Duration::from_secs(2) {
+							self.state = *prev_state.clone();
+						} else {
+							escape_handling(self, frame, step.clone(), *prev_state.clone(), cancelled_instant.clone());
+						}
+					}
+					None => escape_handling(self, frame, step.clone(), *prev_state.clone(), cancelled_instant.clone()),
+				}
+			} 
 			_ => {}
 		}
 	}
@@ -102,20 +105,29 @@ impl World<'_>{
 		if event::poll(std::time::Duration::from_millis(16))? {
 			match event::read()? {
 				Event::Key(key) => {
-					if key.code == KeyCode::Esc { self.quit = true };
-					match &self.state {
-						States::Login => {
-							login_event(key, self);
-						},
-						States::Idle
-						| States::InFight { .. } => {
-							idle_event(key, self);
+					if key.code == KeyCode::Esc {
+						if self.room.focus == Focus::BAG {
+							self.room.fight.bag = false;
+						} else {
+							match &self.state {
+								States::Quit(step, prev_state, cancelled_instant) => self.state = States::Quit(*step + 1, Box::new(*prev_state.clone()), *cancelled_instant),
+								_ => self.state = States::Quit(1, Box::new(self.state.clone()), None)
+							}
 						}
-						States::InDiscuss(name, _) => {
-							discuss_event(key, self, name.clone());
-						}
-						_ => {}
-				}
+					} else {
+						match &self.state {
+							States::Login => login_event(key, self),
+							States::Idle
+							| States::InFight { .. } => idle_event(key, self),
+							States::InDiscuss(name, _) => discuss_event(key, self, name.clone()),
+							States::Quit( step, prev_state, ..) => {
+								if key.code == KeyCode::Enter {
+									self.state = States::Quit(*step, Box::new(*prev_state.clone()), Some(Instant::now()));
+								}
+							},
+							_ => {}
+					}
+					}
 			}
 			Event::Mouse(event) => {
 				handle_mouse(event, self);
