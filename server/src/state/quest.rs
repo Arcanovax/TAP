@@ -60,6 +60,9 @@ impl ServerInfo {
                     let player = self.get_player_mut(peer_addr).unwrap();
                     if let Some(qty) = player.inventory.get_mut(&item) {
                         *qty -= amount;
+                        if qty == &mut 0 {
+                            player.inventory.remove(&item);
+                        }
                     }
                 }
                 _ => {}
