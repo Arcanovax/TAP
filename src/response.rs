@@ -364,11 +364,16 @@ pub async fn handle_response(game: &mut Game, answer: &str, state: &str){
 		}
 		PendingAction::Quests => {
 			if state =="OK"{
-				game.quests.is_load = true;
-					match serde_json::from_str::<Vec<String>>(answer) {
-						Ok(quests) => {
 
-							// game.quests.all = quests;
+					match serde_json::from_str::<Vec<QuestsData>>(answer) {
+						Ok(quests) => {
+							game.quests.is_load = true;
+							for quest in quests{
+								game.quests.all.push(
+									Quest { npc_id: String::new(), quest_id: quest.quest_id, description: quest.progress, reward: String::new(), goal: None}
+								)
+							}
+
 						}
 						Err(e) => {
 							println!("Error JSON: {}", e);
@@ -459,6 +464,14 @@ pub struct QuestData {
 	pub quest_id: String,
     pub description: String,
     pub reward: String,
+    pub status: String,
+}
+
+
+#[derive(Deserialize, Debug)]
+pub struct QuestsData {
+	pub progress: String,
+    pub quest_id: String,
     pub status: String,
 }
 
