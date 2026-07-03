@@ -115,44 +115,44 @@ pub fn handle_npc_interactions(game: &mut Game, place: Vec2, npc: Npc){
 
 	}
 
-
+	handle_shop(game, npc, rect);
 	camera_handler(game);
 
 }
 
 
-// fn handle_shop(game: &mut Game){
-// 	if let NPCKind::Merchant { inventory, gold } = &npc.kind {
-// 		let btn_buy = get_rect_centered_x(rect, vec2(125.0, 25.0), 120.0);
-// 		if get_button(btn_buy, "Shop", 25, WHITE, mouse){
-// 			game.npc_shop.is_active = !game.npc_shop.is_active
-// 		}
-// 		if game.npc_shop.is_active {
-// 			let shop_rect = get_center_rect(vec2(400.0, 250.0));
-// 			draw_rectangle(shop_rect.x,shop_rect.y,shop_rect.w,shop_rect.h,Color::new(0.0, 0.0, 0.0, 1.0),);
-// 			let item_size = 40.0;
+fn handle_shop(game: &mut Game, npc: Npc, rect: Rect){
+	if let NPCKind::Merchant { inventory, gold } = &npc.kind {
+		let btn_buy = get_rect_centered_x(rect, vec2(125.0, 25.0), 120.0);
+		if get_button(btn_buy, "Shop", 25, WHITE, game.mouse){
+			game.npc_shop.is_active = !game.npc_shop.is_active
+		}
+		if game.npc_shop.is_active {
+			let shop_rect = get_center_rect(vec2(400.0, 250.0));
+			draw_rectangle(shop_rect.x,shop_rect.y,shop_rect.w,shop_rect.h,Color::new(0.0, 0.0, 0.0, 1.0),);
+			let item_size = 40.0;
 
-// 			for (i, item) in inventory.iter().enumerate() {
-// 				let line = shop_rect.y + i as f32 * 50.0;
+			for (i, item) in inventory.iter().enumerate() {
+				let line = shop_rect.y + i as f32 * 50.0;
 
-// 				let slot = Rect::new(
-// 					shop_rect.x + 10.0,
-// 					line + (50.0 - item_size) / 2.0,
-// 					item_size,
-// 					item_size,
-// 				);
-// 				draw_item_center(slot, &game.loaded_items[item]);
-// 				draw_text(
-// 					&game.loaded_items[item].name,
-// 					slot.x + slot.w + 15.0,
-// 					slot.y + item_size * 0.75,
-// 					30.0,
-// 					WHITE,
-// 				);
-// 			}
-// 		}
-// 	}
-// }
+				let slot = Rect::new(
+					shop_rect.x + 10.0,
+					line + (50.0 - item_size) / 2.0,
+					item_size,
+					item_size,
+				);
+				draw_item_center(slot, &game.loaded_items[item]);
+				draw_text(
+					&game.loaded_items[item].name,
+					slot.x + slot.w + 15.0,
+					slot.y + item_size * 0.75,
+					30.0,
+					WHITE,
+				);
+			}
+		}
+	}
+}
 
 pub async fn get_npc_texture(item_id: &str) -> Texture2D {
     let path = match item_id {
