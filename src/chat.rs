@@ -40,7 +40,7 @@ impl Chat {
 }
 
 
-fn draw_chat_selection(x: f32, y: f32,selected: i32, mouse: (f32, f32)) -> i32 {
+fn draw_chat_selection(x: f32, y: f32,selected: i32, mouse: Vec2) -> i32 {
 	let mut selected_channel = selected;
 
     for i in 0..CHANNELS.len(){
@@ -129,7 +129,7 @@ pub fn update_chat(game: &mut Game) {
 }
 
 pub fn draw_chat(chat:&mut Chat) {
-    let mouse: (f32, f32) = mouse_position();
+    let mouse:Vec2  = vec2(mouse_position().0, mouse_position().1);
     let bottom_y = screen_height();
     let line_height = 25.0;
 

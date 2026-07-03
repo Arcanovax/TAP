@@ -41,9 +41,15 @@ pub struct Npc {
 	pub name: String,
 	pub kind: NPCKind,
 	pub has_quest: bool,
-	pub npc_talk: Option<NpcTalk>
-
+	pub npc_talk: Option<NpcTalk>,
 }
+
+#[derive(Clone, PartialEq, Debug)]
+pub struct InfoShop{
+	pub time: f64,
+	pub color: Color,
+}
+
 
 #[derive(Clone, PartialEq, Debug)]
 pub struct NpcTalk{
@@ -54,6 +60,8 @@ pub struct NpcTalk{
 
 pub struct NpcShop {
 	pub is_active: bool,
+	pub buy_info: Option<InfoShop>,
+	pub sell_info: Option<InfoShop>
 }
 
 impl Npc {
@@ -64,7 +72,7 @@ impl Npc {
 			name: name,
 			kind: kind,
 			has_quest: has_quest,
-			npc_talk: None
+			npc_talk: None,
 		}
 	}
 }
@@ -123,8 +131,8 @@ pub fn handle_npc_interactions(game: &mut Game, place: Vec2, npc: Npc){
 
 fn handle_shop(game: &mut Game, npc: Npc, rect: Rect){
 	if let NPCKind::Merchant { inventory, gold } = &npc.kind {
-		let btn_buy = get_rect_centered_x(rect, vec2(125.0, 25.0), 120.0);
-		if get_button(btn_buy, "Shop", 25, WHITE, game.mouse){
+		let btn_shop = get_rect_centered_x(rect, vec2(125.0, 25.0), 120.0);
+		if get_button(btn_shop, "Shop", 25, WHITE, game.mouse){
 			game.npc_shop.is_active = !game.npc_shop.is_active
 		}
 		if game.npc_shop.is_active {
@@ -133,7 +141,7 @@ fn handle_shop(game: &mut Game, npc: Npc, rect: Rect){
 			let item_size = 40.0;
 
 			for (i, item) in inventory.iter().enumerate() {
-				let line = shop_rect.y + i as f32 * 50.0;
+				let line = shop_rect.y + i as f32 * 55.0;
 
 				let slot = Rect::new(
 					shop_rect.x + 10.0,
@@ -146,9 +154,37 @@ fn handle_shop(game: &mut Game, npc: Npc, rect: Rect){
 					&game.loaded_items[item].name,
 					slot.x + slot.w + 15.0,
 					slot.y + item_size * 0.75,
-					30.0,
+					22.5,
 					WHITE,
 				);
+
+				let btn_buy = Rect::new(shop_rect.x + shop_rect.w - 115.0, line + (50.0 - item_size) / 2.0, 50.0,37.5);
+				if let Some(info) = game.npc_shop.buy_info.as_ref() {
+					if get_time() - info.time > 1.5 && btn_buy.contains(game.mouse){
+					game.npc_shop.buy_info = None;
+					}
+					else {
+						let color = info.color;
+						if get_button(btn_buy, "Buy", 25, color,game.mouse) && !game.group.typed.is_empty(){
+							let rq: String = format!("BUY {} {} \n",npc.id,item);
+							game.tx_to_serv.try_send(rq).ok();
+							game.pending_action = PendingAction::Buy;
+						}
+					}
+				}
+				else{
+					if get_button(btn_buy, "Buy", 25, WHITE, game.mouse){
+							let rq: String = format!("BUY {} {} \n",npc.id,item);
+							game.tx_to_serv.try_send(rq).ok();
+							game.pending_action = PendingAction::Buy;
+				}}
+
+
+				let btn_sell = Rect::new(shop_rect.x + shop_rect.w - 60.0, line + (50.0 - item_size) / 2.0, 50.0,37.5);
+				if get_button(btn_sell, "Sell", 25, WHITE, game.mouse){
+
+				}
+
 			}
 		}
 	}

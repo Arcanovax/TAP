@@ -90,10 +90,10 @@ fn get_item_slot_floor(slot_rect: Rect, game: &mut Game, item: &Item, mouse: (f3
 }
 
 
-pub fn get_item_slot_inv(slot_rect: Rect, game: &mut Game, item: &Item, amount: &i32 , mouse: (f32, f32)) -> bool{
+pub fn get_item_slot_inv(slot_rect: Rect, game: &mut Game, item: &Item, amount: &i32) -> bool{
 
     draw_rectangle(slot_rect.x, slot_rect.y, slot_rect.w, slot_rect.h, GRAY);
-    let hovered = slot_rect.contains(Vec2::new(mouse.0, mouse.1));
+    let hovered = slot_rect.contains(game.mouse);
 
 	draw_item_center(slot_rect, &item);
 	let amount_str: &str = &format!("{}", amount).to_string();
@@ -146,7 +146,7 @@ pub fn draw_inv(game: &mut Game) {
 			let item_rect = Rect::new(inv_rect.x, inv_rect.y+ SLOT_SIZE * (i as f32), SLOT_SIZE, SLOT_SIZE);
 			let item: Option<Item> = game.loaded_items.get(item_id).cloned();
 			if let Some(item) = item {
-				if get_item_slot_inv(item_rect, game, &item, amount, mouse){
+				if get_item_slot_inv(item_rect, game, &item, amount){
 					let rq: String = format!("DROP {}\n",item.id);
 					game.tx_to_serv.try_send(rq).ok();
 					game.pending_action = PendingAction::Drop;

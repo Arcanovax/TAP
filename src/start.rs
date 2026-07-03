@@ -1,9 +1,9 @@
 use crate::Game;
 use macroquad::prelude::*;
 
-fn draw_skin_selection(x: f32, y: f32,game: &mut Game, mouse: (f32, f32)) -> i32 {
+fn draw_skin_selection(x: f32, y: f32,game: &mut Game) -> i32 {
     let size = 50.0;
-    let mouse_pos = Vec2::new(mouse.0, mouse.1);
+    let mouse_pos = game.mouse;
 
 
     let btn_left = Rect::new(x, y, size, size);
@@ -45,9 +45,9 @@ fn draw_skin_selection(x: f32, y: f32,game: &mut Game, mouse: (f32, f32)) -> i32
 }
 
 
-fn draw_name_input(x: f32, y: f32,game: &mut Game, mouse: (f32, f32)){
+fn draw_name_input(x: f32, y: f32,game: &mut Game){
     let input_rect = Rect::new(x, y, 175.0, 40.0);
-    let input_hovered = input_rect.contains(Vec2::new(mouse.0, mouse.1));
+    let input_hovered = input_rect.contains(game.mouse);
 
     let input_bg = if input_hovered { Color::new(0.2, 0.2, 0.2, 1.0) } else { Color::new(0.1, 0.1, 0.1, 1.0) };
     draw_rectangle(input_rect.x, input_rect.y, input_rect.w, input_rect.h, input_bg);
@@ -99,17 +99,17 @@ pub fn handle_starter(game: &mut Game){
     let start_x = title_pos.x;
     let current_y = title_pos.y + 110.0;
 
-    draw_name_input(start_x, current_y + 150.0, game, mouse);
+    draw_name_input(start_x, current_y + 150.0, game);
 
 
-    let state_selector = draw_skin_selection(start_x, current_y + 50.0, game, mouse);
+    let state_selector = draw_skin_selection(start_x, current_y + 50.0, game);
     let nb_skins: i32 = game.skins.len() as i32;
     if state_selector != 0 {
         game.player.spritesheet_index = ((game.player.spritesheet_index as i32 + state_selector + nb_skins) % nb_skins) as usize;
     }
 
     let btn_valid = Rect::new(start_x, current_y + 250.0, 80.0, 40.0);
-    let valid_hovered = btn_valid.contains(Vec2::new(mouse.0, mouse.1));
+    let valid_hovered = btn_valid.contains(mouse);
     let bg_valid = if valid_hovered { Color::new(0.3, 0.3, 0.3, 1.0) } else { Color::new(0.15, 0.15, 0.15, 1.0) };
     draw_rectangle(btn_valid.x, btn_valid.y, btn_valid.w, btn_valid.h, bg_valid);
     draw_text("Continue", btn_valid.x+ 6.0, btn_valid.y + 18.0, 30.0, WHITE);

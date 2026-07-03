@@ -112,7 +112,7 @@ struct Game {
 	pub active_fight: Option<Fight>,
 	pub quests: Quests,
 	pub npc_shop: NpcShop,
-	mouse: (f32, f32)
+	mouse: Vec2
 }
 
 
@@ -232,8 +232,8 @@ async fn main() {
 		},
 		active_fight: None,
 		quests: Quests { all: Vec::new(), is_load: false},
-		npc_shop: NpcShop { is_active: false },
-		mouse: (0.0,0.0)
+		npc_shop: NpcShop { is_active: false, buy_info: None, sell_info: None},
+		mouse: Vec2::new(0.0, 0.0)
 
     };
 
@@ -269,7 +269,7 @@ async fn main() {
 			game.pending_action = PendingAction::None;
 
 		}
-		game.mouse = mouse_position();
+		game.mouse = vec2(mouse_position().0, mouse_position().1);
 		if !game.is_auth{
 					handle_starter(&mut game);
 					next_frame().await

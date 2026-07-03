@@ -82,57 +82,55 @@ pub fn handle_fight(game: &mut Game, floor: &Texture2D) {
     );
 
 	draw_all_players(game, players);
+	set_default_camera();
+	if let Some(state) = game.player.state.clone(){
+		draw_player_info(game, state);
+	}
+	draw_enemy_info(game, enemy.clone());
 
-	if let Some(state) = game.player.state.clone() {
-		set_default_camera();
-		draw_player_info(game, state.clone());
-		draw_enemy_info(game, enemy.clone());
 
+	let rect = get_center_rect_x(vec2(1100.0, 75.0), screen_height()-85.0);
+	draw_rectangle(rect.x, rect.y, rect.w, rect.h, Color::new(0.0, 0.0, 0.0, 0.5));
+	let btn_size = vec2(300.0, 55.0);
+	let spacing = 30.0;
+	let mouse = game.mouse;
 
-		let rect = get_center_rect_x(vec2(1100.0, 75.0), screen_height()-85.0);
-		draw_rectangle(rect.x, rect.y, rect.w, rect.h, Color::new(0.0, 0.0, 0.0, 0.5));
-		let btn_size = vec2(300.0, 55.0);
-		let spacing = 30.0;
-		let mouse = game.mouse;
+	let total_width = (3.0 as f32 * btn_size.x) + ((3 - 1) as f32 * spacing);
 
-		let total_width = (3.0 as f32 * btn_size.x) + ((3 - 1) as f32 * spacing);
+	let rect_center_x = rect.x + (rect.w / 2.0);
+	let start_x = rect_center_x - (total_width / 2.0);
+	let pos_y = rect.y + (rect.h / 2.0) - (btn_size.y / 2.0);
 
-		let rect_center_x = rect.x + (rect.w / 2.0);
-		let start_x = rect_center_x - (total_width / 2.0);
-		let pos_y = rect.y + (rect.h / 2.0) - (btn_size.y / 2.0);
+	let pos_attack = vec2(start_x, pos_y);
+	let btn_attack = Rect::new(pos_attack.x, pos_attack.y, btn_size.x, btn_size.y);
+	let Some(ref mut fight) = game.active_fight else { return };
 
-		let pos_attack = vec2(start_x, pos_y);
-		let btn_attack = Rect::new(pos_attack.x, pos_attack.y, btn_size.x, btn_size.y);
-		let Some(ref mut fight) = game.active_fight else { return };
+	if get_button(btn_attack, "Attack", 25, WHITE, mouse) {
+		let rq: String = format!("ATTACK {}\n",enemy.id);
+		game.tx_to_serv.try_send(rq).ok();
+		game.pending_action = PendingAction::Attack(enemy.id.clone());
+	}
 
-		if get_button(btn_attack, "Attack", 25, WHITE, mouse) {
-			let rq: String = format!("ATTACK {}\n",enemy.id);
-			game.tx_to_serv.try_send(rq).ok();
-			game.pending_action = PendingAction::Attack(enemy.id.clone());
-		}
+	let btn_consume = Rect::new(start_x + (1.0 * (btn_size.x + spacing)), pos_y, btn_size.x, btn_size.y);
+	if get_button(btn_consume, "Consume", 25, WHITE, mouse) {
+		fight.consume_is_act = !fight.consume_is_act
+	}
 
-		let btn_consume = Rect::new(start_x + (1.0 * (btn_size.x + spacing)), pos_y, btn_size.x, btn_size.y);
-		if get_button(btn_consume, "Consume", 25, WHITE, mouse) {
-			fight.consume_is_act = !fight.consume_is_act
-		}
+	let btn_flee = Rect::new(start_x + (2.0 * (btn_size.x + spacing)), pos_y, btn_size.x, btn_size.y);
+	if get_button(btn_flee, "Flee", 25, WHITE, mouse) {
+		let rq: String = format!("FLEE {}\n",enemy.id);
+		game.tx_to_serv.try_send(rq).ok();
+		game.pending_action = PendingAction::Flee;
+	}
 
-		let btn_flee = Rect::new(start_x + (2.0 * (btn_size.x + spacing)), pos_y, btn_size.x, btn_size.y);
-		if get_button(btn_flee, "Flee", 25, WHITE, mouse) {
-			let rq: String = format!("FLEE {}\n",enemy.id);
-			game.tx_to_serv.try_send(rq).ok();
-			game.pending_action = PendingAction::Flee;
-		}
+	let chat_rect = get_center_rect_x(vec2(400.0, 250.0), 125.0);
+	draw_rectangle(chat_rect.x, chat_rect.y, chat_rect.w, chat_rect.h, Color::new(0.0, 0.0, 0.0, 0.75));
+	for (i, msg) in chat.iter().enumerate(){
+		draw_text(msg, chat_rect.x + 10.0 , chat_rect.y + (20 + (i* 20))as f32, 20.0, WHITE);
+	}
 
-		let chat_rect = get_center_rect_x(vec2(400.0, 250.0), 125.0);
-		draw_rectangle(chat_rect.x, chat_rect.y, chat_rect.w, chat_rect.h, Color::new(0.0, 0.0, 0.0, 0.75));
-		for (i, msg) in chat.iter().enumerate(){
-			draw_text(msg, chat_rect.x + 10.0 , chat_rect.y + (20 + (i* 20))as f32, 20.0, WHITE);
-		}
-
-		if fight.consume_is_act {
-			handle_consume(game);
-		}
-
+	if fight.consume_is_act {
+		handle_consume(game);
 	}
 }
 
@@ -146,7 +144,7 @@ fn handle_consume(game: &mut Game){
 		if let Some(item) = game.loaded_items.get(item_id).cloned() {
 			if let ItemKind::Potion { .. } = item.kind {
 				let item_rect = Rect::new(consume_rect.x, consume_rect.y + 50.0 * (y_index as f32), 50.0, 50.0);
-				if get_item_slot_inv(item_rect, game, &item, amount, game.mouse) {
+				if get_item_slot_inv(item_rect, game, &item, amount) {
 					let rq: String = format!("CONSUME {}\n", item.id);
 					game.tx_to_serv.try_send(rq).ok();
 					game.pending_action = PendingAction::Consume(item.id);

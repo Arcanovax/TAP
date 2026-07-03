@@ -157,19 +157,18 @@ pub fn draw_group(game: &mut Game){
 	}
 }
 
-pub fn draw_icon(game: &mut Game, mouse: (f32, f32)){
+pub fn draw_icon(game: &mut Game){
 	let mut icon: Rect = get_rect_bottom(RECT_ICON, screen_width());
 	icon.x -= 10.0;
 	icon.y -= 10.0;
-	if get_button(icon, "Group", 30, YELLOW, mouse){
+	if get_button(icon, "Group", 30, YELLOW, game.mouse){
 		game.group.is_active = true
 	}
 }
 
 pub fn handle_group(game: &mut Game) {
-	let mouse = game.mouse;
 	if !game.group.is_active {
-		draw_icon(game, mouse);
+		draw_icon(game);
 		if is_key_pressed(KeyCode::F) && game.focus == InputFocus::Game {
 			game.group.is_active = true;
 		}

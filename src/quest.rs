@@ -46,7 +46,6 @@ pub fn display_quests(game: &mut Game){
 				format!("- Talk to {}", dialog)
 			}
 			Some(Goal::Retrieve {amount, dialog,item}) => {
-
 				format!("- Retrieve {} {}", amount,item)
 			}
 			_ => String::new()

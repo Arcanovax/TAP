@@ -26,7 +26,8 @@ pub enum PendingAction {
 	Quests,
 	Gold,
 	Flee,
-	Consume(String)
+	Consume(String),
+	Buy
 }
 
 
@@ -431,6 +432,19 @@ pub async fn handle_response(game: &mut Game, answer: &str, state: &str){
 						game.player.inventory.data.insert(used.clone(), new_count);
 					}
 				}
+			}
+		}
+		PendingAction::Buy => {
+			if state =="OK" {
+				game.npc_shop.buy_info = Some(InfoShop{
+					color: GREEN,
+					time: get_time()
+				});
+			} else{
+				game.npc_shop.buy_info = Some(InfoShop{
+					color: RED,
+					time: get_time()
+				});
 			}
 		}
 		_ => {

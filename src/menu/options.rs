@@ -7,10 +7,10 @@ pub struct OptionsSettings {
 }
 
 
-fn draw_checkbox(x: f32, y: f32, label: &str, checked: bool, mouse: (f32, f32)) -> bool {
+fn draw_checkbox(x: f32, y: f32, label: &str, checked: bool, mouse: Vec2) -> bool {
     let size = 24.0;
     let rect = Rect::new(x, y, size, size);
-    let hovered = rect.contains(Vec2::new(mouse.0, mouse.1));
+    let hovered = rect.contains(mouse);
 
 
     let bg = if hovered { Color::new(0.3, 0.3, 0.3, 1.0) } else { Color::new(0.15, 0.15, 0.15, 1.0) };
@@ -28,13 +28,11 @@ fn draw_checkbox(x: f32, y: f32, label: &str, checked: bool, mouse: (f32, f32)) 
     hovered && is_mouse_button_pressed(MouseButton::Left)
 }
 
-fn draw_skin_selection(x: f32, y: f32,current_name: &str, mouse: (f32, f32)) -> i32 {
+fn draw_skin_selection(x: f32, y: f32,current_name: &str, mouse:Vec2) -> i32 {
     let size = 25.0;
-    let mouse_pos = Vec2::new(mouse.0, mouse.1);
-
 
     let btn_left = Rect::new(x, y, size, size);
-    let left_hovered = btn_left.contains(mouse_pos);
+    let left_hovered = btn_left.contains(mouse);
     let bg_left = if left_hovered { Color::new(0.3, 0.3, 0.3, 1.0) } else { Color::new(0.15, 0.15, 0.15, 1.0) };
     draw_rectangle(btn_left.x, btn_left.y, btn_left.w, btn_left.h, bg_left);
     draw_text("<", btn_left.x+ 6.0, btn_left.y + 18.0, 30.0, WHITE);
@@ -43,7 +41,7 @@ fn draw_skin_selection(x: f32, y: f32,current_name: &str, mouse: (f32, f32)) -> 
     draw_text(current_name, x+ 30.0, y+20.0, 30.0, WHITE);
 
     let btn_right = Rect::new(x+125.0, y, 35.0, 35.0);
-    let right_hovered = btn_right.contains(mouse_pos);
+    let right_hovered = btn_right.contains(mouse);
     let bg_right = if right_hovered { Color::new(0.3, 0.3, 0.3, 1.0) } else { Color::new(0.15, 0.15, 0.15, 1.0) };
     draw_rectangle(btn_right.x, btn_right.y, size, size, bg_right);
     draw_text(">", btn_right.x + 6.0, btn_right.y + 18.0, 20.0, WHITE);

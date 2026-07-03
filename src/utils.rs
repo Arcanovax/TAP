@@ -86,9 +86,9 @@ pub fn draw_text_bottom(rect: Rect,text: &str, font_size: u16, x: f32){
 }
 
 
-pub fn get_button(rect: Rect,text: &str, font_size: u16, color: Color, mouse: (f32, f32)) -> bool {
+pub fn get_button(rect: Rect,text: &str, font_size: u16, color: Color, mouse: Vec2) -> bool {
 		let button: Rect = rect;
-		let hovered = button.contains(Vec2::new(mouse.0, mouse.1));
+		let hovered = button.contains(mouse);
 		let bg = if hovered { Color::new(0.3, 0.3, 0.3, 0.75) }
 		else { Color::new(0.10, 0.10, 0.10, 0.75) };
 		let text_size = measure_text(text, None, font_size, 1.0);
@@ -105,8 +105,8 @@ pub fn get_button(rect: Rect,text: &str, font_size: u16, color: Color, mouse: (f
 }
 
 
-pub fn input_text(input_rect: Rect,field: &mut String,is_active: bool, mouse: (f32, f32)) -> bool{
-		let input_hovered = input_rect.contains(Vec2::new(mouse.0, mouse.1));
+pub fn input_text(input_rect: Rect,field: &mut String,is_active: bool, mouse: Vec2) -> bool{
+		let input_hovered = input_rect.contains(mouse);
 		let input_bg = if input_hovered { Color::new(0.2, 0.2, 0.2, 1.0) } else { Color::new(0.1, 0.1, 0.1, 1.0) };
 
 		draw_rectangle(input_rect.x, input_rect.y, input_rect.w, input_rect.h, input_bg);
