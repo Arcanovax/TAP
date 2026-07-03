@@ -135,10 +135,10 @@ pub fn handle_fight(game: &mut Game, floor: &Texture2D) {
 			game.tx_to_serv.try_send(rq).ok();
 			game.pending_action = PendingAction::Attack(enemy.id.clone());
 		}
-
+		let Some(ref mut fight) = game.active_fight else { return };
 		let btn_skill = Rect::new(start_x + (1.0 * (btn_size.x + spacing)), pos_y, btn_size.x, btn_size.y);
 		if get_button(btn_skill, "Consume", 25, WHITE, mouse) {
-			let Some(ref mut fight) = game.active_fight else { return };
+
 			fight.consume_is_act = !fight.consume_is_act
 		}
 
@@ -155,28 +155,30 @@ pub fn handle_fight(game: &mut Game, floor: &Texture2D) {
 			draw_text(msg, chat_rect.x + 10.0 , chat_rect.y + (20 + (i* 20))as f32, 20.0, WHITE);
 		}
 
-		if let Some(ref mut fight) = game.active_fight {
-			if fight.consume_is_act {
-				let consume_rect = get_center_rect_x(vec2(200.0, 200.0), 405.0);
-				draw_rectangle(consume_rect.x, consume_rect.y, consume_rect.w, consume_rect.h, Color::new(0.0, 0.0, 0.0, 0.75));
+		if fight.consume_is_act {
+			handle_consume(game);
+		}
 
-				let inventory_data = game.player.inventory.data.clone();
-				let mut y_index = 0;
-				for (item_id, amount) in inventory_data.iter(){
-					if let Some(item) = game.loaded_items.get(item_id).cloned() {
-						if let ItemKind::Potion { .. } = item.kind {
-							let item_rect = Rect::new(consume_rect.x, consume_rect.y + 50.0 * (y_index as f32), 50.0, 50.0);
-							if get_item_slot_inv(item_rect, game, &item, amount, mouse) {
-								let rq: String = format!("CONSUME {}\n", item.id);
-								game.tx_to_serv.try_send(rq).ok();
-								game.pending_action = PendingAction::Consume(item.id);
-							}
-							y_index += 1;
-						}
-					}
+	}
+}
+
+fn handle_consume(game: &mut Game){
+	let consume_rect = get_center_rect_x(vec2(200.0, 200.0), 405.0);
+	draw_rectangle(consume_rect.x, consume_rect.y, consume_rect.w, consume_rect.h, Color::new(0.0, 0.0, 0.0, 0.75));
+
+	let inventory_data = game.player.inventory.data.clone();
+	let mut y_index = 0;
+	for (item_id, amount) in inventory_data.iter(){
+		if let Some(item) = game.loaded_items.get(item_id).cloned() {
+			if let ItemKind::Potion { .. } = item.kind {
+				let item_rect = Rect::new(consume_rect.x, consume_rect.y + 50.0 * (y_index as f32), 50.0, 50.0);
+				if get_item_slot_inv(item_rect, game, &item, amount, game.mouse) {
+					let rq: String = format!("CONSUME {}\n", item.id);
+					game.tx_to_serv.try_send(rq).ok();
+					game.pending_action = PendingAction::Consume(item.id);
 				}
+				y_index += 1;
 			}
 		}
 	}
 }
-
