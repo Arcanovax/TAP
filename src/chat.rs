@@ -129,7 +129,7 @@ pub fn update_chat(game: &mut Game) {
 }
 
 pub fn draw_chat(chat:&mut Chat) {
-    let mouse = mouse_position();
+    let mouse: (f32, f32) = mouse_position();
     let bottom_y = screen_height();
     let line_height = 25.0;
 

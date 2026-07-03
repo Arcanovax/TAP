@@ -85,7 +85,7 @@ fn draw_name_input(x: f32, y: f32,game: &mut Game, mouse: (f32, f32)){
 pub fn handle_starter(game: &mut Game){
 
 
-    let mouse = mouse_position();
+    let mouse = game.mouse;
 	let menu_name: &str = "The answer protocol";
 
 	let title_size = measure_text(menu_name, None, 70, 1.0);

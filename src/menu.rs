@@ -66,7 +66,7 @@ pub fn handle_menu(game: &mut Game) {
     }
 
 	let menu_rect = get_menu_rect();
-	let mouse = mouse_position();
+	let mouse = game.mouse;
 
 	for i in 0..LABELS.len(){
             let rect = Rect::new(menu_rect.x + 20.0, menu_rect.y + 50.0 + (i as f32 * 125.0), 250.0, 75.0);
@@ -104,7 +104,7 @@ pub fn draw_menu(game: &mut Game) {
 
 	if game.menu.state == 0{
 		let menu_rect = get_menu_rect();
-		let mouse = mouse_position();
+		let mouse = game.mouse;
 
 		for (i, label) in LABELS.iter().enumerate() {
 			let rect = Rect::new(menu_rect.x + 20.0, menu_rect.y + 50.0 + (i as f32 * 125.0), 250.0, 75.0);

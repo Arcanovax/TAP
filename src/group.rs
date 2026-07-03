@@ -54,7 +54,7 @@ fn send_group_invite(game: &mut Game){
 
 
 pub fn draw_group(game: &mut Game){
-	let mouse = mouse_position();
+	let mouse = game.mouse;
 	let rect: Rect = get_rect_right(RECT_MENU, screen_height());
 	draw_rectangle(rect.x, rect.y, rect.w, rect.h, Color::new(0.0, 0.0, 0.0, 0.5));
 
@@ -167,7 +167,7 @@ pub fn draw_icon(game: &mut Game, mouse: (f32, f32)){
 }
 
 pub fn handle_group(game: &mut Game) {
-	let mouse = mouse_position();
+	let mouse = game.mouse;
 	if !game.group.is_active {
 		draw_icon(game, mouse);
 		if is_key_pressed(KeyCode::F) && game.focus == InputFocus::Game {
