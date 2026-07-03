@@ -76,7 +76,7 @@ pub fn draw_room_discuss(world: &mut World, frame: &mut Frame, name: String, sen
 
 	lines.push(Line::from(vec![
 		Span::styled("Gold:", Style::default().fg(Color::Yellow)),
-		Span::raw(world.player.inventory.get("item.gold").unwrap_or(&0).to_string()),
+		Span::raw(world.player.gold.to_string()),
 	]));
 
 	let id: Paragraph = Paragraph::new(Text::from(Text::from(lines)))

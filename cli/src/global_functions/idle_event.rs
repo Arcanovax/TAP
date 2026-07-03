@@ -1,9 +1,11 @@
+use std::{fs::OpenOptions, io::Write};
+
 use ratatui::crossterm::event::{KeyCode, KeyEvent};
 
 use crate::{enums::{actions::PendingAction, channels::Channels, focus::Focus, npc_kind::NPCKind}, global_functions::find_action::find_action, structures::world::World};
 
 pub fn idle_event(key: KeyEvent, world: &mut World) {
-	if world.room.focus == Focus::COMMAND && key.code != KeyCode::Tab && key.code != KeyCode::Enter{
+	if world.room.focus == Focus::COMMAND && ![KeyCode::Tab, KeyCode::Enter, KeyCode::Up, KeyCode::Down].contains(&key.code){
 		world.room.text_area.input(key);
 		world.index_command = 0;
 	} else {
@@ -17,18 +19,23 @@ pub fn idle_event(key: KeyEvent, world: &mut World) {
 					Focus::INVENTORY => world.room.inventory_list_state.select_next(),
 					Focus::EXITS => world.room.exits_list_state.select_next(),
 					Focus::COMMAND => {
-						if world.index_command == 0 {
-						} else {
+						if world.index_command > 0 {
+							world.index_command = world.index_command.saturating_sub(1);
 							world.room.text_area.clear();
-							world.room.text_area.insert_str(world.old_command.iter().nth(world.index_command).unwrap_or(&"".to_string()));
-							world.index_command -= 1;
+							if world.index_command > 0 {
+								if let Some(command) = world.old_command.get(world.index_command - 1) {
+									world.room.text_area.insert_str(command);
+							}
 						}
+					}
 					},
 					Focus::BAG => world.room.bag_state.select_next(),
 					_ => {}
 				}
 				}
 			KeyCode::Up => {
+				// if let Ok(mut file) = OpenOptions::new().create(true).append(true).open("debug_network.txt") {
+				// 		let _ = writeln!(file, "ko (State {:?}) : {:#?}", world.old_command, world.index_command);}
 				match world.room.focus {
 					Focus::CHAT => world.room.chat_scroll_pos.scroll_up(),
 					Focus::DESCR => world.room.descr_scroll_pos.scroll_up(),
@@ -40,11 +47,10 @@ pub fn idle_event(key: KeyEvent, world: &mut World) {
 						if world.index_command < world.old_command.len() {
 							world.index_command +=1;
 							world.room.text_area.clear();
-							if let Some(command) = world.
+							if let Some(command) = world.old_command.get(world.index_command - 1) {
+								world.room.text_area.insert_str(command);
+							}
 						}
-						world.room.text_area.clear();
-						world.room.text_area.insert_str(world.old_command.iter().nth(world.index_command).unwrap_or(&"".to_string()));
-						world.index_command += 1;
 					},
 					Focus::BAG => world.room.bag_state.select_previous(),
 					_ => {}
@@ -94,18 +100,21 @@ pub fn idle_event(key: KeyEvent, world: &mut World) {
 			KeyCode::Enter => {
 				match world.room.focus {
 					Focus::COMMAND => {
-						let command = world.room.text_area.lines().join("");
-						world.old_command.push_front(command.clone());
-						let split_command: Vec<&str> = command.split(" ").collect();
-						let _ = world.tx_to_serv.try_send(split_command.join(" ") + "\n");
-
-						if !["CHAT"].contains(&split_command[0].to_uppercase().as_str()) {
-							world.output.push_back(format!("\n> {}", split_command.join(" ")));
-							world.room.output_scroll_pos.scroll_to_bottom();
+						if !world.room.text_area.is_empty() {
+							let command = world.room.text_area.lines().join("");
+							world.index_command = 0;
+							world.old_command.push_front(command.clone());
+							let split_command: Vec<&str> = command.split(" ").collect();
+							let _ = world.tx_to_serv.try_send(split_command.join(" ") + "\n");
+	
+							if !["CHAT"].contains(&split_command[0].to_uppercase().as_str()) {
+								world.output.push_back(format!("\n> {}", split_command.join(" ")));
+								world.room.output_scroll_pos.scroll_to_bottom();
+							}
+	
+							find_action(split_command, world);
+							world.room.text_area.clear();
 						}
-
-						find_action(split_command, world);
-						world.room.text_area.clear();
 					}
 					Focus::EXITS => {
 						if let Some(index) = world.room.exits_list_state.selected_mut() {
@@ -140,6 +149,7 @@ pub fn idle_event(key: KeyEvent, world: &mut World) {
 					| Focus::BAG => {
 						if world.room.focus == Focus::BAG && world.room.bag.len() == 0 {
 							world.room.fight.bag = false;
+							world.room.focus = Focus::COMMAND;
 						} else {
 							let item_name = {
 								if world.room.focus == Focus::INVENTORY {
@@ -153,6 +163,7 @@ pub fn idle_event(key: KeyEvent, world: &mut World) {
 							};
 							match item_name {
 								Some(item) => {
+									world.room.focus = Focus::COMMAND;
 									let _ = world.tx_to_serv.try_send(format!("CONSUME {}\n", item));
 									world.action = PendingAction::Consume(item.clone());
 								},

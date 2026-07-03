@@ -1,4 +1,5 @@
-use std::{collections::{VecDeque}};
+use core::num;
+use std::{collections::VecDeque, ptr::read};
 
 use crate::{enums::{actions::PendingAction, focus::Focus, item_kind::ItemKind, npc_kind::NPCKind, states::States}, structures::{attack_results::AttackResult, room::Room, status_view::StatusView, world::World}};
 
@@ -28,23 +29,35 @@ pub fn response_handling(world: &mut World, answers: Vec<&str>) {
 					| PendingAction::ClientLook => {
 						world.room = serde_json::from_str(&real_answer).unwrap();
 						if world.action == PendingAction::Look {
-							let room = serde_json::from_str::<Room>(&real_answer).unwrap_or(Room::new());
-							world.output.push_back(format!("[Server response] {}", room.room));
+							world.room = serde_json::from_str::<Room>(&real_answer).unwrap_or(Room::new());
+							world.output.push_back(format!("[Server response]\n{}", world.room));
+							world.action = PendingAction::None;
+						} else {
+							let _ = world.tx_to_serv.try_send(String::from("STATUS\n"));
+							world.action = PendingAction::ClientStatus;
 						}
-						let _ = world.tx_to_serv.try_send(String::from("STATUS\n"));
-						world.action = PendingAction::ClientStatus;
 					},
 					
+					PendingAction::Drop(item) => {
+						world.output.push_back(format!("You successfully droped one {}", item));
+						world.player.inventory.entry(item.to_string()).and_modify(|f|*f -= 1);
+						if *world.player.inventory.get(&item.to_string()).unwrap_or(&0) < 1 {
+							world.player.inventory.remove(&item.to_string());
+						}
+					}
+
 					PendingAction::Status
 					| PendingAction::ClientStatus => {
 						let status: StatusView = serde_json::from_str::<StatusView>(&real_answer).unwrap();
+						world.player.hp = status.hp;
+						world.state = status.status.clone();
 						if world.action == PendingAction::Status {
 							world.output.push_back(format!("[Server response] {}", status));
+							world.action = PendingAction::None;
+						} else {
+							let _ = world.tx_to_serv.try_send(String::from("INVENTORY\n"));
+							world.action = PendingAction::ClientInventory;
 						}
-						world.player.hp = status.hp;
-						world.state = status.status;
-						let _ = world.tx_to_serv.try_send(String::from("INVENTORY\n"));
-						world.action = PendingAction::Inventory;
 					},
 					
 					PendingAction::Items => {
@@ -92,13 +105,12 @@ pub fn response_handling(world: &mut World, answers: Vec<&str>) {
 							world.player.inventory.insert(item.to_string(), count);
 						}
 
-						if world.action == PendingAction::ClientInventory {
+						if world.action == PendingAction::Inventory {
 							for (item, number) in &world.player.inventory {
 								world.output.push_back(format!("{} x{}", item, number));
 							}
 						}
 						let _ = world.tx_to_serv.try_send(String::from("GOLD\n"));
-						
 						world.action = PendingAction::Gold;
 					},
 					
@@ -149,6 +161,14 @@ pub fn response_handling(world: &mut World, answers: Vec<&str>) {
 						world.action = PendingAction::None;
 					},
 
+					PendingAction::Who => {
+						let numbers: Vec<&str> = real_answer.split("=").collect();
+						let number: u32 = numbers[1].parse().unwrap();
+						let be = if number > 1 {"are".to_string()} else {"is".to_string()};
+						let plural = if number > 1 {"players".to_string()} else {"player".to_string()};
+						world.output.push_back(format!("Currently, there {be} {number} {plural} connected."));
+					}
+
 					PendingAction::GroupJoin(name) => {
 						world.group.in_group = true;
 						world.output.push_back(format!("{name} group successfully joined."));
@@ -194,6 +214,14 @@ pub fn response_handling(world: &mut World, answers: Vec<&str>) {
 						fight.target_hp = result.target_hp;
 						world.state = States::InFight { target_id: fight.target_name.clone() };
 						world.room.focus = Focus::COMMAND;
+						if result.damage > 0 {
+							let (damages, enn_hp) = (result.damage, result.target_hp);
+							world.output.push_back("".to_string());
+							world.output.push_back(format!(
+								"[FIGHT] You dealt {} damages to the enemy. {} has {} HP remaining.",
+								damages, world.room.fight.target_name, enn_hp
+							));
+						}
 					}
 					_ => {}
 			}

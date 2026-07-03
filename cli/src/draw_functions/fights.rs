@@ -89,7 +89,7 @@ pub fn draw_room_fight(world: &mut World, frame: &mut Frame) {
 
 	lines.push(Line::from(vec![
 		Span::styled("Gold:", Style::default().fg(Color::Yellow)),
-		Span::raw(world.player.inventory.get("item.gold").unwrap_or(&0).to_string()),
+		Span::raw(world.player.gold.to_string()),
 	]));
 
 	let id: Paragraph = Paragraph::new(Text::from(Text::from(lines)))
@@ -349,7 +349,9 @@ pub fn draw_room_fight(world: &mut World, frame: &mut Frame) {
 	let output_content = Paragraph::new(str_lines)
 	.wrap(Wrap { trim: true });
 
-
+	if world.room.focus != Focus::OUTPUT {
+		world.room.output_scroll_pos.scroll_to_bottom();
+	}
 	frame.render_widget(output, left_layout[3]);
 	scroll_output.render_widget(output_content, Rect::new(0, 0, content_width, content_height));
 	frame.render_stateful_widget(scroll_output, inner_output, &mut world.room.output_scroll_pos);
@@ -386,8 +388,8 @@ pub fn draw_room_fight(world: &mut World, frame: &mut Frame) {
 		for (item, _) in &world.player.inventory {
 			let item_kind =  {
 				// if let Ok(mut file) = OpenOptions::new().create(true).append(true).open("debug_network.txt") {
-				// 	let _ = writeln!(file, "ok (State {:#?}) :", item);}
-				let item_name = world.list_items.get(&format!("item.{}", item)).unwrap();
+				// 	let _ = writeln!(file, "ok (State {:#?}) :", world.list_items);}
+				let item_name = world.list_items.get(item).unwrap();
 				item_name.kind.clone()
 			};
 			match item_kind {

@@ -146,7 +146,7 @@ pub fn draw_room(world: &mut World, frame: &mut Frame) {
 		for elem in &world.room.npcs {
 			if let Some(npc) = world.list_npcs.get(elem){
 				npcs_list.push(ListItem::new(
-					Line::from(npc.name.clone())
+					Line::from(format!("{} ({})", npc.name.clone(), elem.clone()))
 					.alignment(Alignment::Center)
 					.style(match npc.kind {NPCKind::Citizen => {Color::White}, NPCKind::Enemy { .. } => {Color::Red}, NPCKind::Merchant { .. } => {Color::Yellow}} )));
 			} else {
@@ -316,7 +316,9 @@ pub fn draw_room(world: &mut World, frame: &mut Frame) {
 	let output_content = Paragraph::new(str_lines)
 	.wrap(Wrap { trim: true });
 
-
+	if world.room.focus != Focus::OUTPUT {
+		world.room.output_scroll_pos.scroll_to_bottom();
+	}
 	frame.render_widget(output, left_layout[3]);
 	scroll_output.render_widget(output_content, Rect::new(0, 0, content_width, content_height));
 	frame.render_stateful_widget(scroll_output, inner_output, &mut world.room.output_scroll_pos);

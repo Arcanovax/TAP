@@ -1,4 +1,4 @@
-use std::collections::VecDeque;
+use std::{collections::VecDeque, fmt::Display};
 
 use ratatui::widgets::{ListState};
 use ratatui_textarea::TextArea;
@@ -63,5 +63,32 @@ impl Room<'_> {
 			exits_list_state: ListState::default(),
 			text_area: TextArea::default()
 		}
+	}
+}
+
+impl Display for Room<'_> {
+	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+		let mut items_list: Vec<String> = Vec::new();
+		for item in &self.items {
+			items_list.push(format!("- {}", item));
+		}
+		if items_list.len() == 0 {
+			items_list.push("Nothing.".to_string());
+		}
+		let mut npc_list: Vec<String> = Vec::new();
+		for npc in &self.npcs {
+			npc_list.push(format!("- {}", npc));
+		}
+		if npc_list.len() == 0 {
+			npc_list.push("Nobody.".to_string());
+		}
+		let mut players_list: Vec<String> = Vec::new();
+		for player in &self.players {
+			players_list.push(format!("- {}", player));
+		}
+		if players_list.len() == 0 {
+			players_list.push("You are alone.".to_string());
+		}
+		write!(f, "{}\nItems you can take:\n{}\nNPCS:\n{}\nPlayers:\n{}", self.room, items_list.join("\n"), npc_list.join("\n"), players_list.join("\n"))
 	}
 }

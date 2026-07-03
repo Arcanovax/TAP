@@ -6,7 +6,7 @@ pub enum PendingAction {
 	Flee,
 	Consume(String),
     Talk(String),
-    Drop,
+    Drop(String),
     Take,
 	Auth,
 	GroupCreate(String),

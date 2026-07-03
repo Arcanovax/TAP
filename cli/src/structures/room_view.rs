@@ -27,6 +27,6 @@ impl Display for RoomView {
 		for (dir, dest) in &self.exits {
 			final_exits.push(format!("{dir} => {dest}"));
 		}
-		write!(f, "Id: {}\nName: {}\nDescription: {}\n Exits: {}", self.id, self.name, self.description, final_exits.join("\n"))
+		write!(f, "Id: {}\nName: {}\nDescription: {}\nExits:\n{}", self.id, self.name, self.description, final_exits.join("\n"))
 	}
 }

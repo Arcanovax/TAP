@@ -5,7 +5,7 @@ pub fn find_action(command: Vec<&str>, world: &mut World) {
 	match command[0].to_lowercase().as_str() {
 		"move" => world.action = PendingAction::Move,
 		"talk" => world.action = PendingAction::Talk(command[1..].join(" ")),
-		"drop" => world.action = PendingAction::Drop,
+		"drop" => world.action = PendingAction::Drop(command[1..].join(" ")),
 		"take" => world.action = PendingAction::Take,
 		"look" => world.action = PendingAction::Look,
 		"who" => world.action = PendingAction::Who,
@@ -21,7 +21,7 @@ pub fn find_action(command: Vec<&str>, world: &mut World) {
 		}
 		"status" => world.action = PendingAction::Status,
 		"attack" => world.action = PendingAction::Attack(command[1..].join(" ")),
-		"inventory" => world.action = PendingAction::ClientInventory,
+		"inventory" => world.action = PendingAction::Inventory,
 		"flee" => world.action = PendingAction::Flee,
 		"quest" => world.action = PendingAction::Quest,
 		_ => {}
