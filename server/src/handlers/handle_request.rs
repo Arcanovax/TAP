@@ -1,3 +1,5 @@
+use rand::RngExt;
+
 use crate::{
     handlers::{
         buy::buy_request,
@@ -10,6 +12,7 @@ use crate::{
         quest::quest_request,
         quests::quests_request,
         sell::sell_request,
+        slot_machine::slot_machine_request,
     },
     protocol::Payload,
     state::{SharedServer, Tx},
@@ -67,6 +70,25 @@ pub fn handle_request(
             Some(Command::SELL) => sell_request(args, server_info, peer_addr).into(),
             Some(Command::GOLD) => gold_request(server_info, peer_addr).into(),
             Some(Command::DUNGEON) => dungeon_request(args, server_info, peer_addr).into(),
+            Some(Command::SLOT_MACHINE) => {
+                let pool: Vec<String> = server_info
+                    .lock()
+                    .unwrap()
+                    .world
+                    .items
+                    .keys()
+                    .cloned()
+                    .collect();
+                let roll = move || {
+                    let mut rng = rand::rng();
+                    if rng.random_bool(1.0 / 10.0) {
+                        Some(pool[rng.random_range(0..pool.len())].clone())
+                    } else {
+                        None
+                    }
+                };
+                slot_machine_request(server_info, peer_addr, roll).into()
+            }
             _ => Message::Response {
                 error: ErrorCode::INVALID_COMMAND,
                 payload: Payload::Empty,

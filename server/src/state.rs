@@ -23,6 +23,7 @@ use tracing::info;
 use uuid::Uuid;
 
 mod broadcast;
+mod dungeon;
 pub mod group;
 mod player;
 mod quest;
@@ -47,6 +48,7 @@ pub struct ServerInfo {
     pub world: World,
     pub db: Arc<Database>,
     pub dungeons: HashMap<Uuid, Dungeon>,
+    pub base_world: World,
 }
 
 impl ServerInfo {
@@ -58,6 +60,7 @@ impl ServerInfo {
             invitations: HashMap::new(),
             fights: HashMap::new(),
             dungeons: HashMap::new(),
+            base_world: world.clone(),
             world: world,
             db: db,
         }

@@ -81,7 +81,7 @@ fn populate_rooms(world: &World, dungeon: &mut Dungeon, gid: Uuid) {
         while i < nb_ennemy {
             let id = format_dungeon_id("npc", gid, ennemy_index + i);
             let Some(ennemy) = ennemy_pool.clone().choose(&mut rand::rng()) else {
-                continue;
+                break;
             };
             room.npc.push(id.clone());
             dungeon.name_to_ref.insert(ennemy.name.clone(), id.clone());
@@ -100,7 +100,7 @@ fn populate_rooms(world: &World, dungeon: &mut Dungeon, gid: Uuid) {
                 .clone()
                 .choose(&mut rand::rng())
             else {
-                continue;
+                break;
             };
             room.items.push(id.clone().into());
             dungeon.name_to_ref.insert(item.name.clone(), id.clone());
