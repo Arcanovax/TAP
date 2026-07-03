@@ -75,6 +75,7 @@ pub fn handle_request(
 				Some(Command::BUY) => buy_request(args, server_info, peer_addr).into(),
 				Some(Command::SELL) => sell_request(args, server_info, peer_addr).into(),
 				Some(Command::GOLD) => gold_request(server_info, peer_addr).into(),
+				Some(Command::DUNGEON) => dungeon_request(args, server_info, peer_addr).into(),
 				_ => Message::Response {
 					error: ErrorCode::INVALID_COMMAND,
 					payload: Payload::Empty,
