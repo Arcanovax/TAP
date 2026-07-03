@@ -13,7 +13,7 @@ use std::{collections::HashMap, net::SocketAddr};
 
 mod attack;
 pub mod enemy_attack;
-mod is_it_my_turn;
+pub mod is_it_my_turn;
 #[cfg(test)]
 mod tests;
 
