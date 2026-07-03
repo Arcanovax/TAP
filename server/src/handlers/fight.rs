@@ -99,19 +99,19 @@ pub fn fight_request(
         State::Idle => {
             if let Some(fight) = world_mut.fights.get_mut(&args[0]) {
                 if !fight.fighters.contains(&p_name) && !fight.defeated_fighters.contains(&p_name) {
-                    fight.fighters.push(p_name.clone());
-                    for fighter in fight.fighters.clone() {
-                        if let Some(con) = world_mut
-                            .connections
-                            .values()
-                            .find(|c| c.player.name == fighter)
+					for fighter in fight.fighters.clone() {
+						if let Some(con) = world_mut
+						.connections
+						.values()
+						.find(|c| c.player.name == fighter)
                         {
-                            let _ = con.tx.send(Message::Event(EventType::ENTER_FIGHT {
-                                player_name: p_name.clone(),
+							let _ = con.tx.send(Message::Event(EventType::ENTER_FIGHT {
+								player_name: p_name.clone(),
                                 hp: p_hp,
                             }));
                         }
                     }
+					fight.fighters.push(p_name.clone());
                 } else {
                     return Message::Response {
                         error: ErrorCode::DEFEATED_FIGHTER,

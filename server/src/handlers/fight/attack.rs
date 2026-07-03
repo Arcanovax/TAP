@@ -77,18 +77,20 @@ pub fn execute_attack<'a>(
     }
 
     for fighter in &fighters_list {
-        if let Some(con) = world_mut
-            .connections
-            .values()
-            .find(|c| c.player.name == *fighter)
-        {
-            let _ = con.tx.send(Message::Event(EventType::ATTACK {
-                player_name: player_name.clone(),
-                damages: curr_damages,
-                enemy_hp: target_hp_after,
-            }));
-        } else {
-        }
+		if *fighter != player_name {
+			if let Some(con) = world_mut
+				.connections
+				.values()
+				.find(|c| c.player.name == *fighter)
+			{
+				let _ = con.tx.send(Message::Event(EventType::ATTACK {
+					player_name: player_name.clone(),
+					damages: curr_damages,
+					enemy_hp: target_hp_after,
+				}));
+			} else {
+			}
+		}
     }
 
     let mut fighters: HashMap<String, u32> = HashMap::new();
