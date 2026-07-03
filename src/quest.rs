@@ -17,8 +17,9 @@ pub struct Quests{
 
 #[derive(Debug, Deserialize, PartialEq, Eq, Clone)]
 pub enum Goal {
-    Collect { item: String, amount: u32 },
+    Collect {item: String, amount: u32 },
     Talk { dialog: String },
+	Retrieve {amount: i32, dialog:String, item:String}
 }
 
 
@@ -34,21 +35,28 @@ pub fn display_quests(game: &mut Game){
     let mut pos_y = title_quest_pos.y + 30.0;
 
     for quest in game.quests.all.iter(){
-        let quest_info = format!("- {}", quest.description);
+        let quest_info = format!("- {}", quest.quest_id);
         draw_text(quest_info, title_quest_pos.x, pos_y, 25.0, YELLOW);
-        // pos_y += 20.0;
-        // for goals in quest.goals.iter(){
-        //     let quest_goal = match goals {
-        //         Goal::Collect { item, amount } => {
-        //             format!("- Collect {} x{}", item, amount)
-        //         }
-        //         Goal::Talk { dialog } => {
-        //             format!("- Talk to {}", dialog)
-        //         }
-        //     };
-        //     draw_text(&quest_goal, title_quest_pos.x + 20.0, pos_y, 20.0, WHITE);
-        //     pos_y += 15.0;
-        // }
+        pos_y += 20.0;
+		let quest_goal = match quest.goal.clone() {
+			Some(Goal::Collect { item, amount }) => {
+				format!("- Collect {} x{}", item, amount)
+			}
+			Some(Goal::Talk { dialog }) => {
+				format!("- Talk to {}", dialog)
+			}
+			Some(Goal::Retrieve {amount, dialog,item}) => {
+
+				format!("- Retrieve {} {}", amount,item)
+			}
+			_ => String::new()
+		};
+		if quest_goal.is_empty(){
+			draw_text(&quest.description, title_quest_pos.x + 20.0, pos_y, 20.0, WHITE);
+		}
+		else{
+			draw_text(&quest_goal, title_quest_pos.x + 20.0, pos_y, 20.0, WHITE);
+		}
         pos_y += 10.0;
 
     }

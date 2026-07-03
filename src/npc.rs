@@ -49,7 +49,6 @@ pub struct Npc {
 pub struct NpcTalk{
 	pub text_i: usize,
 	pub texts: String,
-	pub info: String
 }
 
 
@@ -81,12 +80,7 @@ pub fn handle_npc_interactions(game: &mut Game, place: Vec2, npc: Npc){
 	if let Some(npc_talk) = npc.npc_talk.clone() {
 		let talk_pos = vec2(s_pos.x, s_pos.y - 20.0);
 		draw_rectangle(talk_pos.x, talk_pos.y, 200.0,30.0, WHITE);
-		if npc_talk.info.is_empty(){
-			draw_text(npc_talk.texts.clone(), talk_pos.x, talk_pos.y + 20.0, 25.0, BLACK);
-		}
-		else{
-			draw_text(npc_talk.info.clone(), talk_pos.x, talk_pos.y + 20.0, 25.0, RED);
-		}
+		draw_text(npc_talk.texts.clone(), talk_pos.x, talk_pos.y + 20.0, 25.0, BLACK);
 	}
 
 	let rect = Rect::new(s_pos.x + 62.5, s_pos.y, 175.0, 125.0);
@@ -99,24 +93,10 @@ pub fn handle_npc_interactions(game: &mut Game, place: Vec2, npc: Npc){
 	let btn_talk:Rect = get_rect_centered_x(rect, vec2(125.0, 25.0), 30.0);
 	if get_button(btn_talk, "Talk", 25, WHITE, mouse){
 		if let Some(npc) = game.loaded_npcs.get_mut(&npc.id) {
-			if let Some(ref mut npc_talk) = npc.npc_talk {
-				// npc_talk.text_i = (npc_talk.text_i + 1) % npc_talk.texts.len();
-				if !npc_talk.texts.is_empty(){
-					npc_talk.info.clear();
-				}
-				else{
-					npc.npc_talk = None;
-					let rq: String = format!("TALK {}\n",npc.id);
-					game.tx_to_serv.try_send(rq).ok();
-					game.pending_action = PendingAction::Talk(npc.id.clone());
-				}
-
-			}
-			else {
-				let rq: String = format!("TALK {}\n",npc.id);
-				game.tx_to_serv.try_send(rq).ok();
-				game.pending_action = PendingAction::Talk(npc.id.clone());
-			}
+			// npc_talk.text_i = (npc_talk.text_i + 1) % npc_talk.texts.len();
+			let rq: String = format!("TALK {}\n",npc.id);
+			game.tx_to_serv.try_send(rq).ok();
+			game.pending_action = PendingAction::Talk(npc.id.clone());
 		}
 	}
 	if npc.has_quest{

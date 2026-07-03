@@ -54,6 +54,17 @@ pub async fn handle_events(game: &mut Game, answer: Vec<&str>){
 					}
 				}
 			}
+			"FINISH" => {
+				match serde_json::from_str::<QuestFinishEvent>(answer[3..].join(" ").as_str()) {
+					Ok(quest_rm) => {
+						game.quests.all.retain(|quest| quest.quest_id != quest_rm.quest);
+						game.player.inventory.is_load = false;
+        			}
+					Err(e) => {
+						println!("EVT QUEST error parsing: {}", e);
+					}
+				}
+			}
 			_ => return
 		}
 	}
@@ -103,9 +114,8 @@ pub async fn handle_events(game: &mut Game, answer: Vec<&str>){
 						if answer[3] == game.player.name{
 							if let Some(npc) = game.loaded_npcs.get_mut(&fight.enemy.id){
 								npc.npc_talk = Some(NpcTalk{
-									texts: String::new(),
+									texts: "You lost".to_string(),
 									text_i: 0,
-									info: "You lost".to_string()
 								});
 							}
 							game.active_fight = None;
@@ -192,3 +202,9 @@ pub struct QuestUpdateEvent {
 	pub goal: Goal
 }
 
+
+#[derive(Deserialize, Debug)]
+pub struct QuestFinishEvent {
+	pub quest: String,
+	pub reward: String
+}

@@ -245,27 +245,8 @@ pub async fn handle_response(game: &mut Game, answer: &str, state: &str){
 							npc.npc_talk = Some(NpcTalk{
 							texts: answer.to_string(),
 							text_i: 0,
-							info: String::new()
 						})
 					}
-			}
-		}
-		PendingAction::Quest(ref npc_id) => {
-			if  state =="OK"{
-				match serde_json::from_str::<QuestData>(answer) {
-					Ok(quest) => {
-						game.quests.all.push(Quest {
-							npc_id: npc_id.to_string(),
-							quest_id: quest.quest_id,
-							description: quest.description,
-							reward: quest.reward,
-							goal: None
-						});
-					}
-					Err(e) => {
-						eprintln!("QUEST error: {}", e);
-					}
-				}
 			}
 		}
 		PendingAction::Attack(ref npc_id) => {
@@ -302,18 +283,16 @@ pub async fn handle_response(game: &mut Game, answer: &str, state: &str){
 				if answer.contains("NPC_NOT_HOSTILE"){
 					if let Some(npc) = game.loaded_npcs.get_mut(npc_id){
 							npc.npc_talk = Some(NpcTalk{
-							texts: String::new(),
+							texts:  "I am not Hostile".to_string(),
 							text_i: 0,
-							info: "I am not Hostile".to_string()
 						});
 					}
 				}
 				if answer.contains("DEFEATED_FIGHTER"){
 					if let Some(npc) = game.loaded_npcs.get_mut(npc_id){
 							npc.npc_talk = Some(NpcTalk{
-							texts: String::new(),
+							texts:"You already lost".to_string(),
 							text_i: 0,
-							info: "You already lost".to_string()
 						});
 					}
 				}
@@ -399,6 +378,24 @@ pub async fn handle_response(game: &mut Game, answer: &str, state: &str){
 				else{
 					game.group.in_group = false;
 				}
+		}
+		PendingAction::Quest(ref npc_id) => {
+			if  state =="OK"{
+				match serde_json::from_str::<QuestData>(answer) {
+					Ok(quest) => {
+						game.quests.all.push(Quest {
+							npc_id: npc_id.to_string(),
+							quest_id: quest.quest_id,
+							description: quest.description,
+							reward: quest.reward,
+							goal: None
+						});
+					}
+					Err(e) => {
+						eprintln!("QUEST error: {}", e);
+					}
+				}
+			}
 		}
 		PendingAction::Gold => {
 			if let Some(val_str) = answer.strip_prefix("gold=") {
