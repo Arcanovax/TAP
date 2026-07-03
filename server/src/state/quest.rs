@@ -9,7 +9,7 @@ impl ServerInfo {
         &mut self,
         peer_addr: SocketAddr,
         npc_name: &str,
-    ) -> Result<&Quest, ErrorCode> {
+    ) -> Result<(String, &Quest), ErrorCode> {
         let npc = match self.resolve_npc(npc_name) {
             Some(npc) => npc,
             None => return Err(ErrorCode::NPC_NOT_FOUND),
@@ -26,7 +26,7 @@ impl ServerInfo {
         }
         player.quests_in_progress.insert(quest_ref.clone(), 0);
         let quest = self.world.quests.get(&quest_ref).unwrap();
-        Ok(&quest)
+        Ok((quest_ref, &quest))
     }
 
     pub fn advance_quests(&mut self, peer_addr: SocketAddr, event: Option<&GameEvent>) {
@@ -65,7 +65,7 @@ impl ServerInfo {
                 _ => {}
             }
             if new_step == quest.goals.len() {
-                send_quest_finish_event(&quest, tx);
+                send_quest_finish_event(id.to_string(), &quest, tx);
                 {
                     let reward = quest.reward.clone();
                     let player = self.get_player_mut(peer_addr).unwrap();
@@ -74,22 +74,27 @@ impl ServerInfo {
                     player.quests_in_progress.remove(id);
                 }
             } else {
-                send_quest_update_event(&quest, new_step, tx);
+                send_quest_update_event(id.to_string(), &quest, new_step, tx);
             }
         }
     }
 }
 
-fn send_quest_update_event(quest: &Quest, step: usize, tx: UnboundedSender<Message>) {
+fn send_quest_update_event(
+    quest_id: String,
+    quest: &Quest,
+    step: usize,
+    tx: UnboundedSender<Message>,
+) {
     let _ = tx.send(Message::Event(EventType::QUEST_UPDATE {
-        quest_name: quest.name.clone(),
+        quest_id,
         goal: quest.goals[step].clone(),
     }));
 }
 
-fn send_quest_finish_event(quest: &Quest, tx: UnboundedSender<Message>) {
+fn send_quest_finish_event(quest_id: String, quest: &Quest, tx: UnboundedSender<Message>) {
     let _ = tx.send(Message::Event(EventType::QUEST_FINISH {
-        quest_name: quest.name.clone(),
+        quest_id,
         reward: quest.reward.clone(),
     }));
 }

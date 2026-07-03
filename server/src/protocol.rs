@@ -36,11 +36,11 @@ pub enum EventType {
         group_name: String,
     },
     QUEST_UPDATE {
-        quest_name: String,
+        quest_id: String,
         goal: Goal,
     },
     QUEST_FINISH {
-        quest_name: String,
+        quest_id: String,
         reward: String,
     },
     GROUP_LEAVE {
@@ -73,7 +73,7 @@ pub enum EventType {
         player_name: String,
         hp: u32,
     },
-	HEALING {
+    HEALING {
         player_name: String,
         heal: u32,
     },
@@ -173,7 +173,7 @@ impl Message {
                 EventType::ENTER_FIGHT { player_name, hp } => {
                     format!("EVT FIGHT ENTER {player_name} {hp}\n")
                 }
-				EventType::HEALING { player_name, heal } => {
+                EventType::HEALING { player_name, heal } => {
                     format!("EVT FIGHT HEALING {player_name} {heal}\n")
                 }
                 EventType::ENEMY_ATTACK {
@@ -195,12 +195,12 @@ impl Message {
                     format!("EVT ROOM DROP {player_name} {item}\n")
                 }
                 EventType::SERVER_RESET => format!("EVT SERVER RESET\n"),
-                EventType::QUEST_UPDATE { quest_name, goal } => {
-                    let data = serde_json::json!({ "quest": quest_name, "goal": goal });
+                EventType::QUEST_UPDATE { quest_id, goal } => {
+                    let data = serde_json::json!({ "quest": quest_id, "goal": goal });
                     format!("EVT QUEST UPDATE {data}\n")
                 }
-                EventType::QUEST_FINISH { quest_name, reward } => {
-                    let data = serde_json::json!({ "quest": quest_name, "reward": reward });
+                EventType::QUEST_FINISH { quest_id, reward } => {
+                    let data = serde_json::json!({ "quest": quest_id, "reward": reward });
                     format!("EVT QUEST FINISH {data}\n")
                 }
             },
