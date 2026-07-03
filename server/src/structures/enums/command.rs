@@ -26,6 +26,7 @@ pub enum Command {
     BUY,
     SELL,
     GOLD,
+    DUNGEON,
 }
 
 impl Command {
@@ -55,6 +56,7 @@ impl Command {
             "BUY" => Some(Command::BUY),
             "SELL" => Some(Command::SELL),
             "GOLD" => Some(Command::GOLD),
+            "DUNGEON" => Some(Command::DUNGEON),
             _ => None,
         }
     }

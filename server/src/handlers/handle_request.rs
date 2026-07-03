@@ -1,7 +1,19 @@
 use crate::{
     handlers::{
-        buy::buy_request, consume::consume, flee::flee, gold::gold_request, item::{item_request, items_request}, npc::{npc_request, npcs_request}, quest::quest_request, quests::quests_request, sell::sell_request,
-    }, protocol::Payload, state::{SharedServer, Tx}, structures::{
+        buy::buy_request,
+        consume::consume,
+        dungeon::dungeon_request,
+        flee::flee,
+        gold::gold_request,
+        item::{item_request, items_request},
+        npc::{npc_request, npcs_request},
+        quest::quest_request,
+        quests::quests_request,
+        sell::sell_request,
+    },
+    protocol::Payload,
+    state::{SharedServer, Tx},
+    structures::{
         enums::{command::Command, error::ErrorCode},
         handler_outcome::HandlerOutcome,
     },
@@ -54,6 +66,7 @@ pub fn handle_request(
             Some(Command::BUY) => buy_request(args, server_info, peer_addr).into(),
             Some(Command::SELL) => sell_request(args, server_info, peer_addr).into(),
             Some(Command::GOLD) => gold_request(server_info, peer_addr).into(),
+            Some(Command::DUNGEON) => dungeon_request(args, server_info, peer_addr).into(),
             _ => Message::Response {
                 error: ErrorCode::INVALID_COMMAND,
                 payload: Payload::Empty,
