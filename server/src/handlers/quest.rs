@@ -48,9 +48,9 @@ pub(super) fn quest_request(
             Message::Response {
                 error: ErrorCode::SUCCESS,
                 payload: Payload::Json(json!({
-                    "quest_id": &quest.name,
-                    "description": &<Goal as Into<String>>::into(quest.goals[0].clone()),
-                    "reward": &quest.reward,
+                    "quest_id": &quest.0,
+                    "description": &<Goal as Into<String>>::into(quest.1.goals[0].clone()),
+                    "reward": &quest.1.reward,
                     "status": "accepted"
                 })),
             }
