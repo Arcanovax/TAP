@@ -43,7 +43,7 @@ pub fn handle_request(
 				}
 			};
 
-			if is_in_fight && ["TAKE", "DROP", "QUEST", "BUY","SELL", "TALK"].contains(&name.to_uppercase().as_str()) {
+			if is_in_fight && ["TAKE", "DROP", "QUEST", "BUY", "SELL", "TALK"].contains(&name.to_uppercase().as_str()) {
 				Message::Response { error: ErrorCode::FORBIDDEN_ACTION, payload: Payload::Empty }.into()
 			} else {
 				match Command::parse(name) {
