@@ -100,13 +100,13 @@ impl ServerInfo {
         let con = self.connections.get_mut(&peer_addr).unwrap();
         let location = con.player.location.clone();
         match con.player.inventory.get_mut(item) {
-            Some(count) => {
+            Some(count) if count > &mut 0 => {
                 *count -= 1;
                 if *count == 0 {
                     con.player.inventory.remove(item);
                 }
             }
-            None => return Err(ErrorCode::ITEM_NOT_IN_INVENTORY),
+            _ => return Err(ErrorCode::ITEM_NOT_IN_INVENTORY),
         }
         self.resolve_room_mut(&location)
             .unwrap()
