@@ -8,7 +8,6 @@ use std::net::SocketAddr;
 #[cfg(test)]
 mod tests;
 
-
 pub(super) fn connect_request(
     args: &Vec<String>,
     server_info: &SharedServer,
@@ -21,17 +20,17 @@ pub(super) fn connect_request(
             payload: Payload::Empty,
         };
     }
-    let name = args[0].to_string();
+    let name = args[0].trim();
     let res = server_info
         .lock()
         .unwrap()
-        .try_add_player(name.clone(), peer_addr, tx);
+        .try_add_player(name.to_string(), peer_addr, tx);
 
     if res.is_ok() {
         if let Ok(receivers) = server_info.lock().unwrap().get_room_receivers(peer_addr) {
             for con in receivers {
                 let _ = con.tx.send(Message::Event(EventType::ROOM_JOIN {
-                    player_name: name.clone(),
+                    player_name: name.to_string(),
                 }));
             }
         }
