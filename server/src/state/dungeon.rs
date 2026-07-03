@@ -1,6 +1,5 @@
 use crate::{
     dungeon::generation::generate_dungeon,
-    handlers::movement::move_request,
     structures::{dungeon::format_dungeon_id, enums::error::ErrorCode},
 };
 

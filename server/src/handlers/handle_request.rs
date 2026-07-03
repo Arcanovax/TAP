@@ -17,7 +17,7 @@ use crate::{
     protocol::Payload,
     state::{SharedServer, Tx},
     structures::{
-        enums::{command::Command, error::ErrorCode},
+        enums::{command::Command, error::ErrorCode, state::State},
         handler_outcome::HandlerOutcome,
     },
 };
@@ -40,61 +40,81 @@ pub fn handle_request(
     tx: &Tx,
 ) -> Message {
     let handler_result: HandlerOutcome = match &request {
-        Message::Command { name, args } => match Command::parse(name) {
-            Some(Command::CONNECT) => connect_request(args, server_info, peer_addr, tx).into(),
-            Some(Command::QUIT) => Message::Response {
-                error: ErrorCode::SUCCESS,
-                payload: Payload::Text("bye".to_string()),
+        Message::Command { name, args } => {
+            let is_in_fight = {
+                if let Ok(player) = server_info.lock().unwrap().get_player_mut(peer_addr) {
+                    matches!(player.status, State::InFight { .. })
+                } else {
+                    false
+                }
+            };
+
+            if is_in_fight
+                && ["TAKE", "DROP", "QUEST", "BUY", "SELL", "TALK"]
+                    .contains(&name.to_uppercase().as_str())
+            {
+                return Message::Response {
+                    error: ErrorCode::FORBIDDEN_ACTION,
+                    payload: Payload::Empty,
+                }
+                .into();
             }
-            .into(),
-            Some(Command::WHO) => who_request(server_info).into(),
-            Some(Command::CHAT) => chat_request(args, server_info, peer_addr).into(),
-            Some(Command::GROUP) => group_request(args, server_info, peer_addr).into(),
-            Some(Command::STATUS) => status_request(server_info, peer_addr).into(),
-            Some(Command::MOVE) => move_request(server_info, peer_addr, args).into(),
-            Some(Command::TALK) => talk_request(peer_addr, args, server_info),
-            Some(Command::ATTACK) => fight_request(peer_addr, args, server_info).into(),
-            Some(Command::FLEE) => flee(peer_addr, args, server_info).into(),
-            Some(Command::CONSUME) => consume(peer_addr, args, server_info).into(),
-            Some(Command::LOOK) => look_request(server_info, peer_addr).into(),
-            Some(Command::DROP) => drop_request(server_info, peer_addr, args).into(),
-            Some(Command::TAKE) => take_request(server_info, peer_addr, args).into(),
-            Some(Command::INVENTORY) => inventory_request(server_info, peer_addr).into(),
-            Some(Command::QUEST) => quest_request(args, server_info, peer_addr).into(),
-            Some(Command::NPC) => npc_request(server_info, args).into(),
-            Some(Command::NPCS) => npcs_request(server_info).into(),
-            Some(Command::ITEM) => item_request(server_info, args).into(),
-            Some(Command::ITEMS) => items_request(server_info).into(),
-            Some(Command::QUESTS) => quests_request(server_info, peer_addr).into(),
-            Some(Command::BUY) => buy_request(args, server_info, peer_addr).into(),
-            Some(Command::SELL) => sell_request(args, server_info, peer_addr).into(),
-            Some(Command::GOLD) => gold_request(server_info, peer_addr).into(),
-            Some(Command::DUNGEON) => dungeon_request(args, server_info, peer_addr).into(),
-            Some(Command::SLOT_MACHINE) => {
-                let pool: Vec<String> = server_info
-                    .lock()
-                    .unwrap()
-                    .world
-                    .items
-                    .keys()
-                    .cloned()
-                    .collect();
-                let roll = move || {
-                    let mut rng = rand::rng();
-                    if rng.random_bool(1.0 / 10.0) {
-                        Some(pool[rng.random_range(0..pool.len())].clone())
-                    } else {
-                        None
-                    }
-                };
-                slot_machine_request(server_info, peer_addr, roll).into()
+            match Command::parse(name) {
+                Some(Command::CONNECT) => connect_request(args, server_info, peer_addr, tx).into(),
+                Some(Command::QUIT) => Message::Response {
+                    error: ErrorCode::SUCCESS,
+                    payload: Payload::Text("bye".to_string()),
+                }
+                .into(),
+                Some(Command::WHO) => who_request(server_info).into(),
+                Some(Command::CHAT) => chat_request(args, server_info, peer_addr).into(),
+                Some(Command::GROUP) => group_request(args, server_info, peer_addr).into(),
+                Some(Command::STATUS) => status_request(server_info, peer_addr).into(),
+                Some(Command::MOVE) => move_request(server_info, peer_addr, args).into(),
+                Some(Command::TALK) => talk_request(peer_addr, args, server_info),
+                Some(Command::ATTACK) => fight_request(peer_addr, args, server_info).into(),
+                Some(Command::FLEE) => flee(peer_addr, args, server_info).into(),
+                Some(Command::CONSUME) => consume(peer_addr, args, server_info).into(),
+                Some(Command::LOOK) => look_request(server_info, peer_addr).into(),
+                Some(Command::DROP) => drop_request(server_info, peer_addr, args).into(),
+                Some(Command::TAKE) => take_request(server_info, peer_addr, args).into(),
+                Some(Command::INVENTORY) => inventory_request(server_info, peer_addr).into(),
+                Some(Command::QUEST) => quest_request(args, server_info, peer_addr).into(),
+                Some(Command::NPC) => npc_request(server_info, args).into(),
+                Some(Command::NPCS) => npcs_request(server_info).into(),
+                Some(Command::ITEM) => item_request(server_info, args).into(),
+                Some(Command::ITEMS) => items_request(server_info).into(),
+                Some(Command::QUESTS) => quests_request(server_info, peer_addr).into(),
+                Some(Command::BUY) => buy_request(args, server_info, peer_addr).into(),
+                Some(Command::SELL) => sell_request(args, server_info, peer_addr).into(),
+                Some(Command::GOLD) => gold_request(server_info, peer_addr).into(),
+                Some(Command::DUNGEON) => dungeon_request(args, server_info, peer_addr).into(),
+                Some(Command::SLOT_MACHINE) => {
+                    let pool: Vec<String> = server_info
+                        .lock()
+                        .unwrap()
+                        .world
+                        .items
+                        .keys()
+                        .cloned()
+                        .collect();
+                    let roll = move || {
+                        let mut rng = rand::rng();
+                        if rng.random_bool(1.0 / 10.0) {
+                            Some(pool[rng.random_range(0..pool.len())].clone())
+                        } else {
+                            None
+                        }
+                    };
+                    slot_machine_request(server_info, peer_addr, roll).into()
+                }
+                _ => Message::Response {
+                    error: ErrorCode::INVALID_COMMAND,
+                    payload: Payload::Empty,
+                }
+                .into(),
             }
-            _ => Message::Response {
-                error: ErrorCode::INVALID_COMMAND,
-                payload: Payload::Empty,
-            }
-            .into(),
-        },
+        }
         _ => Message::Response {
             error: ErrorCode::INVALID_COMMAND,
             payload: Payload::Empty,
