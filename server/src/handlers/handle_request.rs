@@ -1,6 +1,15 @@
 use crate::{
     handlers::{
-        buy::buy_request, consume::consume, flee::flee, gold::gold_request, item::{item_request, items_request}, npc::{npc_request, npcs_request}, quest::quest_request, quests::quests_request, sell::sell_request,
+        buy::buy_request,
+        consume::consume,
+        dungeon::dungeon_request,
+        flee::flee,
+        gold::gold_request,
+        item::{item_request, items_request},
+        npc::{npc_request, npcs_request},
+        quest::quest_request,
+        quests::quests_request,
+        sell::sell_request,
     }, protocol::Payload, state::{SharedServer, Tx}, structures::{
         enums::{command::Command, error::ErrorCode, state::State}, handler_outcome::HandlerOutcome,
     },
