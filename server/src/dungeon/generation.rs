@@ -84,6 +84,7 @@ fn populate_rooms(world: &World, dungeon: &mut Dungeon, gid: Uuid) {
                 continue;
             };
             room.npc.push(id.clone());
+            dungeon.name_to_ref.insert(ennemy.name.clone(), id.clone());
             dungeon.npcs.insert(id, ennemy.clone());
             i += 1;
         }
@@ -102,6 +103,7 @@ fn populate_rooms(world: &World, dungeon: &mut Dungeon, gid: Uuid) {
                 continue;
             };
             room.items.push(id.clone().into());
+            dungeon.name_to_ref.insert(item.name.clone(), id.clone());
             dungeon.items.insert(id, item.clone());
             i += 1;
         }
