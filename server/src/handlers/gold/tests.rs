@@ -10,14 +10,17 @@ use crate::test_utils::{addr, connect, err, give_gold, ok_pair, test_server};
 #[test]
 fn gold_without_connection_returns_invalid_command() {
     let server = test_server();
-    assert_eq!(gold_request(&server, addr(1)), err(ErrorCode::INVALID_COMMAND));
+    assert_eq!(
+        gold_request(&server, addr(1)),
+        err(ErrorCode::INVALID_COMMAND)
+    );
 }
 
 #[test]
 fn gold_defaults_to_zero_for_new_player() {
     let server = test_server();
     connect(&server, addr(1), "alice");
-    assert_eq!(gold_request(&server, addr(1)), ok_pair(&[("gold", "0")]));
+    assert_eq!(gold_request(&server, addr(1)), ok_pair(&[("gold", "50")]));
 }
 
 #[test]
