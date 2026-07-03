@@ -148,6 +148,9 @@ pub fn draw_room_fight(world: &mut World, frame: &mut Frame) {
 	} else {
 		Color::Green
 	};
+
+	// if let Ok(mut file) = OpenOptions::new().create(true).append(true).open("debug_network.txt") {
+	// 		let _ = writeln!(file, "ok (State {:#?}) : {:#?}", world.room.fight.target_hp, world.room.fight.target_max_hp);}
 	
 	let percent = world.room.fight.target_hp * 100 / world.room.fight.target_max_hp;
 	hp_bar = Gauge::default()
@@ -387,8 +390,6 @@ pub fn draw_room_fight(world: &mut World, frame: &mut Frame) {
 
 		for (item, _) in &world.player.inventory {
 			let item_kind =  {
-				// if let Ok(mut file) = OpenOptions::new().create(true).append(true).open("debug_network.txt") {
-				// 	let _ = writeln!(file, "ok (State {:#?}) :", world.list_items);}
 				let item_name = world.list_items.get(item).unwrap();
 				item_name.kind.clone()
 			};

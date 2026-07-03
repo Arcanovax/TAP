@@ -6,7 +6,7 @@ pub fn find_action(command: Vec<&str>, world: &mut World) {
 		"move" => world.action = PendingAction::Move,
 		"talk" => world.action = PendingAction::Talk(command[1..].join(" ")),
 		"drop" => world.action = PendingAction::Drop(command[1..].join(" ")),
-		"take" => world.action = PendingAction::Take,
+		"take" => world.action = PendingAction::Take(command[1..].join(" ")),
 		"look" => world.action = PendingAction::Look,
 		"who" => world.action = PendingAction::Who,
 		"chat" => world.action = PendingAction::SendChat(command[..2].join(" ").clone().to_lowercase(), command[2..].join(" ")),
@@ -24,6 +24,8 @@ pub fn find_action(command: Vec<&str>, world: &mut World) {
 		"inventory" => world.action = PendingAction::Inventory,
 		"flee" => world.action = PendingAction::Flee,
 		"quest" => world.action = PendingAction::Quest,
+		"gold" => world.action = PendingAction::Gold,
+		"npc" => world.action = PendingAction::Npc,
 		_ => {}
 	}
 }

@@ -1,7 +1,6 @@
-use core::num;
-use std::{collections::VecDeque, ptr::read};
+use std::{collections::VecDeque, fs::OpenOptions, io::Write};
 
-use crate::{enums::{actions::PendingAction, focus::Focus, item_kind::ItemKind, npc_kind::NPCKind, states::States}, structures::{attack_results::AttackResult, room::Room, status_view::StatusView, world::World}};
+use crate::{enums::{actions::PendingAction, focus::Focus, item_kind::ItemKind, npc_kind::NPCKind, states::States}, structures::{attack_results::AttackResult, npc::NPC, room::{Room, RoomPayload}, status_view::StatusView, world::World}};
 
 pub fn response_handling(world: &mut World, answers: Vec<&str>) {
 	// if let Ok(mut file) = OpenOptions::new().create(true).append(true).open("debug_network.txt") {
@@ -27,23 +26,42 @@ pub fn response_handling(world: &mut World, answers: Vec<&str>) {
 				match &world.action {
 					PendingAction::Look
 					| PendingAction::ClientLook => {
-						world.room = serde_json::from_str(&real_answer).unwrap();
+						let payload: RoomPayload = serde_json::from_str(&real_answer).unwrap();
+						// if let Ok(mut file) = OpenOptions::new().create(true).append(true).open("debug_network.txt") {
+						// 	let _ = writeln!(file, "ok (State {:#?}) : {:#?}", world.room, world.room.fight.target_max_hp);}
 						if world.action == PendingAction::Look {
-							world.room = serde_json::from_str::<Room>(&real_answer).unwrap_or(Room::new());
+							// world.room = serde_json::from_str::<Room>(&real_answer).unwrap_or(Room::new());
+							world.room.apply_update(payload);
 							world.output.push_back(format!("[Server response]\n{}", world.room));
 							world.action = PendingAction::None;
 						} else {
+							world.room = Room::new();
+							world.room.apply_update(payload);
 							let _ = world.tx_to_serv.try_send(String::from("STATUS\n"));
 							world.action = PendingAction::ClientStatus;
 						}
 					},
 					
 					PendingAction::Drop(item) => {
-						world.output.push_back(format!("You successfully droped one {}", item));
+						if let Some(item_obj) = world.list_items.get(item) {
+							world.output.push_back(format!("You successfully droped one {}", item_obj.name));
+						} else {
+							world.output.push_back(format!("You successfully droped one {}", item));
+						}
 						world.player.inventory.entry(item.to_string()).and_modify(|f|*f -= 1);
 						if *world.player.inventory.get(&item.to_string()).unwrap_or(&0) < 1 {
 							world.player.inventory.remove(&item.to_string());
 						}
+					}
+
+					PendingAction::Take(item) => {
+						if let Some(item_obj) = world.list_items.get(item) {
+							world.output.push_back(format!("You successfully retrieved one {}", item_obj.name));
+						} else {
+							world.output.push_back(format!("You successfully retrieved one {}", item));
+						}
+						let quantity = world.player.inventory.entry(item.to_string()).or_insert(0);
+							*quantity += 1;
 					}
 
 					PendingAction::Status
@@ -87,27 +105,21 @@ pub fn response_handling(world: &mut World, answers: Vec<&str>) {
 
 					PendingAction::Inventory
 					| PendingAction::ClientInventory => {
-						let mut item: &str = "";
-						let mut count = 1;
 						let list_items: Vec<String> = serde_json::from_str(&real_answer).unwrap();
-						for (i, line) in list_items.iter().enumerate() {
-							if item != line {
-								if i > 0 {
-									world.player.inventory.insert(item.to_string(), count);
-								}
-								item = line;
-								count = 1;
-							} else {
-								count += 1;
-							}
-						}
-						if item != "" {
-							world.player.inventory.insert(item.to_string(), count);
+						
+						world.player.inventory.clear();
+
+						for item in list_items {
+							*world.player.inventory.entry(item).or_insert(0) += 1;
 						}
 
 						if world.action == PendingAction::Inventory {
+							world.output.push_back("In your inventory: ".to_string());
 							for (item, number) in &world.player.inventory {
-								world.output.push_back(format!("{} x{}", item, number));
+								world.output.push_back(format!("- {} x{}", item, number));
+							}
+							if world.player.inventory.len() == 0 {
+								world.output.push_back("Nothing".to_string());
 							}
 						}
 						let _ = world.tx_to_serv.try_send(String::from("GOLD\n"));
@@ -139,7 +151,7 @@ pub fn response_handling(world: &mut World, answers: Vec<&str>) {
 							world.output.push_back(format!("[server response] You have successfully used {}.", item));
 						}
 						let heal = {
-							let item_name = world.list_items.get(&format!("item.{}", item));
+							let item_name = world.list_items.get(item);
 							match item_name {
 								Some(it) => {
 									if let ItemKind::Potion { healing } = it.kind {
@@ -167,6 +179,11 @@ pub fn response_handling(world: &mut World, answers: Vec<&str>) {
 						let be = if number > 1 {"are".to_string()} else {"is".to_string()};
 						let plural = if number > 1 {"players".to_string()} else {"player".to_string()};
 						world.output.push_back(format!("Currently, there {be} {number} {plural} connected."));
+					}
+
+					PendingAction::Npc => {
+						let npc_view: NPC = serde_json::from_str(&real_answer).unwrap();
+						world.output.push_back(format!("{npc_view}"));
 					}
 
 					PendingAction::GroupJoin(name) => {
@@ -216,7 +233,6 @@ pub fn response_handling(world: &mut World, answers: Vec<&str>) {
 						world.room.focus = Focus::COMMAND;
 						if result.damage > 0 {
 							let (damages, enn_hp) = (result.damage, result.target_hp);
-							world.output.push_back("".to_string());
 							world.output.push_back(format!(
 								"[FIGHT] You dealt {} damages to the enemy. {} has {} HP remaining.",
 								damages, world.room.fight.target_name, enn_hp
@@ -247,6 +263,7 @@ pub fn response_handling(world: &mut World, answers: Vec<&str>) {
 					world.action = PendingAction::ClientLook;
 				}
 				PendingAction::SendChat(command, args) => {
+					world.output.push_back(format!(""));
 					world.output.push_back(format!("> {command} {args}"));
 					world.output.push_back(format!("[Error] {}", real_answer));
 					world.action = PendingAction::None;

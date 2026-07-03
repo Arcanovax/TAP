@@ -8,6 +8,14 @@ use tui_widgets::scrollview::ScrollViewState;
 use crate::{enums::{focus::Focus}, structures::{fight::Fight, room_view::RoomView}};
 
 #[derive(Deserialize, Debug)]
+pub struct RoomPayload {
+    pub items: Vec<String>,
+    pub npcs: Vec<String>,
+    pub players: Vec<String>,
+    pub room: RoomView,
+}
+
+#[derive(Deserialize, Debug)]
 pub struct Room<'a> {
     pub items: Vec<String>,
     pub npcs: Vec<String>,
@@ -64,6 +72,13 @@ impl Room<'_> {
 			text_area: TextArea::default()
 		}
 	}
+
+	pub fn apply_update(&mut self, payload: RoomPayload) {
+        self.items = payload.items;
+        self.npcs = payload.npcs;
+        self.players = payload.players;
+        self.room = payload.room;
+    }
 }
 
 impl Display for Room<'_> {

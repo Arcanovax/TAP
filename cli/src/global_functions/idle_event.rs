@@ -2,7 +2,7 @@ use std::{fs::OpenOptions, io::Write};
 
 use ratatui::crossterm::event::{KeyCode, KeyEvent};
 
-use crate::{enums::{actions::PendingAction, channels::Channels, focus::Focus, npc_kind::NPCKind}, global_functions::find_action::find_action, structures::world::World};
+use crate::{enums::{actions::PendingAction, channels::Channels, focus::Focus, item_kind::ItemKind, npc_kind::NPCKind}, global_functions::find_action::find_action, structures::world::World};
 
 pub fn idle_event(key: KeyEvent, world: &mut World) {
 	if world.room.focus == Focus::COMMAND && ![KeyCode::Tab, KeyCode::Enter, KeyCode::Up, KeyCode::Down].contains(&key.code){
@@ -119,6 +119,8 @@ pub fn idle_event(key: KeyEvent, world: &mut World) {
 					Focus::EXITS => {
 						if let Some(index) = world.room.exits_list_state.selected_mut() {
 							if let Some(dir) = world.room.room.exits.keys().nth(*index) {
+								world.output.push_back(format!("\n> {}", format!("MOVE {}\n", dir)));
+								world.room.output_scroll_pos.scroll_to_bottom();
 								let _ = world.tx_to_serv.try_send(format!("MOVE {}\n", dir));
 								world.action = PendingAction::Move;
 							} else {
@@ -131,10 +133,14 @@ pub fn idle_event(key: KeyEvent, world: &mut World) {
 								if let Some(npc) = world.list_npcs.get(selected_npc) {
 									match npc.kind {
 										NPCKind::Enemy { .. } => {
+											world.output.push_back(format!("\n> {}", format!("attack {}\n", selected_npc)));
+											world.room.output_scroll_pos.scroll_to_bottom();
 											let _ = world.tx_to_serv.try_send(format!("attack {}\n", selected_npc));
 											world.action = PendingAction::Attack(selected_npc.clone());
 										}
 										NPCKind::Citizen => {
+											world.output.push_back(format!("\n> {}", format!("TALK {}\n", selected_npc)));
+											world.room.output_scroll_pos.scroll_to_bottom();
 											let _ = world.tx_to_serv.try_send(format!("TALK {}\n", selected_npc));
 											world.action = PendingAction::Talk(selected_npc.clone());
 										}
@@ -151,23 +157,40 @@ pub fn idle_event(key: KeyEvent, world: &mut World) {
 							world.room.fight.bag = false;
 							world.room.focus = Focus::COMMAND;
 						} else {
-							let item_name = {
-								if world.room.focus == Focus::INVENTORY {
-									let index = world.room.inventory_list_state.selected().unwrap();
-									world.player.inventory.keys().nth(index)
-								} else {
-									let index = world.room.bag_state.selected().unwrap();
-									world.room.fight.bag = false;
-									world.room.bag.iter().nth(index)
+							if world.room.focus == Focus::INVENTORY && world.player.inventory.len() == 0 {
+								world.output.push_back("\nAre you really trying to use... nothing?".to_string());
+							} else {
+								let item_name = {
+									if world.room.focus == Focus::INVENTORY {
+										let index = world.room.inventory_list_state.selected().unwrap();
+										world.player.inventory.keys().nth(index)
+									} else {
+										let index = world.room.bag_state.selected().unwrap();
+										world.room.fight.bag = false;
+										world.room.bag.iter().nth(index)
+									}
+								};
+								match item_name {
+									Some(item) => {
+										if let Some(item_obj) =  world.list_items.get(item) {
+											match item_obj.kind {
+												ItemKind::Potion { .. } => {
+													world.output.push_back(format!("\n> {}", format!("CONSUME {}\n", item)));
+													let _ = world.tx_to_serv.try_send(format!("CONSUME {}\n", item));
+													world.action = PendingAction::Consume(item.clone());
+												},
+												_ => {
+													world.output.push_back(format!("\n> {}", format!("DROP {}\n", item)));
+													let _ = world.tx_to_serv.try_send(format!("DROP {}\n", item));
+													world.action = PendingAction::Drop(item.clone());
+												}
+											}
+										} 
+										world.room.focus = Focus::COMMAND;
+										world.room.output_scroll_pos.scroll_to_bottom();
+									},
+									None => {world.output.push_back("An error occurs, impossible to find your selected object.".to_string());}
 								}
-							};
-							match item_name {
-								Some(item) => {
-									world.room.focus = Focus::COMMAND;
-									let _ = world.tx_to_serv.try_send(format!("CONSUME {}\n", item));
-									world.action = PendingAction::Consume(item.clone());
-								},
-								None => {world.output.push_back("An error occurs, impossible to find your selected object.".to_string());}
 							}
 						}
 					}
