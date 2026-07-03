@@ -25,7 +25,8 @@ pub enum PendingAction {
 	Inventory,
 	Quests,
 	Gold,
-	Flee
+	Flee,
+	Consume(String)
 }
 
 
@@ -275,7 +276,7 @@ pub async fn handle_response(game: &mut Game, answer: &str, state: &str){
 							state.hp = fight_data.attacker_hp;
 							if let Some(ref mut fight) = &mut game.active_fight{
 								fight.enemy_hp = fight_data.target_hp;
-								// fight.chat.push(format!("{} attack and deal {} damage", fight_data.attacker_name, fight_data.damage));
+								fight.chat.push(format!("You attack and deal {} damage", fight_data.damage));
 							}
 							else{
 								state.status= fight_data.status;
@@ -283,8 +284,10 @@ pub async fn handle_response(game: &mut Game, answer: &str, state: &str){
 									enemy: game.loaded_npcs[npc_id].clone(),
 									players: fight_data.fighters,
 									enemy_hp: fight_data.target_hp,
-									chat:Vec::new()
+									chat:vec!["You joined the fight".to_string()],
+									consume_is_act: false
 								});
+
 							}
 
 						}
@@ -413,6 +416,19 @@ pub async fn handle_response(game: &mut Game, answer: &str, state: &str){
 			if state=="OK"{
 				game.player.state = None;
 				game.active_fight = None;
+			}
+		}
+		PendingAction::Consume(used) => {
+			if state=="OK"{
+				let current_count = game.player.inventory.data.get(used).copied().unwrap_or(0);
+				if current_count > 0 {
+					let new_count = current_count - 1;
+					if new_count <= 0 {
+						game.player.inventory.data.remove(used);
+					} else {
+						game.player.inventory.data.insert(used.clone(), new_count);
+					}
+				}
 			}
 		}
 		_ => {

@@ -71,7 +71,7 @@ pub async fn handle_events(game: &mut Game, answer: Vec<&str>){
 			}
 			"LEAVE" => {
 				if let Some(ref mut fight) = game.active_fight{
-						fight.players.remove(answer[5]);
+						fight.players.remove(answer[3]);
 						fight.chat.push(format!("{} left the fight", answer[3].to_string()));
 					}
 			}
@@ -119,6 +119,21 @@ pub async fn handle_events(game: &mut Game, answer: Vec<&str>){
 
 					}
 
+				}
+			}
+			"HEALING" => {
+				let Some(ref mut state) = game.player.state else { return };
+				if let Some(ref mut fight) = game.active_fight{
+					if let Ok(heal) = answer[4].parse::<i32>() {
+						if answer[3] == game.player.name{
+							state.hp += heal;
+						}
+						if let Some(player_hp) = fight.players.get_mut(answer[3]) {
+							*player_hp += heal;
+						}
+						let text: String = format!("{} healed {}HP", answer[3], heal);
+						fight.chat.push(text);
+						}
 				}
 			}
 			_ => return

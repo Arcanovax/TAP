@@ -90,7 +90,7 @@ fn get_item_slot_floor(slot_rect: Rect, game: &mut Game, item: &Item, mouse: (f3
 }
 
 
-fn get_item_slot_inv(slot_rect: Rect, game: &mut Game, item: &Item, amount: &i32 , mouse: (f32, f32)){
+pub fn get_item_slot_inv(slot_rect: Rect, game: &mut Game, item: &Item, amount: &i32 , mouse: (f32, f32)) -> bool{
 
     draw_rectangle(slot_rect.x, slot_rect.y, slot_rect.w, slot_rect.h, GRAY);
     let hovered = slot_rect.contains(Vec2::new(mouse.0, mouse.1));
@@ -103,10 +103,9 @@ fn get_item_slot_inv(slot_rect: Rect, game: &mut Game, item: &Item, amount: &i32
 		draw_item_info(slot_rect, &item);
 	}
 	if hovered && is_mouse_button_pressed(MouseButton::Left) && game.pending_action == PendingAction::None{
-		let rq: String = format!("DROP {}\n",item.id);
-		game.tx_to_serv.try_send(rq).ok();
-		game.pending_action = PendingAction::Drop;
+		return true;
 	}
+	return false;
 }
 
 
@@ -147,9 +146,12 @@ pub fn draw_inv(game: &mut Game) {
 			let item_rect = Rect::new(inv_rect.x, inv_rect.y+ SLOT_SIZE * (i as f32), SLOT_SIZE, SLOT_SIZE);
 			let item: Option<Item> = game.loaded_items.get(item_id).cloned();
 			if let Some(item) = item {
-				get_item_slot_inv(item_rect, game, &item, amount, mouse);
+				if get_item_slot_inv(item_rect, game, &item, amount, mouse){
+					let rq: String = format!("DROP {}\n",item.id);
+					game.tx_to_serv.try_send(rq).ok();
+					game.pending_action = PendingAction::Drop;
+				}
 			}
-
 		}
 
 
