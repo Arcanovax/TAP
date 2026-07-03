@@ -69,8 +69,7 @@ pub fn handle_fight(game: &mut Game, floor: &Texture2D) {
     );
 
     let sprite_size = vec2(game.config.sprite_width * 1.5, game.config.sprite_height * 1.5);
-	let sprite_width: f32 = game.config.sprite_width;
-	let sprite_height: f32 = game.config.sprite_height;
+
     draw_texture_ex(
         &enemy.texture,
         ENEMY_POS.x,
@@ -82,33 +81,7 @@ pub fn handle_fight(game: &mut Game, floor: &Texture2D) {
         },
     );
 
-	let players_len = players.len();
-	let spacing = 40.0;
-
-	let total_width = if players_len > 1 { (players_len - 1) as f32 * spacing } else { 0.0 };
-	let start_x = PLAYER_POS.x - (total_width / 2.0);
-	for (i, (player,life)) in players.iter().enumerate(){
-		let player_pos = &vec2(start_x + (i as f32 * spacing) ,PLAYER_POS.y);
-		camera_handler(game);
-		draw_texture_ex(
-			&game.skins[game.player.spritesheet_index as usize].texture.clone(),
-			player_pos.x,player_pos.y,
-			WHITE,
-			DrawTextureParams {
-				source: Some(Rect::new(0.0, 0.0, sprite_width, sprite_height - 1.0)),
-				dest_size: Some(vec2(sprite_width, sprite_height - 1.0)),
-				..Default::default()},
-    	);
-		let screen_pos = world_to_screen_pos(*player_pos);
-		let sprite_rect = world_to_screen_pos(vec2(sprite_width, sprite_height));
-		set_default_camera();
-		let rect_width = 80.0;
-		let rect = Rect::new(screen_pos.x + (sprite_rect.x / 2.0) - (rect_width / 2.0), screen_pos.y-30.0, rect_width, 20.0);
-		draw_text_center(rect, player, 30);
-		let rect = Rect::new(screen_pos.x + (sprite_rect.x / 2.0) - (rect_width / 2.0), screen_pos.y-10.0, rect_width, 20.0);
-		let hp_text = format!("{}HP", life);
-		draw_text_center(rect, hp_text.as_str(), 20);
-	}
+	draw_all_players(game, players);
 
 	if let Some(state) = game.player.state.clone() {
 		set_default_camera();
@@ -120,7 +93,7 @@ pub fn handle_fight(game: &mut Game, floor: &Texture2D) {
 		draw_rectangle(rect.x, rect.y, rect.w, rect.h, Color::new(0.0, 0.0, 0.0, 0.5));
 		let btn_size = vec2(300.0, 55.0);
 		let spacing = 30.0;
-		let mouse = mouse_position();
+		let mouse = game.mouse;
 
 		let total_width = (3.0 as f32 * btn_size.x) + ((3 - 1) as f32 * spacing);
 
@@ -130,15 +103,16 @@ pub fn handle_fight(game: &mut Game, floor: &Texture2D) {
 
 		let pos_attack = vec2(start_x, pos_y);
 		let btn_attack = Rect::new(pos_attack.x, pos_attack.y, btn_size.x, btn_size.y);
+		let Some(ref mut fight) = game.active_fight else { return };
+
 		if get_button(btn_attack, "Attack", 25, WHITE, mouse) {
 			let rq: String = format!("ATTACK {}\n",enemy.id);
 			game.tx_to_serv.try_send(rq).ok();
 			game.pending_action = PendingAction::Attack(enemy.id.clone());
 		}
-		let Some(ref mut fight) = game.active_fight else { return };
-		let btn_skill = Rect::new(start_x + (1.0 * (btn_size.x + spacing)), pos_y, btn_size.x, btn_size.y);
-		if get_button(btn_skill, "Consume", 25, WHITE, mouse) {
 
+		let btn_consume = Rect::new(start_x + (1.0 * (btn_size.x + spacing)), pos_y, btn_size.x, btn_size.y);
+		if get_button(btn_consume, "Consume", 25, WHITE, mouse) {
 			fight.consume_is_act = !fight.consume_is_act
 		}
 
@@ -180,5 +154,37 @@ fn handle_consume(game: &mut Game){
 				y_index += 1;
 			}
 		}
+	}
+}
+
+fn draw_all_players(game: &mut Game, players: HashMap<String, i32>){
+	let sprite_width: f32 = game.config.sprite_width;
+	let sprite_height: f32 = game.config.sprite_height;
+	let players_len = players.len();
+	let spacing = 40.0;
+
+	let total_width = if players_len > 1 { (players_len - 1) as f32 * spacing } else { 0.0 };
+	let start_x = PLAYER_POS.x - (total_width / 2.0);
+	for (i, (player,life)) in players.iter().enumerate(){
+		let player_pos = &vec2(start_x + (i as f32 * spacing) ,PLAYER_POS.y);
+		camera_handler(game);
+		draw_texture_ex(
+			&game.skins[game.player.spritesheet_index as usize].texture.clone(),
+			player_pos.x,player_pos.y,
+			WHITE,
+			DrawTextureParams {
+				source: Some(Rect::new(0.0, 0.0, sprite_width, sprite_height - 1.0)),
+				dest_size: Some(vec2(sprite_width, sprite_height - 1.0)),
+				..Default::default()},
+    	);
+		let screen_pos = world_to_screen_pos(*player_pos);
+		let sprite_rect = world_to_screen_pos(vec2(sprite_width, sprite_height));
+		set_default_camera();
+		let rect_width = 80.0;
+		let rect = Rect::new(screen_pos.x + (sprite_rect.x / 2.0) - (rect_width / 2.0), screen_pos.y-30.0, rect_width, 20.0);
+		draw_text_center(rect, player, 30);
+		let rect = Rect::new(screen_pos.x + (sprite_rect.x / 2.0) - (rect_width / 2.0), screen_pos.y-10.0, rect_width, 20.0);
+		let hp_text = format!("{}HP", life);
+		draw_text_center(rect, hp_text.as_str(), 20);
 	}
 }
