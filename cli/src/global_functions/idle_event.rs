@@ -5,6 +5,7 @@ use crate::{enums::{actions::PendingAction, channels::Channels, focus::Focus, np
 pub fn idle_event(key: KeyEvent, world: &mut World) {
 	if world.room.focus == Focus::COMMAND && key.code != KeyCode::Tab && key.code != KeyCode::Enter{
 		world.room.text_area.input(key);
+		world.index_command = 0;
 	} else {
 		match key.code {
 			KeyCode::Down => {
@@ -15,6 +16,14 @@ pub fn idle_event(key: KeyEvent, world: &mut World) {
 					Focus::NPC => world.room.npc_list_state.select_next(),
 					Focus::INVENTORY => world.room.inventory_list_state.select_next(),
 					Focus::EXITS => world.room.exits_list_state.select_next(),
+					Focus::COMMAND => {
+						if world.index_command == 0 {
+						} else {
+							world.room.text_area.clear();
+							world.room.text_area.insert_str(world.old_command.iter().nth(world.index_command).unwrap_or(&"".to_string()));
+							world.index_command -= 1;
+						}
+					},
 					Focus::BAG => world.room.bag_state.select_next(),
 					_ => {}
 				}
@@ -27,6 +36,16 @@ pub fn idle_event(key: KeyEvent, world: &mut World) {
 					Focus::NPC => world.room.npc_list_state.select_previous(),
 					Focus::INVENTORY => world.room.inventory_list_state.select_previous(),
 					Focus::EXITS => world.room.exits_list_state.select_previous(),
+					Focus::COMMAND => {
+						if world.index_command < world.old_command.len() {
+							world.index_command +=1;
+							world.room.text_area.clear();
+							if let Some(command) = world.
+						}
+						world.room.text_area.clear();
+						world.room.text_area.insert_str(world.old_command.iter().nth(world.index_command).unwrap_or(&"".to_string()));
+						world.index_command += 1;
+					},
 					Focus::BAG => world.room.bag_state.select_previous(),
 					_ => {}
 				}
@@ -76,6 +95,7 @@ pub fn idle_event(key: KeyEvent, world: &mut World) {
 				match world.room.focus {
 					Focus::COMMAND => {
 						let command = world.room.text_area.lines().join("");
+						world.old_command.push_front(command.clone());
 						let split_command: Vec<&str> = command.split(" ").collect();
 						let _ = world.tx_to_serv.try_send(split_command.join(" ") + "\n");
 

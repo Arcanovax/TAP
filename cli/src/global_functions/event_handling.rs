@@ -45,7 +45,6 @@ pub fn event_handling(world: &mut World, answer: Vec<&str>) {
 						world.output.push_back("".to_string());
 						world.output.push_back(format!("[FIGHT] {} says: 'Hello there!'.", answer[3]));
 						world.room.fight.fighters.insert(answer[3].to_string(), answer[4].parse::<u32>().unwrap_or(100));
-						// world.room.output_scroll_pos.scroll_to_bottom();
 					}
 					"LEAVE" => {
 						world.output.push_back("".to_string());

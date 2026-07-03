@@ -6,11 +6,9 @@ use std::{
 };
 
 use ratatui::{
-	DefaultTerminal,
-	Frame,
-	crossterm::event::{
+	DefaultTerminal, Frame, crossterm::event::{
 		self, Event, KeyCode
-	},
+	}, widgets::List,
 };
 use tokio::sync::mpsc::Sender;
 
@@ -34,6 +32,8 @@ pub struct World<'a> {
 	pub action: PendingAction,
 	pub group: Group,
 	pub counter: u32,
+	pub old_command: VecDeque<String>,
+	pub index_command: usize,
 	pub error: bool,
 	pub message_error: String,
 	pub click: bool,
@@ -55,6 +55,8 @@ impl World<'_>{
 			message: String::from(""),
 			chat: Chat::new(),
 			output: VecDeque::new(),
+			old_command: VecDeque::new(),
+			index_command: 0,
 			action: PendingAction::None,
 			counter: 0,
 			group: Group::new(),
