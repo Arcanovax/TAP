@@ -10,8 +10,8 @@ pub enum ErrorCode {
     ALREADY_IN_GROUP,
     ITEM_NOT_FOUND,
     NOT_AN_ITEM,
-	FORBIDDEN_ACTION,
-	UNUSABLE_ITEM,
+    FORBIDDEN_ACTION,
+    UNUSABLE_ITEM,
     ITEM_NOT_IN_INVENTORY,
     NPC_NOT_FOUND,
     NPC_NOT_HOSTILE,
@@ -30,7 +30,9 @@ pub enum ErrorCode {
     DISCONNECTION_FAIL,
     ALREADY_INVITED,
     NOT_ENOUGH_GOLD,
-	GAME_LOSE,
+    GAME_LOSE,
+    DUNGEON_ALREADY_IN_PROGRESS,
+    NO_DUNGEON_IN_PROGRESS,
 }
 
 impl ErrorCode {
@@ -46,7 +48,7 @@ impl ErrorCode {
             ErrorCode::ITEM_NOT_FOUND
             | ErrorCode::NOT_AN_ITEM
             | ErrorCode::ROOM_NOT_FOUND
-			| ErrorCode::FORBIDDEN_ACTION
+            | ErrorCode::FORBIDDEN_ACTION
             | ErrorCode::UNUSABLE_ITEM
             | ErrorCode::DEFEATED_ENEMY
             | ErrorCode::NOT_YOUR_TURN
@@ -56,7 +58,9 @@ impl ErrorCode {
             ErrorCode::NPC_NOT_HOSTILE => 405,
             ErrorCode::NO_QUEST_AVAILABLE => 406,
             ErrorCode::NOT_ENOUGH_GOLD => 408,
-			ErrorCode::GAME_LOSE => 409,
+            ErrorCode::GAME_LOSE => 409,
+            ErrorCode::DUNGEON_ALREADY_IN_PROGRESS => 410,
+            ErrorCode::NO_DUNGEON_IN_PROGRESS => 411,
             ErrorCode::CONNECTION_FAILED => 900,
             ErrorCode::SEND_FAILED => 901,
             ErrorCode::INVALID_ARGS => 902,

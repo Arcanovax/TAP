@@ -49,6 +49,7 @@ pub enum EventType {
     GROUP_JOIN {
         player_name: String,
     },
+    DUNGEON_CREATE,
     ROOM_LEAVE {
         player_name: String,
     },
@@ -148,6 +149,7 @@ impl Message {
                 EventType::GROUP_JOIN { player_name } => {
                     format!("EVT GROUP JOIN {player_name}\n")
                 }
+                EventType::DUNGEON_CREATE => format!("EVT DUNGEON CREATE\n"),
                 EventType::GROUP_LEAVE { player_name } => {
                     format!("EVT GROUP LEAVE {player_name}\n")
                 }
