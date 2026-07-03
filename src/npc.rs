@@ -172,14 +172,14 @@ fn handle_shop(game: &mut Game, npc: Npc, rect: Rect){
 						if get_button(btn_buy, "Buy", 25, color,game.mouse) && !game.group.typed.is_empty(){
 							let rq: String = format!("BUY {} {} \n",npc.id,item);
 							game.tx_to_serv.try_send(rq).ok();
-							game.pending_action = PendingAction::Buy;
+							game.pending_action = PendingAction::Buy(item.to_string());
 						}
 					}
 					else{
 						if get_button(btn_buy, "Buy", 25, WHITE, game.mouse){
 							let rq: String = format!("BUY {} {} \n",npc.id,item);
 							game.tx_to_serv.try_send(rq).ok();
-							game.pending_action = PendingAction::Buy;
+							game.pending_action = PendingAction::Buy(item.to_string());
 						}
 					}
 
@@ -188,14 +188,38 @@ fn handle_shop(game: &mut Game, npc: Npc, rect: Rect){
 					if get_button(btn_buy, "Buy", 25, WHITE, game.mouse){
 							let rq: String = format!("BUY {} {} \n",npc.id,item);
 							game.tx_to_serv.try_send(rq).ok();
-							game.pending_action = PendingAction::Buy;
+							game.pending_action = PendingAction::Buy(item.to_string());
 				}}
 
 
 				let btn_sell = Rect::new(shop_rect.x + shop_rect.w - 60.0, line + (50.0 - item_size) / 2.0, 50.0,37.5);
-				if get_button(btn_sell, "Sell", 25, WHITE, game.mouse){
+				if let Some(info) = game.npc_shop.buy_info.as_ref() {
+					if get_time() - info.time > 0.5 {
+						game.npc_shop.buy_info = None;
+					}
+					else if btn_sell.contains(game.mouse){
+						let color = info.color;
+						if get_button(btn_sell, "Sell", 25, color,game.mouse) && !game.group.typed.is_empty(){
+							let rq: String = format!("SELL {} {} \n",npc.id,item);
+							game.tx_to_serv.try_send(rq).ok();
+							game.pending_action = PendingAction::Sell(item.to_string());
+						}
+					}
+					else{
+						if get_button(btn_sell, "Sell", 25, WHITE, game.mouse){
+							let rq: String = format!("SELL {} {} \n",npc.id,item);
+							game.tx_to_serv.try_send(rq).ok();
+							game.pending_action = PendingAction::Sell(item.to_string());
+						}
+					}
 
 				}
+				else{
+					if get_button(btn_sell, "Sell", 25, WHITE, game.mouse){
+							let rq: String = format!("SELL {} {} \n",npc.id,item);
+							game.tx_to_serv.try_send(rq).ok();
+							game.pending_action = PendingAction::Sell(item.to_string());
+				}}
 
 			}
 		}

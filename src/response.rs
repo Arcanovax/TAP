@@ -27,7 +27,8 @@ pub enum PendingAction {
 	Gold,
 	Flee,
 	Consume(String),
-	Buy
+	Buy(String),
+	Sell(String)
 }
 
 
@@ -434,18 +435,37 @@ pub async fn handle_response(game: &mut Game, answer: &str, state: &str){
 				}
 			}
 		}
-		PendingAction::Buy => {
-			if state =="OK" {
-				game.npc_shop.buy_info = Some(InfoShop{
-					color: GREEN,
-					time: get_time()
-				});
-			} else{
-				game.npc_shop.buy_info = Some(InfoShop{
-					color: RED,
-					time: get_time()
-				});
-			}
+		PendingAction::Buy(item_key) => {
+			let color = if state == "OK" { GREEN } else { RED };
+			game.npc_shop.buy_info = Some(InfoShop {
+				color,
+				time: get_time(),
+			});
+
+			if state == "OK" {
+				game.player.inventory.is_load = false;
+				if let Some(item) = game.loaded_items.get(item_key) {
+					if let Some(ref mut gold) = game.player.gold {
+						*gold -= item.price;
+					}
+				}
+    		}
+		}
+		PendingAction::Sell(item_key) => {
+			let color = if state == "OK" { GREEN } else { RED };
+			game.npc_shop.buy_info = Some(InfoShop {
+				color,
+				time: get_time(),
+			});
+
+			if state == "OK" {
+				game.player.inventory.is_load = false;
+				if let Some(item) = game.loaded_items.get(item_key) {
+					if let Some(ref mut gold) = game.player.gold {
+						*gold += item.price;
+					}
+				}
+    		}
 		}
 		_ => {
 			game.pending_action = PendingAction::None;
