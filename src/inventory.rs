@@ -96,9 +96,10 @@ pub fn get_item_slot_inv(slot_rect: Rect, game: &mut Game, item: &Item, amount: 
     let hovered = slot_rect.contains(game.mouse);
 
 	draw_item_center(slot_rect, &item);
-	let amount_str: &str = &format!("{}", amount).to_string();
-	draw_text_bottom(slot_rect, amount_str, 30,0.0);
-
+	if *amount > 1{
+		let amount_str: &str = &format!("{}", amount).to_string();
+		draw_text_bottom(slot_rect, amount_str, 30,0.0);
+	}
 	if hovered{
 		draw_item_info(slot_rect, &item);
 	}
