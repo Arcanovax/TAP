@@ -301,11 +301,6 @@ async fn main() {
 				game.pending_action = PendingAction::Status;
 			}
 
-			else if !game.player.inventory.is_load && game.pending_action == PendingAction::None{
-				game.tx_to_serv.try_send("INVENTORY \n".to_string()).ok();
-				game.pending_action = PendingAction::Inventory;
-			}
-
 			else if !game.quests.is_load && game.pending_action == PendingAction::None{
 				game.tx_to_serv.try_send("QUESTS \n".to_string()).ok();
 				game.pending_action = PendingAction::Quests;
@@ -315,6 +310,10 @@ async fn main() {
 				game.tx_to_serv.try_send("GOLD \n".to_string()).ok();
 				game.pending_action = PendingAction::Gold;
 			}
+			else if game.map_data.is_none() && game.pending_action == PendingAction::None {
+					game.tx_to_serv.try_send("LOOK \n".to_string()).ok();
+					game.pending_action = PendingAction::Look;
+				}
 
 			else{
 				if let Some(state) = game.player.state.clone() {
@@ -327,22 +326,19 @@ async fn main() {
 					}
 					else{
 
+					if !game.player.inventory.is_load && game.pending_action == PendingAction::None{
+						game.tx_to_serv.try_send("INVENTORY \n".to_string()).ok();
+						game.pending_action = PendingAction::Inventory;
+					}
 
-				if game.map_data.is_none() && game.pending_action == PendingAction::None {
-					game.tx_to_serv.try_send("LOOK \n".to_string()).ok();
-					game.pending_action = PendingAction::Look;
-				}
+					if let Some(map_data) = game.map_data.clone() {
+						let map = match rooms.get(&map_data.room.id) {
+							Some(room_data) => room_data,
+							None => {
+								continue;
+							}
 
-				if let Some(map_data) = game.map_data.clone() {
-					let map = match rooms.get(&map_data.room.id) {
-						Some(room_data) => room_data,
-						None => {
-							continue;
-						}
-
-					};
-
-
+						};
 
 					if game.player.new_spawn != Spawn::None && game.player.new_spawn != Spawn::Center{
 						let spawn: Vec2 = map.spawns[&game.player.new_spawn];
