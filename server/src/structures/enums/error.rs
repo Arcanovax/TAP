@@ -10,6 +10,7 @@ pub enum ErrorCode {
     ALREADY_IN_GROUP,
     ITEM_NOT_FOUND,
     NOT_AN_ITEM,
+	FORBIDDEN_ACTION,
 	UNUSABLE_ITEM,
     ITEM_NOT_IN_INVENTORY,
     NPC_NOT_FOUND,
@@ -45,6 +46,7 @@ impl ErrorCode {
             ErrorCode::ITEM_NOT_FOUND
             | ErrorCode::NOT_AN_ITEM
             | ErrorCode::ROOM_NOT_FOUND
+			| ErrorCode::FORBIDDEN_ACTION
             | ErrorCode::UNUSABLE_ITEM
             | ErrorCode::DEFEATED_ENEMY
             | ErrorCode::NOT_YOUR_TURN
