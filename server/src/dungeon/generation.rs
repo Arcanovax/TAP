@@ -1,6 +1,6 @@
 use crate::structures::{
     dungeon::{Dungeon, format_dungeon_id},
-    enums::exits::Direction,
+    enums::{exits::Direction, npc_kind::NPCKind},
     game::World,
     room::Room,
 };
@@ -10,6 +10,12 @@ use uuid::Uuid;
 
 const MIN_ROOM: u8 = 3;
 const MAX_ROOM: u8 = 6;
+
+const MIN_ITEM: u8 = 1;
+const MAX_ITEM: u8 = 2;
+
+const MIN_ENNEMY: u8 = 1;
+const MAX_ENNEMY: u8 = 3;
 
 const TO_NORTH: Coord = Coord { x: 0, y: -1 };
 const TO_SOUTH: Coord = Coord { x: 0, y: 1 };
@@ -41,16 +47,65 @@ impl From<(i8, i8)> for Coord {
     }
 }
 
-pub fn generate_dungeon(world: &World, gid: Uuid) -> Dungeon {
+pub fn generate_dungeon(base_world: &World, gid: Uuid) -> Dungeon {
     // TODO: Change spawn_room to dungeon entrance
-    let rooms = generate_rooms(world.spawn_room.clone(), gid);
-    // TODO: Peupler les rooms
+    let rooms = generate_rooms(base_world.spawn_room.clone(), gid);
 
-    Dungeon {
+    let mut dungeon = Dungeon {
         rooms,
         npcs: HashMap::new(),
         items: HashMap::new(),
         name_to_ref: HashMap::new(),
+    };
+
+    populate_rooms(base_world, &mut dungeon, gid);
+
+    dungeon
+}
+
+fn populate_rooms(world: &World, dungeon: &mut Dungeon, gid: Uuid) {
+    let ennemy_pool = world
+        .npcs
+        .iter()
+        .filter(|(_, npc)| matches!(npc.kind, NPCKind::Enemy { .. }))
+        .map(|(_, npc)| npc);
+
+    let mut ennemy_index = 0;
+    let mut item_index = 0;
+
+    for room in dungeon.rooms.values_mut() {
+        let nb_ennemy = rand::rng().random_range(MIN_ENNEMY..=MAX_ENNEMY);
+        let nb_item = rand::rng().random_range(MIN_ITEM..=MAX_ITEM);
+
+        let mut i = 0;
+        while i < nb_ennemy {
+            let id = format_dungeon_id("npc", gid, ennemy_index + i);
+            let Some(ennemy) = ennemy_pool.clone().choose(&mut rand::rng()) else {
+                continue;
+            };
+            room.npc.push(id.clone());
+            dungeon.npcs.insert(id, ennemy.clone());
+            i += 1;
+        }
+        ennemy_index += i;
+
+        let mut i = 0;
+        while i < nb_item {
+            let id = format_dungeon_id("item", gid, item_index + i);
+            let Some(item) = world
+                .items
+                .iter()
+                .map(|(_, item)| item)
+                .clone()
+                .choose(&mut rand::rng())
+            else {
+                continue;
+            };
+            room.items.push(id.clone().into());
+            dungeon.items.insert(id, item.clone());
+            i += 1;
+        }
+        item_index += i;
     }
 }
 
@@ -64,7 +119,7 @@ fn generate_rooms(return_room: String, gid: Uuid) -> HashMap<String, Room> {
     start_room.exits.insert(Direction::West, return_room);
     rooms.insert(id, start_room);
 
-    let n = rand::rng().random_range(MIN_ROOM..MAX_ROOM);
+    let n = rand::rng().random_range(MIN_ROOM..=MAX_ROOM);
     let mut i = 1;
     while i < n {
         let Some(coord) = room_grid.keys().choose(&mut rand::rng()) else {
