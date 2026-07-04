@@ -87,7 +87,7 @@ impl ServerInfo {
     fn try_delete_group(&mut self, group_id: Uuid) -> bool {
         let group = self.groups.get(&group_id).unwrap();
         if group.get_group_size() == 0 {
-            self.dungeons.remove(&group_id);
+            self.close_dungeon(group_id);
             self.groups.remove(&group_id);
             self.cleanup_group_invitation(group_id);
             info!("group({}) deleted", group_id);

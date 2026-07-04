@@ -6,6 +6,7 @@ use crate::{
     state::ServerInfo,
     structures::{
         attack_result::AttackResult,
+        dungeon::parse_dungeon_id,
         enums::{item_kind::ItemKind, npc_kind::NPCKind, state::State},
     },
 };
@@ -120,6 +121,23 @@ pub fn execute_attack<'a>(
                 .find(|c| &c.player.name == fighter_name)
             {
                 fighters.insert(fighter.player.name.clone(), fighter.player.hp);
+            }
+        }
+
+        if let Some(gid) = parse_dungeon_id(target_id) {
+            let cleared = world_mut
+                .dungeons
+                .get(&gid)
+                .map(|d| {
+                    d.npcs.values().all(|npc| match &npc.kind {
+                        NPCKind::Enemy { defeated, .. } => *defeated,
+                        _ => true,
+                    })
+                })
+                .unwrap_or(false);
+
+            if cleared {
+                world_mut.close_dungeon(gid);
             }
         }
 

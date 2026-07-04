@@ -61,4 +61,132 @@ impl ServerInfo {
 
         Ok(())
     }
+
+    pub fn close_dungeon(&mut self, gid: Uuid) {
+        let spawn = self.world.spawn_room.clone();
+
+        let addrs = match self.groups.get(&gid) {
+            Some(group) => group.players.clone(),
+            None => Vec::new(),
+        };
+
+        let receiver_txs: Vec<_> = self
+            .connections
+            .values()
+            .filter(|con| con.player.location == spawn)
+            .map(|con| con.tx.clone())
+            .collect();
+
+        for addr in addrs {
+            if let Some(con) = self.connections.get_mut(&addr) {
+                con.player.location = spawn.clone();
+                for tx in &receiver_txs {
+                    let _ = tx.send(Message::Event(EventType::ROOM_JOIN {
+                        player_name: con.player.name.clone(),
+                    }));
+                }
+            }
+        }
+
+        self.dungeons.remove(&gid);
+        info!("{} dungeon deleted", gid);
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::test_utils::{
+        addr, connect, dg_room, group_with, populated_server, test_dungeon, test_gid,
+    };
+
+    // --- close_dungeon (la fonction elle-même) ---
+
+    #[test]
+    fn close_dungeon_removes_the_dungeon() {
+        let server = populated_server();
+        let mut guard = server.lock().unwrap();
+        let gid = test_gid();
+        guard.dungeons.insert(gid, test_dungeon());
+
+        guard.close_dungeon(gid);
+
+        assert!(!guard.dungeons.contains_key(&gid));
+    }
+
+    #[test]
+    fn close_dungeon_relocates_members_to_spawn() {
+        let server = populated_server();
+        let _rxs = group_with(&server, &[(addr(1), "alice"), (addr(2), "bob")]);
+        let mut guard = server.lock().unwrap();
+
+        let gid = guard.get_player(addr(1)).unwrap().group_id.unwrap();
+        guard.dungeons.insert(gid, test_dungeon());
+        for a in [addr(1), addr(2)] {
+            guard.get_player_mut(a).unwrap().location = dg_room(0);
+        }
+
+        guard.close_dungeon(gid);
+
+        let spawn = guard.world.spawn_room.clone();
+        assert_eq!(guard.get_player(addr(1)).unwrap().location, spawn);
+        assert_eq!(guard.get_player(addr(2)).unwrap().location, spawn);
+    }
+
+    #[test]
+    fn close_dungeon_notifies_players_at_spawn() {
+        let server = populated_server();
+        let _rxs = group_with(&server, &[(addr(1), "alice"), (addr(2), "bob")]);
+        let mut witness_rx = connect(&server, addr(3), "witness");
+        let mut guard = server.lock().unwrap();
+
+        // le témoin reste au spawn, les deux membres sont dans le donjon
+        let spawn = guard.world.spawn_room.clone();
+        guard.get_player_mut(addr(3)).unwrap().location = spawn;
+        let gid = guard.get_player(addr(1)).unwrap().group_id.unwrap();
+        guard.dungeons.insert(gid, test_dungeon());
+        for a in [addr(1), addr(2)] {
+            guard.get_player_mut(a).unwrap().location = dg_room(0);
+        }
+        while witness_rx.try_recv().is_ok() {} // on ignore le bruit d'installation
+
+        guard.close_dungeon(gid);
+        drop(guard);
+
+        let mut joins = 0;
+        while let Ok(msg) = witness_rx.try_recv() {
+            if matches!(msg, Message::Event(EventType::ROOM_JOIN { .. })) {
+                joins += 1;
+            }
+        }
+        assert_eq!(joins, 2, "le témoin doit voir arriver les 2 membres");
+    }
+
+    #[test]
+    fn close_dungeon_on_missing_dungeon_is_a_noop() {
+        let server = populated_server();
+        let mut guard = server.lock().unwrap();
+        // aucun donjon inséré : l'appel ne doit ni paniquer ni créer d'état
+        guard.close_dungeon(test_gid());
+        assert!(guard.dungeons.is_empty());
+    }
+
+    // --- Déclencheur 1 : suppression du groupe ---
+
+    #[test]
+    fn deleting_last_group_member_closes_open_dungeon() {
+        let server = populated_server();
+        let _rx = connect(&server, addr(1), "alice");
+        let mut guard = server.lock().unwrap();
+
+        guard.try_create_group(addr(1), "grp").unwrap();
+        let gid = guard.get_player(addr(1)).unwrap().group_id.unwrap();
+        guard.dungeons.insert(gid, test_dungeon());
+        guard.get_player_mut(addr(1)).unwrap().location = dg_room(0);
+
+        // alice quitte : le groupe devient vide -> supprimé -> donjon fermé
+        guard.try_leave_group(addr(1)).unwrap();
+
+        assert!(!guard.dungeons.contains_key(&gid));
+    }
 }
