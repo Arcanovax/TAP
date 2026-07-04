@@ -1,9 +1,9 @@
-pub mod estimate_height;
-pub mod response_handling;
-pub mod event_handling;
-pub mod handle_local_events;
-pub mod escape_handling;
 pub mod discuss_event;
-pub mod login_event;
+pub mod escape_handling;
+pub mod estimate_height;
+pub mod event_handling;
 pub mod find_action;
+pub mod handle_local_events;
 pub mod handle_mouse;
+pub mod login_event;
+pub mod response_handling;

@@ -22,11 +22,18 @@ impl RoomView {
 }
 
 impl Display for RoomView {
-	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-		let mut final_exits: Vec<String> = Vec::new();
-		for (dir, dest) in &self.exits {
-			final_exits.push(format!("{dir} => {dest}"));
-		}
-		write!(f, "Id: {}\nName: {}\nDescription: {}\nExits:\n{}", self.id, self.name, self.description, final_exits.join("\n"))
-	}
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let mut final_exits: Vec<String> = Vec::new();
+        for (dir, dest) in &self.exits {
+            final_exits.push(format!("{dir} => {dest}"));
+        }
+        write!(
+            f,
+            "Id: {}\nName: {}\nDescription: {}\nExits:\n{}",
+            self.id,
+            self.name,
+            self.description,
+            final_exits.join("\n")
+        )
+    }
 }
