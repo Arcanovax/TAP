@@ -1,17 +1,9 @@
 use std::{collections::VecDeque, fs::OpenOptions, io::Write};
 
 use ratatui::{
-    Frame,
-    layout::{
-        Alignment,
-        Constraint::{Fill, Length, Percentage},
-        Direction::{Horizontal, Vertical},
-        HorizontalAlignment::Center,
-        Layout, Margin, Rect, Size,
-    },
-    style::{Color, Modifier, Style, Stylize},
-    text::{Line, Span, Text},
-    widgets::{Block, Borders, Gauge, List, ListItem, Paragraph, Wrap},
+    Frame, layout::{
+        Alignment, Constraint::{Fill, Length, Percentage}, Direction::{Horizontal, Vertical}, Flex, HorizontalAlignment::Center, Layout, Margin, Rect, Size,
+    }, style::{Color, Modifier, Style, Stylize}, text::{Line, Span, Text}, widgets::{Block, Borders, Gauge, List, ListItem, Paragraph, Wrap},
 };
 use tui_widgets::scrollview::ScrollView;
 
@@ -49,13 +41,20 @@ pub fn draw_room(world: &mut World, frame: &mut Frame) {
 
     let right_layout = Layout::default()
         .direction(Vertical)
-        .constraints(vec![Length(10), Fill(1), Length(6)])
+        .constraints(vec![Length(10), Fill(1), Fill(1), Length(6)])
         .split(layout[1]);
 
     let lists_layout = Layout::default()
         .direction(Horizontal)
+		.flex(Flex::Center)
         .constraints(vec![Percentage(50), Percentage(50)])
         .split(right_layout[1]);
+
+	let quests_layout = Layout::default()
+        .direction(Horizontal)
+		.flex(Flex::Center)
+        .constraints(vec![Percentage(50), Percentage(50)])
+        .split(right_layout[2]);
 
     // ID
     let mut lines = vec![
@@ -244,7 +243,7 @@ pub fn draw_room(world: &mut World, frame: &mut Frame) {
 
     frame.render_stateful_widget(
         exits_list,
-        right_layout[2],
+        right_layout[3],
         &mut world.room.exits_list_state,
     );
 

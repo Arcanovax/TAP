@@ -1,16 +1,11 @@
-use std::{collections::VecDeque, fs::OpenOptions, io::Write};
+use std::{collections::VecDeque, fmt::format, fs::OpenOptions, io::Write};
 
 use crate::{
     enums::{
         actions::PendingAction, focus::Focus, item_kind::ItemKind, npc_kind::NPCKind,
         states::States,
-    },
-    structures::{
-        attack_results::AttackResult,
-        npc::NPC,
-        room::{Room, RoomPayload},
-        status_view::StatusView,
-        world::World,
+    }, structures::{
+        attack_results::AttackResult, npc::NPC, quest_view::QuestView, room::{Room, RoomPayload}, status_view::StatusView, world::World,
     },
 };
 
@@ -54,6 +49,10 @@ pub fn response_handling(world: &mut World, answers: Vec<&str>) {
                         }
                     }
 
+					PendingAction::Quest => {
+						let view_quest: QuestView = serde_json::from_str(&real_answer).unwrap();
+						world.output.push_back(format!("[Server Response] {:#?}", view_quest));
+					}
                     PendingAction::Drop(item) => {
                         if let Some(item_obj) = world.list_items.get(item) {
                             world.output.push_back(format!(
