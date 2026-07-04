@@ -29,6 +29,7 @@ pub enum Command {
     GOLD,
     DUNGEON,
     SLOT_MACHINE,
+    QUEST_INFO,
 }
 
 impl Command {
@@ -60,6 +61,7 @@ impl Command {
             "GOLD" => Some(Command::GOLD),
             "DUNGEON" => Some(Command::DUNGEON),
             "SLOT_MACHINE" => Some(Command::SLOT_MACHINE),
+            "QUEST_INFO" => Some(Command::QUEST_INFO),
             _ => None,
         }
     }

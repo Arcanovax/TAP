@@ -10,6 +10,7 @@ use crate::{
         item::{item_request, items_request},
         npc::{npc_request, npcs_request},
         quest::quest_request,
+        quest_info::quest_info_request,
         quests::quests_request,
         sell::sell_request,
         slot_machine::slot_machine_request,
@@ -89,6 +90,7 @@ pub fn handle_request(
                 Some(Command::SELL) => sell_request(args, server_info, peer_addr).into(),
                 Some(Command::GOLD) => gold_request(server_info, peer_addr).into(),
                 Some(Command::DUNGEON) => dungeon_request(args, server_info, peer_addr).into(),
+                Some(Command::QUEST_INFO) => quest_info_request(server_info, args).into(),
                 Some(Command::SLOT_MACHINE) => {
                     let pool: Vec<String> = server_info
                         .lock()
