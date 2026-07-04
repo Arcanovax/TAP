@@ -2,7 +2,7 @@ use std::{fs::OpenOptions, io::Write};
 
 use ratatui::crossterm::event::{KeyCode, KeyEvent};
 
-use crate::{enums::{actions::PendingAction, channels::Channels, focus::Focus, item_kind::ItemKind, npc_kind::NPCKind}, global_functions::find_action::find_action, structures::world::World};
+use crate::{enums::{actions::PendingAction, channels::Channels, focus::Focus, item_kind::ItemKind, npc_kind::NPCKind, states::States}, global_functions::find_action::find_action, structures::world::World};
 
 pub fn idle_event(key: KeyEvent, world: &mut World) {
 	if world.room.focus == Focus::COMMAND && ![KeyCode::Tab, KeyCode::Enter, KeyCode::Up, KeyCode::Down].contains(&key.code){
@@ -131,7 +131,7 @@ pub fn idle_event(key: KeyEvent, world: &mut World) {
 						if let Some(index) = world.room.npc_list_state.selected_mut() {
 							if let Some(selected_npc) = world.room.npcs.get(*index) {
 								if let Some(npc) = world.list_npcs.get(selected_npc) {
-									match npc.kind {
+									match &npc.kind {
 										NPCKind::Enemy { .. } => {
 											world.output.push_back(format!("\n> {}", format!("attack {}\n", selected_npc)));
 											world.room.output_scroll_pos.scroll_to_bottom();
@@ -144,7 +144,9 @@ pub fn idle_event(key: KeyEvent, world: &mut World) {
 											let _ = world.tx_to_serv.try_send(format!("TALK {}\n", selected_npc));
 											world.action = PendingAction::Talk(selected_npc.clone());
 										}
-										NPCKind::Merchant { .. } => {todo!()}
+										NPCKind::Merchant { inventory } => {
+											world.state = States::Trade(inventory.clone());
+										}
 									}
 								}
 							}

@@ -8,8 +8,9 @@ use std::{
 use ratatui::{
 	DefaultTerminal, Frame, crossterm::event::{
 		self, Event, KeyCode
-	}, widgets::List,
+	}
 };
+
 use tokio::sync::mpsc::Sender;
 
 use crate::{
@@ -17,7 +18,7 @@ use crate::{
 		discuss::draw_room_discuss, fights::draw_room_fight, login::login_draw, rooms::draw_room, wait_server::draw_wait
 	}, enums::{
 		actions::PendingAction, focus::Focus, states::States
-	}, global_functions::{discuss_event::discuss_event, escape_handling::escape_handling, event_handling::event_handling, handle_mouse::handle_mouse, idle_event::idle_event, login_event::login_event, response_handling::response_handling}, structures::{
+	}, global_functions::{discuss_event::discuss_event, escape_handling::escape_handling, event_handling::event_handling, handle_mouse::handle_mouse, handle_local_events::idle_event, login_event::login_event, response_handling::response_handling}, structures::{
 		chat::Chat, group::Group, items::Item, npc::NPC, player::Player, room::Room
 	}
 };
