@@ -122,6 +122,7 @@ pub(super) fn sell_request(
         payload: Payload::Pair(HashMap::from([
             ("sold".to_string(), item_ref),
             ("amount".to_string(), amount.to_string()),
+            ("gold".to_string(), price.to_string()),
         ])),
     }
 }

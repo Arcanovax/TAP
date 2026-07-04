@@ -120,7 +120,7 @@ fn buy_existing_item_adds_to_inventory_and_debits_gold() {
         &server,
         addr(1),
     );
-    assert_eq!(result, ok_pair(&[("bought", "sword"), ("amount", "1")]));
+    assert_eq!(result, ok_pair(&[("bought", "sword"), ("amount", "1"), ("gold", "10")]));
 
     let guard = server.lock().unwrap();
     let player = guard.get_player(addr(1)).unwrap();
@@ -138,7 +138,7 @@ fn buy_with_amount_debits_and_stacks() {
         &server,
         addr(1),
     );
-    assert_eq!(result, ok_pair(&[("bought", "sword"), ("amount", "3")]));
+    assert_eq!(result, ok_pair(&[("bought", "sword"), ("amount", "3"), ("gold", "30")]));
 
     let guard = server.lock().unwrap();
     let player = guard.get_player(addr(1)).unwrap();

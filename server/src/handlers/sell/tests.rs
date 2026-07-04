@@ -129,7 +129,7 @@ fn sell_existing_item_removes_it_and_credits_gold() {
         &server,
         addr(1),
     );
-    assert_eq!(result, ok_pair(&[("sold", "sword"), ("amount", "1")]));
+    assert_eq!(result, ok_pair(&[("sold", "sword"), ("gold", "10"), ("amount", "1")]));
 
     let guard = server.lock().unwrap();
     let player = guard.get_player(addr(1)).unwrap();
@@ -148,7 +148,7 @@ fn sell_with_amount_credits_and_decrements() {
         &server,
         addr(1),
     );
-    assert_eq!(result, ok_pair(&[("sold", "sword"), ("amount", "2")]));
+    assert_eq!(result, ok_pair(&[("gold", "20"), ("sold", "sword"), ("amount", "2"),]));
 
     let guard = server.lock().unwrap();
     let player = guard.get_player(addr(1)).unwrap();
