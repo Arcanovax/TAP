@@ -62,6 +62,46 @@ impl Loader {
         }
     }
 
+    fn define(&mut self, id: &str, path: &Path) -> Result<(), ConfigError> {
+        if let Some(file_a) = self.definer.insert(id.to_string(), path.to_path_buf()) {
+            return Err(ConfigError::Conflict {
+                id: id.to_string(),
+                file_a,
+                file_b: path.to_path_buf(),
+            });
+        }
+        Ok(())
+    }
+
+    fn referencing_entries(&self) -> impl Iterator<Item = (&str, Vec<&str>)> {
+        let rooms = self
+            .world
+            .rooms
+            .iter()
+            .map(|(id, r)| (id.as_str(), r.references()));
+        let npcs = self
+            .world
+            .npcs
+            .iter()
+            .map(|(id, n)| (id.as_str(), n.references()));
+        let quests = self
+            .world
+            .quests
+            .iter()
+            .map(|(id, q)| (id.as_str(), q.references()));
+        let singles = self
+            .singletons()
+            .into_iter()
+            .filter(|(_, target)| !target.is_empty())
+            .map(|(label, target)| (label, vec![target.as_str()]));
+
+        rooms.chain(npcs).chain(quests).chain(singles)
+    }
+
+    fn singletons(&self) -> [(&str, &String); 1] {
+        [(SPAWN_POINT, &self.world.spawn_room)]
+    }
+
     fn load_file(&mut self, path: &Path) -> Result<(), ConfigError> {
         let path = path.canonicalize().map_err(|source| ConfigError::Io {
             path: path.to_path_buf(),
@@ -81,16 +121,7 @@ impl Loader {
                 path: path.clone(),
                 source,
             })?;
-        if !parsed.spawn_point.is_empty() {
-            if let Some(file_a) = self.definer.insert(SPAWN_POINT.to_string(), path.clone()) {
-                return Err(ConfigError::Conflict {
-                    id: SPAWN_POINT.to_string(),
-                    file_a,
-                    file_b: path,
-                });
-            }
-            self.world.spawn_room = parsed.spawn_point;
-        }
+
         for file in &parsed.import {
             let dep = path.parent().unwrap_or(Path::new(".")).join(file);
             let dep = dep.canonicalize().map_err(|source| ConfigError::Io {
@@ -103,15 +134,15 @@ impl Loader {
                 .push(dep.clone());
             self.load_file(&dep)?;
         }
+
+        if !parsed.spawn_point.is_empty() {
+            self.define(SPAWN_POINT, &path)?;
+            self.world.spawn_room = parsed.spawn_point;
+        }
+
         for (name, npc) in parsed.npc {
             let id = format!("npc.{}", name);
-            if let Some(file_a) = self.definer.insert(id.clone(), path.clone()) {
-                return Err(ConfigError::Conflict {
-                    id,
-                    file_a,
-                    file_b: path,
-                });
-            };
+            self.define(&id, &path)?;
             for (d, _) in &npc.dialog {
                 if let Some(file_a) = self
                     .definer
@@ -126,6 +157,7 @@ impl Loader {
             }
             self.world.npcs.insert(id.clone(), npc);
         }
+
         for (name, room) in parsed.room {
             let id = format!("room.{}", name);
             self.world.rooms.insert(
@@ -138,72 +170,32 @@ impl Loader {
                     items: room.items.into_iter().map(OwnedItem::from).collect(),
                 },
             );
-            if let Some(file_a) = self.definer.insert(id.clone(), path.clone()) {
-                return Err(ConfigError::Conflict {
-                    id,
-                    file_a,
-                    file_b: path,
-                });
-            };
+            self.define(&id, &path)?;
         }
+
         for (name, item) in parsed.item {
             let id = format!("item.{}", name);
             self.world.items.insert(id.clone(), item);
-            if let Some(file_a) = self.definer.insert(id.clone(), path.clone()) {
-                return Err(ConfigError::Conflict {
-                    id,
-                    file_a,
-                    file_b: path,
-                });
-            };
+            self.define(&id, &path)?;
         }
+
         for (name, quest) in parsed.quest {
             let id = format!("quest.{}", name);
             self.world.quests.insert(id.clone(), quest);
-            if let Some(file_a) = self.definer.insert(id.clone(), path.clone()) {
-                return Err(ConfigError::Conflict {
-                    id,
-                    file_a,
-                    file_b: path,
-                });
-            };
+            self.define(&id, &path)?;
         }
         Ok(())
     }
 
     fn check_refs(&self) -> Result<(), ConfigError> {
-        for (id, room) in &self.world.rooms {
-            for r in room.references() {
+        for (id, obj) in self.referencing_entries() {
+            for r in obj {
                 self.definer.get(r).ok_or(ConfigError::DanglingRef {
-                    from_id: id.clone(),
+                    from_id: id.to_string(),
                     missing_ref: r.to_string(),
                 })?;
             }
         }
-        for (id, npc) in &self.world.npcs {
-            for r in npc.references() {
-                self.definer.get(r).ok_or(ConfigError::DanglingRef {
-                    from_id: id.clone(),
-                    missing_ref: r.to_string(),
-                })?;
-            }
-        }
-        for (id, quest) in &self.world.quests {
-            for r in quest.references() {
-                self.definer.get(r).ok_or(ConfigError::DanglingRef {
-                    from_id: id.clone(),
-                    missing_ref: r.to_string(),
-                })?;
-            }
-        }
-
-        self.definer
-            .get(&self.world.spawn_room)
-            .ok_or(ConfigError::DanglingRef {
-                from_id: SPAWN_POINT.to_string(),
-                missing_ref: self.world.spawn_room.clone(),
-            })?;
-
         Ok(())
     }
 
@@ -225,43 +217,11 @@ impl Loader {
     }
 
     fn check_scope(&self) -> Result<(), ConfigError> {
-        for (id, room) in &self.world.rooms {
+        for (id, obj) in self.referencing_entries() {
             let f = &self.definer[id];
             let visibles = self.get_visible_file(&f);
 
-            for r in room.references() {
-                let g = &self.definer[r];
-
-                if !visibles.contains(g) {
-                    return Err(ConfigError::ScopeViolation {
-                        from_id: id.to_string(),
-                        ref_id: r.to_string(),
-                        defined_in: g.to_path_buf(),
-                    });
-                }
-            }
-        }
-        for (id, npc) in &self.world.npcs {
-            let f = &self.definer[id];
-            let visibles = self.get_visible_file(&f);
-
-            for r in npc.references() {
-                let g = &self.definer[r];
-
-                if !visibles.contains(g) {
-                    return Err(ConfigError::ScopeViolation {
-                        from_id: id.to_string(),
-                        ref_id: r.to_string(),
-                        defined_in: g.to_path_buf(),
-                    });
-                }
-            }
-        }
-        for (id, quest) in &self.world.quests {
-            let f = &self.definer[id];
-            let visibles = self.get_visible_file(&f);
-
-            for r in quest.references() {
+            for r in obj {
                 let g = &self.definer[r];
 
                 if !visibles.contains(g) {
@@ -274,17 +234,18 @@ impl Loader {
             }
         }
 
-        let f = &self.definer[SPAWN_POINT];
-        let visibles = self.get_visible_file(&f);
-        let g = &self.definer[&self.world.spawn_room];
-        if !visibles.contains(g) {
-            return Err(ConfigError::ScopeViolation {
-                from_id: SPAWN_POINT.to_string(),
-                ref_id: self.world.spawn_room.clone(),
-                defined_in: g.to_path_buf(),
-            });
-        }
+        Ok(())
+    }
 
+    fn check_singles_type(&self) -> Result<(), ConfigError> {
+        for (id, r) in self.singletons() {
+            if let None = self.world.rooms.get(r) {
+                return Err(ConfigError::WrongRef {
+                    from_id: id.to_string(),
+                    ref_id: r.to_string(),
+                });
+            }
+        }
         Ok(())
     }
 
@@ -301,5 +262,6 @@ pub(super) fn load(entry: &Path) -> Result<World, ConfigError> {
     }
     loader.check_refs()?;
     loader.check_scope()?;
+    loader.check_singles_type()?;
     Ok(loader.finish())
 }

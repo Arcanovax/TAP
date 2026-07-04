@@ -26,11 +26,18 @@ pub enum ConfigError {
         defined_in: PathBuf,
     },
     MissingSpawnPoint,
+    WrongRef {
+        from_id: String,
+        ref_id: String,
+    },
 }
 
 impl fmt::Display for ConfigError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
+            ConfigError::WrongRef { from_id, ref_id } => {
+                write!(f, "invalid ref {} for {}", ref_id, from_id)
+            }
             ConfigError::Io { path, source } => {
                 write!(f, "failed to read {}: {source}", path.display())
             }

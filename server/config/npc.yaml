@@ -1,5 +1,4 @@
 import:
-  - "items.yaml"
   - "quests.yaml"
 
 npc:

@@ -1,6 +1,5 @@
 import:
   - "npc.yaml"
-  - "items.yaml"
 
 spawn_point: "room.city_square"
 
