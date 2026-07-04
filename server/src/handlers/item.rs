@@ -10,11 +10,17 @@ use crate::{
 mod tests;
 
 pub(super) fn item_request(server_info: &SharedServer, args: &Vec<String>) -> Message {
+    if args.len() != 1 {
+        return Message::Response {
+            error: ErrorCode::INVALID_ARGS,
+            payload: Payload::Empty,
+        };
+    }
+
     let binding = server_info.lock().unwrap();
 
-    let item_ref = args.join(" ");
-
-    let item = match binding.resolve_item(&item_ref) {
+    let item_ref = &args[0];
+    let item = match binding.resolve_item(item_ref) {
         Some(item) => item,
         None => {
             return Message::Response {

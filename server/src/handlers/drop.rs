@@ -21,16 +21,16 @@ pub fn drop_request(
             payload: Payload::Empty,
         };
     }
-    if args.len() == 0 {
+    if args.len() != 1 {
         return Message::Response {
             error: ErrorCode::INVALID_ARGS,
             payload: Payload::Empty,
         };
     }
 
-    let item = args.join(" ");
+    let item = &args[0];
 
-    match binding.try_drop_item(peer_addr, &item) {
+    match binding.try_drop_item(peer_addr, item) {
         Ok(item) => {
             info!("{} dropped", item);
             let receivers = binding.get_room_receivers(peer_addr).unwrap();

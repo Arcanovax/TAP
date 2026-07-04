@@ -22,7 +22,7 @@ pub(super) fn quest_request(
             payload: Payload::Empty,
         };
     }
-    if args.len() == 0 {
+    if args.len() != 1 {
         return Message::Response {
             error: ErrorCode::INVALID_ARGS,
             payload: Payload::Empty,
@@ -30,10 +30,10 @@ pub(super) fn quest_request(
     }
 
     let mut binding = server_info.lock().unwrap();
-    let npc_ref = args.join(" ");
+    let npc_ref = &args[0];
 
     let player_room = binding.get_player_room(peer_addr).unwrap();
-    if !player_room.npc.iter().any(|npc| *npc == npc_ref) {
+    if !player_room.npc.iter().any(|npc| npc == npc_ref) {
         return Message::Response {
             error: ErrorCode::NPC_NOT_FOUND,
             payload: Payload::Empty,

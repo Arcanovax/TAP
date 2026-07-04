@@ -62,11 +62,17 @@ impl<'a> From<&'a NPC> for NPCView<'a> {
 }
 
 pub(super) fn npc_request(server_info: &SharedServer, args: &Vec<String>) -> Message {
+    if args.len() != 1 {
+        return Message::Response {
+            error: ErrorCode::INVALID_ARGS,
+            payload: Payload::Empty,
+        };
+    }
+
     let binding = server_info.lock().unwrap();
 
-    let npc_ref = args.join(" ");
-
-    let npc = match binding.resolve_npc(&npc_ref) {
+    let npc_ref = &args[0];
+    let npc = match binding.resolve_npc(npc_ref) {
         Some(npc) => npc,
         None => {
             return Message::Response {
