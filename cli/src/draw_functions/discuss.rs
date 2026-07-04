@@ -36,7 +36,7 @@ pub fn draw_room_discuss(world: &mut World, frame: &mut Frame, name: String, sen
     let chat_space = Layout::default()
         .direction(Vertical)
         .margin(1)
-        .constraints(vec![Length(3), Fill(1)])
+        .constraints(vec![Length(3), Fill(1), Length(3)])
         .split(left_layout[2]);
 
     let channels = Layout::default()
@@ -307,6 +307,18 @@ pub fn draw_room_discuss(world: &mut World, frame: &mut Frame, name: String, sen
         inner_output,
         &mut world.room.output_scroll_pos,
     );
+
+    // CHAT TEXT AREA
+    world.room.chat_text_area.set_block(
+        Block::bordered()
+            .title("Send messages here:")
+            .title_alignment(Alignment::Center)
+            .title_style(Color::Green)
+            .bold()
+            .border_style(Color::White),
+    );
+
+    frame.render_widget(&world.room.chat_text_area, chat_space[2]);
 
     // COMMAND
     world.room.text_area.set_block(
