@@ -93,24 +93,37 @@ pub(super) fn npc_request(server_info: &SharedServer, args: &Vec<String>) -> Mes
 
 pub(super) fn npcs_request(server_info: &SharedServer, peer_addr: SocketAddr) -> Message {
     info!("Get all npcs info");
-
     let binding = server_info.lock().unwrap();
+
+    let mut npcs: HashMap<String, NPCView> = HashMap::new();
+
+    for (id, npc) in &binding.world.npcs {
+        npcs.insert(id.into(), npc.into());
+    }
+
     match binding.get_player(peer_addr) {
         Ok(player) if parse_dungeon_id(&player.location).is_some() && player.group_id.is_some() => {
             match binding.dungeons.get(&player.group_id.unwrap()) {
-                Some(dungeon) => Message::Response {
-                    error: ErrorCode::SUCCESS,
-                    payload: Payload::Json(serde_json::to_value(&dungeon.npcs).unwrap()),
-                },
+                Some(dungeon) => {
+                    let mut npcs: HashMap<String, NPCView> = HashMap::new();
+
+                    for (id, npc) in &dungeon.npcs {
+                        npcs.insert(id.into(), npc.into());
+                    }
+                    Message::Response {
+                        error: ErrorCode::SUCCESS,
+                        payload: Payload::Json(serde_json::to_value(&npcs).unwrap()),
+                    }
+                }
                 _ => Message::Response {
                     error: ErrorCode::SUCCESS,
-                    payload: Payload::Json(serde_json::to_value(&binding.world.npcs).unwrap()),
+                    payload: Payload::Json(serde_json::to_value(&npcs).unwrap()),
                 },
             }
         }
         _ => Message::Response {
             error: ErrorCode::SUCCESS,
-            payload: Payload::Json(serde_json::to_value(&binding.world.npcs).unwrap()),
+            payload: Payload::Json(serde_json::to_value(&npcs).unwrap()),
         },
     }
 }
