@@ -1,7 +1,10 @@
 use std::net::SocketAddr;
 
 use crate::{
-    handlers::fight::{enemy_attack::enemy_attack, is_it_my_turn::is_it_my_turn}, protocol::{EventType, Message, Payload}, state::SharedServer, structures::enums::{error::ErrorCode, item_kind::ItemKind, state::State, turn_res::TurnRes},
+    handlers::fight::{enemy_attack::enemy_attack, is_it_my_turn::is_it_my_turn},
+    protocol::{EventType, Message, Payload},
+    state::SharedServer,
+    structures::enums::{error::ErrorCode, item_kind::ItemKind, state::State, turn_res::TurnRes},
 };
 
 pub fn consume(peer_addr: SocketAddr, args: &Vec<String>, server_info: &SharedServer) -> Message {
@@ -26,16 +29,21 @@ pub fn consume(peer_addr: SocketAddr, args: &Vec<String>, server_info: &SharedSe
         (player.status.clone(), player.name.clone())
     };
 
-	match p_status {
-		State::InFight { ref target_id } => {
-		let fight = world_mut.fights.get_mut(target_id).unwrap();
-		match is_it_my_turn(p_name.clone(), fight) {
-			TurnRes::MyTurn => {},
-			_ => return Message::Response { error: ErrorCode::NOT_YOUR_TURN, payload: Payload::Empty }
-		}
-	},
-	_ => {}
-	} 
+    match p_status {
+        State::InFight { ref target_id } => {
+            let fight = world_mut.fights.get_mut(target_id).unwrap();
+            match is_it_my_turn(p_name.clone(), fight) {
+                TurnRes::MyTurn => {}
+                _ => {
+                    return Message::Response {
+                        error: ErrorCode::NOT_YOUR_TURN,
+                        payload: Payload::Empty,
+                    };
+                }
+            }
+        }
+        _ => {}
+    }
     let item_kind = {
         let item = world_mut.resolve_item(&args[0]);
 
@@ -82,8 +90,8 @@ pub fn consume(peer_addr: SocketAddr, args: &Vec<String>, server_info: &SharedSe
             State::InFight { target_id } => {
                 let (fighters, turn) = {
                     let fight = world_mut.fights.get_mut(&target_id).unwrap();
-					fight.turn += 1;
-					(fight.fighters.clone(), fight.turn)
+                    fight.turn += 1;
+                    (fight.fighters.clone(), fight.turn)
                 };
                 for fighter in &fighters {
                     if let Some(con) = world_mut
@@ -115,4 +123,3 @@ pub fn consume(peer_addr: SocketAddr, args: &Vec<String>, server_info: &SharedSe
         }
     }
 }
-
