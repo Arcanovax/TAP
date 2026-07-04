@@ -40,4 +40,25 @@ impl ServerInfo {
 
         Ok(())
     }
+
+    pub fn try_join_dungeon(&mut self, peer_addr: SocketAddr) -> Result<(), ErrorCode> {
+        let player = self.get_player(peer_addr)?;
+
+        if let Some(_) = parse_dungeon_id(&player.location) {
+            return Err(ErrorCode::DUNGEON_ALREADY_IN_PROGRESS);
+        };
+
+        let Some(gid) = player.group_id else {
+            return Err(ErrorCode::NOT_IN_GROUP);
+        };
+
+        let Some(_) = self.dungeons.get(&gid) else {
+            return Err(ErrorCode::NO_DUNGEON_IN_PROGRESS);
+        };
+
+        let player = self.get_player_mut(peer_addr)?;
+        player.location = format_dungeon_id("room", gid, 0);
+
+        Ok(())
+    }
 }

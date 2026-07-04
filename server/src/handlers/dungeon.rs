@@ -15,7 +15,7 @@ pub(super) fn dungeon_request(
 ) -> Message {
     if args.len() != 1 {
         return Message::Response {
-            error: ErrorCode::INVALID_COMMAND,
+            error: ErrorCode::INVALID_ARGS,
             payload: Payload::Empty,
         };
     }
@@ -41,8 +41,9 @@ fn dungeon_create_request(server_info: &SharedServer, peer_addr: SocketAddr) -> 
 }
 
 fn dungeon_join_request(server_info: &SharedServer, peer_addr: SocketAddr) -> Message {
-    Message::Response {
-        error: ErrorCode::SUCCESS,
-        payload: Payload::Empty,
-    }
+    server_info
+        .lock()
+        .unwrap()
+        .try_join_dungeon(peer_addr)
+        .into()
 }
