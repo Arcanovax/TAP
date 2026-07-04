@@ -1,9 +1,11 @@
+use std::net::SocketAddr;
+
 use tracing::info;
 
 use crate::{
     protocol::{Message, Payload},
     state::SharedServer,
-    structures::enums::error::ErrorCode,
+    structures::{dungeon::parse_dungeon_id, enums::error::ErrorCode},
 };
 
 #[cfg(test)]
@@ -38,12 +40,26 @@ pub(super) fn item_request(server_info: &SharedServer, args: &Vec<String>) -> Me
     }
 }
 
-pub(super) fn items_request(server_info: &SharedServer) -> Message {
+pub(super) fn items_request(server_info: &SharedServer, peer_addr: SocketAddr) -> Message {
     info!("Get all items info");
-    Message::Response {
-        error: ErrorCode::SUCCESS,
-        payload: Payload::Json(
-            serde_json::to_value(&server_info.lock().unwrap().world.items).unwrap(),
-        ),
+
+    let binding = server_info.lock().unwrap();
+    match binding.get_player(peer_addr) {
+        Ok(player) if parse_dungeon_id(&player.location).is_some() && player.group_id.is_some() => {
+            match binding.dungeons.get(&player.group_id.unwrap()) {
+                Some(dungeon) => Message::Response {
+                    error: ErrorCode::SUCCESS,
+                    payload: Payload::Json(serde_json::to_value(&dungeon.items).unwrap()),
+                },
+                _ => Message::Response {
+                    error: ErrorCode::SUCCESS,
+                    payload: Payload::Json(serde_json::to_value(&binding.world.items).unwrap()),
+                },
+            }
+        }
+        _ => Message::Response {
+            error: ErrorCode::SUCCESS,
+            payload: Payload::Json(serde_json::to_value(&binding.world.items).unwrap()),
+        },
     }
 }

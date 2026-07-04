@@ -1,9 +1,10 @@
-use std::collections::HashMap;
+use std::{collections::HashMap, net::SocketAddr};
 
 use crate::{
     protocol::{Message, Payload},
     state::SharedServer,
     structures::{
+        dungeon::parse_dungeon_id,
         enums::{error::ErrorCode, npc_kind::NPCKind},
         npc::NPC,
     },
@@ -90,18 +91,26 @@ pub(super) fn npc_request(server_info: &SharedServer, args: &Vec<String>) -> Mes
     }
 }
 
-pub(super) fn npcs_request(server_info: &SharedServer) -> Message {
-    let binding = server_info.lock().unwrap();
-    let mut npcs: HashMap<String, NPCView> = HashMap::new();
-
-    for (id, npc) in &binding.world.npcs {
-        npcs.insert(id.into(), npc.into());
-    }
-
+pub(super) fn npcs_request(server_info: &SharedServer, peer_addr: SocketAddr) -> Message {
     info!("Get all npcs info");
 
-    Message::Response {
-        error: ErrorCode::SUCCESS,
-        payload: Payload::Json(serde_json::to_value(npcs).unwrap()),
+    let binding = server_info.lock().unwrap();
+    match binding.get_player(peer_addr) {
+        Ok(player) if parse_dungeon_id(&player.location).is_some() && player.group_id.is_some() => {
+            match binding.dungeons.get(&player.group_id.unwrap()) {
+                Some(dungeon) => Message::Response {
+                    error: ErrorCode::SUCCESS,
+                    payload: Payload::Json(serde_json::to_value(&dungeon.npcs).unwrap()),
+                },
+                _ => Message::Response {
+                    error: ErrorCode::SUCCESS,
+                    payload: Payload::Json(serde_json::to_value(&binding.world.npcs).unwrap()),
+                },
+            }
+        }
+        _ => Message::Response {
+            error: ErrorCode::SUCCESS,
+            payload: Payload::Json(serde_json::to_value(&binding.world.npcs).unwrap()),
+        },
     }
 }

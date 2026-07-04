@@ -393,6 +393,13 @@ pub(crate) fn connect_in_dungeon(
     name: &str,
 ) -> UnboundedReceiver<Message> {
     let rx = connect(server, addr, name);
-    server.lock().unwrap().get_player_mut(addr).unwrap().location = dg_room(0);
+    {
+        let mut guard = server.lock().unwrap();
+        let player = guard.get_player_mut(addr).unwrap();
+        player.location = dg_room(0);
+        // Le donjon est indexé par le `group_id` du joueur (cf. `try_create_dungeon`).
+        // Sans ça, les handlers qui résolvent via `group_id` retombent sur le world.
+        player.group_id = Some(test_gid());
+    }
     rx
 }
