@@ -20,7 +20,7 @@ use crate::{
     structures::world::World,
 };
 
-pub fn draw_trade(world: &mut World, frame: &mut Frame) {
+pub fn draw_trade(world: &mut World, frame: &mut Frame, inventory: Vec<String>) {
     let main_layout = Layout::default()
         .direction(Vertical)
         .constraints(vec![Fill(1), Length(3)])
@@ -152,56 +152,22 @@ pub fn draw_trade(world: &mut World, frame: &mut Frame) {
                 ));
             } else {
                 items_list.push(ListItem::new(
-                    Line::from(format!("{} x{} (Un)")).alignment(Alignment::Center),
+                    Line::from(format!("{} x{} (Unknown price)", item.clone(), quantity))
+                        .alignment(Alignment::Center),
                 ));
             }
         }
     }
 
-    let npc_list = List::new(npcs_list)
+    let displayed_list = List::new(items_list)
         .block(
             Block::bordered()
-                .border_style(if world.room.focus == Focus::NPC {
+                .border_style(if world.room.focus == Focus::SELL {
                     Color::LightBlue
                 } else {
                     Color::White
                 })
-                .title("You can talk to:")
-                .title_alignment(Alignment::Center)
-                .title_style(Color::Green)
-                .bold(),
-        )
-        .style(Color::LightCyan)
-        .highlight_style(Modifier::REVERSED);
-
-    frame.render_stateful_widget(npc_list, lists_layout[0], &mut world.room.npc_list_state);
-
-    // ITEMS TO BUY
-    let mut inventory_items: Vec<ListItem> = world
-        .player
-        .inventory
-        .iter()
-        .map(|item| {
-            ListItem::new(
-                Line::from(format!("{} x{}", item.0, item.1)).alignment(Alignment::Center),
-            )
-        })
-        .collect();
-    if inventory_items.len() == 0 {
-        inventory_items.push(ListItem::new(
-            Line::from("Nothing in your bag").alignment(Alignment::Center),
-        ));
-    }
-
-    let items_list = List::new(inventory_items)
-        .block(
-            Block::bordered()
-                .border_style(if world.room.focus == Focus::INVENTORY {
-                    Color::LightBlue
-                } else {
-                    Color::White
-                })
-                .title("In your bag:")
+                .title("You can sell:")
                 .title_alignment(Alignment::Center)
                 .title_style(Color::Green)
                 .bold(),
@@ -210,10 +176,49 @@ pub fn draw_trade(world: &mut World, frame: &mut Frame) {
         .highlight_style(Modifier::REVERSED);
 
     frame.render_stateful_widget(
-        items_list,
-        lists_layout[1],
-        &mut world.room.inventory_list_state,
+        displayed_list,
+        lists_layout[0],
+        &mut world.room.sell_list_state,
     );
+
+    // ITEMS TO BUY
+    items_list = Vec::new();
+
+    for item in inventory {
+        if let Some(item_obj) = world.list_items.get(&item) {
+            items_list.push(ListItem::new(
+                Line::from(format!(
+                    "{} ({} golds)",
+                    item_obj.name.clone(),
+                    item_obj.price
+                ))
+                .alignment(Alignment::Center),
+            ));
+        } else {
+            items_list.push(ListItem::new(
+                Line::from(format!("{} (Unknown price)", item.clone()))
+                    .alignment(Alignment::Center),
+            ));
+        }
+    }
+
+    let buy_list = List::new(items_list)
+        .block(
+            Block::bordered()
+                .border_style(if world.room.focus == Focus::BUY {
+                    Color::LightBlue
+                } else {
+                    Color::White
+                })
+                .title("You can buy:")
+                .title_alignment(Alignment::Center)
+                .title_style(Color::Green)
+                .bold(),
+        )
+        .style(Color::LightCyan)
+        .highlight_style(Modifier::REVERSED);
+
+    frame.render_stateful_widget(buy_list, lists_layout[1], &mut world.room.buy_list_state);
 
     // EXITS
     let exits_items: Vec<ListItem> = world

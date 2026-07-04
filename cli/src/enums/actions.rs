@@ -3,6 +3,8 @@ pub enum PendingAction {
     None,
     Gold,
     Npcs,
+    Sell(String),
+    Buy(String),
     Npc,
     Flee,
     Consume(String),

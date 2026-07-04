@@ -9,6 +9,8 @@ pub enum Focus {
     #[default]
     COMMAND,
     OUTPUT,
+    SELL,
+    BUY,
     CHAT,
     DESCR,
     NPC,

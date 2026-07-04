@@ -46,6 +46,10 @@ pub struct Room<'a> {
     #[serde(skip)]
     pub npc_list_state: ListState,
     #[serde(skip)]
+    pub sell_list_state: ListState,
+    #[serde(skip)]
+    pub buy_list_state: ListState,
+    #[serde(skip)]
     pub inventory_list_state: ListState,
     #[serde(skip)]
     pub exits_list_state: ListState,
@@ -71,6 +75,8 @@ impl Room<'_> {
             descr_scroll_pos: ScrollViewState::new(),
             npc_list_state: ListState::default(),
             inventory_list_state: ListState::default(),
+            sell_list_state: ListState::default(),
+            buy_list_state: ListState::default(),
             exits_list_state: ListState::default(),
             text_area: TextArea::default(),
         }

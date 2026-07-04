@@ -19,7 +19,7 @@ pub fn response_handling(world: &mut World, answers: Vec<&str>) {
     // 	let _ = writeln!(file, "ko (State {:?}) : {:#?}", world.state, answers);}
     let real_answer = answers[1..].join(" ");
     if answers[0] == "OK" {
-        match world.state {
+        match &world.state {
             States::ServerWait => {
                 world.state = States::Login;
             }
@@ -201,8 +201,6 @@ pub fn response_handling(world: &mut World, answers: Vec<&str>) {
                                 None => 0 as u32,
                             }
                         };
-                        // if let Ok(mut file) = OpenOptions::new().create(true).append(true).open("debug_network.txt") {
-                        // 		let _ = writeln!(file, "real (State {:#?}) :", heal);}
                         world.player.hp = world.player.hp.saturating_add(heal).min(100);
                         world.action = PendingAction::None;
                     }
@@ -322,6 +320,64 @@ pub fn response_handling(world: &mut World, answers: Vec<&str>) {
                 }
                 if world.room.focus != Focus::OUTPUT {
                     world.room.output_scroll_pos.scroll_to_bottom();
+                }
+            }
+            States::Trade(..) => {
+                match &world.action {
+                    PendingAction::Buy(item_name) => {
+                        let answers: Vec<&str> = real_answer.split_whitespace().collect();
+                        let mut amount = 0;
+                        let mut cost = 0;
+                        let mut item_id = String::from("");
+                        for elem in answers.iter() {
+                            let elems: Vec<&str> = elem.split("=").collect();
+                            match elems[0] {
+                                "amount" => amount = elems[1].parse::<u32>().unwrap(),
+                                "gold" => cost = elems[1].parse::<u32>().unwrap(),
+                                "bought" => item_id = elems[1].to_string(),
+                                _ => {}
+                            }
+                        }
+                        *world.player.inventory.entry(item_id).or_insert(0) += amount.clone();
+                        world.player.gold -= cost;
+                        world.output.push_back(format!("[Server Response] You successfully bought {} {}. It costs you {} golds!", amount, item_name, cost));
+                        world.room.output_scroll_pos.scroll_to_bottom();
+                    }
+                    PendingAction::Sell(item_name) => {
+                        let answers: Vec<&str> = real_answer.split_whitespace().collect();
+                        let mut item_id = String::from("");
+                        let mut amount = 0;
+                        let mut cost = 0;
+                        for elem in answers.iter() {
+                            let elems: Vec<&str> = elem.split("=").collect();
+                            if let Ok(mut file) = OpenOptions::new()
+                                .create(true)
+                                .append(true)
+                                .open("debug_network.txt")
+                            {
+                                let _ =
+                                    writeln!(file, "real (State {:#?}) :{:#?}", elems, real_answer);
+                            }
+                            match elems[0] {
+                                "amount" => amount = elems[1].parse::<u32>().unwrap(),
+                                "gold" => cost = elems[1].parse::<u32>().unwrap(),
+                                "sold" => item_id = elems[1].to_string(),
+                                _ => {}
+                            }
+                        }
+                        world
+                            .player
+                            .inventory
+                            .entry(item_id.clone())
+                            .and_modify(|f| *f -= amount);
+                        if *world.player.inventory.get(&item_id).unwrap_or(&0) < 1 {
+                            world.player.inventory.remove(&item_id);
+                        }
+                        world.player.gold += cost;
+                        world.output.push_back(format!("[Server Response] You successfully sold {} {}. That earned you {} golds!", amount, item_name, cost));
+                        world.room.output_scroll_pos.scroll_to_bottom();
+                    }
+                    _ => {}
                 }
             }
             _ => {}

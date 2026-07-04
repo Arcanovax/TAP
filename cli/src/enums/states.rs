@@ -8,7 +8,7 @@ pub enum States {
     ServerWait,
     ServerError(String),
     Idle,
-    Trade(Vec<String>),
+    Trade(Vec<String>, String),
     InFight { target_id: String },
     InDiscuss(String, String),
     Quit(u32, Box<States>, #[serde(skip)] Option<Instant>),

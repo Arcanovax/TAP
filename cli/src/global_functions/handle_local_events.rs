@@ -11,7 +11,7 @@ use crate::{
     structures::world::World,
 };
 
-pub fn idle_event(key: KeyEvent, world: &mut World) {
+pub fn handle_global_events(key: KeyEvent, world: &mut World) {
     if world.room.focus == Focus::COMMAND
         && ![KeyCode::Tab, KeyCode::Enter, KeyCode::Up, KeyCode::Down].contains(&key.code)
     {
@@ -164,7 +164,10 @@ pub fn idle_event(key: KeyEvent, world: &mut World) {
                                         world.action = PendingAction::Talk(selected_npc.clone());
                                     }
                                     NPCKind::Merchant { inventory } => {
-                                        world.state = States::Trade(inventory.clone());
+                                        world.room.focus = Focus::SELL;
+                                        world.room.sell_list_state.select_first();
+                                        world.state =
+                                            States::Trade(inventory.clone(), selected_npc.clone());
                                     }
                                 }
                             }

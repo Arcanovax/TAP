@@ -16,13 +16,14 @@ use tokio::sync::mpsc::Sender;
 use crate::{
     draw_functions::{
         discuss::draw_room_discuss, fights::draw_room_fight, login::login_draw, rooms::draw_room,
-        wait_server::draw_wait,
+        trade::draw_trade, wait_server::draw_wait,
     },
-    enums::{actions::PendingAction, focus::Focus, states::States},
+    enums::{actions::PendingAction, states::States},
     global_functions::{
         discuss_event::discuss_event, escape_handling::escape_handling,
-        event_handling::event_handling, handle_local_events::idle_event,
-        handle_mouse::handle_mouse, login_event::login_event, response_handling::response_handling,
+        event_handling::event_handling, handle_escape::handle_escape,
+        handle_local_events::handle_global_events, handle_mouse::handle_mouse,
+        login_event::login_event, response_handling::response_handling, trade_event::trade_event,
     },
     structures::{chat::Chat, group::Group, items::Item, npc::NPC, player::Player, room::Room},
 };
@@ -103,6 +104,7 @@ impl World<'_> {
                 }
                 None => escape_handling(self, frame, step.clone(), cancelled_instant.clone()),
             },
+            States::Trade(inventory, ..) => draw_trade(self, frame, inventory.clone()),
             _ => {}
         }
     }
@@ -112,30 +114,11 @@ impl World<'_> {
             match event::read()? {
                 Event::Key(key) => {
                     if key.code == KeyCode::Esc {
-                        // if let Ok(mut file) = OpenOptions::new().create(true).append(true).open("debug_network.txt") {
-                        // 		let _ = writeln!(file, "all (State {:?}) : {:#?}", self.room.focus, self.state);}
-                        if self.room.focus == Focus::BAG {
-                            self.room.fight.bag = false;
-                            self.room.focus = Focus::COMMAND;
-                            self.room.bag = Vec::new();
-                        } else {
-                            match &self.state {
-                                States::Quit(step, prev_state, cancelled_instant) => {
-                                    self.state = States::Quit(
-                                        *step + 1,
-                                        Box::new(*prev_state.clone()),
-                                        *cancelled_instant,
-                                    )
-                                }
-                                _ => {
-                                    self.state = States::Quit(1, Box::new(self.state.clone()), None)
-                                }
-                            }
-                        }
+                        handle_escape(self);
                     } else {
                         match &self.state {
                             States::Login => login_event(key, self),
-                            States::Idle | States::InFight { .. } => idle_event(key, self),
+                            States::Idle | States::InFight { .. } => handle_global_events(key, self),
                             States::InDiscuss(name, _) => discuss_event(key, self, name.clone()),
                             States::Quit(step, prev_state, ..) => {
                                 if key.code == KeyCode::Enter {
@@ -145,6 +128,9 @@ impl World<'_> {
                                         Some(Instant::now()),
                                     );
                                 }
+                            }
+                            States::Trade(inventory, npc_id) => {
+                                trade_event(self, key, inventory.clone(), npc_id.clone())
                             }
                             _ => {}
                         }
@@ -163,6 +149,13 @@ impl World<'_> {
         loop {
             match self.rx_from_serv.try_recv() {
                 Ok(msg) => {
+                    // if let Ok(mut file) = OpenOptions::new()
+                    //     .create(true)
+                    //     .append(true)
+                    //     .open("debug_network.txt")
+                    // {
+                    //     let _ = writeln!(file, "all (State {:?}) : {:#?}", self.room.focus, msg);
+                    // }
                     let answers = msg.lines();
                     for answer in answers {
                         let parts: Vec<&str> = answer.split_whitespace().collect();
