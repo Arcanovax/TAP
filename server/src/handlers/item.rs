@@ -12,10 +12,7 @@ mod tests;
 pub(super) fn item_request(server_info: &SharedServer, args: &Vec<String>) -> Message {
     let binding = server_info.lock().unwrap();
 
-    let mut item_ref = args.join(" ");
-    if let Some(reference) = binding.world.name_to_ref.get(&item_ref.to_lowercase()) {
-        item_ref = reference.clone();
-    }
+    let item_ref = args.join(" ");
 
     let item = match binding.resolve_item(&item_ref) {
         Some(item) => item,

@@ -30,10 +30,8 @@ pub(super) fn quest_request(
     }
 
     let mut binding = server_info.lock().unwrap();
-    let mut npc_ref = args.join(" ");
-    if let Some(reference) = binding.world.name_to_ref.get(&npc_ref.to_lowercase()) {
-        npc_ref = reference.clone();
-    }
+    let npc_ref = args.join(" ");
+
     let player_room = binding.get_player_room(peer_addr).unwrap();
     if !player_room.npc.iter().any(|npc| *npc == npc_ref) {
         return Message::Response {

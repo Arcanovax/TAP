@@ -9,7 +9,6 @@ pub struct Dungeon {
     pub rooms: HashMap<String, Room>,
     pub npcs: HashMap<String, NPC>,
     pub items: HashMap<String, Item>,
-    pub name_to_ref: HashMap<String, String>,
 }
 
 pub fn parse_dungeon_id(id: &str) -> Option<Uuid> {

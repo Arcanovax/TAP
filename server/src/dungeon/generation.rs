@@ -55,7 +55,6 @@ pub fn generate_dungeon(base_world: &World, gid: Uuid) -> Dungeon {
         rooms,
         npcs: HashMap::new(),
         items: HashMap::new(),
-        name_to_ref: HashMap::new(),
     };
 
     populate_rooms(base_world, &mut dungeon, gid);
@@ -84,7 +83,6 @@ fn populate_rooms(world: &World, dungeon: &mut Dungeon, gid: Uuid) {
                 break;
             };
             room.npc.push(id.clone());
-            dungeon.name_to_ref.insert(ennemy.name.clone(), id.clone());
             dungeon.npcs.insert(id, ennemy.clone());
             i += 1;
         }
@@ -103,7 +101,6 @@ fn populate_rooms(world: &World, dungeon: &mut Dungeon, gid: Uuid) {
                 break;
             };
             room.items.push(id.clone().into());
-            dungeon.name_to_ref.insert(item.name.clone(), id.clone());
             dungeon.items.insert(id, item.clone());
             i += 1;
         }

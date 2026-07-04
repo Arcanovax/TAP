@@ -8,7 +8,6 @@ pub struct World {
     pub npcs: HashMap<String, NPC>,
     pub items: HashMap<String, Item>,
     pub quests: HashMap<String, Quest>,
-    pub name_to_ref: HashMap<String, String>,
     pub spawn_room: String,
 }
 
@@ -19,7 +18,6 @@ impl World {
             npcs: HashMap::new(),
             items: HashMap::new(),
             quests: HashMap::new(),
-            name_to_ref: HashMap::new(),
             spawn_room: String::new(),
         }
     }

@@ -64,10 +64,7 @@ impl<'a> From<&'a NPC> for NPCView<'a> {
 pub(super) fn npc_request(server_info: &SharedServer, args: &Vec<String>) -> Message {
     let binding = server_info.lock().unwrap();
 
-    let mut npc_ref = args.join(" ");
-    if let Some(reference) = binding.world.name_to_ref.get(&npc_ref.to_lowercase()) {
-        npc_ref = reference.clone();
-    }
+    let npc_ref = args.join(" ");
 
     let npc = match binding.resolve_npc(&npc_ref) {
         Some(npc) => npc,

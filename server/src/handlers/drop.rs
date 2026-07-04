@@ -28,10 +28,8 @@ pub fn drop_request(
         };
     }
 
-    let mut item = args.join(" ");
-    if let Some(reference) = binding.world.name_to_ref.get(&item.to_lowercase()) {
-        item = reference.clone();
-    }
+    let item = args.join(" ");
+
     match binding.try_drop_item(peer_addr, &item) {
         Ok(item) => {
             info!("{} dropped", item);
