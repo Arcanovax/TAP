@@ -55,6 +55,8 @@ pub struct Room<'a> {
     pub exits_list_state: ListState,
     #[serde(skip)]
     pub text_area: TextArea<'a>,
+    #[serde(skip)]
+    pub chat_text_area: TextArea<'a>,
 }
 
 impl Room<'_> {
@@ -79,6 +81,7 @@ impl Room<'_> {
             buy_list_state: ListState::default(),
             exits_list_state: ListState::default(),
             text_area: TextArea::default(),
+            chat_text_area: TextArea::default(),
         }
     }
 

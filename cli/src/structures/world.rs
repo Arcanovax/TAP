@@ -118,7 +118,9 @@ impl World<'_> {
                     } else {
                         match &self.state {
                             States::Login => login_event(key, self),
-                            States::Idle | States::InFight { .. } => handle_global_events(key, self),
+                            States::Idle | States::InFight { .. } => {
+                                handle_global_events(key, self)
+                            }
                             States::InDiscuss(name, _) => discuss_event(key, self, name.clone()),
                             States::Quit(step, prev_state, ..) => {
                                 if key.code == KeyCode::Enter {

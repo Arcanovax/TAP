@@ -1,23 +1,20 @@
 use std::{fs::OpenOptions, io::Write};
 
-use ratatui::crossterm::event::{KeyCode, KeyEvent};
+use ratatui::crossterm::event::{KeyCode, KeyEvent, KeyModifiers};
 
 use crate::{
     enums::{
         actions::PendingAction, channels::Channels, focus::Focus, item_kind::ItemKind,
         npc_kind::NPCKind, states::States,
     },
-    global_functions::find_action::find_action,
+    global_functions::{check_text_areas::check_text_areas, find_action::find_action},
     structures::world::World,
 };
 
 pub fn handle_global_events(key: KeyEvent, world: &mut World) {
-    if world.room.focus == Focus::COMMAND
-        && ![KeyCode::Tab, KeyCode::Enter, KeyCode::Up, KeyCode::Down].contains(&key.code)
-    {
-        world.room.text_area.input(key);
-        world.index_command = 0;
-    } else {
+    if !check_text_areas(world, key) {
+        // if let Ok(mut file) = OpenOptions::new().create(true).append(true).open("debug_network.txt") {
+        // 		let _ = writeln!(file, "ko (State {:#?}) :", key);}
         match key.code {
             KeyCode::Down => match world.room.focus {
                 Focus::CHAT => world.room.chat_scroll_pos.scroll_down(),
@@ -40,29 +37,25 @@ pub fn handle_global_events(key: KeyEvent, world: &mut World) {
                 Focus::BAG => world.room.bag_state.select_next(),
                 _ => {}
             },
-            KeyCode::Up => {
-                // if let Ok(mut file) = OpenOptions::new().create(true).append(true).open("debug_network.txt") {
-                // 		let _ = writeln!(file, "ko (State {:?}) : {:#?}", world.old_command, world.index_command);}
-                match world.room.focus {
-                    Focus::CHAT => world.room.chat_scroll_pos.scroll_up(),
-                    Focus::DESCR => world.room.descr_scroll_pos.scroll_up(),
-                    Focus::OUTPUT => world.room.output_scroll_pos.scroll_up(),
-                    Focus::NPC => world.room.npc_list_state.select_previous(),
-                    Focus::INVENTORY => world.room.inventory_list_state.select_previous(),
-                    Focus::EXITS => world.room.exits_list_state.select_previous(),
-                    Focus::COMMAND => {
-                        if world.index_command < world.old_command.len() {
-                            world.index_command += 1;
-                            world.room.text_area.clear();
-                            if let Some(command) = world.old_command.get(world.index_command - 1) {
-                                world.room.text_area.insert_str(command);
-                            }
+            KeyCode::Up => match world.room.focus {
+                Focus::CHAT => world.room.chat_scroll_pos.scroll_up(),
+                Focus::DESCR => world.room.descr_scroll_pos.scroll_up(),
+                Focus::OUTPUT => world.room.output_scroll_pos.scroll_up(),
+                Focus::NPC => world.room.npc_list_state.select_previous(),
+                Focus::INVENTORY => world.room.inventory_list_state.select_previous(),
+                Focus::EXITS => world.room.exits_list_state.select_previous(),
+                Focus::COMMAND => {
+                    if world.index_command < world.old_command.len() {
+                        world.index_command += 1;
+                        world.room.text_area.clear();
+                        if let Some(command) = world.old_command.get(world.index_command - 1) {
+                            world.room.text_area.insert_str(command);
                         }
                     }
-                    Focus::BAG => world.room.bag_state.select_previous(),
-                    _ => {}
                 }
-            }
+                Focus::BAG => world.room.bag_state.select_previous(),
+                _ => {}
+            },
             KeyCode::Left => match world.room.focus {
                 Focus::CHAT => {
                     world.chat.channel = match world.chat.channel {
@@ -83,12 +76,23 @@ pub fn handle_global_events(key: KeyEvent, world: &mut World) {
                 }
                 _ => {}
             },
-            KeyCode::Tab => {
+            KeyCode::Tab | KeyCode::BackTab => {
                 let current_index = Focus::iterator(&world.state)
                     .position(|f| f == &world.room.focus)
                     .unwrap_or(0);
 
-                let next_index = (current_index + 1) % Focus::iterator(&world.state).len();
+                let final_index = {
+                    if key.modifiers == KeyModifiers::SHIFT {
+                        if current_index == 0 {
+                            Focus::iterator(&world.state).len() - 1
+                        } else {
+                            current_index.saturating_sub(1)
+                        }
+                    } else {
+                        current_index + 1
+                    }
+                };
+                let next_index = (final_index) % Focus::iterator(&world.state).len();
                 world.room.focus = Focus::iterator(&world.state)
                     .nth(next_index)
                     .unwrap()
@@ -106,7 +110,7 @@ pub fn handle_global_events(key: KeyEvent, world: &mut World) {
             KeyCode::Enter => match world.room.focus {
                 Focus::COMMAND => {
                     if !world.room.text_area.is_empty() {
-                        let command = world.room.text_area.lines().join("");
+                        let command = world.room.text_area.lines().join(" ");
                         world.index_command = 0;
                         world.old_command.push_front(command.clone());
                         let split_command: Vec<&str> = command.split(" ").collect();
@@ -121,6 +125,21 @@ pub fn handle_global_events(key: KeyEvent, world: &mut World) {
 
                         find_action(split_command, world);
                         world.room.text_area.clear();
+                    }
+                }
+                Focus::CHATTEXT => {
+                    if !world.room.chat_text_area.is_empty() {
+                        let message = world.room.chat_text_area.lines().join(" ");
+                        let scope = match world.chat.channel {
+                            Channels::GLOBAL => "GLOBAL",
+                            Channels::ROOM => "ROOM",
+                            Channels::GROUP => "GROUP",
+                        };
+                        let _ = world
+                            .tx_to_serv
+                            .try_send(format!("CHAT {scope} {}\n", message));
+                        world.action = PendingAction::SendChat(format!("CHAT {}", scope), message);
+                        world.room.chat_text_area.clear();
                     }
                 }
                 Focus::EXITS => {

@@ -9,6 +9,7 @@ pub enum Focus {
     #[default]
     COMMAND,
     OUTPUT,
+    CHATTEXT,
     SELL,
     BUY,
     CHAT,
@@ -23,14 +24,16 @@ impl Focus {
     pub fn iterator(state: &States) -> Iter<'static, Focus> {
         match state {
             States::InFight { .. } => {
-                static FOCUS: [Focus; 3] = [Focus::COMMAND, Focus::OUTPUT, Focus::CHAT];
+                static FOCUS: [Focus; 4] =
+                    [Focus::COMMAND, Focus::OUTPUT, Focus::CHAT, Focus::CHATTEXT];
                 FOCUS.iter()
             }
             _ => {
-                static FOCUS: [Focus; 7] = [
+                static FOCUS: [Focus; 8] = [
                     Focus::COMMAND,
                     Focus::OUTPUT,
                     Focus::CHAT,
+                    Focus::CHATTEXT,
                     Focus::DESCR,
                     Focus::NPC,
                     Focus::INVENTORY,

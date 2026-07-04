@@ -1,3 +1,4 @@
+pub mod check_text_areas;
 pub mod discuss_event;
 pub mod escape_handling;
 pub mod estimate_height;
