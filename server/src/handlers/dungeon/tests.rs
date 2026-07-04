@@ -44,7 +44,13 @@ fn dungeon_create_moves_creator_into_dungeon() {
     let a = addr(20001);
     connect(&server, a, "hero");
     dungeon_create_request(&server, a);
-    let loc = server.lock().unwrap().get_player(a).unwrap().location.clone();
+    let loc = server
+        .lock()
+        .unwrap()
+        .get_player(a)
+        .unwrap()
+        .location
+        .clone();
     assert!(
         loc.contains(".dg_"),
         "creator should be inside a dungeon room, got {loc:?}"

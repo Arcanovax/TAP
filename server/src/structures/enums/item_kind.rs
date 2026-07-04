@@ -7,4 +7,3 @@ pub enum ItemKind {
     Potion { healing: u32 },
     Miscellaneous,
 }
-

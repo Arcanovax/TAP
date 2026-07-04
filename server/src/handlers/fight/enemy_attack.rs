@@ -93,7 +93,7 @@ pub fn enemy_attack(opponent_id: &str, world: &mut ServerInfo) {
             }));
         }
     }
-	if let Some(fight) = world.fights.get_mut(opponent_id) {
-		fight.turn = 0;
-	}
+    if let Some(fight) = world.fights.get_mut(opponent_id) {
+        fight.turn = 0;
+    }
 }

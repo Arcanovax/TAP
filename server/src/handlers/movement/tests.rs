@@ -20,7 +20,11 @@ fn move_without_args_returns_invalid_args() {
 fn move_with_too_many_args_returns_invalid_args() {
     let server = populated_server();
     connect(&server, addr(1), "alice");
-    let result = move_request(&server, addr(1), &vec!["North".to_string(), "South".to_string()]);
+    let result = move_request(
+        &server,
+        addr(1),
+        &vec!["North".to_string(), "South".to_string()],
+    );
     assert_eq!(result, err(ErrorCode::INVALID_ARGS));
 }
 
@@ -86,7 +90,10 @@ fn consecutive_moves_follow_exits_from_new_room() {
     assert_eq!(second, ok_pair(&[("room", "room.city_square")]));
 
     let guard = server.lock().unwrap();
-    assert_eq!(guard.get_player(addr(1)).unwrap().location, "room.city_square");
+    assert_eq!(
+        guard.get_player(addr(1)).unwrap().location,
+        "room.city_square"
+    );
 }
 
 #[test]
