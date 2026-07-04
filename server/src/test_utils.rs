@@ -10,8 +10,10 @@ use crate::{
         room::Room,
     },
 };
+use crate::structures::dungeon::{Dungeon, format_dungeon_id};
 use redb::{Database, backends::InMemoryBackend};
 use std::collections::HashMap;
+use uuid::Uuid;
 use std::{
     net::SocketAddr,
     sync::{Arc, Mutex},
@@ -284,4 +286,113 @@ pub fn give_item(
         .unwrap()
         .inventory
         .insert(item.to_string(), amount);
+}
+
+// ---------------------------------------------------------------------------
+// Fixtures « donjon »
+//
+// `generate_dungeon` étant aléatoire, on construit ici un donjon *déterministe*
+// à gid fixe, calqué sur la forme de [`test_world`] pour que les assertions
+// soient stables. Les entités portent leurs ids de donjon (`*.dg_{gid}_{n}`) ;
+// les handlers ne résolvant le nom→id que via `world.name_to_ref`, les tests
+// « donjon » référencent les entités par leur id brut (voir [`dg_item`], etc.).
+// ---------------------------------------------------------------------------
+
+/// Le gid fixe partagé par toutes les fixtures de donjon.
+pub(crate) fn test_gid() -> Uuid {
+    Uuid::from_u128(1)
+}
+
+/// Id de la `n`-ième room du donjon de test.
+pub(crate) fn dg_room(n: u8) -> String {
+    format_dungeon_id("room", test_gid(), n)
+}
+
+/// Id du `n`-ième item du donjon de test.
+pub(crate) fn dg_item(n: u8) -> String {
+    format_dungeon_id("item", test_gid(), n)
+}
+
+/// Id du `n`-ième npc du donjon de test.
+pub(crate) fn dg_npc(n: u8) -> String {
+    format_dungeon_id("npc", test_gid(), n)
+}
+
+/// Un `Dungeon` déterministe à deux salles :
+/// - entrée `dg_room(0)` : item `dg_item(0)` (= « sword », prix 10), ennemi
+///   `dg_npc(0)` (= « goblin » non vaincu), sortie Nord vers `dg_room(1)`
+/// - `dg_room(1)` : vide, sortie Sud retour vers l'entrée
+pub(crate) fn test_dungeon() -> Dungeon {
+    let mut rooms = HashMap::new();
+    rooms.insert(
+        dg_room(0),
+        Room {
+            name: dg_room(0),
+            exits: HashMap::from([(Direction::North, dg_room(1))]),
+            description: "The dungeon entrance".to_string(),
+            npc: vec![dg_npc(0)],
+            items: vec![dg_item(0).into()],
+        },
+    );
+    rooms.insert(
+        dg_room(1),
+        Room {
+            name: dg_room(1),
+            exits: HashMap::from([(Direction::South, dg_room(0))]),
+            description: "The dungeon depths".to_string(),
+            npc: Vec::new(),
+            items: Vec::new(),
+        },
+    );
+
+    let mut npcs = HashMap::new();
+    npcs.insert(
+        dg_npc(0),
+        NPC {
+            name: "goblin".to_string(),
+            dialog: HashMap::new(),
+            kind: NPCKind::Enemy {
+                hp: 30,
+                max_hp: 30,
+                damages: 5,
+                loot: Vec::new(),
+                defeated: false,
+            },
+            quest: None,
+        },
+    );
+
+    let mut items = HashMap::new();
+    items.insert(
+        dg_item(0),
+        Item {
+            name: "sword".to_string(),
+            price: 10,
+            kind: ItemKind::Miscellaneous,
+        },
+    );
+
+    Dungeon { rooms, npcs, items }
+}
+
+/// [`populated_server`] auquel on a ajouté le donjon déterministe [`test_dungeon`].
+pub(crate) fn dungeon_server() -> SharedServer {
+    let server = populated_server();
+    server
+        .lock()
+        .unwrap()
+        .dungeons
+        .insert(test_gid(), test_dungeon());
+    server
+}
+
+/// Comme [`connect`], mais place immédiatement le joueur dans l'entrée du donjon.
+pub(crate) fn connect_in_dungeon(
+    server: &SharedServer,
+    addr: SocketAddr,
+    name: &str,
+) -> UnboundedReceiver<Message> {
+    let rx = connect(server, addr, name);
+    server.lock().unwrap().get_player_mut(addr).unwrap().location = dg_room(0);
+    rx
 }

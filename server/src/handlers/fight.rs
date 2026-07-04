@@ -74,7 +74,7 @@ pub fn fight_request(
     }
 
     let (is_defeated, target_hp) = {
-        if let NPCKind::Enemy { defeated, hp, .. } = world_mut.world.npcs[&args[0]].kind {
+        if let NPCKind::Enemy { defeated, hp, .. } = world_mut.resolve_npc(&args[0]).unwrap().kind {
             (defeated, hp)
         } else {
             return Message::Response {

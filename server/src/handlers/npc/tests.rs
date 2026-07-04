@@ -1,5 +1,5 @@
 use super::*;
-use crate::test_utils::populated_server;
+use crate::test_utils::{dg_npc, dungeon_server, populated_server};
 
 #[test]
 fn npc_right_name_returns_success() {
@@ -30,6 +30,32 @@ fn npc_wrong_name_returns_npc_not_found() {
         Message::Response {
             error: ErrorCode::NPC_NOT_FOUND,
             payload: Payload::Empty
+        }
+    )
+}
+
+// --- Variante « donjon » : npc (ennemi) référencé par son id de donjon.
+
+#[test]
+fn npc_in_dungeon_by_id_returns_success() {
+    let server = dungeon_server();
+    let res = npc_request(&server, &vec![dg_npc(0)]);
+    assert_eq!(
+        res,
+        Message::Response {
+            error: ErrorCode::SUCCESS,
+            payload: Payload::Json(
+                serde_json::to_value(NPCView {
+                    name: "goblin",
+                    kind: NPCKindView::Enemy {
+                        hp: 30,
+                        max_hp: 30,
+                        defeated: false
+                    },
+                    has_quest: false
+                })
+                .unwrap()
+            )
         }
     )
 }
