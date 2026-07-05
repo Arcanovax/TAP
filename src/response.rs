@@ -253,7 +253,7 @@ pub async fn handle_response(game: &mut Game, answer: &str, state: &str){
 		}
 		PendingAction::Attack(ref npc_id) => {
 			if state =="OK"{
-				match serde_json::from_str::<fight_data>(answer) {
+				match serde_json::from_str::<FightData>(answer) {
 					Ok(fight_data) => {
 						if let Some(ref mut state) = game.player.state{
 							state.hp = fight_data.attacker_hp;
@@ -268,7 +268,7 @@ pub async fn handle_response(game: &mut Game, answer: &str, state: &str){
 									players: fight_data.fighters,
 									enemy_hp: fight_data.target_hp,
 									chat:vec!["You joined the fight".to_string()],
-									consume_is_act: false
+									consume_menu_open: false
 								});
 
 							}
@@ -453,7 +453,7 @@ pub async fn handle_response(game: &mut Game, answer: &str, state: &str){
 		}
 		PendingAction::Sell(item_key) => {
 			let color = if state == "OK" { GREEN } else { RED };
-			game.npc_shop.buy_info = Some(InfoShop {
+			game.npc_shop.sell_info = Some(InfoShop {
 				color,
 				time: get_time(),
 			});
@@ -510,7 +510,7 @@ pub struct QuestsData {
 }
 
 #[derive(Deserialize, Debug)]
-pub struct fight_data {
+pub struct FightData  {
 	pub attacker_hp: i32,
     pub attacker_name: String,
 	pub damage: i32,

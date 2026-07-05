@@ -1,49 +1,6 @@
 use crate::Game;
 use macroquad::prelude::*;
 
-fn draw_skin_selection(x: f32, y: f32,game: &mut Game) -> i32 {
-    let size = 50.0;
-    let mouse_pos = game.mouse;
-
-
-    let btn_left = Rect::new(x, y, size, size);
-    let left_hovered = btn_left.contains(mouse_pos);
-    let bg_left = if left_hovered { Color::new(0.3, 0.3, 0.3, 1.0) } else { Color::new(0.15, 0.15, 0.15, 1.0) };
-    draw_rectangle(btn_left.x, btn_left.y, btn_left.w, btn_left.h, bg_left);
-    draw_text("<", btn_left.x+ 6.0, btn_left.y + 18.0, 30.0, WHITE);
-
-    let sprite_width: f32 = 16.0;
-    let sprite_height: f32 = 32.0;
-    let cut_sheet = DrawTextureParams {
-            source: Some(Rect::new(0.0, 0.0, sprite_width, sprite_height - 1.0)),
-            dest_size: Some(vec2(sprite_width * 2.0, sprite_height* 2.0 - 1.0)),
-            ..Default::default()
-        };
-    let current_skin = &game.skins[game.player.spritesheet_index as usize];
-    draw_texture_ex(
-            &current_skin.texture,
-			x+75.0, y-5.0,
-            WHITE,
-            cut_sheet
-        );
-
-
-
-    let btn_right = Rect::new(x+125.0, y, 35.0, 35.0);
-    let right_hovered = btn_right.contains(mouse_pos);
-    let bg_right = if right_hovered { Color::new(0.3, 0.3, 0.3, 1.0) } else { Color::new(0.15, 0.15, 0.15, 1.0) };
-    draw_rectangle(btn_right.x, btn_right.y, size, size, bg_right);
-    draw_text(">", btn_right.x + 6.0, btn_right.y + 18.0, 20.0, WHITE);
-
-    if left_hovered && is_mouse_button_pressed(MouseButton::Left) {
-        return -1;
-    }
-    if right_hovered && is_mouse_button_pressed(MouseButton::Left) {
-        return 1;
-    }
-    return 0;
-}
-
 
 fn draw_name_input(x: f32, y: f32,game: &mut Game){
     let input_rect = Rect::new(x, y, 175.0, 40.0);
@@ -100,13 +57,6 @@ pub fn handle_starter(game: &mut Game){
     let current_y = title_pos.y + 110.0;
 
     draw_name_input(start_x, current_y + 150.0, game);
-
-
-    let state_selector = draw_skin_selection(start_x, current_y + 50.0, game);
-    let nb_skins: i32 = game.skins.len() as i32;
-    if state_selector != 0 {
-        game.player.spritesheet_index = ((game.player.spritesheet_index as i32 + state_selector + nb_skins) % nb_skins) as usize;
-    }
 
     let btn_valid = Rect::new(start_x, current_y + 250.0, 80.0, 40.0);
     let valid_hovered = btn_valid.contains(mouse);

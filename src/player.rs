@@ -142,7 +142,7 @@ pub fn draw_player_info(game: &mut Game, state: PlayerState){
 		..Default::default()
 	};
 	draw_texture_ex(
-		&game.skins[game.player.spritesheet_index as usize].texture.clone(),
+		&game.skin.clone(),
 		frame.x+12.5, frame.y,
 		WHITE,
 		cut_sheet_head

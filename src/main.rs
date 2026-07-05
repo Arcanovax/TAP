@@ -98,7 +98,7 @@ struct Game {
     pub menu: Menu,
     pub player: Player,
     pub chat: Chat,
-    pub skins: Vec<Skin>,
+    pub skin: Texture2D,
 	pub tx_to_serv: tokio::sync::mpsc::Sender<String>,
     pub is_auth: bool,
     pub rx_from_serv: std::sync::mpsc::Receiver<String>,
@@ -123,18 +123,6 @@ struct GameConfig {
    	camera:Camera2D
 }
 
-impl Game {
-    pub async fn load_skins(&mut self, skin_data: Vec<(&str, &str)>){
-        for (path, name) in skin_data {
-            let texture = load_texture(path).await.unwrap();
-            texture.set_filter(FilterMode::Nearest);
-            self.skins.push(Skin {
-                texture: texture,
-                name: name.to_string(),
-            });
-    }
-    }
-}
 async fn network_task(tx: mpsc::Sender<String>, mut rx: tokio::sync::mpsc::Receiver<String>) {
     let stream = TcpStream::connect("127.0.0.1:8080").await.unwrap();
     let (mut reader, mut writer) = stream.into_split();
@@ -195,7 +183,8 @@ async fn main() {
 				.unwrap()
 				.block_on(network_task(tx_to_game, rx_from_game));
 		});
-
+	let texture = load_texture("assets/player_skin.png").await.unwrap();
+    texture.set_filter(FilterMode::Nearest);
     let mut game: Game = Game{
 		focus: InputFocus::Game,
         chat: Chat::new(),
@@ -214,7 +203,7 @@ async fn main() {
 			state: None,
 			gold: None
         },
-        skins: Vec::new(),
+        skin:texture,
 		tx_to_serv: tx_to_serv,
         rx_from_serv: rx_from_serv,
         is_auth: false,
@@ -241,13 +230,6 @@ async fn main() {
 
 	let rooms: std::collections::HashMap<String, rooms::Room> = get_rooms().await;
 
-    let skin_data: Vec<(&str, &str)> = vec![
-        ("assets/skins/alex.png", "Alex"),
-        ("assets/skins/kent.png", "Kent"),
-        ("assets/skins/pierre.png", "Pierre"),
-        ("assets/skins/shane.png", "Shane"),
-    ];
-    game.load_skins(skin_data).await;
 
 	let floor: Texture2D = load_texture("assets/map/fightmap.png").await.unwrap();
 
@@ -258,15 +240,15 @@ async fn main() {
 			println!("Send: {:?}", game.pending_action);
             println!("GET: {}", msg);
 			let parts: Vec<&str> = msg.split_whitespace().collect();
+			if parts.is_empty() { return; }
 			let answer = parts[1..].join(" ");
 			let state: &str = parts[0];
-			if parts.is_empty() { return; }
+			
 			match state {
 				"OK" | "ERR" => handle_response(&mut game, answer.as_str(), state).await,
 				"EVT" => handle_events(&mut game, parts).await,
 				_ => {}
 			}
-			game.pending_action = PendingAction::None;
 
 		}
 		game.mouse = vec2(mouse_position().0, mouse_position().1);
@@ -309,11 +291,7 @@ async fn main() {
 			else if game.player.gold.is_none() && game.pending_action == PendingAction::None{
 				game.tx_to_serv.try_send("GOLD \n".to_string()).ok();
 				game.pending_action = PendingAction::Gold;
-			}
-			else if game.map_data.is_none() && game.pending_action == PendingAction::None {
-					game.tx_to_serv.try_send("LOOK \n".to_string()).ok();
-					game.pending_action = PendingAction::Look;
-				}
+			}  
 
 			else{
 				if let Some(state) = game.player.state.clone() {
@@ -374,7 +352,7 @@ async fn main() {
 						player_handler(&mut game, &map_obstacles);
 					}
 
-					let current_skin_texture = game.skins[game.player.spritesheet_index as usize].texture.clone();
+					let current_skin_texture = game.skin.clone();
 					let sprite_width: f32 = game.config.sprite_width;
 					let sprite_height: f32 = game.config.sprite_height;
 					let source_x: f32 = game.player.row as f32 * sprite_width;

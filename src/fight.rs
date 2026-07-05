@@ -7,7 +7,7 @@ pub struct Fight{
 	pub players: HashMap<String, i32>,
 	pub enemy_hp: i32,
 	pub chat: Vec<String>,
-	pub consume_is_act: bool
+	pub consume_menu_open: bool
 }
 
 pub fn draw_enemy_info(game: &mut Game, npc: Npc){
@@ -113,7 +113,7 @@ pub fn handle_fight(game: &mut Game, floor: &Texture2D) {
 
 	let btn_consume = Rect::new(start_x + (1.0 * (btn_size.x + spacing)), pos_y, btn_size.x, btn_size.y);
 	if get_button(btn_consume, "Consume", 25, WHITE, mouse) {
-		fight.consume_is_act = !fight.consume_is_act
+		fight.consume_menu_open = !fight.consume_menu_open
 	}
 
 	let btn_flee = Rect::new(start_x + (2.0 * (btn_size.x + spacing)), pos_y, btn_size.x, btn_size.y);
@@ -129,7 +129,7 @@ pub fn handle_fight(game: &mut Game, floor: &Texture2D) {
 		draw_text(msg, chat_rect.x + 10.0 , chat_rect.y + (20 + (i* 20))as f32, 20.0, WHITE);
 	}
 
-	if fight.consume_is_act {
+	if fight.consume_menu_open {
 		handle_consume(game);
 	}
 }
@@ -167,7 +167,7 @@ fn draw_all_players(game: &mut Game, players: HashMap<String, i32>){
 		let player_pos = &vec2(start_x + (i as f32 * spacing) ,PLAYER_POS.y);
 		camera_handler(game);
 		draw_texture_ex(
-			&game.skins[game.player.spritesheet_index as usize].texture.clone(),
+			&game.skin.clone(),
 			player_pos.x,player_pos.y,
 			WHITE,
 			DrawTextureParams {
