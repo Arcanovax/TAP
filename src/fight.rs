@@ -153,6 +153,12 @@ fn handle_consume(game: &mut Game){
 			}
 		}
 	}
+		if let Some((rect, item)) = game.player.inventory.active_item_info.clone(){
+					draw_item_info(rect, &item);
+		};
+		game.player.inventory.active_item_info = None;
+			
+
 }
 
 fn draw_all_players(game: &mut Game, players: HashMap<String, i32>){

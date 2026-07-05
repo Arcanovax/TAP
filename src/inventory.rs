@@ -63,7 +63,7 @@ impl Inventory {
     }
 }
 
-fn draw_item_info(rect: Rect, item: &Item){
+pub fn draw_item_info(rect: Rect, item: &Item){
 	let text_size = measure_text(item.name.clone(), None, 25, 1.0);
 	let width = text_size.width.max(ITEM_INFO.x) + 10.0;
 	let item_rect = Rect::new(rect.x + rect.w + 5.0, rect.y, width, ITEM_INFO.y);
@@ -186,10 +186,6 @@ pub fn draw_inv(game: &mut Game) {
 			}
             }
         }
-        if let Some((rect, item)) = game.player.inventory.active_item_info.clone(){
-            draw_item_info(rect, &item);
-        };
-        game.player.inventory.active_item_info = None;
     }
 }
 

@@ -1,3 +1,5 @@
+use macroquad::input::KeyCode::N;
+
 use crate::*;
 
 #[derive(Debug, Clone, PartialEq)]
@@ -420,6 +422,7 @@ pub async fn handle_response(game: &mut Game, answer: &str, state: &str){
 			if state=="OK"{
 				game.player.state = None;
 				game.active_fight = None;
+				game.player.gold = None;
 			}
 		}
 		PendingAction::Consume(used) => {

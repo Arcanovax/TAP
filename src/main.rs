@@ -510,7 +510,12 @@ async fn main() {
 					handle_inv(&mut game);
 					handle_chat(&mut game);
 					handle_group(&mut game);
+					if let Some((rect, item)) = game.player.inventory.active_item_info.clone(){
+						draw_item_info(rect, &item);
+					};
+					game.player.inventory.active_item_info = None;
 					draw_menu(&mut game);
+
 				}
 
 					}

@@ -154,6 +154,7 @@ fn handle_shop(game: &mut Game, npc: Npc, rect: Rect){
 					get_item_slot_inv(slot, game, &item, &1);
 				}
 
+
 				draw_text(
 					&game.loaded_items[item].name,
 					slot.x + slot.w + 15.0,
@@ -161,6 +162,8 @@ fn handle_shop(game: &mut Game, npc: Npc, rect: Rect){
 					22.5,
 					WHITE,
 				);
+
+
 
 				let btn_buy = Rect::new(shop_rect.x + shop_rect.w - 115.0, line + (50.0 - item_size) / 2.0, 50.0,37.5);
 				if let Some(info) = game.npc_shop.buy_info.as_ref() {
