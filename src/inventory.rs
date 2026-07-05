@@ -10,7 +10,8 @@ const ITEM_INFO: Vec2 = vec2(120.0, 100.0);
 pub struct Inventory {
     pub data: HashMap<String, i32>,
 	pub is_load: bool,
-	pub is_active: bool
+	pub is_active: bool,
+    pub active_item_info: Option<(Rect, Item)>
 }
 
 use std::collections::HashMap;
@@ -57,6 +58,7 @@ impl Inventory {
             data: HashMap::new(),
             is_load: false,
             is_active: false,
+            active_item_info: None
         }
     }
 }
@@ -94,7 +96,7 @@ pub fn get_item_slot_inv(slot_rect: Rect, game: &mut Game, item: &Item, amount: 
     let hovered = slot_rect.contains(game.mouse);
 
 	if hovered{
-		draw_item_info(slot_rect, &item);
+        game.player.inventory.active_item_info = Some((slot_rect, item.clone()));
 	}
 
     draw_item_center(slot_rect, &item);
@@ -134,6 +136,18 @@ pub fn update_inv(game: &mut Game) {
 	return;
 }
 
+fn get_slot_pos(rect: Rect, i: usize) -> Vec2 {
+    let columns = 8;
+
+    let col = i % columns; 
+    let row = i / columns; 
+    
+    Vec2::new(
+        rect.x + (col as f32) * SLOT_SIZE,
+        rect.y + (row as f32) * SLOT_SIZE,
+    )
+}
+
 pub fn draw_inv(game: &mut Game) {
     if game.player.inventory.is_active {
 
@@ -145,9 +159,9 @@ pub fn draw_inv(game: &mut Game) {
         flr_item_rect.y += 175.0;
         draw_rectangle(flr_item_rect.x, flr_item_rect.y, flr_item_rect.w, flr_item_rect.h, Color::new(0.0, 0.0, 0.0, 0.5));
 
-
 		for (i, (item_id, amount)) in game.player.inventory.data.clone().iter().enumerate(){
-			let item_rect = Rect::new(inv_rect.x, inv_rect.y+ SLOT_SIZE * (i as f32), SLOT_SIZE, SLOT_SIZE);
+            let item_pos = get_slot_pos(inv_rect, i);
+			let item_rect = Rect::new(item_pos.x, item_pos.y, SLOT_SIZE, SLOT_SIZE);
 			let item: Option<Item> = game.loaded_items.get(item_id).cloned();
 			if let Some(item) = item {
 				if get_item_slot_inv(item_rect, game, &item, amount){
@@ -160,7 +174,8 @@ pub fn draw_inv(game: &mut Game) {
 
         if let Some(mapdata) = game.map_data.clone(){
             for (i, item_id) in mapdata.items.iter().enumerate(){
-                let item_rect = Rect::new(flr_item_rect.x, flr_item_rect.y+ SLOT_SIZE * (i as f32), SLOT_SIZE, SLOT_SIZE);
+                let item_pos = get_slot_pos(flr_item_rect, i);
+			    let item_rect = Rect::new(item_pos.x, item_pos.y, SLOT_SIZE, SLOT_SIZE);
 				let item: Option<Item> = game.loaded_items.get(item_id).cloned();
 				if let Some(item) = item {
                 if get_item_slot_inv(item_rect, game, &item, &1){
@@ -171,6 +186,10 @@ pub fn draw_inv(game: &mut Game) {
 			}
             }
         }
+        if let Some((rect, item)) = game.player.inventory.active_item_info.clone(){
+            draw_item_info(rect, &item);
+        };
+        game.player.inventory.active_item_info = None;
     }
 }
 
