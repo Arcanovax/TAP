@@ -30,6 +30,6 @@ pub enum PendingAction {
     ClientInventory,
     Quest,
     Quests,
-    QuestInfo,
+    QuestInfo(String),
     Items,
 }

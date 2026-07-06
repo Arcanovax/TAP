@@ -226,7 +226,7 @@ pub fn draw_room(world: &mut World, frame: &mut Frame) {
     let mut quests: Vec<ListItem> = world
         .player
         .quests
-        .iter()
+        .values()
         .map(|quest| ListItem::new(Line::from(quest.name.clone()).alignment(Alignment::Center)))
         .collect();
     if quests.len() == 0 {
@@ -302,7 +302,7 @@ pub fn draw_room(world: &mut World, frame: &mut Frame) {
                 if let Some(selected_quest) = world
                     .player
                     .quests
-                    .iter()
+                    .values()
                     .nth(world.room.quests_list_state.selected().unwrap())
                 {
                     Paragraph::new(Text::from(format!("{}", selected_quest)))

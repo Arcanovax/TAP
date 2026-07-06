@@ -4,14 +4,8 @@ use crate::{
     enums::{
         actions::PendingAction, focus::Focus, item_kind::ItemKind, npc_kind::NPCKind,
         states::States,
-    },
-    structures::{
-        attack_results::AttackResult,
-        npc::NPC,
-        quest_view::{QuestView, QuestsView},
-        room::{Room, RoomPayload},
-        status_view::StatusView,
-        world::World,
+    }, global_functions::check_goals::check_goals, structures::{
+        attack_results::AttackResult, npc::NPC, quest::Quest, quest_view::{QuestView, QuestsView}, room::{Room, RoomPayload}, status_view::StatusView, world::World,
     },
 };
 
@@ -66,11 +60,13 @@ pub fn response_handling(world: &mut World, answers: Vec<&str>) {
                         world.action = PendingAction::Quests;
                     }
 
-                    PendingAction::QuestInfo => {
+                    PendingAction::QuestInfo(id) => {
+						let mut new_quest: Quest = serde_json::from_str(&real_answer).unwrap();
+						check_goals(world.list_npcs.clone(), &mut new_quest);
                         world
                             .player
                             .quests
-                            .push(serde_json::from_str(&real_answer).unwrap());
+                            .insert(id.clone(), new_quest);
                         let quests_number = world.player.quests.len();
                         if quests_number == world.player.quests_views.len() {
                             if world.rooms.len() == 0 {
@@ -179,13 +175,18 @@ pub fn response_handling(world: &mut World, answers: Vec<&str>) {
                             serde_json::from_str(&real_answer).unwrap();
                         if quests_list.len() > 0 && (quests_list.len() != world.player.quests.len())
                         {
-							world.player.quests = Vec::new();
+							// world.player.quests = HashMap::new();
                             let id = &quests_list[0].quest_id.clone();
                             world.player.quests_views = quests_list;
                             let _ = world.tx_to_serv.try_send(format!("QUEST_INFO {}\n", id));
-                            world.action = PendingAction::QuestInfo;
+                            world.action = PendingAction::QuestInfo(id.clone());
                         } else {
-                            world.action = PendingAction::None;
+							if world.rooms.len() == 0 {
+                                let _ = world.tx_to_serv.try_send("ROOMS\n".to_string());
+                                world.action = PendingAction::Rooms;
+                            } else {
+                                world.action = PendingAction::None;
+                            }
                         }
                     }
 

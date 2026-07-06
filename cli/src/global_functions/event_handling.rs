@@ -1,4 +1,6 @@
-use std::{fs::OpenOptions, io::Write};
+use std::{collections::HashMap, fs::OpenOptions, io::Write};
+
+use serde::de::Unexpected::Str;
 
 use crate::{
     enums::{focus::Focus, states::States},
@@ -129,7 +131,59 @@ pub fn event_handling(world: &mut World, answer: Vec<&str>) {
                 }
                 world.room.output_scroll_pos.scroll_to_bottom();
             }
-            "QUEST" => {}
+            "QUEST" => {
+				match answer[2] {
+					"UPDATE" => {
+						let answers: Vec<&str> = answer[3].split_whitespace().collect();
+                        let mut quest_name = String::from("");
+                        let mut goal = String::from("");
+                        for elem in answers.iter() {
+                            let elems: Vec<&str> = elem.split(":").collect();
+                            match elems[0] {
+                                "quest" => {
+									if let Some(quest) = world.player.quests.get(elems[1]) {
+										quest_name = quest.name.clone();
+									} else {
+										quest_name = elems[1].to_string();
+									}
+								},
+                                "goal" => { goal = elems[1].to_string() },
+                                _ => {
+									world.output.push_back(format!("An error occurs with your quest update."));
+								}
+                            }
+                        }
+						world.output.push_back(format!("Congratulation! You validate the goal '{}' of the {} quest.", goal, quest_name));
+					}
+					"FINISH" => {
+						let answers: Vec<&str> = answer[3].split_whitespace().collect();
+						let mut id_quest = String::from("");
+                        let mut quest_name = String::from("");
+                        let mut reward = String::from("");
+                        for elem in answers.iter() {
+                            let elems: Vec<&str> = elem.split(":").collect();
+                            match elems[0] {
+                                "quest" => {
+									id_quest = elems[1].to_string();
+									if let Some(quest) = world.player.quests.get(elems[1]) {
+										quest_name = quest.name.clone();
+									} else {
+										quest_name = elems[1].to_string();
+									}
+								},
+                                "reward" => { reward = elems[1].to_string() },
+                                _ => {
+									world.output.push_back(format!("An error occurs with your quest."));
+								}
+                            }
+                        }
+						world.output.push_back(format!("Unbelievable! You've completed the quest {} and earned {}.", quest_name, reward));
+						*world.player.inventory.entry(reward).or_insert(0) += 1;
+						world.player.quests.remove(&id_quest);
+					}
+					_ => {}
+				}
+			}
             _ => {}
         }
     }

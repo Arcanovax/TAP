@@ -2,6 +2,7 @@ pub mod check_text_areas;
 pub mod discuss_event;
 pub mod escape_handling;
 pub mod estimate_height;
+pub mod check_goals;
 pub mod event_handling;
 pub mod find_action;
 pub mod handle_escape;

@@ -11,7 +11,7 @@ pub struct Player {
     pub max_hp: u32,
     pub inventory: HashMap<String, u32>,
     pub gold: u32,
-    pub quests: Vec<Quest>,
+    pub quests: HashMap<String, Quest>,
     pub quests_views: Vec<QuestsView>,
 }
 
@@ -23,7 +23,7 @@ impl Player {
             max_hp: 100,
             inventory: HashMap::new(),
             gold: 0,
-            quests: Vec::new(),
+            quests: HashMap::new(),
             quests_views: Vec::new(),
         }
     }

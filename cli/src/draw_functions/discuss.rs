@@ -133,6 +133,8 @@ pub fn draw_room_discuss(world: &mut World, frame: &mut Frame, name: String, sen
         world.counter += 1;
     }
 
+    if let Ok(mut file) = OpenOptions::new().create(true).append(true).open("debug_network.txt") {
+    	let _ = writeln!(file, "ok (State {:?}) : {:#?}", world.message, sentence);}
     if mess_len >= sentence.len() {
         world.counter = 0;
     } else if world.counter % 2 == 0 {
@@ -328,9 +330,6 @@ pub fn draw_room_discuss(world: &mut World, frame: &mut Frame, name: String, sen
             .title_style(Color::Green)
             .bold(),
     );
-
-    // if let Ok(mut file) = OpenOptions::new().create(true).append(true).open("debug_network.txt") {
-    // 			let _ = writeln!(file, "ok (State {:?}) : {:#?}", world.state, world.room.focus);}
 
     frame.render_widget(&world.room.text_area, main_layout[1]);
 }
