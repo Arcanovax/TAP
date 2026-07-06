@@ -134,16 +134,6 @@ impl ServerInfo {
         }
     }
 
-    pub fn resolve_item_mut(&mut self, id: &str) -> Option<&mut Item> {
-        match parse_dungeon_id(id) {
-            Some(gid) => match self.dungeons.get_mut(&gid) {
-                Some(dungeon) => dungeon.items.get_mut(id),
-                None => None,
-            },
-            None => self.world.items.get_mut(id),
-        }
-    }
-
     pub fn resolve_npc_mut(&mut self, id: &str) -> Option<&mut NPC> {
         match parse_dungeon_id(id) {
             Some(gid) => match self.dungeons.get_mut(&gid) {
