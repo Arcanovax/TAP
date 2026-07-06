@@ -2,6 +2,7 @@ pub mod buy;
 pub mod chat;
 pub mod connect;
 pub mod consume;
+pub mod dices;
 pub mod drop;
 pub mod dungeon;
 pub mod fight;

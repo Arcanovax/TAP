@@ -4,6 +4,7 @@ use crate::{
     handlers::{
         buy::buy_request,
         consume::consume,
+        dices::dices_request,
         dungeon::dungeon_request,
         flee::flee,
         gold::gold_request,
@@ -114,6 +115,14 @@ pub fn handle_request(
                         }
                     };
                     slot_machine_request(server_info, peer_addr, roll).into()
+                }
+                Some(Command::DICES) => {
+                    let mut rng = rand::rng();
+                    let mut draw = Vec::new();
+                    for _ in 0..10 {
+                        draw.push(rng.random_range(1..=10));
+                    }
+                    dices_request(server_info, peer_addr, args, draw).into()
                 }
                 _ => Message::Response {
                     error: ErrorCode::INVALID_COMMAND,

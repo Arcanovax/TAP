@@ -36,6 +36,7 @@ pub enum Command {
     HELP,
     ROOMS,
     ROOM,
+    DICES,
 }
 
 impl Command {
@@ -71,6 +72,7 @@ impl Command {
             Command::HELP => "List all available commands and what they do.",
             Command::ROOMS => "List the rooms",
             Command::ROOM => "Show the details of a specific room",
+            Command::DICES => "Play the dices game in the gambling room",
         }
     }
 
