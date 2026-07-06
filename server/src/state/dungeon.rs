@@ -8,6 +8,11 @@ use super::*;
 impl ServerInfo {
     pub fn try_create_dungeon(&mut self, peer_addr: SocketAddr) -> Result<(), ErrorCode> {
         let player = self.get_player(peer_addr)?;
+
+        if player.location != self.world.dungeon_entrance {
+            return Err(ErrorCode::FORBIDDEN_ACTION);
+        }
+
         match self.try_create_group(peer_addr, format!("{}'s group", player.name).as_str()) {
             Ok(_) | Err(ErrorCode::ALREADY_IN_GROUP) => {}
             Err(code) => return Err(code),
@@ -43,6 +48,10 @@ impl ServerInfo {
 
     pub fn try_join_dungeon(&mut self, peer_addr: SocketAddr) -> Result<(), ErrorCode> {
         let player = self.get_player(peer_addr)?;
+
+        if player.location != self.world.dungeon_entrance {
+            return Err(ErrorCode::FORBIDDEN_ACTION);
+        }
 
         if let Some(_) = parse_dungeon_id(&player.location) {
             return Err(ErrorCode::DUNGEON_ALREADY_IN_PROGRESS);

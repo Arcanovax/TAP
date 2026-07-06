@@ -62,7 +62,14 @@ fn dungeon_create_when_already_in_dungeon_returns_already_in_progress() {
     let server = test_server();
     let a = addr(20001);
     connect(&server, a, "hero");
+    let entrance = server.lock().unwrap().world.dungeon_entrance.clone();
+
+    // Première création : hero est déplacé DANS le donjon.
     dungeon_create_request(&server, a);
+    // On le ramène à l'entrée pour repasser le garde de room ; le donjon du
+    // groupe existe déjà -> on atteint la branche DUNGEON_ALREADY_IN_PROGRESS.
+    server.lock().unwrap().get_player_mut(a).unwrap().location = entrance;
+
     let result = dungeon_create_request(&server, a);
     assert_eq!(result, err(ErrorCode::DUNGEON_ALREADY_IN_PROGRESS));
 }
@@ -81,7 +88,17 @@ fn dungeon_create_when_group_already_has_dungeon_returns_already_in_progress() {
     let server = test_server();
     let members = vec![(addr(20001), "leader"), (addr(20002), "member")];
     group_with(&server, &members);
+    let entrance = server.lock().unwrap().world.dungeon_entrance.clone();
+
     dungeon_create_request(&server, members[0].0);
+    // le leader ressort à l'entrée alors que le donjon du groupe existe déjà
+    server
+        .lock()
+        .unwrap()
+        .get_player_mut(members[0].0)
+        .unwrap()
+        .location = entrance;
+
     let result = dungeon_create_request(&server, members[0].0);
     assert_eq!(result, err(ErrorCode::DUNGEON_ALREADY_IN_PROGRESS));
 }
@@ -98,6 +115,23 @@ fn dungeon_create_notifies_group_members() {
             .try_recv()
             .expect("member should be notified of the dungeon creation"),
         Message::Event(EventType::DUNGEON_CREATE)
+    );
+}
+
+#[test]
+fn dungeon_create_with_wrong_room_returns_forbidden_action() {
+    let server = test_server();
+    connect(&server, addr(1), "alice");
+    server
+        .lock()
+        .unwrap()
+        .get_player_mut(addr(1))
+        .unwrap()
+        .location = "room.not_dungeon_entrance".to_string();
+
+    assert_eq!(
+        dungeon_create_request(&server, addr(1)),
+        err(ErrorCode::FORBIDDEN_ACTION)
     );
 }
 
@@ -150,12 +184,32 @@ fn dungeon_join_moves_member_into_dungeon() {
 }
 
 #[test]
-fn dungeon_join_when_already_in_dungeon_returns_already_in_progress() {
+fn dungeon_join_when_already_in_dungeon_returns_forbidden_action() {
     let server = test_server();
     let members = vec![(addr(20001), "leader"), (addr(20002), "member")];
     group_with(&server, &members);
     dungeon_create_request(&server, members[0].0);
     dungeon_join_request(&server, members[1].0);
+    // member est désormais DANS le donjon, donc plus à l'entrée : re-rejoindre
+    // est refusé par le garde de room (FORBIDDEN_ACTION), avant l'ancien check
+    // DUNGEON_ALREADY_IN_PROGRESS du join, devenu inatteignable (cf. dungeon.rs).
     let result = dungeon_join_request(&server, members[1].0);
-    assert_eq!(result, err(ErrorCode::DUNGEON_ALREADY_IN_PROGRESS));
+    assert_eq!(result, err(ErrorCode::FORBIDDEN_ACTION));
+}
+
+#[test]
+fn dungeon_join_with_wrong_room_returns_forbidden_action() {
+    let server = test_server();
+    connect(&server, addr(1), "alice");
+    server
+        .lock()
+        .unwrap()
+        .get_player_mut(addr(1))
+        .unwrap()
+        .location = "room.not_dungeon_entrance".to_string();
+
+    assert_eq!(
+        dungeon_join_request(&server, addr(1)),
+        err(ErrorCode::FORBIDDEN_ACTION)
+    );
 }
