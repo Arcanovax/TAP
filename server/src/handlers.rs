@@ -9,6 +9,7 @@ pub mod flee;
 pub mod gold;
 pub mod group;
 pub mod handle_request;
+pub mod help;
 pub mod inventory;
 pub mod item;
 pub mod look;

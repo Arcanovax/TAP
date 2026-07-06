@@ -7,6 +7,7 @@ use crate::{
         dungeon::dungeon_request,
         flee::flee,
         gold::gold_request,
+        help::help_request,
         item::{item_request, items_request},
         npc::{npc_request, npcs_request},
         quest::quest_request,
@@ -91,6 +92,7 @@ pub fn handle_request(
                 Some(Command::GOLD) => gold_request(server_info, peer_addr).into(),
                 Some(Command::DUNGEON) => dungeon_request(args, server_info, peer_addr).into(),
                 Some(Command::QUEST_INFO) => quest_info_request(server_info, args).into(),
+                Some(Command::HELP) => help_request().into(),
                 Some(Command::SLOT_MACHINE) => {
                     let pool: Vec<String> = server_info
                         .lock()
