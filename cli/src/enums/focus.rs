@@ -16,6 +16,7 @@ pub enum Focus {
     DESCR,
     NPC,
     INVENTORY,
+    QUESTS,
     EXITS,
     BAG,
 }
@@ -29,7 +30,7 @@ impl Focus {
                 FOCUS.iter()
             }
             _ => {
-                static FOCUS: [Focus; 8] = [
+                static FOCUS: [Focus; 9] = [
                     Focus::COMMAND,
                     Focus::OUTPUT,
                     Focus::CHAT,
@@ -37,6 +38,7 @@ impl Focus {
                     Focus::DESCR,
                     Focus::NPC,
                     Focus::INVENTORY,
+                    Focus::QUESTS,
                     Focus::EXITS,
                 ];
                 FOCUS.iter()

@@ -1,9 +1,19 @@
 use std::{collections::VecDeque, fs::OpenOptions, io::Write};
 
 use ratatui::{
-    Frame, layout::{
-        Alignment, Constraint::{Fill, Length, Percentage}, Direction::{Horizontal, Vertical}, Flex, HorizontalAlignment::Center, Layout, Margin, Rect, Size,
-    }, style::{Color, Modifier, Style, Stylize}, text::{Line, Span, Text}, widgets::{Block, Borders, Gauge, List, ListItem, Paragraph, Wrap},
+    Frame,
+    backend::TestBackend,
+    layout::{
+        Alignment,
+        Constraint::{Fill, Length, Percentage},
+        Direction::{Horizontal, Vertical},
+        Flex,
+        HorizontalAlignment::Center,
+        Layout, Margin, Rect, Size,
+    },
+    style::{Color, Modifier, Style, Stylize},
+    text::{Line, Span, Text},
+    widgets::{Block, Borders, Gauge, List, ListItem, Paragraph, Wrap},
 };
 use tui_widgets::scrollview::ScrollView;
 
@@ -46,13 +56,13 @@ pub fn draw_room(world: &mut World, frame: &mut Frame) {
 
     let lists_layout = Layout::default()
         .direction(Horizontal)
-		.flex(Flex::Center)
+        .flex(Flex::Center)
         .constraints(vec![Percentage(50), Percentage(50)])
         .split(right_layout[1]);
 
-	let quests_layout = Layout::default()
+    let quests_layout = Layout::default()
         .direction(Horizontal)
-		.flex(Flex::Center)
+        .flex(Flex::Center)
         .constraints(vec![Percentage(50), Percentage(50)])
         .split(right_layout[2]);
 
@@ -117,8 +127,6 @@ pub fn draw_room(world: &mut World, frame: &mut Frame) {
         Color::Green
     };
 
-    // if let Ok(mut file) = OpenOptions::new().create(true).append(true).open("debug_network.txt") {
-    // 			let _ = writeln!(file, "ok (State {:?}) :", world.player.hp);}
     let hp_bar = Gauge::default()
         .block(
             Block::new()
@@ -214,6 +222,122 @@ pub fn draw_room(world: &mut World, frame: &mut Frame) {
         &mut world.room.inventory_list_state,
     );
 
+    //QUESTS
+    let mut quests: Vec<ListItem> = world
+        .player
+        .quests
+        .iter()
+        .map(|quest| ListItem::new(Line::from(quest.name.clone()).alignment(Alignment::Center)))
+        .collect();
+    if quests.len() == 0 {
+        quests.push(ListItem::new(
+            Line::from("No quest accepted yet.").alignment(Alignment::Center),
+        ));
+    }
+
+    let quests_list = List::new(quests)
+        .block(
+            Block::bordered()
+                .border_style(if world.room.focus == Focus::QUESTS {
+                    Color::LightBlue
+                } else {
+                    Color::White
+                })
+                .title("Quests:")
+                .title_alignment(Alignment::Center)
+                .title_style(Color::Green)
+                .bold(),
+        )
+        .style(Color::LightCyan)
+        .highlight_style(Modifier::REVERSED);
+
+    frame.render_stateful_widget(
+        quests_list,
+        quests_layout[0],
+        &mut world.room.quests_list_state,
+    );
+
+    //DETAILS
+    let details_block = Block::bordered()
+        .title("More details")
+        .title_alignment(Alignment::Center)
+        .title_style(Color::Green)
+        .bold();
+
+    let details_content = {
+        match world.room.focus {
+            Focus::NPC => {
+                if let Some(selected_npc) = world
+                    .room
+                    .npcs
+                    .iter()
+                    .nth(world.room.npc_list_state.selected().unwrap_or(0))
+                {
+                    if let Some(npc) = world.list_npcs.get(selected_npc) {
+                        Paragraph::new(Text::from(format!("{}", npc)))
+                    } else {
+                        Paragraph::new(Text::from("Can't find details about this NPC."))
+                    }
+                } else {
+                    Paragraph::new(Text::from("Can't find details about this NPC."))
+                }
+            }
+            Focus::INVENTORY => {
+                if let Some((selected_item, ..)) = world
+                    .player
+                    .inventory
+                    .iter()
+                    .nth(world.room.inventory_list_state.selected().unwrap())
+                {
+                    if let Some(detailled_item) = world.list_items.get(selected_item) {
+                        Paragraph::new(Text::from(format!("{}", detailled_item)))
+                    } else {
+                        Paragraph::new(Text::from("Can't find details about this item."))
+                    }
+                } else {
+                    Paragraph::new(Text::from("Can't find details about this item."))
+                }
+            }
+            Focus::QUESTS => {
+                if let Some(selected_quest) = world
+                    .player
+                    .quests
+                    .iter()
+                    .nth(world.room.quests_list_state.selected().unwrap())
+                {
+                    Paragraph::new(Text::from(format!("{}", selected_quest)))
+                } else {
+                    Paragraph::new(Text::from("Can't find details about this quest."))
+                }
+            }
+            Focus::EXITS => {
+                if let Some((.., selected_exit)) = world
+                    .room
+                    .room
+                    .exits
+                    .iter()
+                    .nth(world.room.exits_list_state.selected().unwrap())
+                {
+                    if let Some(detailled_exit) = world.rooms.get(selected_exit) {
+                        Paragraph::new(Text::from(format!("{}", detailled_exit)))
+                    } else {
+                        Paragraph::new(Text::from("Can't find details about this exit."))
+                    }
+                } else {
+                    Paragraph::new(Text::from("Can't find details about this exit."))
+                }
+            }
+            _ => Paragraph::new(Text::from("Nothing selected")),
+        }
+    };
+    frame.render_widget(
+        details_content
+            .block(details_block)
+            .wrap(Wrap { trim: true })
+            .centered(),
+        quests_layout[1],
+    );
+
     // EXITS
     let exits_items: Vec<ListItem> = world
         .room
@@ -221,7 +345,17 @@ pub fn draw_room(world: &mut World, frame: &mut Frame) {
         .exits
         .iter()
         .map(|(dir, dest)| {
-            ListItem::new(Line::from(format!("{dir} => {dest}")).alignment(Alignment::Center))
+            ListItem::new(
+                Line::from(format!(
+                    "{dir} => {}",
+                    if let Some(target) = world.rooms.get(dest) {
+                        &target.name
+                    } else {
+                        dest
+                    }
+                ))
+                .alignment(Alignment::Center),
+            )
         })
         .collect();
 

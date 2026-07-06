@@ -25,11 +25,15 @@ use crate::{
         handle_local_events::handle_global_events, handle_mouse::handle_mouse,
         login_event::login_event, response_handling::response_handling, trade_event::trade_event,
     },
-    structures::{chat::Chat, group::Group, items::Item, npc::NPC, player::Player, room::Room},
+    structures::{
+        chat::Chat, group::Group, items::Item, npc::NPC, player::Player, room::Room,
+        rooms_view::RoomsView,
+    },
 };
 
 pub struct World<'a> {
     pub room: Room<'a>,
+    pub rooms: HashMap<String, RoomsView>,
     pub player: Player,
     pub quit: bool,
     pub message: String,
@@ -55,6 +59,7 @@ impl World<'_> {
     pub fn new(tx_to_serv: Sender<String>, rx_from_serv: Receiver<String>) -> Self {
         Self {
             room: Room::new(),
+            rooms: HashMap::new(),
             player: Player::new(),
             quit: false,
             message: String::from(""),

@@ -23,6 +23,7 @@ pub fn handle_global_events(key: KeyEvent, world: &mut World) {
                 Focus::NPC => world.room.npc_list_state.select_next(),
                 Focus::INVENTORY => world.room.inventory_list_state.select_next(),
                 Focus::EXITS => world.room.exits_list_state.select_next(),
+                Focus::QUESTS => world.room.quests_list_state.select_next(),
                 Focus::COMMAND => {
                     if world.index_command > 0 {
                         world.index_command = world.index_command.saturating_sub(1);
@@ -44,6 +45,7 @@ pub fn handle_global_events(key: KeyEvent, world: &mut World) {
                 Focus::NPC => world.room.npc_list_state.select_previous(),
                 Focus::INVENTORY => world.room.inventory_list_state.select_previous(),
                 Focus::EXITS => world.room.exits_list_state.select_previous(),
+                Focus::QUESTS => world.room.quests_list_state.select_previous(),
                 Focus::COMMAND => {
                     if world.index_command < world.old_command.len() {
                         world.index_command += 1;
@@ -100,10 +102,12 @@ pub fn handle_global_events(key: KeyEvent, world: &mut World) {
                 world.room.exits_list_state.select(None);
                 world.room.inventory_list_state.select(None);
                 world.room.npc_list_state.select(None);
+                world.room.quests_list_state.select(None);
                 match world.room.focus {
                     Focus::EXITS => world.room.exits_list_state.select_first(),
                     Focus::INVENTORY => world.room.inventory_list_state.select_first(),
                     Focus::NPC => world.room.npc_list_state.select_first(),
+                    Focus::QUESTS => world.room.quests_list_state.select_first(),
                     _ => {}
                 }
             }
@@ -156,19 +160,19 @@ pub fn handle_global_events(key: KeyEvent, world: &mut World) {
                     }
                 }
                 Focus::NPC => {
-                    if let Some(index) = world.room.npc_list_state.selected_mut() {
-                        if let Some(selected_npc) = world.room.npcs.get(*index) {
+                    if let Some(index) = world.room.npc_list_state.selected() {
+                        if let Some(selected_npc) = world.room.npcs.get(index) {
                             if let Some(npc) = world.list_npcs.get(selected_npc) {
                                 match &npc.kind {
                                     NPCKind::Enemy { .. } => {
                                         world.output.push_back(format!(
                                             "\n> {}",
-                                            format!("attack {}\n", selected_npc)
+                                            format!("ATTACK {}\n", selected_npc)
                                         ));
                                         world.room.output_scroll_pos.scroll_to_bottom();
                                         let _ = world
                                             .tx_to_serv
-                                            .try_send(format!("attack {}\n", selected_npc));
+                                            .try_send(format!("ATTACK {}\n", selected_npc));
                                         world.action = PendingAction::Attack(selected_npc.clone());
                                     }
                                     NPCKind::Citizen => {
@@ -241,7 +245,9 @@ pub fn handle_global_events(key: KeyEvent, world: &mut World) {
                                             }
                                         }
                                     }
-                                    world.room.focus = Focus::COMMAND;
+									if world.room.focus == Focus::BAG {
+										world.room.focus = Focus::COMMAND;
+									}
                                     world.room.output_scroll_pos.scroll_to_bottom();
                                 }
                                 None => {

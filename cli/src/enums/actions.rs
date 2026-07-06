@@ -18,7 +18,9 @@ pub enum PendingAction {
     GroupInvite(String),
     SendChat(String, String),
     ClientLook,
+    MoveLook,
     Look,
+    Rooms,
     Status,
     ClientStatus,
     Move,
@@ -27,5 +29,7 @@ pub enum PendingAction {
     Inventory,
     ClientInventory,
     Quest,
+    Quests,
+    QuestInfo,
     Items,
 }

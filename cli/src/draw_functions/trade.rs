@@ -389,7 +389,7 @@ pub fn draw_trade(world: &mut World, frame: &mut Frame, inventory: Vec<String>) 
         &mut world.room.output_scroll_pos,
     );
 
-	// CHAT TEXT AREA
+    // CHAT TEXT AREA
     world.room.chat_text_area.set_block(
         Block::bordered()
             .title("Send messages here:")

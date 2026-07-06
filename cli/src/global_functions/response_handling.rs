@@ -4,8 +4,14 @@ use crate::{
     enums::{
         actions::PendingAction, focus::Focus, item_kind::ItemKind, npc_kind::NPCKind,
         states::States,
-    }, structures::{
-        attack_results::AttackResult, npc::NPC, quest_view::QuestView, room::{Room, RoomPayload}, status_view::StatusView, world::World,
+    },
+    structures::{
+        attack_results::AttackResult,
+        npc::NPC,
+        quest_view::{QuestView, QuestsView},
+        room::{Room, RoomPayload},
+        status_view::StatusView,
+        world::World,
     },
 };
 
@@ -30,12 +36,9 @@ pub fn response_handling(world: &mut World, answers: Vec<&str>) {
             }
             States::Idle | States::InFight { .. } => {
                 match &world.action {
-                    PendingAction::Look | PendingAction::ClientLook => {
+                    PendingAction::Look | PendingAction::ClientLook | PendingAction::MoveLook => {
                         let payload: RoomPayload = serde_json::from_str(&real_answer).unwrap();
-                        // if let Ok(mut file) = OpenOptions::new().create(true).append(true).open("debug_network.txt") {
-                        // 	let _ = writeln!(file, "ok (State {:#?}) : {:#?}", world.room, world.room.fight.target_max_hp);}
                         if world.action == PendingAction::Look {
-                            // world.room = serde_json::from_str::<Room>(&real_answer).unwrap_or(Room::new());
                             world.room.apply_update(payload);
                             world
                                 .output
@@ -44,15 +47,51 @@ pub fn response_handling(world: &mut World, answers: Vec<&str>) {
                         } else {
                             world.room = Room::new();
                             world.room.apply_update(payload);
-                            let _ = world.tx_to_serv.try_send(String::from("STATUS\n"));
-                            world.action = PendingAction::ClientStatus;
+                            if world.action == PendingAction::ClientLook {
+                                let _ = world.tx_to_serv.try_send(String::from("STATUS\n"));
+                                world.action = PendingAction::ClientStatus;
+                            } else {
+                                world.action = PendingAction::None;
+                            }
                         }
                     }
 
-					PendingAction::Quest => {
-						let view_quest: QuestView = serde_json::from_str(&real_answer).unwrap();
-						world.output.push_back(format!("[Server Response] {:#?}", view_quest));
-					}
+                    PendingAction::Quest => {
+                        let view_quest: QuestView = serde_json::from_str(&real_answer).unwrap();
+                        world.output.push_back(format!(
+                            "[Server Response] You accept this quest:\n {:#?}",
+                            view_quest
+                        ));
+                        let _ = world.tx_to_serv.try_send("QUESTS\n".to_string());
+                        world.action = PendingAction::Quests;
+                    }
+
+                    PendingAction::QuestInfo => {
+                        world
+                            .player
+                            .quests
+                            .push(serde_json::from_str(&real_answer).unwrap());
+                        let quests_number = world.player.quests.len();
+                        if quests_number == world.player.quests_views.len() {
+                            if world.rooms.len() == 0 {
+                                let _ = world.tx_to_serv.try_send("ROOMS\n".to_string());
+                                world.action = PendingAction::Rooms;
+                            } else {
+                                world.action = PendingAction::None;
+                            }
+                        } else {
+                            let _ = world.tx_to_serv.try_send(format!(
+                                "QUEST_INFO {}\n",
+                                world.player.quests_views[quests_number].quest_id
+                            ));
+                        }
+                    }
+
+                    PendingAction::Rooms => {
+                        world.rooms = serde_json::from_str(&real_answer).unwrap();
+                        world.action = PendingAction::None;
+                    }
+
                     PendingAction::Drop(item) => {
                         if let Some(item_obj) = world.list_items.get(item) {
                             world.output.push_back(format!(
@@ -129,7 +168,25 @@ pub fn response_handling(world: &mut World, answers: Vec<&str>) {
                     PendingAction::Gold => {
                         let gold: Vec<&str> = real_answer.split("=").collect();
                         world.player.gold = gold[1].parse().unwrap();
-                        world.action = PendingAction::None;
+                        let _ = world.tx_to_serv.try_send("QUESTS\n".to_string());
+                        world.action = PendingAction::Quests;
+                    }
+
+                    PendingAction::Quests => {
+                        // if let Ok(mut file) = OpenOptions::new().create(true).append(true).open("debug_network.txt") {
+                        // 	let _ = writeln!(file, "ok (State {:#?}) :", real_answer);}
+                        let quests_list: Vec<QuestsView> =
+                            serde_json::from_str(&real_answer).unwrap();
+                        if quests_list.len() > 0 && (quests_list.len() != world.player.quests.len())
+                        {
+							world.player.quests = Vec::new();
+                            let id = &quests_list[0].quest_id.clone();
+                            world.player.quests_views = quests_list;
+                            let _ = world.tx_to_serv.try_send(format!("QUEST_INFO {}\n", id));
+                            world.action = PendingAction::QuestInfo;
+                        } else {
+                            world.action = PendingAction::None;
+                        }
                     }
 
                     PendingAction::Inventory | PendingAction::ClientInventory => {
@@ -275,7 +332,7 @@ pub fn response_handling(world: &mut World, answers: Vec<&str>) {
                     PendingAction::Move => {
                         world.chat.room_messages = VecDeque::new();
                         let _ = world.tx_to_serv.try_send(String::from("LOOK\n"));
-                        world.action = PendingAction::ClientLook;
+                        world.action = PendingAction::MoveLook;
                     }
                     PendingAction::Attack(name) => {
                         let result: AttackResult = serde_json::from_str(&real_answer).unwrap();
@@ -403,8 +460,9 @@ pub fn response_handling(world: &mut World, answers: Vec<&str>) {
                     world.action = PendingAction::None;
                 }
                 _ => {
-                    // world.output.push_back(format!("[Error] coucou"));
-                    world.output.push_back(format!("[Error] {}", real_answer));
+                    world
+                        .output
+                        .push_back(format!("[Error] {:#?}, {}", world.action, real_answer));
                     world.action = PendingAction::None;
                 }
             }
