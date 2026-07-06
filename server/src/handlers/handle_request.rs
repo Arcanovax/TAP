@@ -54,7 +54,7 @@ pub fn handle_request(
             };
 
             if is_in_fight
-                && ["TAKE", "DROP", "QUEST", "BUY", "SELL", "TALK"]
+                && ["TAKE", "DROP", "QUEST", "BUY", "SELL", "TALK", "MOVE"]
                     .contains(&name.to_uppercase().as_str())
             {
                 return Message::Response {

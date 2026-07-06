@@ -1,0 +1,58 @@
+import:
+  - "blacksmith.yaml"   # exit North
+  - "market.yaml"       # exit West (+ dialog quest.lostbook.1 sur citizen_4)
+  - "beach.yaml"        # quest.lostbook : dialog quest.lostbook.0 (old_man)
+  - "../items/armors.yaml"   # quest.lostbook : helmet (reward)
+
+room:
+  parc:
+    name: "The Amazing Parc"
+    description: "Children tear across the lawns under their parents' half-watchful eyes, while a quiet reading corner offers refuge to anyone who would rather turn a page than dodge a stray football."
+    exits:
+      North: "room.blacksmith's_shop"
+      West: "room.market"
+    npc:
+      - "npc.bookseller"
+      - "npc.citizen_5"
+      - "npc.citizen_6"
+
+npc:
+  bookseller:
+    name: "Damducédéix"
+    dialog:
+      default:
+        - "A book, traveler? No batteries, no updates, no terms and conditions to accept."
+        - "In this quiet corner, the only spoilers are the ones printed on page one hundred."
+      quest.lostbook.2:
+        - "You found it — my missing final page! A hundred readings and I never knew how the tale ended. I'm... not sure I dare look. Take this helmet for your trouble; wear it when you think hard. It helps. Somehow."
+    kind: Citizen
+    quest: "quest.lostbook"
+
+  citizen_5:
+    name: "Iwanttobreakfrix"
+    dialog:
+      default:
+        - "I want to break freeee... ah, sorry. That one's been stuck in my head for years."
+        - "Don't stop me now — I'm having far too good a time wandering this park."
+    kind: Citizen
+
+  citizen_6:
+    name: "Soirénetflix"
+    dialog:
+      default:
+        - "I only came outside because my screen asked if I was still watching. I felt judged."
+        - "Fresh air is overrated. You can't even pause it."
+    kind: Citizen
+
+quest:
+  lostbook:
+    name: "The Missing Page"
+    description: "Damducédéix has lost the final page of his favourite book. Track down who might have seen it: ask the muttering old man on the beach, then the film buff at the market."
+    reward: "item.helmet"
+    goals:
+      - Talk:
+          dialog: "npc.old_man.dialog.quest.lostbook.0"
+      - Talk:
+          dialog: "npc.citizen_4.dialog.quest.lostbook.1"
+      - Talk:
+          dialog: "npc.bookseller.dialog.quest.lostbook.2"

@@ -34,28 +34,16 @@ item:
       Potion:
         healing: 10
 
-  sword:
-    name: "Excalibur"
-    price: 25
+  bread:
+    name: "Lord of the Loaf"
+    price: 12
     kind:
-      Weapon:
-        damages: 30
+      Potion:
+        healing: 30
 
-  shield:
-    name: "You_shall_not_pass"
-    price: 25
+  cheese:
+    name: "The Big Cheese"
+    price: 6
     kind:
-      Armor:
-        protection: 20
-
-  helmet:
-    name: "Helmetique"
-    price: 15
-    kind:
-      Armor:
-        protection: 10
-
-  gold:
-    name: "Gold"
-    price: 1
-    kind: Miscellaneous
+      Potion:
+        healing: 18

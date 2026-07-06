@@ -1,0 +1,22 @@
+import:
+  - "tavern.yaml"   # exit South
+
+room:
+  game_room:
+    name: "The Ace Play"
+    description: "A smoky, strictly 18-and-over den of green-felt tables and the soft rattle of dice. At the back, a pink curtain conceals another room entirely — sadly inaccessible without the DLC."
+    exits:
+      South: "room.tavern"
+    npc:
+      - "npc.dealer"
+
+npc:
+  dealer:
+    name: "Donnetonfrix"
+    dialog:
+      default:
+        - "Welcome, welcome! The name's Donnetonfrix, and yes, I fully intend to take your gold. Two ways to lose it here:"
+        - "SLOT_MACHINE — five gold a pull. Line up a combo and an item is yours; miss, and I thank you for the generous donation."
+        - "DICES — also five gold. Guess which numbers, one to ten, I'll roll. Bet on several at once and the payout multiplies... but every single one must come up."
+        - "The house always wins. Still, who knows — maybe today you're its favorite charity."
+    kind: Citizen

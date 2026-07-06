@@ -1,0 +1,31 @@
+import:
+  - "mine.yaml"          # exit North
+  - "blacksmith.yaml"    # exit South
+  - "../items/misc.yaml"      # loot des goblins
+
+room:
+  quarry:
+    name: "The Ancient Pit"
+    description: "An abandoned quarry of scattered rock, crumbling ruins, and the bones of animals that took the wrong shortcut. In the far corner, three goblins loiter before the entrance to an old mine, doing their very best to look like guards."
+    exits:
+      North: "room.mine"
+      South: "room.blacksmith's_shop"
+    npc:
+      - "npc.goblins"
+
+npc:
+  goblins:
+    name: "Sansabrix"
+    dialog:
+      default:
+        - "No sabers on us, sure — but we've got numbers. And attitude. Mostly attitude."
+        - "Turn back, tall one. This mine is ours. Though, honestly, the rent is dreadful."
+    kind:
+      Enemy:
+        hp: 120
+        max_hp: 120
+        damages: 15
+        loot:
+          - "item.gold"
+          - "item.goblin_tooth"
+        defeated: false

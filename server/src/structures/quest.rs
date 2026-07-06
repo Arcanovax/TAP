@@ -45,7 +45,7 @@ impl Into<String> for Goal {
             Goal::Collect { item, amount } => format!("Collect {} {}", amount, item),
             Goal::Talk { dialog } => {
                 let mut splitted = dialog.splitn(3, ".");
-                let npc = splitted.next().unwrap().to_owned() + splitted.next().unwrap();
+                let npc = splitted.next().unwrap().to_owned() + "." + splitted.next().unwrap();
                 format!("Talk to {}", npc)
             }
             Goal::Retrieve {
@@ -54,7 +54,7 @@ impl Into<String> for Goal {
                 dialog,
             } => {
                 let mut splitted = dialog.splitn(3, ".");
-                let npc = splitted.next().unwrap().to_owned() + splitted.next().unwrap();
+                let npc = splitted.next().unwrap().to_owned() + "." + splitted.next().unwrap();
                 format!("Gave {} {} to {}", amount, item, npc)
             }
         }

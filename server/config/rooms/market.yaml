@@ -1,0 +1,52 @@
+import:
+  - "city_square.yaml"   # exit North
+  - "parc.yaml"          # exit East
+  - "beach.yaml"         # exit South
+  - "../items/potions.yaml"   # inventaire de seller
+
+room:
+  market:
+    name: "The Artisan Plaza"
+    description: "A bustling plaza of stalls and hand-painted signs, each one shouting a bargain louder than the last. Somewhere in the din, a merchant is already smashing his prices to splinters."
+    exits:
+      North: "room.city_square"
+      East: "room.parc"
+      South: "room.beach"
+    npc:
+      - "npc.seller"
+      - "npc.citizen_3"
+      - "npc.citizen_4"
+
+npc:
+  seller:
+    name: "Oncassléprix"
+    dialog:
+      default:
+        - "Prices SMASHED! Everything must go — especially the things nobody wants!"
+        - "For you, my friend, a special price. Same as everyone else, but I say it with more warmth."
+    kind:
+      Merchant:
+        gold: 45
+        inventory:
+          - "item.strawberry"
+          - "item.orange"
+          - "item.bread"
+          - "item.cheese"
+
+  citizen_3:
+    name: "Alavavix"
+    dialog:
+      default:
+        - "Can't stop, deals to catch, bargains to grab. It's all go, go, go!"
+        - "Out of the way, please — the good tomatoes are nearly gone!"
+    kind: Citizen
+
+  citizen_4:
+    name: "Cinematix"
+    dialog:
+      default:
+        - "This market reminds me of a film. Everything reminds me of a film, honestly."
+        - "I'd tell you how it ends, but I don't do spoilers. Unlike some people."
+      quest.lostbook.1:
+        - "A page? Oh, THAT page. I may have... read it. And left it back in the reading corner where it belongs. I don't do spoilers, remember — but between us, the butler absolutely did it. Go tell the old bookseller it's home."
+    kind: Citizen

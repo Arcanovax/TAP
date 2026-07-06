@@ -1,0 +1,9 @@
+import:
+  - "quarry.yaml"   # exit South
+
+room:
+  mine:
+    name: "The Abandoned Prospect"
+    description: "A dark, dripping mine where the only sounds are water falling from the stalactites and the leathery flap of bats overhead. An old mine car sits dead-center on its rails, patiently awaiting a shove it will never receive."
+    exits:
+      South: "room.quarry"

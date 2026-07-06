@@ -1,0 +1,10 @@
+item:
+  gold:
+    name: "Gold"
+    price: 1
+    kind: Miscellaneous
+
+  goblin_tooth:
+    name: "Goblin Tooth"
+    price: 8
+    kind: Miscellaneous

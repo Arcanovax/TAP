@@ -1,0 +1,64 @@
+import:
+  - "city_square.yaml"   # exit East
+  - "../items/potions.yaml"   # quests escape/crows : strawberry, peanuts (goals) + cheese, bread (rewards)
+
+room:
+  farm:
+    name: "The Abundant Pasture"
+    description: "Neat rows of crops stretch toward a lopsided barn, watched over by a suspiciously well-fed cow. It is all, the farmer will insist before you even ask, one hundred percent organic — weeds included."
+    exits:
+      East: "room.city_square"
+    npc:
+      - "npc.farmer"
+      - "npc.cow"
+
+npc:
+  farmer:
+    name: "Sanpesticix"
+    dialog:
+      default:
+        - "Everything here is one hundred percent organic. The weeds, sadly, included."
+        - "No pesticides on my land. The bugs and I have reached an understanding."
+      quest.escape.0:
+        - "Bigtastix put you up to this, didn't she? Look — I'm not turning her into anything. She's the best weed-eater I've got. But if it'll quiet the mooing, bring her something nice and tell her she's staying. As a colleague."
+      quest.crows.1:
+        - "Ha! The peanuts did the trick — the crows took the bait and left my corn in peace. Here, a fresh loaf from that very corn. One hundred percent organic, weeds and all."
+    kind: Citizen
+    quest: "quest.crows"
+
+  cow:
+    name: "Bigtastix"
+    dialog:
+      default:
+        - "Moo. ...That's cow for 'please stop looking at me like I'm lunch.'"
+        - "The farmer named me Bigtastix. I try very hard not to read into it."
+      quest.escape.1:
+        - "Strawberries? For ME? And the farmer says I'm STAFF now, not stock? Moo-velous. Here — take this. Don't ask a cow where the cheese came from. Just take it, and we never speak of it again."
+    kind: Citizen
+    quest: "quest.escape"
+
+quest:
+  escape:
+    name: "Bovine Liberation"
+    description: "Bigtastix the cow is convinced she is one bad day from becoming a burger. Plead her case to the farmer, then bring her a peace offering."
+    reward: "item.cheese"
+    goals:
+      - Talk:
+          dialog: "npc.farmer.dialog.quest.escape.0"
+      - Retrieve:
+          item: "item.strawberry"
+          amount: 2
+          dialog: "npc.cow.dialog.quest.escape.1"
+
+  crows:
+    name: "A Murder in the Corn"
+    description: "Crows from the awkward forest keep raiding Sanpesticix's crops. Fetch some peanuts to bait them away from the fields."
+    reward: "item.bread"
+    goals:
+      - Collect:
+          item: "item.peanuts"
+          amount: 3
+      - Retrieve:
+          item: "item.peanuts"
+          amount: 3
+          dialog: "npc.farmer.dialog.quest.crows.1"

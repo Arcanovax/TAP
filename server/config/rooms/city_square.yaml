@@ -1,0 +1,62 @@
+import:
+  - "tavern.yaml"      # exit North
+  - "blacksmith.yaml"  # exit East (+ dialog quest.threat.0 et .5)
+  - "farm.yaml"        # exit West
+  - "market.yaml"      # exit South
+  - "beach.yaml"       # quest.threat : dialog quest.threat.2 (old_man)
+  - "../items/potions.yaml"   # item.ale au sol + quest.threat : pint (goal)
+  - "../items/weapons.yaml"   # quest.threat : dagger (goal), sword (reward)
+  - "../items/misc.yaml"      # quest.threat : goblin_tooth
+
+room:
+  city_square:
+    name: "The Answer Place"
+    description: "A small, quiet square where every road seems to begin. A bulletin board creaks in the breeze, promising answers to questions no one quite remembers asking. From the tavern to the north drifts the faint, encouraging smell of ale."
+    exits:
+      North: "room.tavern"
+      East: "room.blacksmith's_shop"
+      West: "room.farm"
+      South: "room.market"
+    npc:
+      - "npc.city_gard"
+    items:
+      - "item.ale"
+
+npc:
+  city_gard:
+    name: "Haltlarix"
+    dialog:
+      default:
+        - "Halt! Who goes— oh. It's you again. Fine, proceed."
+        - "Thirty years guarding this square and nothing ever happens. Please, do something interesting."
+      quest.threat.6:
+        - "By the gods, an actual goblin tooth. So the rumours were true."
+        - "You've done this square a real service, traveler. Take this blade — it's seen better centuries, but it'll serve you far better than it ever served me. And whatever you saw down there... don't go back alone."
+    kind: Citizen
+    quest: "quest.threat"
+
+quest:
+  threat:
+    name: "The Threat Beneath"
+    description: "Rumours speak of goblins massing in the old quarry, guarding something down in the mine. Arm yourself, learn what sleeps beneath, and put an end to it — before it finds us."
+    reward: "item.sword"
+    goals:
+      - Talk:
+          dialog: "npc.blacksmith.dialog.quest.threat.0"
+      - Collect:
+          item: "item.dagger"
+          amount: 1
+      - Talk:
+          dialog: "npc.old_man.dialog.quest.threat.2"
+      - Collect:
+          item: "item.pint"
+          amount: 1
+      - Collect:
+          item: "item.goblin_tooth"
+          amount: 1
+      - Talk:
+          dialog: "npc.blacksmith.dialog.quest.threat.5"
+      - Retrieve:
+          item: "item.goblin_tooth"
+          amount: 1
+          dialog: "npc.city_gard.dialog.quest.threat.6"

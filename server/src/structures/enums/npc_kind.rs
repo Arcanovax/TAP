@@ -4,7 +4,6 @@ use serde::{Deserialize, Serialize};
 pub enum NPCKind {
     Merchant {
         inventory: Vec<String>,
-        gold: u32,
     },
     Enemy {
         hp: u32,

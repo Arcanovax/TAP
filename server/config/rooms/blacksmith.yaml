@@ -1,0 +1,60 @@
+import:
+  - "quarry.yaml"        # exit North
+  - "forest.yaml"        # exit East
+  - "parc.yaml"          # exit South
+  - "city_square.yaml"   # exit West
+  - "../items/weapons.yaml"   # inventaire de blacksmith
+  - "../items/armors.yaml"    # inventaire + reward quest.tempering (breastplate)
+  - "../items/potions.yaml"   # quest.tempering : ale (goal)
+
+room:
+  blacksmiths_shop:
+    name: "Tongs, Anvils & Pincers"
+    description: "The clang of hammer on red-hot steel rings out without pause, answered by the hiss of a fresh blade plunged into cold water and the roar of the bellows feeding the flames. It is hot, deafening, and thick with the smell of iron and ambition."
+    exits:
+      North: "room.quarry"
+      East: "room.forest"
+      South: "room.parc"
+      West: "room.city_square"
+    npc:
+      - "npc.blacksmith"
+
+npc:
+  blacksmith:
+    name: "Métallurgix"
+    dialog:
+      default:
+        - "Steel never lies. Forged well, it will outlast you. No pressure."
+        - "Sword, shield, helmet — take two if you're brave, all three if you're wise."
+      quest.threat.0:
+        - "The quarry? Aye, north of here. Goblins moved in a while back — hunched little things, guarding the old mine like it owes them money."
+        - "So the guard's finally sending someone. Good. Buy yourself a blade first — walking in there unarmed is how you become a rumour yourself."
+      quest.threat.5:
+        - "Let me see that tooth. ...By the anvil. This is no quarry stock — these markings come from deeper. From the dungeon itself."
+        - "Haltlarix needs to see this, now. Go — and tell him the real problem hasn't even surfaced yet."
+      quest.tempering.1:
+        - "You brought the ale! Perfect. Forget water — a blade quenched in a good amber holds its edge AND a fine bouquet. Here, this breastplate is yours. 'Plot Armor,' I call it: never seen a hero die in one."
+    kind:
+      Merchant:
+        gold: 45
+        inventory:
+          - "item.sword"
+          - "item.shield"
+          - "item.helmet"
+          - "item.dagger"
+          - "item.breastplate"
+    quest: "quest.tempering"
+
+quest:
+  tempering:
+    name: "A Fine Tempering"
+    description: "Métallurgix swears a blade quenched in good ale outlasts one cooled in mere water. Bring him an amber beer from the pub to prove it."
+    reward: "item.breastplate"
+    goals:
+      - Collect:
+          item: "item.ale"
+          amount: 1
+      - Retrieve:
+          item: "item.ale"
+          amount: 1
+          dialog: "npc.blacksmith.dialog.quest.tempering.1"

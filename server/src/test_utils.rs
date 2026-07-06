@@ -209,7 +209,6 @@ pub(crate) fn test_world() -> World {
             dialog: HashMap::new(),
             kind: NPCKind::Merchant {
                 inventory: vec!["sword".to_string()],
-                gold: 100,
             },
             quest: None,
         },
