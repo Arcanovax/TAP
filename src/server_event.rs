@@ -136,10 +136,10 @@ pub async fn handle_events(game: &mut Game, answer: Vec<&str>){
 				if let Some(ref mut fight) = game.active_fight{
 					if let Ok(heal) = answer[4].parse::<i32>() {
 						if answer[3] == game.player.name{
-							state.hp += heal;
+							state.hp = (state.hp + heal).min(100);
 						}
 						if let Some(player_hp) = fight.players.get_mut(answer[3]) {
-							*player_hp += heal;
+							*player_hp = (player_hp.clone() + heal).min(100);
 						}
 						let text: String = format!("{} healed {}HP", answer[3], heal);
 						fight.chat.push(text);
