@@ -33,17 +33,16 @@ pub fn draw_enemy_info(game: &mut Game, npc: Npc){
 	);
 	draw_rectangle_lines(frame.x, frame.y, frame.w, frame.h, 10.0, Color::new(0.53, 0.31, 0.16, 1.0));
 
-
-	draw_text(&npc.name, frame.x + frame.w + 5.0, frame.y + 30.0, 40.0, WHITE);
-	let lifebar = Rect::new(frame.x + frame.w + 5.0, frame.y + 70.0, 200.0, 25.0);
-	draw_rectangle(lifebar.x, lifebar.y, lifebar.w, lifebar.h,BLACK);
-	let hp_ratio: f32 = fight.enemy_hp as f32 / 2000 as f32;
-	draw_rectangle(lifebar.x, lifebar.y+2.5, lifebar.w * hp_ratio, 20.0,RED);
-	let hp_info = format!("{}/{}",fight.enemy_hp,2000);
-	draw_text_center(lifebar, &hp_info, 20);
-	draw_rectangle_lines(lifebar.x, lifebar.y, lifebar.w, lifebar.h, 5.0, GRAY);
-
-
+	if let NPCKind::Enemy { max_hp, .. } = fight.enemy.kind {
+		draw_text(&npc.name, frame.x + frame.w + 5.0, frame.y + 30.0, 40.0, WHITE);
+		let lifebar = Rect::new(frame.x + frame.w + 5.0, frame.y + 70.0, 200.0, 25.0);
+		draw_rectangle(lifebar.x, lifebar.y, lifebar.w, lifebar.h,BLACK);
+		let hp_ratio: f32 = fight.enemy_hp as f32 / max_hp as f32;
+		draw_rectangle(lifebar.x, lifebar.y+2.5, lifebar.w * hp_ratio, 20.0,RED);
+		let hp_info = format!("{}/{}",fight.enemy_hp,2000);
+		draw_text_center(lifebar, &hp_info, 20);
+		draw_rectangle_lines(lifebar.x, lifebar.y, lifebar.w, lifebar.h, 5.0, GRAY);
+	}
 }
 
 pub fn handle_fight(game: &mut Game, floor: &Texture2D) {
@@ -157,7 +156,7 @@ fn handle_consume(game: &mut Game){
 					draw_item_info(rect, &item);
 		};
 		game.player.inventory.active_item_info = None;
-			
+
 
 }
 
