@@ -1,3 +1,4 @@
+use crate::structures::dungeon::{Dungeon, format_dungeon_id};
 use crate::{
     protocol::{Message, Payload},
     state::{ServerInfo, SharedServer, Tx},
@@ -10,15 +11,14 @@ use crate::{
         room::Room,
     },
 };
-use crate::structures::dungeon::{Dungeon, format_dungeon_id};
 use redb::{Database, backends::InMemoryBackend};
 use std::collections::HashMap;
-use uuid::Uuid;
 use std::{
     net::SocketAddr,
     sync::{Arc, Mutex},
 };
 use tokio::sync::mpsc::{self, UnboundedReceiver};
+use uuid::Uuid;
 
 pub(crate) fn test_server() -> SharedServer {
     let db = Arc::new(test_db());
@@ -252,6 +252,8 @@ pub(crate) fn test_world() -> World {
         },
     );
     world.spawn_room = "room.city_square".to_string();
+    world.gambling_room = "room.city_quare".to_string();
+    world.dungeon_entrance = "room.city_square".to_string();
 
     world
 }

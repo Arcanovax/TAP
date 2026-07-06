@@ -1,8 +1,8 @@
 use super::*;
 use crate::structures::npc::NPC;
 use crate::test_utils::{
-    addr, assert_success_contains, connect, connect_in_dungeon, dg_npc, dungeon_server,
-    populated_server, response_error, test_gid, test_server,
+    addr, connect, connect_in_dungeon, dg_npc, dungeon_server, populated_server, response_error,
+    test_gid, test_server,
 };
 
 #[test]

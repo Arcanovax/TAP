@@ -54,3 +54,20 @@ fn slot_machine_with_winning_roll_returns_success_with_item() {
         ok_pair(&[("item", "item.cherry")])
     );
 }
+
+#[test]
+fn slot_machine_with_wrong_location_returns_forbidden_action() {
+    let server = test_server();
+    connect(&server, addr(1), "alice");
+    server
+        .lock()
+        .unwrap()
+        .get_player_mut(addr(1))
+        .unwrap()
+        .location = "room.not_gambling_room".to_string();
+
+    assert_eq!(
+        slot_machine_request(&server, addr(1), || None),
+        err(ErrorCode::FORBIDDEN_ACTION)
+    );
+}

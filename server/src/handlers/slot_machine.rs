@@ -15,6 +15,7 @@ pub(super) fn slot_machine_request(
     roll: impl FnOnce() -> Option<String>,
 ) -> Message {
     let mut binding = server_info.lock().unwrap();
+    let gambling_room = binding.world.gambling_room.clone();
     let player = match binding.get_player_mut(peer_addr) {
         Ok(player) => player,
         Err(code) => {
@@ -24,6 +25,13 @@ pub(super) fn slot_machine_request(
             };
         }
     };
+
+    if player.location != gambling_room {
+        return Message::Response {
+            error: ErrorCode::FORBIDDEN_ACTION,
+            payload: Payload::Empty,
+        };
+    }
 
     if player.gold < SLOT_MACHINE_COST as u32 {
         return Message::Response {
