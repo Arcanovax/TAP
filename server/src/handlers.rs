@@ -18,6 +18,7 @@ pub mod npc;
 pub mod quest;
 pub mod quest_info;
 pub mod quests;
+pub mod room;
 pub mod sell;
 pub mod slot_machine;
 pub mod status;

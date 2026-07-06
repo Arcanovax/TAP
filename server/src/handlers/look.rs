@@ -11,11 +11,11 @@ use tracing::info;
 mod tests;
 
 #[derive(Serialize, Debug)]
-struct RoomView<'a> {
-    id: &'a String,
-    name: &'a String,
-    description: &'a String,
-    exits: &'a HashMap<Direction, String>,
+pub struct RoomView<'a> {
+    pub id: &'a String,
+    pub name: &'a String,
+    pub description: &'a String,
+    pub exits: &'a HashMap<Direction, String>,
 }
 
 #[derive(Serialize, Debug)]

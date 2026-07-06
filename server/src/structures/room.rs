@@ -2,6 +2,9 @@ use crate::structures::enums::exits::Direction;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
+#[cfg(test)]
+mod tests;
+
 #[derive(Debug, PartialEq, Serialize, Deserialize, Clone, Default)]
 pub enum Owner {
     #[default]

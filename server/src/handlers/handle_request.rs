@@ -13,6 +13,7 @@ use crate::{
         quest::quest_request,
         quest_info::quest_info_request,
         quests::quests_request,
+        room::{room_request, rooms_request},
         sell::sell_request,
         slot_machine::slot_machine_request,
     },
@@ -93,6 +94,8 @@ pub fn handle_request(
                 Some(Command::DUNGEON) => dungeon_request(args, server_info, peer_addr).into(),
                 Some(Command::QUEST_INFO) => quest_info_request(server_info, args).into(),
                 Some(Command::HELP) => help_request().into(),
+                Some(Command::ROOM) => room_request(server_info, args).into(),
+                Some(Command::ROOMS) => rooms_request(server_info, peer_addr).into(),
                 Some(Command::SLOT_MACHINE) => {
                     let pool: Vec<String> = server_info
                         .lock()

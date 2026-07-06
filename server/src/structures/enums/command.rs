@@ -35,6 +35,7 @@ pub enum Command {
     QUEST_INFO,
     HELP,
     ROOMS,
+    ROOM,
 }
 
 impl Command {
@@ -69,6 +70,7 @@ impl Command {
             Command::QUEST_INFO => "Show detailed information about a quest.",
             Command::HELP => "List all available commands and what they do.",
             Command::ROOMS => "List the rooms",
+            Command::ROOM => "Show the details of a specific room",
         }
     }
 
