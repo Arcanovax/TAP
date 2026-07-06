@@ -26,6 +26,8 @@ pub enum ConfigError {
         defined_in: PathBuf,
     },
     MissingSpawnPoint,
+    MissingGamblingRoom,
+    MissingDungeonEntrance,
     WrongRef {
         from_id: String,
         ref_id: String,
@@ -67,6 +69,8 @@ impl fmt::Display for ConfigError {
                 defined_in.display()
             ),
             ConfigError::MissingSpawnPoint => write!(f, "spawn_point key is missing"),
+            ConfigError::MissingGamblingRoom => write!(f, "gambling_room key is missing"),
+            ConfigError::MissingDungeonEntrance => write!(f, "dungeon_entrance key is missing"),
         }
     }
 }

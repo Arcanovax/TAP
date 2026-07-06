@@ -16,6 +16,8 @@ use std::{
 };
 
 const SPAWN_POINT: &str = "spawn_point";
+const GAMBLING_TOOM: &str = "gambling_room";
+const DUNGEON_ENTRANCE: &str = "dungeon_entrance";
 
 #[derive(Deserialize, Debug)]
 struct ConfigRoom {
@@ -42,6 +44,10 @@ struct ConfigFile {
     quest: HashMap<String, Quest>,
     #[serde(default)]
     spawn_point: String,
+    #[serde(default)]
+    gambling_room: String,
+    #[serde(default)]
+    dungeon_entrance: String,
 }
 
 #[derive(Debug)]
@@ -98,8 +104,12 @@ impl Loader {
         rooms.chain(npcs).chain(quests).chain(singles)
     }
 
-    fn singletons(&self) -> [(&str, &String); 1] {
-        [(SPAWN_POINT, &self.world.spawn_room)]
+    fn singletons(&self) -> [(&str, &String); 3] {
+        [
+            (SPAWN_POINT, &self.world.spawn_room),
+            (GAMBLING_TOOM, &self.world.gambling_room),
+            (DUNGEON_ENTRANCE, &self.world.dungeon_entrance),
+        ]
     }
 
     fn load_file(&mut self, path: &Path) -> Result<(), ConfigError> {
@@ -138,6 +148,16 @@ impl Loader {
         if !parsed.spawn_point.is_empty() {
             self.define(SPAWN_POINT, &path)?;
             self.world.spawn_room = parsed.spawn_point;
+        }
+
+        if !parsed.gambling_room.is_empty() {
+            self.define(GAMBLING_TOOM, &path)?;
+            self.world.gambling_room = parsed.gambling_room;
+        }
+
+        if !parsed.dungeon_entrance.is_empty() {
+            self.define(DUNGEON_ENTRANCE, &path)?;
+            self.world.dungeon_entrance = parsed.dungeon_entrance;
         }
 
         for (name, npc) in parsed.npc {
