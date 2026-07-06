@@ -48,8 +48,7 @@ impl From<(i8, i8)> for Coord {
 }
 
 pub fn generate_dungeon(base_world: &World, gid: Uuid) -> Dungeon {
-    // TODO: Change spawn_room to dungeon entrance
-    let rooms = generate_rooms(base_world.spawn_room.clone(), gid);
+    let rooms = generate_rooms(base_world.dungeon_entrance.clone(), gid);
 
     let mut dungeon = Dungeon {
         rooms,

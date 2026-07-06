@@ -63,7 +63,7 @@ impl ServerInfo {
     }
 
     pub fn close_dungeon(&mut self, gid: Uuid) {
-        let spawn = self.world.spawn_room.clone();
+        let entrance = self.world.dungeon_entrance.clone();
 
         let addrs = match self.groups.get(&gid) {
             Some(group) => group.players.clone(),
@@ -73,13 +73,13 @@ impl ServerInfo {
         let receiver_txs: Vec<_> = self
             .connections
             .values()
-            .filter(|con| con.player.location == spawn)
+            .filter(|con| con.player.location == entrance)
             .map(|con| con.tx.clone())
             .collect();
 
         for addr in addrs {
             if let Some(con) = self.connections.get_mut(&addr) {
-                con.player.location = spawn.clone();
+                con.player.location = entrance.clone();
                 for tx in &receiver_txs {
                     let _ = tx.send(Message::Event(EventType::ROOM_JOIN {
                         player_name: con.player.name.clone(),
@@ -128,7 +128,7 @@ mod tests {
 
         guard.close_dungeon(gid);
 
-        let spawn = guard.world.spawn_room.clone();
+        let spawn = guard.world.dungeon_entrance.clone();
         assert_eq!(guard.get_player(addr(1)).unwrap().location, spawn);
         assert_eq!(guard.get_player(addr(2)).unwrap().location, spawn);
     }
@@ -141,7 +141,7 @@ mod tests {
         let mut guard = server.lock().unwrap();
 
         // le témoin reste au spawn, les deux membres sont dans le donjon
-        let spawn = guard.world.spawn_room.clone();
+        let spawn = guard.world.dungeon_entrance.clone();
         guard.get_player_mut(addr(3)).unwrap().location = spawn;
         let gid = guard.get_player(addr(1)).unwrap().group_id.unwrap();
         guard.dungeons.insert(gid, test_dungeon());
