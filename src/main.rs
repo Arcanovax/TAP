@@ -241,7 +241,7 @@ async fn main() {
 			if parts.is_empty() { return; }
 			let answer = parts[1..].join(" ");
 			let state: &str = parts[0];
-			
+
 			match state {
 				"OK" | "ERR" => handle_response(&mut game, answer.as_str(), state).await,
 				"EVT" => handle_events(&mut game, parts).await,
@@ -289,7 +289,7 @@ async fn main() {
 			else if game.player.gold.is_none() && game.pending_action == PendingAction::None{
 				game.tx_to_serv.try_send("GOLD \n".to_string()).ok();
 				game.pending_action = PendingAction::Gold;
-			}  
+			}
 
 			else{
 				if let Some(state) = game.player.state.clone() {

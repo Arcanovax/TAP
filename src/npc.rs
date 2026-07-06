@@ -126,19 +126,15 @@ fn handle_shop(game: &mut Game, npc: Npc, rect: Rect){
 
 			for (i, item) in inventory.iter().enumerate() {
 				let line = shop_rect.y + i as f32 * 55.0;
-
 				let slot = Rect::new(
 					shop_rect.x + 10.0,
 					line + (50.0 - item_size) / 2.0,
 					item_size,
 					item_size,
 				);
-				// draw_item_center(slot, &game.loaded_items[item]);
 				if let Some(item) = game.loaded_items.get(item).cloned() {
-					get_item_slot_inv(slot, game, &item, &1);
+					get_item_slot_inv(shop_rect, slot, game, &item, &1);
 				}
-
-
 				draw_text(
 					&game.loaded_items[item].name,
 					slot.x + slot.w + 15.0,
@@ -146,9 +142,6 @@ fn handle_shop(game: &mut Game, npc: Npc, rect: Rect){
 					22.5,
 					WHITE,
 				);
-
-
-
 				let btn_buy = Rect::new(shop_rect.x + shop_rect.w - 115.0, line + (50.0 - item_size) / 2.0, 50.0,37.5);
 				if let Some(info) = game.npc_shop.buy_info.as_ref() {
 					if get_time() - info.time > 0.5 {
@@ -180,9 +173,9 @@ fn handle_shop(game: &mut Game, npc: Npc, rect: Rect){
 
 
 				let btn_sell = Rect::new(shop_rect.x + shop_rect.w - 60.0, line + (50.0 - item_size) / 2.0, 50.0,37.5);
-				if let Some(info) = game.npc_shop.buy_info.as_ref() {
+				if let Some(info) = game.npc_shop.sell_info.as_ref() {
 					if get_time() - info.time > 0.5 {
-						game.npc_shop.buy_info = None;
+						game.npc_shop.sell_info = None;
 					}
 					else if btn_sell.contains(game.mouse){
 						let color = info.color;

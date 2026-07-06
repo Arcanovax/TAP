@@ -142,8 +142,9 @@ fn handle_consume(game: &mut Game){
 	for (item_id, amount) in inventory_data.iter(){
 		if let Some(item) = game.loaded_items.get(item_id).cloned() {
 			if let ItemKind::Potion { .. } = item.kind {
-				let item_rect = Rect::new(consume_rect.x, consume_rect.y + 50.0 * (y_index as f32), 50.0, 50.0);
-				if get_item_slot_inv(item_rect, game, &item, amount) {
+				let item_pos: Vec2 = get_slot_pos(consume_rect, y_index, 4, 0.0);
+				let item_rect = Rect::new(item_pos.x, item_pos.y, 50.0, 50.0);
+				if get_item_slot_inv(consume_rect,item_rect, game, &item, amount) {
 					let rq: String = format!("CONSUME {}\n", item.id);
 					game.tx_to_serv.try_send(rq).ok();
 					game.pending_action = PendingAction::Consume(item.id);
