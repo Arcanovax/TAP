@@ -12,8 +12,22 @@ pub struct Inventory {
 	pub is_load: bool,
 	pub is_active: bool,
     pub active_item_info: Option<(Rect, Item)>,
-	pub scroll_pos: f32,
+    pub inv_scroll: Scroll,
+    pub dropped_scroll: Scroll,
+}
+
+pub struct Scroll{
+    pub scroll_pos: f32,
     pub is_dragging:bool,
+}
+
+impl Scroll {
+    pub fn new() -> Self {
+        Self {
+			scroll_pos : 0.0,
+			is_dragging: false
+        }
+    }
 }
 
 use std::collections::HashMap;
@@ -61,8 +75,8 @@ impl Inventory {
             is_load: false,
             is_active: false,
             active_item_info: None,
-			scroll_pos : 0.0,
-			is_dragging: false
+			inv_scroll : Scroll::new(),
+			dropped_scroll: Scroll::new()
         }
     }
 }
@@ -178,94 +192,106 @@ fn pop_cut_rect() {
 
 
 pub fn draw_inv(game: &mut Game) {
-    if game.player.inventory.is_active {
-		let Some(mapdata) = game.map_data.clone() else { return };
-		let mut inv_rect: Rect = get_inv_rect();
-        inv_rect.y -= 100.0;
-        draw_rectangle(inv_rect.x, inv_rect.y, inv_rect.w, inv_rect.h, Color::new(0.0, 0.0, 0.0, 0.5));
+    let mut inv_rect: Rect = get_inv_rect();
+    inv_rect.y -= 100.0;
+    let columns = 1;
+    let total_h = ( game.player.inventory.data.len() as f32 / columns as f32).ceil() * SLOT_SIZE;
+    let max_offset = (total_h - inv_rect.h).max(0.0);
 
-        let mut flr_item_rect: Rect = get_item_floor_rect();
-        flr_item_rect.y += 175.0;
-        draw_rectangle(flr_item_rect.x, flr_item_rect.y, flr_item_rect.w, flr_item_rect.h, Color::new(0.0, 0.0, 0.0, 0.5));
+    draw_rectangle(inv_rect.x, inv_rect.y, inv_rect.w, inv_rect.h, Color::new(0.0, 0.0, 0.0, 0.5));
 
-		for (i, (item_id, amount)) in game.player.inventory.data.clone().iter().enumerate(){
-            let item_pos = get_slot_pos(inv_rect, i, 8, 0.0);
-			let item_rect = Rect::new(item_pos.x, item_pos.y, SLOT_SIZE, SLOT_SIZE);
-			let item: Option<Item> = game.loaded_items.get(item_id).cloned();
-			if let Some(item) = item {
-				if get_item_slot_inv(inv_rect, item_rect, game, &item, amount){
-					let rq: String = format!("DROP {}\n",item.id);
-					game.tx_to_serv.try_send(rq).ok();
-					game.pending_action = PendingAction::Drop;
-				}
-			}
-		}
+    handle_sroll_bar(game.mouse, inv_rect, total_h, max_offset,&mut game.player.inventory.inv_scroll);
+    let offset = game.player.inventory.inv_scroll.scroll_pos * max_offset;
 
-		let columns = 8;
-        let total_h = (mapdata.items.len() as f32 / columns as f32).ceil() * SLOT_SIZE;
-		let max_offset = (total_h - flr_item_rect.h).max(0.0);
-
-
-		handle_sroll_bar(game, flr_item_rect, total_h, max_offset);
-		let offset = game.player.inventory.scroll_pos * max_offset;
-
-		push_cut_rect(flr_item_rect);
-        for (i, item_id) in mapdata.items.iter().enumerate(){
-			let item_pos = get_slot_pos(flr_item_rect, i, columns, offset);
-			let item_rect = Rect::new(item_pos.x, item_pos.y , SLOT_SIZE, SLOT_SIZE);
-			let item: Option<Item> = game.loaded_items.get(item_id).cloned();
-			if let Some(item) = item {
-				if get_item_slot_inv(flr_item_rect, item_rect, game, &item, &1){
-					let rq: String = format!("TAKE {}\n",item.id);
-					game.tx_to_serv.try_send(rq).ok();
-					game.pending_action = PendingAction::Take;
-				}
-			}
-		}
-		pop_cut_rect();
-
-	}
+    push_cut_rect(inv_rect);
+    for (i, (item_id, amount)) in game.player.inventory.data.clone().iter().enumerate(){
+        let item_pos = get_slot_pos(inv_rect, i, columns, offset);
+        let item_rect = Rect::new(item_pos.x, item_pos.y, SLOT_SIZE, SLOT_SIZE);
+        let item: Option<Item> = game.loaded_items.get(item_id).cloned();
+        if let Some(item) = item {
+            if get_item_slot_inv(inv_rect, item_rect, game, &item, amount){
+                let rq: String = format!("DROP {}\n",item.id);
+                game.tx_to_serv.try_send(rq).ok();
+                game.pending_action = PendingAction::Drop;
+            }
+        }
+    }
+    pop_cut_rect();
 }
 
-fn handle_sroll_bar(game: &mut Game, rect: Rect,total_h:f32, max_offset: f32){
+
+pub fn draw_dropped(game: &mut Game) {
+    let Some(mapdata) = game.map_data.clone() else { return };
+    let mut dropped_rect: Rect = get_item_floor_rect();
+    dropped_rect.y += 175.0;
+    let columns = 8;
+    let total_h = (mapdata.items.len() as f32 / columns as f32).ceil() * SLOT_SIZE;
+    let max_offset = (total_h - dropped_rect.h).max(0.0);
+
+    draw_rectangle(dropped_rect.x, dropped_rect.y, dropped_rect.w, dropped_rect.h, Color::new(0.0, 0.0, 0.0, 0.5));
+
+    handle_sroll_bar(game.mouse, dropped_rect, total_h, max_offset, &mut game.player.inventory.dropped_scroll);
+    let offset = game.player.inventory.dropped_scroll.scroll_pos * max_offset;
+
+    push_cut_rect(dropped_rect);
+    for (i, item_id) in mapdata.items.iter().enumerate(){
+        let item_pos = get_slot_pos(dropped_rect, i, columns, offset);
+        let item_rect = Rect::new(item_pos.x, item_pos.y , SLOT_SIZE, SLOT_SIZE);
+        let item: Option<Item> = game.loaded_items.get(item_id).cloned();
+        if let Some(item) = item {
+            if get_item_slot_inv(dropped_rect, item_rect, game, &item, &1){
+                let rq: String = format!("TAKE {}\n",item.id);
+                game.tx_to_serv.try_send(rq).ok();
+                game.pending_action = PendingAction::Take;
+            }
+        }
+    }
+    pop_cut_rect();
+}
+
+
+fn handle_sroll_bar(mouse: Vec2, rect: Rect, total_h:f32, max_offset: f32, scroll: &mut Scroll){
 	let bar: Rect = Rect::new(rect.x + rect.w, rect.y, 15.0, rect.h);
 	let ratio = (rect.h / total_h).min(1.0);
-	let handle_h = (bar.h * ratio).max(20.0);
-	let mut handle_y = bar.y + game.player.inventory.scroll_pos * (bar.h - handle_h);
-	let mouse_y = game.mouse.y;
+	let cursor_h = (bar.h * ratio).max(20.0);
+	let mut cursor_y = scroll.scroll_pos * (bar.h - cursor_h);
+	let mouse_y = mouse.y;
 	let (_, wheel_y) = mouse_wheel();
 
-    if wheel_y != 0.0 && rect.contains(game.mouse) && max_offset > 0.0 {
+    if wheel_y != 0.0 && rect.contains(mouse) && max_offset > 0.0 {
 		let scroll_px = 40.0;
 		let delta = wheel_y.signum() * scroll_px / max_offset;
-		game.player.inventory.scroll_pos =
-		(game.player.inventory.scroll_pos - delta).clamp(0.0, 1.0);
+		scroll.scroll_pos =
+		(scroll.scroll_pos - delta).clamp(0.0, 1.0);
 	}
 
-	if is_mouse_button_pressed(MouseButton::Left) && bar.contains(game.mouse){
-        game.player.inventory.is_dragging = true;
+	if is_mouse_button_pressed(MouseButton::Left) && bar.contains(mouse){
+        scroll.is_dragging = true;
     }
 
 	if is_mouse_button_released(MouseButton::Left) {
-        game.player.inventory.is_dragging = false;
+       scroll.is_dragging = false;
     }
 
-	if game.player.inventory.is_dragging {
-        let new_y = mouse_y - handle_h / 2.0;
-		game.player.inventory.scroll_pos = ((new_y - bar.y) / (bar.h - handle_h)).clamp(0.0, 1.0);
+	if scroll.is_dragging {
+        let new_y = mouse_y - cursor_h / 2.0;
+		scroll.scroll_pos = ((new_y - bar.y) / (bar.h - cursor_h)).clamp(0.0, 1.0);
     }
 
-	handle_y = bar.y + game.player.inventory.scroll_pos * (bar.h - handle_h);
+	cursor_y = bar.y + scroll.scroll_pos * (bar.h - cursor_h);
 
-	let handle_color = if game.player.inventory.is_dragging { WHITE } else { LIGHTGRAY };
-	if handle_h != bar.h{
+	let handle_color = if scroll.is_dragging { WHITE } else { LIGHTGRAY };
+	if cursor_h != bar.h{
 		draw_rectangle(bar.x, bar.y, bar.w, bar.h, GRAY);
-		draw_rectangle(bar.x, handle_y, bar.w, handle_h, handle_color);
+		draw_rectangle(bar.x, cursor_y, bar.w, cursor_h, handle_color);
 	}
 }
 
 pub fn handle_inv(game: &mut Game) {
-	draw_inv(game);
+    if game.player.inventory.is_active {
+        draw_inv(game);
+        draw_dropped(game);
+    }
 	update_inv(game);
 	if is_key_pressed(KeyCode::E) && game.focus == InputFocus::Game{
         if !game.player.inventory.is_active {
