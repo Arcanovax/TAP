@@ -280,6 +280,12 @@ pub(super) fn load(entry: &Path) -> Result<World, ConfigError> {
     if loader.world.spawn_room.is_empty() {
         return Err(ConfigError::MissingSpawnPoint);
     }
+    if loader.world.gambling_room.is_empty() {
+        return Err(ConfigError::MissingGamblingRoom);
+    }
+    if loader.world.dungeon_entrance.is_empty() {
+        return Err(ConfigError::MissingDungeonEntrance);
+    }
     loader.check_refs()?;
     loader.check_scope()?;
     loader.check_singles_type()?;
