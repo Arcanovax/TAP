@@ -480,19 +480,6 @@ async fn main() {
 					set_default_camera();
 					draw_player_info(&mut game, state);
 
-					// let text_player = format!("Total players: {}",game.nb_players.clone());
-					// draw_text(map_data.room.name.clone(), 5.0, 30.0, 30.0, WHITE);
-					// draw_text(text_player, 5.0, 70.0, 30.0, WHITE);
-
-					// if let Some(state) = game.player.state.as_ref(){
-					// 	let rect_info: Rect =get_rect_right(vec2(100.0, 60.0), 0.0);
-					// 	draw_rectangle(rect_info.x, rect_info.y, rect_info.w, rect_info.h, BLACK);
-					//
-					// 	draw_text_bottom(rect_info, &hp_info.to_string(), 30, 0.0);
-					// }
-
-
-
 
 					display_quests(&mut game);
 

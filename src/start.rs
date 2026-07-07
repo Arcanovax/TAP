@@ -1,14 +1,12 @@
-use crate::Game;
+use crate::*;
 use macroquad::prelude::*;
 
 
-fn draw_name_input(x: f32, y: f32,game: &mut Game){
-    let input_rect = Rect::new(x, y, 175.0, 40.0);
-    let input_hovered = input_rect.contains(game.mouse);
-
+fn draw_name_input(rect:Rect,game: &mut Game){
+    let input_hovered = rect.contains(game.mouse);
     let input_bg = if input_hovered { Color::new(0.2, 0.2, 0.2, 1.0) } else { Color::new(0.1, 0.1, 0.1, 1.0) };
-    draw_rectangle(input_rect.x, input_rect.y, input_rect.w, input_rect.h, input_bg);
-    draw_rectangle_lines(input_rect.x, input_rect.y, input_rect.w, input_rect.h, 2.0, GRAY);
+    draw_rectangle(rect.x, rect.y, rect.w, rect.h, input_bg);
+    draw_rectangle_lines(rect.x, rect.y, rect.w, rect.h, 2.0, GRAY);
 
     if is_key_pressed(KeyCode::Backspace) {
         game.player.name.pop();
@@ -33,9 +31,9 @@ fn draw_name_input(x: f32, y: f32,game: &mut Game){
     }
 
     if game.player.name.is_empty() && !input_hovered {
-        draw_text("Type Name...", input_rect.x + 10.0, input_rect.y + 28.0, 25.0, DARKGRAY);
+        draw_text("Type Name...", rect.x + 10.0, rect.y + 35.0, 30.0, DARKGRAY);
     } else {
-        draw_text(&display_name, input_rect.x + 10.0, input_rect.y + 28.0, 25.0, YELLOW);
+        draw_text(&display_name, rect.x + 10.0, rect.y + 35.0, 30.0, YELLOW);
     }
 }
 
@@ -45,30 +43,29 @@ pub fn handle_starter(game: &mut Game){
     let mouse = game.mouse;
 	let menu_name: &str = "The answer protocol";
 
-	let title_size = measure_text(menu_name, None, 70, 1.0);
+	let title_size = measure_text(menu_name, None, 120, 1.0);
 	let title_pos = Vec2::new(
             	(screen_width() - title_size.width) / 2.0,
-            	(screen_height() + title_size.height) / 10.0
+            	(screen_height() + title_size.height) / 9.0
         	);
-    draw_text(menu_name, title_pos.x, title_pos.y+ 60.0, 70.0, WHITE);
+    draw_text(menu_name, title_pos.x, title_pos.y+ 60.0, 120.0, WHITE);
 
 
-    let start_x = title_pos.x;
-    let current_y = title_pos.y + 110.0;
+    let current_y = title_pos.y + 200.0;
 
-    draw_name_input(start_x, current_y + 150.0, game);
+	let input_rect = Rect::new((screen_width())/2.0-100.0, current_y, 200.0, 50.0);
+    draw_name_input(input_rect, game);
 
-    let btn_valid = Rect::new(start_x, current_y + 250.0, 80.0, 40.0);
-    let valid_hovered = btn_valid.contains(mouse);
-    let bg_valid = if valid_hovered { Color::new(0.3, 0.3, 0.3, 1.0) } else { Color::new(0.15, 0.15, 0.15, 1.0) };
-    draw_rectangle(btn_valid.x, btn_valid.y, btn_valid.w, btn_valid.h, bg_valid);
-    draw_text("Continue", btn_valid.x+ 6.0, btn_valid.y + 18.0, 30.0, WHITE);
-
-    if valid_hovered && (is_mouse_button_pressed(MouseButton::Left)) && !game.player.name.is_empty(){
-        let msg: String = format!("connect {}\n", game.player.name);
+    let btn_valid = Rect::new((screen_width())/2.0-100.0, current_y + 70.0, 200.0, 40.0);
+	if get_button(btn_valid, "Continue", 30, WHITE, mouse){
+		let msg: String = format!("connect {}\n", game.player.name);
 		game.tx_to_serv.try_send(msg).ok();
 		game.pending_action = crate::PendingAction::Auth
-    }
+	}
+
+	let rect = Rect::new(0.0, 0.0, screen_width(), screen_height());
+	draw_text_bottom(rect, "Made by: mthetcha, relaforg, bfitte", 30, 0.0);
+
 
 }
 
