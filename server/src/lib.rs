@@ -4,6 +4,7 @@ use crate::persistence::players::save_player;
 use crate::persistence::world::{load_world, save_world};
 use crate::protocol::{Message, Payload};
 use crate::state::{ServerInfo, SharedServer};
+use crate::structures::enums::error::ErrorCode;
 use crate::structures::enums::state::State;
 use crate::structures::room::Owner;
 use redb::Database;
@@ -16,7 +17,9 @@ use tokio::net::TcpListener;
 use tokio::net::tcp::OwnedWriteHalf;
 use tokio::signal::unix::{SignalKind, signal};
 use tokio::time::interval;
-use tracing::{Instrument, debug, error, info};
+use tracing::{Instrument, debug, error, info, warn};
+use tracing_subscriber::layer::SubscriberExt;
+use tracing_subscriber::util::SubscriberInitExt;
 
 mod config;
 mod dungeon;
@@ -61,7 +64,7 @@ fn cleanup_tcp_connection(
 
     match binding.try_save_player(peer_addr) {
         Ok(()) => {
-            info!("Player info saved");
+            debug!("Player info saved");
         }
         Err(code) => {
             let _ = write_half.write_all(
@@ -81,14 +84,23 @@ fn cleanup_tcp_connection(
         Err(_) => {}
     }
     binding.send_players_event(peer_addr);
-    info!("TCP connection closed");
+    debug!("TCP connection closed");
 }
 
 pub async fn run(addr: String, port: String) -> Result<(), Box<dyn std::error::Error>> {
-    tracing_subscriber::fmt()
-        .with_env_filter(
+    let (file_writer, _guard) =
+        tracing_appender::non_blocking(tracing_appender::rolling::daily("logs", "tap.log"));
+
+    tracing_subscriber::registry()
+        .with(
             tracing_subscriber::EnvFilter::try_from_default_env()
-                .unwrap_or_else(|_| tracing_subscriber::EnvFilter::new("debug")),
+                .unwrap_or_else(|_| tracing_subscriber::EnvFilter::new("info")),
+        )
+        .with(tracing_subscriber::fmt::layer())
+        .with(
+            tracing_subscriber::fmt::layer()
+                .json()
+                .with_writer(file_writer),
         )
         .init();
 
@@ -130,9 +142,9 @@ pub async fn run(addr: String, port: String) -> Result<(), Box<dyn std::error::E
             binding.reset(&base_world);
             debug!("Server reset done");
 
-            info!("Saving world...");
+            debug!("Saving world...");
             let _ = save_world(&db_copy, &binding.world);
-            info!("World saved");
+            debug!("World saved");
         }
     });
 
@@ -140,7 +152,7 @@ pub async fn run(addr: String, port: String) -> Result<(), Box<dyn std::error::E
         tokio::select! {
             res = listener.accept() => {
             let (mut socket, peer_addr) = res?;
-            let span = tracing::info_span!("connection", %peer_addr);
+            let span = tracing::info_span!("connection", %peer_addr, player = tracing::field::Empty);
 
             let server_info_copy = Arc::clone(&server_info);
 
@@ -154,7 +166,7 @@ pub async fn run(addr: String, port: String) -> Result<(), Box<dyn std::error::E
                         return Err(e);
                     }
 
-                    info!("TCP connection established");
+                    debug!("TCP connection established");
                     let (read_half, mut write_half) = socket.into_split();
                     let mut reader = BufReader::new(read_half);
                     let mut line = String::new();
@@ -170,7 +182,23 @@ pub async fn run(addr: String, port: String) -> Result<(), Box<dyn std::error::E
                                     Err(_) => break,
                                 }
                                 let request = parse_command(line.as_str());
+                                match &request {
+                                    Message::Command { name, args } => info!(command = %name, params = ?args, "command received"),
+                                    _ => {}
+                                };
                                 let response = handle_request(&request, &server_info_copy, peer_addr, &tx);
+                                match &response {
+                                    Message::Response { error: ErrorCode::SUCCESS, .. } => {
+                                        info!(code = 0, "response sent");
+                                    }
+                                    Message::Response { error, .. } if error.code() >= 900 => {
+                                        warn!(code = error.code(), error = %error.name(), "response sent");
+                                    }
+                                    Message::Response { error, .. } => {
+                                        info!(code = error.code(), error = %error.name(), "response sent");
+                                    }
+                                    _ => {}
+                                };
                                 let _ = write_half.write_all(response.to_str().as_bytes()).await;
                                 line.clear();
                                 if let Message::Command { name, .. } = &request {
@@ -204,17 +232,17 @@ pub async fn run(addr: String, port: String) -> Result<(), Box<dyn std::error::E
 }
 
 fn server_shutdown(db: &Database, server_info: &SharedServer) {
-    info!("Server closing...");
+    debug!("Server closing...");
     let binding = server_info.lock().unwrap();
 
-    info!("Saving world...");
+    debug!("Saving world...");
     let _ = save_world(db, &binding.world);
-    info!("World saved");
+    debug!("World saved");
 
-    info!("Saving players...");
+    debug!("Saving players...");
     for (_, con) in &binding.connections {
         let _ = save_player(db, &con.player);
     }
-    info!("Players saved");
-    info!("Server is shuting down now");
+    debug!("Players saved");
+    debug!("Server is shuting down now");
 }

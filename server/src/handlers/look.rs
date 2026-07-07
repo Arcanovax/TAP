@@ -5,7 +5,6 @@ use crate::{
 };
 use serde::Serialize;
 use std::{collections::HashMap, net::SocketAddr};
-use tracing::info;
 
 #[cfg(test)]
 mod tests;
@@ -73,7 +72,6 @@ pub fn look_request(server_info: &SharedServer, peer_addr: SocketAddr) -> Messag
         npcs: &room.npc,
         items: &room.items.iter().map(|item| item.item.clone()).collect(),
     };
-    info!("Get room info");
     Message::Response {
         error: ErrorCode::SUCCESS,
         payload: Payload::Json(serde_json::to_value(&view).unwrap()),

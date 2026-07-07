@@ -1,5 +1,7 @@
 use std::{collections::HashMap, net::SocketAddr};
 
+use tracing::info;
+
 use crate::{
     handlers::fight::enemy_attack::enemy_attack,
     protocol::{EventType, Message},
@@ -63,6 +65,12 @@ pub fn execute_attack<'a>(
         }
     }
 
+    if enemy_died {
+        info!(attacker = %player_name, target = %target_id, damage = curr_damages, loot = ?loot_list, "enemy defeated");
+    } else {
+        info!(attacker = %player_name, target = %target_id, damage = curr_damages, enemy_hp = target_hp_after, "attack landed");
+    }
+
     {
         let fight = world_mut.fights.get_mut(target_id).unwrap();
         fighters_list = fight.fighters.clone();
@@ -88,7 +96,7 @@ pub fn execute_attack<'a>(
                     player_name: player_name.clone(),
                     damages: curr_damages,
                     enemy_hp: target_hp_after,
-					loot: loot_list.clone()
+                    loot: loot_list.clone(),
                 }));
             } else {
             }
@@ -109,11 +117,11 @@ pub fn execute_attack<'a>(
                 pl.status = State::Idle;
                 status = pl.status.clone();
                 for loot_item in &loot_list {
-					if loot_item == "item.gold" {
-                    	pl.gold += 50;
-					} else {
-						*pl.inventory.entry(loot_item.clone()).or_insert(0) += 1;
-					}
+                    if loot_item == "item.gold" {
+                        pl.gold += 50;
+                    } else {
+                        *pl.inventory.entry(loot_item.clone()).or_insert(0) += 1;
+                    }
                 }
             }
         }
@@ -142,6 +150,7 @@ pub fn execute_attack<'a>(
 
             if cleared {
                 world_mut.close_dungeon(gid);
+                info!(dungeon = %gid, "dungeon cleared");
             }
         }
 
@@ -152,7 +161,7 @@ pub fn execute_attack<'a>(
             damage: curr_damages,
             status: status,
             fighters: Some(fighters),
-			loot: loot_list
+            loot: loot_list,
         };
     }
 
@@ -183,6 +192,6 @@ pub fn execute_attack<'a>(
             .status
             .clone(),
         fighters: Some(fighters),
-		loot: loot_list
+        loot: loot_list,
     }
 }

@@ -32,7 +32,7 @@ pub fn take_request(
 
     match binding.try_take_item(peer_addr, item) {
         Ok(item) => {
-            info!("{} taken", item);
+            info!(item = %item, "item taken");
             let receivers = binding.get_room_receivers(peer_addr).unwrap();
             let player = binding.get_player(peer_addr).unwrap();
             for con in receivers {

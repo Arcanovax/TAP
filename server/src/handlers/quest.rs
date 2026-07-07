@@ -42,7 +42,7 @@ pub(super) fn quest_request(
     }
     match binding.try_accept_quest(peer_addr, &npc_ref) {
         Ok(quest) => {
-            info!("Accepted {} quest", npc_ref);
+            info!(npc = npc_ref, "quest accepted");
             Message::Response {
                 error: ErrorCode::SUCCESS,
                 payload: Payload::Json(json!({

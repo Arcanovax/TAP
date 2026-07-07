@@ -32,7 +32,7 @@ impl ServerInfo {
             .unwrap()
             .players
             .push(con.addr);
-        info!("{} added to group({})", con.player.name, group_id);
+        info!(player = %con.player.name, group = %group_id);
         let player_name = con.player.name.clone();
         let receivers = self.get_group_receivers(peer_addr).unwrap();
         for c in receivers {
@@ -58,7 +58,7 @@ impl ServerInfo {
 
         let name = con.player.name.clone();
         let group_id = self.create_new_group(group_name, peer_addr);
-        info!("{} created group({}:{})", name, group_name, group_id);
+        info!(player = %name, group_name = %group_name, group = %group_id, "group created");
         match self.try_add_player_to_group(peer_addr, group_id) {
             Ok(_) => {}
             Err(code) => {
@@ -90,7 +90,7 @@ impl ServerInfo {
             self.close_dungeon(group_id);
             self.groups.remove(&group_id);
             self.cleanup_group_invitation(group_id);
-            info!("group({}) deleted", group_id);
+            info!(group = %group_id, "group deleted");
             return true;
         }
         return false;
@@ -170,7 +170,7 @@ impl ServerInfo {
             .unwrap()
             .players
             .retain(|&addr| addr != con.addr);
-        info!("{} leaved group({})", con.player.name, group_id);
+        info!(player = %con.player.name, group = %group_id, "left group");
         con.player.group_id = None;
         let group_leader = self.groups.get(&group_id).unwrap().group_leader;
         let is_deleted = self.try_delete_group(group_id);

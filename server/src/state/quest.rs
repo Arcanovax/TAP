@@ -68,6 +68,7 @@ impl ServerInfo {
                 _ => {}
             }
             if new_step == quest.goals.len() {
+                info!(quest = %id, reward = %quest.reward, "quest completed");
                 send_quest_finish_event(id.to_string(), &quest, tx);
                 {
                     let reward = quest.reward.clone();
