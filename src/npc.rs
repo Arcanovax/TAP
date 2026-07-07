@@ -70,9 +70,43 @@ pub fn handle_npc_interactions(game: &mut Game, place: Vec2, npc: Npc){
 	set_default_camera();
 
 	if let Some(npc_talk) = npc.npc_talk.clone() {
-		let talk_pos = vec2(s_pos.x, s_pos.y - 20.0);
-		draw_rectangle(talk_pos.x, talk_pos.y, 200.0,30.0, WHITE);
-		draw_text(npc_talk.texts[npc_talk.text_i%npc_talk.texts.len()].clone(), talk_pos.x, talk_pos.y + 20.0, 25.0, BLACK);
+		let text = npc_talk.texts[npc_talk.text_i % npc_talk.texts.len()].clone();
+		let font_size = 22.5;
+		let max_width = 200.0;
+		let line_height = font_size * 1.15;
+		let mut lines: Vec<String> = Vec::new();
+		let mut current = String::new();
+		for word in text.split_whitespace() {
+			if current.is_empty(){
+				current = format!("{} ",word.to_string())
+			}
+			else {
+				current.push_str(&format!("{} ",word).to_string());
+			};
+			let w = measure_text(&current, None, font_size as u16, 1.0).width;
+			if w > max_width{
+				lines.push(current);
+				current = String::new();
+			}
+		}
+		if !current.is_empty() {
+			lines.push(current);
+		}
+
+		let box_width = lines
+			.iter()
+			.map(|l| measure_text(l, None, font_size as u16, 1.0).width)
+			.fold(0.0_f32, f32::max);
+		let box_height = lines.len() as f32 * line_height + 10.0;
+
+		let talk_rect = Rect::new(s_pos.x, s_pos.y - 15.0 - box_height, box_width, box_height);
+
+		draw_rectangle(talk_rect.x , talk_rect.y, talk_rect.w, talk_rect.h, WHITE);
+		draw_rectangle_lines(talk_rect.x , talk_rect.y, talk_rect.w, talk_rect.h,2.5, BLACK);
+		for (i, line) in lines.iter().enumerate() {
+			let pos_y = talk_rect.y  + font_size + line_height * i as f32;
+			draw_text(line, talk_rect.x + 5.0, pos_y, font_size, BLACK);
+		}
 	}
 
 	let rect = Rect::new(s_pos.x + 62.5, s_pos.y, 175.0, 125.0);
@@ -148,7 +182,7 @@ fn handle_shop(game: &mut Game, npc: Npc, rect: Rect){
 					}
 					else if btn_buy.contains(game.mouse){
 						let color = info.color;
-						if get_button(btn_buy, "Buy", 25, color,game.mouse) && !game.group.typed.is_empty(){
+						if get_button(btn_buy, "Buy", 25, color ,game.mouse) && !game.group.typed.is_empty(){
 							let rq: String = format!("BUY {} {} \n",npc.id,item);
 							game.tx_to_serv.try_send(rq).ok();
 							game.pending_action = PendingAction::Buy(item.to_string());
@@ -168,7 +202,8 @@ fn handle_shop(game: &mut Game, npc: Npc, rect: Rect){
 							let rq: String = format!("BUY {} {} \n",npc.id,item);
 							game.tx_to_serv.try_send(rq).ok();
 							game.pending_action = PendingAction::Buy(item.to_string());
-				}}
+					}
+				}
 
 
 				let btn_sell = Rect::new(shop_rect.x + shop_rect.w - 60.0, line + (50.0 - item_size) / 2.0, 50.0,37.5);
