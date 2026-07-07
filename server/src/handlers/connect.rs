@@ -27,6 +27,7 @@ pub(super) fn connect_request(
         .try_add_player(name.to_string(), peer_addr, tx);
 
     if res.is_ok() {
+        tracing::Span::current().record("player", name);
         if let Ok(receivers) = server_info.lock().unwrap().get_room_receivers(peer_addr) {
             for con in receivers {
                 let _ = con.tx.send(Message::Event(EventType::ROOM_JOIN {

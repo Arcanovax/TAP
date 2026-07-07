@@ -68,7 +68,7 @@ pub fn move_request(server: &SharedServer, peer_addr: SocketAddr, dest: &Vec<Str
         }));
     }
 
-    info!("{} moved from {} to {}", player.name, old_room, target);
+    info!(form = %old_room, to = %target, "player moved");
     Message::Response {
         error: ErrorCode::SUCCESS,
         payload: Payload::Pair(HashMap::from([("room".to_string(), target)])),

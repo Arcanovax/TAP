@@ -80,7 +80,7 @@ pub(super) fn chat_request(
             scope: chat_scope.clone(),
         }));
     }
-    info!("Send {} scoped chat: {}", scope.to_uppercase(), body);
+    info!(scope = %scope.to_uppercase(), body = %body, "chat sent");
     return Message::Response {
         error: ErrorCode::SUCCESS,
         payload: Payload::Empty,

@@ -91,7 +91,7 @@ pub fn talk_request(
         };
     }
 
-    info!("{} talked", npc_ref);
+    info!(npc = npc_ref, "talked to npc");
 
     let (lines, dialog_id) = dialogs.unwrap();
     HandlerOutcome {

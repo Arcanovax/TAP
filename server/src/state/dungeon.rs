@@ -98,7 +98,7 @@ impl ServerInfo {
         }
 
         self.dungeons.remove(&gid);
-        info!("{} dungeon deleted", gid);
+        info!(dungeon = %gid, "dungeon deleted");
     }
 }
 

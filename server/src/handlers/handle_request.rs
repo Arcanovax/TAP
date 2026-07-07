@@ -1,5 +1,3 @@
-use rand::RngExt;
-
 use crate::{
     handlers::{
         buy::buy_request,
@@ -25,6 +23,7 @@ use crate::{
         handler_outcome::HandlerOutcome,
     },
 };
+use rand::RngExt;
 use std::net::SocketAddr;
 
 use crate::{

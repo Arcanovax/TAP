@@ -1,5 +1,3 @@
-use tracing::info;
-
 use crate::{
     handlers::look::RoomView,
     protocol::{Message, Payload},
@@ -32,8 +30,6 @@ pub(super) fn room_request(server_info: &SharedServer, args: &Vec<String>) -> Me
         }
     };
 
-    info!("Get {} info", room_ref);
-
     Message::Response {
         error: ErrorCode::SUCCESS,
         payload: Payload::Json(
@@ -49,7 +45,6 @@ pub(super) fn room_request(server_info: &SharedServer, args: &Vec<String>) -> Me
 }
 
 pub(super) fn rooms_request(server_info: &SharedServer, peer_addr: SocketAddr) -> Message {
-    info!("Get all rooms info");
     let binding = server_info.lock().unwrap();
 
     let mut rooms = HashMap::new();

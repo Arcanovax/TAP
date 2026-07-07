@@ -1,5 +1,7 @@
 use std::time::{SystemTime, UNIX_EPOCH};
 
+use tracing::info;
+
 use crate::{
     protocol::{EventType, Message},
     state::ServerInfo,
@@ -59,6 +61,12 @@ pub fn enemy_attack(opponent_id: &str, world: &mut ServerInfo) {
             unreachable!("No enemy here!");
         }
     };
+
+    if target_killed {
+        info!(target = %target_name, damage = e_damages, "player defeated by enemy");
+    } else {
+        info!(target = %target_name, damage = e_damages, target_hp, "enemy attack landed");
+    }
 
     if target_killed {
         if nb_fighters == 1 {

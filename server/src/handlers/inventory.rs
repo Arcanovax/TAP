@@ -1,5 +1,3 @@
-use tracing::info;
-
 use crate::{protocol::Message, state::SharedServer};
 use std::net::SocketAddr;
 
@@ -7,7 +5,6 @@ use std::net::SocketAddr;
 mod tests;
 
 pub fn inventory_request(server_info: &SharedServer, peer_addr: SocketAddr) -> Message {
-    info!("Get inventory");
     server_info
         .lock()
         .unwrap()

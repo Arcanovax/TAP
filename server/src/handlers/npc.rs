@@ -1,5 +1,3 @@
-use std::{collections::HashMap, net::SocketAddr};
-
 use crate::{
     protocol::{Message, Payload},
     state::SharedServer,
@@ -10,7 +8,7 @@ use crate::{
     },
 };
 use serde::Serialize;
-use tracing::info;
+use std::{collections::HashMap, net::SocketAddr};
 
 #[cfg(test)]
 mod tests;
@@ -83,8 +81,6 @@ pub(super) fn npc_request(server_info: &SharedServer, args: &Vec<String>) -> Mes
         }
     };
 
-    info!("Get {} info", npc_ref);
-
     Message::Response {
         error: ErrorCode::SUCCESS,
         payload: Payload::Json(serde_json::to_value::<NPCView>(npc.into()).unwrap()),
@@ -92,7 +88,6 @@ pub(super) fn npc_request(server_info: &SharedServer, args: &Vec<String>) -> Mes
 }
 
 pub(super) fn npcs_request(server_info: &SharedServer, peer_addr: SocketAddr) -> Message {
-    info!("Get all npcs info");
     let binding = server_info.lock().unwrap();
 
     let mut npcs: HashMap<String, NPCView> = HashMap::new();

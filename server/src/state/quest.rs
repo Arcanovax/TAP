@@ -68,6 +68,7 @@ impl ServerInfo {
                 _ => {}
             }
             if new_step == quest.goals.len() {
+                info!(quest = %id, reward = %quest.reward, "quest completed");
                 send_quest_finish_event(id.to_string(), &quest, tx);
                 {
                     let reward = quest.reward.clone();
@@ -77,6 +78,7 @@ impl ServerInfo {
                     player.quests_in_progress.remove(id);
                 }
             } else {
+                info!(quest = %id, step = new_step, "quest progressed");
                 send_quest_update_event(id.to_string(), &quest, new_step, tx);
             }
         }

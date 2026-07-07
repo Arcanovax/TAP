@@ -3,6 +3,7 @@ use crate::{
     persistence::players::{load_player, save_player},
     structures::{enums::error::ErrorCode, room::OwnedItem},
 };
+use tracing::debug;
 
 impl ServerInfo {
     pub fn try_add_player(
@@ -22,7 +23,7 @@ impl ServerInfo {
         let db = self.db.clone();
         let player = match load_player(&db, name.as_str()) {
             Ok(Some(mut player)) => {
-                info!("{} player data loaded", name);
+                debug!(player = %name, "player data loaded");
                 if !self.world.rooms.contains_key(&player.location) {
                     player.location = self.world.spawn_room.clone();
                 }
