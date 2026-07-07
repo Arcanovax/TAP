@@ -113,7 +113,10 @@ pub fn event_handling(world: &mut World, answer: Vec<&str>) {
 								world.room.fight = Fight::new();
 								world.output.push_back(format!("Congratulation! The enemy is defeated! You earned :\n{}", loot_final));
 							}
-
+						} else {
+							world.state = States::Idle;
+							world.room.fight = Fight::new();
+							world.output.push_back(format!("An error occurs with enemy HP so I decided to evacuate you immediately."));
 						}
                     }
                     "HEALING" => {
