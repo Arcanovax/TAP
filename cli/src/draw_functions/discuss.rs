@@ -17,7 +17,7 @@ use tui_widgets::scrollview::ScrollView;
 
 use crate::{enums::channels::Channels, structures::world::World};
 
-pub fn draw_room_discuss(world: &mut World, frame: &mut Frame, name: String, sentence: String) {
+pub fn draw_room_discuss(world: &mut World, frame: &mut Frame, name: String, sentence: Vec<char>) {
     let main_layout = Layout::default()
         .direction(Vertical)
         .constraints(vec![Fill(1), Length(3)])
@@ -127,19 +127,21 @@ pub fn draw_room_discuss(world: &mut World, frame: &mut Frame, name: String, sen
         vertical: 1,
     });
 
-    let mess_len = world.message.len();
+    let mess_len = sentence.len();
 
-    if mess_len < sentence.len() {
+    if world.index_sentence < mess_len {
         world.counter += 1;
-    }
+		
+		if world.counter % 2 == 0 {
+			world.message.push(sentence[world.index_sentence]);
+			world.index_sentence += 1;
+    	}
+    } else {
+		world.counter = 0;
+	}
 
-    if let Ok(mut file) = OpenOptions::new().create(true).append(true).open("debug_network.txt") {
-    	let _ = writeln!(file, "ok (State {:?}) : {:#?}", world.message, sentence);}
-    if mess_len >= sentence.len() {
-        world.counter = 0;
-    } else if world.counter % 2 == 0 {
-        world.message.push(sentence.chars().nth(mess_len).unwrap());
-    }
+    // if let Ok(mut file) = OpenOptions::new().create(true).append(true).open("debug_network.txt") {
+    // 	let _ = writeln!(file, "ok (State {:?}) : {:#?}", world.message, sentence);}
 
     lines = vec![
         Line::raw("(Press enter => Skip)").centered(),

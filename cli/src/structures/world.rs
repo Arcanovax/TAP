@@ -42,6 +42,7 @@ pub struct World<'a> {
     pub action: PendingAction,
     pub group: Group,
     pub counter: u32,
+	pub index_sentence: usize,
     pub old_command: VecDeque<String>,
     pub index_command: usize,
     pub error: bool,
@@ -69,6 +70,7 @@ impl World<'_> {
             index_command: 0,
             action: PendingAction::None,
             counter: 0,
+            index_sentence: 0,
             group: Group::new(),
             error: false,
             list_items: HashMap::new(),
@@ -97,7 +99,7 @@ impl World<'_> {
             States::Idle => draw_room(self, frame),
             States::InFight { .. } => draw_room_fight(self, frame),
             States::InDiscuss(name, sentence) => {
-                draw_room_discuss(self, frame, name.to_string(), sentence.to_string())
+                draw_room_discuss(self, frame, name.to_string(), sentence.clone())
             }
             States::Quit(step, prev_state, cancelled_instant) => match cancelled_instant {
                 Some(instant) => {

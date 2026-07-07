@@ -10,7 +10,7 @@ pub enum States {
     Idle,
     Trade(Vec<String>, String),
     InFight { target_id: String },
-    InDiscuss(String, String),
+    InDiscuss(String, Vec<char>),
     Quit(u32, Box<States>, #[serde(skip)] Option<Instant>),
 }
 

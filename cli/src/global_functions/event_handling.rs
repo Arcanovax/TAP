@@ -1,6 +1,5 @@
-use std::{collections::HashMap, fs::OpenOptions, io::Write};
+use std::{fs::OpenOptions, io::Write};
 
-use serde::de::Unexpected::Str;
 
 use crate::{
     enums::{focus::Focus, states::States},

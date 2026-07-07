@@ -214,17 +214,17 @@ pub fn response_handling(world: &mut World, answers: Vec<&str>) {
 
                     PendingAction::Talk(name) => {
                         for sentence in real_answer.split("\\") {
-                            world.room.dialogs.push_back(sentence.to_string());
+                            world.room.dialogs.push_back(sentence.chars().collect());
                         }
                         if let Some(npc) = world.list_npcs.get(name) {
                             world.state = States::InDiscuss(
                                 npc.name.clone(),
-                                world.room.dialogs.pop_front().unwrap_or("".to_string()),
+                                world.room.dialogs.pop_front().unwrap_or(vec![' ']),
                             );
                         } else {
                             world.state = States::InDiscuss(
                                 name.clone(),
-                                world.room.dialogs.pop_front().unwrap_or("".to_string()),
+                                world.room.dialogs.pop_front().unwrap_or(vec![' ']),
                             );
                         }
                         world.room.npc_list_state.select(None);

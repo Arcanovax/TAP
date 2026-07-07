@@ -32,7 +32,7 @@ pub struct Room<'a> {
     #[serde(skip)]
     pub fight: Fight,
     #[serde(skip)]
-    pub dialogs: VecDeque<String>,
+    pub dialogs: VecDeque<Vec<char>>,
     #[serde(skip)]
     pub chat_scroll_pos: ScrollViewState,
     #[serde(skip)]
