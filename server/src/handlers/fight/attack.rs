@@ -88,6 +88,7 @@ pub fn execute_attack<'a>(
                     player_name: player_name.clone(),
                     damages: curr_damages,
                     enemy_hp: target_hp_after,
+					loot: loot_list.clone()
                 }));
             } else {
             }
@@ -108,8 +109,11 @@ pub fn execute_attack<'a>(
                 pl.status = State::Idle;
                 status = pl.status.clone();
                 for loot_item in &loot_list {
-                    let amount = if loot_item == "item.gold" { 50 } else { 1 };
-                    *pl.inventory.entry(loot_item.clone()).or_insert(0) += amount;
+					if loot_item == "item.gold" {
+                    	pl.gold += 50;
+					} else {
+						*pl.inventory.entry(loot_item.clone()).or_insert(0) += 1;
+					}
                 }
             }
         }
@@ -148,6 +152,7 @@ pub fn execute_attack<'a>(
             damage: curr_damages,
             status: status,
             fighters: Some(fighters),
+			loot: loot_list
         };
     }
 
@@ -178,5 +183,6 @@ pub fn execute_attack<'a>(
             .status
             .clone(),
         fighters: Some(fighters),
+		loot: loot_list
     }
 }

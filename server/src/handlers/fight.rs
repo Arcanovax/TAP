@@ -159,6 +159,7 @@ pub fn fight_request(
                             target_id: args[0].to_string(),
                         },
                         fighters: Some(fighters),
+						loot: Vec::new()
                     })
                     .unwrap(),
                 ),

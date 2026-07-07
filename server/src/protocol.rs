@@ -82,6 +82,7 @@ pub enum EventType {
         player_name: String,
         damages: u32,
         enemy_hp: u32,
+		loot: Vec<String>
     },
     ENEMY_ATTACK {
         target: String,
@@ -190,8 +191,10 @@ impl Message {
                     player_name,
                     damages,
                     enemy_hp,
+                    loot,
                 } => {
-                    format!("EVT FIGHT ATTACK {player_name} {damages} {enemy_hp}\n")
+					let loot_list = loot.join("//");
+                    format!("EVT FIGHT ATTACK {player_name} {damages} {enemy_hp} {loot_list}\n")
                 }
                 EventType::ROOM_DROP { player_name, item } => {
                     format!("EVT ROOM DROP {player_name} {item}\n")
