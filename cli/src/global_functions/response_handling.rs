@@ -5,7 +5,7 @@ use crate::{
         actions::PendingAction, focus::Focus, item_kind::ItemKind, npc_kind::NPCKind,
         states::States,
     }, global_functions::check_goals::check_goals, structures::{
-        attack_results::AttackResult, npc::NPC, quest::Quest, quest_view::{QuestView, QuestsView}, room::{Room, RoomPayload}, status_view::StatusView, world::World,
+        attack_results::AttackResult, fight::Fight, npc::NPC, quest::Quest, quest_view::{QuestView, QuestsView}, room::{Room, RoomPayload}, status_view::StatusView, world::World,
     },
 };
 
@@ -169,8 +169,6 @@ pub fn response_handling(world: &mut World, answers: Vec<&str>) {
                     }
 
                     PendingAction::Quests => {
-                        // if let Ok(mut file) = OpenOptions::new().create(true).append(true).open("debug_network.txt") {
-                        // 	let _ = writeln!(file, "ok (State {:#?}) :", real_answer);}
                         let quests_list: Vec<QuestsView> =
                             serde_json::from_str(&real_answer).unwrap();
                         if quests_list.len() > 0 && (quests_list.len() != world.player.quests.len())
@@ -336,7 +334,9 @@ pub fn response_handling(world: &mut World, answers: Vec<&str>) {
                         world.action = PendingAction::MoveLook;
                     }
                     PendingAction::Attack(name) => {
-                        let result: AttackResult = serde_json::from_str(&real_answer).unwrap();
+						let result: AttackResult = serde_json::from_str(&real_answer).unwrap();
+						// if let Ok(mut file) = OpenOptions::new().create(true).append(true).open("debug_network.txt") {
+                        // 	let _ = writeln!(file, "ok (State {:#?}) :", result);}
                         world.player.hp = result.attacker_hp;
                         let fight = &mut world.room.fight;
                         if fight.target_name == "".to_string() {
@@ -361,9 +361,7 @@ pub fn response_handling(world: &mut World, answers: Vec<&str>) {
                             None => {}
                         }
                         fight.target_hp = result.target_hp;
-                        world.state = States::InFight {
-                            target_id: fight.target_name.clone(),
-                        };
+                        world.state = result.status;
                         world.room.focus = Focus::COMMAND;
                         if result.damage > 0 {
                             let (damages, enn_hp) = (result.damage, result.target_hp);
@@ -372,6 +370,18 @@ pub fn response_handling(world: &mut World, answers: Vec<&str>) {
 								damages, world.room.fight.target_name, enn_hp
 							));
                         }
+						if result.target_hp == 0 {
+							world.room.fight = Fight::new();
+							for item in &result.loot {
+								if item == "item.gold" {
+									world.player.gold += 50;
+								} else {
+									*world.player.inventory.entry(item.clone()).or_insert(0) += 1;
+								}
+							}
+							let loot_list: Vec<String> = result.loot.iter().map(|f| format!("- {} x{}", f, if f == "item.gold" {50} else {1})).collect();
+							world.output.push_back(format!("Congratulation! You defeated your enemy! You earned :\n{}", loot_list.join("\n")));
+						}
                     }
                     _ => {}
                 }
@@ -407,14 +417,14 @@ pub fn response_handling(world: &mut World, answers: Vec<&str>) {
                         let mut cost = 0;
                         for elem in answers.iter() {
                             let elems: Vec<&str> = elem.split("=").collect();
-                            if let Ok(mut file) = OpenOptions::new()
-                                .create(true)
-                                .append(true)
-                                .open("debug_network.txt")
-                            {
-                                let _ =
-                                    writeln!(file, "real (State {:#?}) :{:#?}", elems, real_answer);
-                            }
+                            // if let Ok(mut file) = OpenOptions::new()
+                            //     .create(true)
+                            //     .append(true)
+                            //     .open("debug_network.txt")
+                            // {
+                            //     let _ =
+                            //         writeln!(file, "real (State {:#?}) :{:#?}", elems, real_answer);
+                            // }
                             match elems[0] {
                                 "amount" => amount = elems[1].parse::<u32>().unwrap(),
                                 "gold" => cost = elems[1].parse::<u32>().unwrap(),

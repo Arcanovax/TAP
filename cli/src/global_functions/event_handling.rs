@@ -98,13 +98,23 @@ pub fn event_handling(world: &mut World, answer: Vec<&str>) {
                         }
                     }
                     "ATTACK" => {
-                        let (player_name, damages, enn_hp) = (answer[3], answer[4], answer[5]);
+                        let (player_name, damages, enn_hp, loot) = (answer[3], answer[4], answer[5], answer[6]);
                         world.output.push_back("".to_string());
                         world.output.push_back(format!(
                             "[FIGHT] {} dealt {} damages to the enemy. {} has {} HP remaining.",
                             player_name, damages, world.room.fight.target_name, enn_hp
                         ));
-                        world.room.fight.target_hp = enn_hp.parse::<u32>().unwrap();
+						if let Ok(hp_enn) = enn_hp.parse::<u32>() {
+							world.room.fight.target_hp = hp_enn;
+							if hp_enn == 0 {
+								let loot_split: Vec<String> = answer[6].split("//").map(|f| format!("- {}", f)).collect();
+								let loot_final = loot_split.join("\n");
+								world.state = States::Idle;
+								world.room.fight = Fight::new();
+								world.output.push_back(format!("Congratulation! The enemy is defeated! You earned :\n{}", loot_final));
+							}
+
+						}
                     }
                     "HEALING" => {
                         let (player_name, heal) = (answer[3], answer[4]);

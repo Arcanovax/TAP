@@ -16,7 +16,7 @@ impl Display for ItemKind {
             ItemKind::Armor { protection } => write!(f, "Armor: +{}\n", protection),
             ItemKind::Miscellaneous => write!(f, "Miscellaneous\n"),
             ItemKind::Potion { healing } => write!(f, "Potion: +{}HP\n", healing),
-            ItemKind::Weapon { damages } => write!(f, "Weapon: +{}damages\n", damages),
+            ItemKind::Weapon { damages } => write!(f, "Weapon: +{} damages\n", damages),
         }
     }
 }

@@ -189,8 +189,9 @@ pub fn draw_room(world: &mut World, frame: &mut Frame) {
         .inventory
         .iter()
         .map(|item| {
+			let item_name = if let Some(it) = world.list_items.get(item.0) {it.name.clone()} else {item.0.clone()};
             ListItem::new(
-                Line::from(format!("{} x{}", item.0, item.1)).alignment(Alignment::Center),
+                Line::from(format!("{} x{}", item_name, item.1)).alignment(Alignment::Center),
             )
         })
         .collect();
