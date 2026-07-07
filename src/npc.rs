@@ -109,50 +109,65 @@ pub fn handle_npc_interactions(game: &mut Game, place: Vec2, npc: Npc){
 		}
 	}
 
-	let rect = Rect::new(s_pos.x + 62.5, s_pos.y, 175.0, 125.0);
+
+	let mouse = game.mouse;
+	let mut rect = Rect::new(s_pos.x + 62.5, s_pos.y, 175.0, 30.0);
+	let mut n_slots = 2;
+	if npc.has_quest {
+		n_slots += 1;
+	}
+	if matches!(npc.kind, NPCKind::Merchant { .. }) {
+		n_slots += 1;
+	}
+
+	rect.h += n_slots as f32 * 30.0;
 	draw_rectangle(rect.x, rect.y, rect.w, rect.h, Color::new(0.0, 0.0, 0.0, 0.5));
 
 	draw_text_center_top(rect, npc.name.as_str(), 30, 22.0);
+	let mut slot_y = 30.0;
 
-	let mouse = game.mouse;
-
-	let btn_talk:Rect = get_rect_centered_x(rect, vec2(125.0, 25.0), 30.0);
+	let btn_talk:Rect = get_rect_centered_x(rect, vec2(125.0, 25.0), slot_y);
+	slot_y += 30.0;
 	if get_button(btn_talk, "Talk", 25, WHITE, mouse){
 		if let Some(npc) = game.loaded_npcs.get_mut(&npc.id) {
 			let rq: String = format!("TALK {}\n",npc.id);
 			game.tx_to_serv.try_send(rq).ok();
 			game.pending_action = PendingAction::Talk(npc.id.clone());
 		}
+
 	}
+
 	if npc.has_quest{
-		let btn_quest = get_rect_centered_x(rect, vec2(125.0, 25.0), 60.0);
+		let btn_quest = get_rect_centered_x(rect, vec2(125.0, 25.0), slot_y);
+		slot_y += 30.0;
 		if get_button(btn_quest, "Quest", 25, WHITE, mouse){
 			let rq: String = format!("QUEST {}\n",npc.id);
 			game.tx_to_serv.try_send(rq).ok();
 			game.pending_action = PendingAction::Quest(npc.id.clone());
 		}
 	}
-	let btn_attack: Rect = get_rect_centered_x(rect, vec2(125.0, 25.0), 90.0);
+	let btn_attack: Rect = get_rect_centered_x(rect, vec2(125.0, 25.0), slot_y);
+	slot_y += 30.0;
 	if get_button(btn_attack, "Attack", 25, WHITE, mouse){
 		let rq: String = format!("ATTACK {}\n",npc.id);
 		game.tx_to_serv.try_send(rq).ok();
 		game.pending_action = PendingAction::Attack(npc.id.clone());
 
 	}
-
-	handle_shop(game, npc, rect);
-	camera_handler(game);
-
-}
-
-
-fn handle_shop(game: &mut Game, npc: Npc, rect: Rect){
-	if let NPCKind::Merchant { inventory, gold } = &npc.kind {
-		let btn_shop = get_rect_centered_x(rect, vec2(125.0, 25.0), 120.0);
+	if let NPCKind::Merchant { .. } = &npc.kind {
+		let btn_shop = get_rect_centered_x(rect, vec2(125.0, 25.0), slot_y);
 		if get_button(btn_shop, "Shop", 25, WHITE, game.mouse){
 			game.npc_shop.is_active = !game.npc_shop.is_active
 		}
 		if game.npc_shop.is_active {
+			handle_shop(game, &npc);
+		}
+	camera_handler(game);
+}
+
+
+fn handle_shop(game: &mut Game, npc: &Npc){
+	if let NPCKind::Merchant { inventory, .. } = &npc.kind {
 			let shop_rect = get_center_rect(vec2(400.0, 250.0));
 			draw_rectangle(shop_rect.x,shop_rect.y,shop_rect.w,shop_rect.h,Color::new(0.0, 0.0, 0.0, 1.0),);
 			let item_size = 40.0;
