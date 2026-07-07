@@ -78,8 +78,7 @@ impl ServerInfo {
                     player.quests_in_progress.remove(id);
                 }
             } else {
-                info!(quest = %id, step = new_step, "quest progressed");
-                send_quest_update_event(id.to_string(), &quest, new_step, tx);
+                send_quest_update_event(id.to_string(), &quest, new_step - 1, tx);
             }
         }
     }
