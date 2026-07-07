@@ -9,7 +9,7 @@ room:
     name: "The Amazing Parc"
     description: "Children tear across the lawns under their parents' half-watchful eyes, while a quiet reading corner offers refuge to anyone who would rather turn a page than dodge a stray football."
     exits:
-      North: "room.blacksmith's_shop"
+      North: "room.blacksmiths_shop"
       West: "room.market"
     npc:
       - "npc.bookseller"

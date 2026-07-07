@@ -14,7 +14,7 @@ room:
     description: "A small, quiet square where every road seems to begin. A bulletin board creaks in the breeze, promising answers to questions no one quite remembers asking. From the tavern to the north drifts the faint, encouraging smell of ale."
     exits:
       North: "room.tavern"
-      East: "room.blacksmith's_shop"
+      East: "room.blacksmiths_shop"
       West: "room.farm"
       South: "room.market"
     npc:

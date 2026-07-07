@@ -6,5 +6,4 @@ room:
     name: "The Awkward Patch"
     description: "A foreboding wood of twisted trees, where crows perch on bare branches—despite the season—and follow you with far too much interest. Something waits deeper in; you can feel it watching back."
     exits:
-      West: "room.blacksmith's_shop"
-      # East: "room.dunjon"
+      West: "room.blacksmiths_shop"

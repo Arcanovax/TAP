@@ -9,7 +9,7 @@ room:
     description: "An abandoned quarry of scattered rock, crumbling ruins, and the bones of animals that took the wrong shortcut. In the far corner, three goblins loiter before the entrance to an old mine, doing their very best to look like guards."
     exits:
       North: "room.mine"
-      South: "room.blacksmith's_shop"
+      South: "room.blacksmiths_shop"
     npc:
       - "npc.goblins"
 
