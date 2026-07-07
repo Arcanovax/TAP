@@ -78,8 +78,13 @@ impl ServerInfo {
                     player.quests_in_progress.remove(id);
                 }
             } else {
+                info!(quest = %id, step = new_step, "quest progressed");
                 send_quest_update_event(id.to_string(), &quest, new_step, tx);
             }
+        }
+
+        if !to_advance.is_empty() {
+            self.advance_quests(peer_addr, None);
         }
     }
 }
@@ -93,6 +98,7 @@ fn send_quest_update_event(
     let _ = tx.send(Message::Event(EventType::QUEST_UPDATE {
         quest_id,
         goal: quest.goals[step].clone(),
+        previous_goal: quest.goals[step - 1].clone(),
     }));
 }
 

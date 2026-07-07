@@ -38,6 +38,7 @@ pub enum EventType {
     QUEST_UPDATE {
         quest_id: String,
         goal: Goal,
+        previous_goal: Goal,
     },
     QUEST_FINISH {
         quest_id: String,
@@ -82,7 +83,7 @@ pub enum EventType {
         player_name: String,
         damages: u32,
         enemy_hp: u32,
-		loot: Vec<String>
+        loot: Vec<String>,
     },
     ENEMY_ATTACK {
         target: String,
@@ -193,15 +194,19 @@ impl Message {
                     enemy_hp,
                     loot,
                 } => {
-					let loot_list = loot.join("//");
+                    let loot_list = loot.join("//");
                     format!("EVT FIGHT ATTACK {player_name} {damages} {enemy_hp} {loot_list}\n")
                 }
                 EventType::ROOM_DROP { player_name, item } => {
                     format!("EVT ROOM DROP {player_name} {item}\n")
                 }
                 EventType::SERVER_RESET => format!("EVT SERVER RESET\n"),
-                EventType::QUEST_UPDATE { quest_id, goal } => {
-                    let data = serde_json::json!({ "quest": quest_id, "goal": goal });
+                EventType::QUEST_UPDATE {
+                    quest_id,
+                    goal,
+                    previous_goal,
+                } => {
+                    let data = serde_json::json!({ "quest": quest_id, "goal": goal , "previous_goal": previous_goal});
                     format!("EVT QUEST UPDATE {data}\n")
                 }
                 EventType::QUEST_FINISH { quest_id, reward } => {
