@@ -171,9 +171,18 @@ fn handle_shop(game: &mut Game, npc: &Npc){
 			let shop_rect = get_center_rect(vec2(400.0, 250.0));
 			draw_rectangle(shop_rect.x,shop_rect.y,shop_rect.w,shop_rect.h,Color::new(0.0, 0.0, 0.0, 0.85));
 			let item_size = 50.0;
+			let columns = 1;
+			let total_h = (inventory.len() as f32 / columns as f32).ceil() * 50.0;
+			let max_offset = (total_h - shop_rect.h).max(0.0);
 
+			draw_rectangle(shop_rect.x, shop_rect.y, shop_rect.w, shop_rect.h, Color::new(0.0, 0.0, 0.0, 0.5));
+
+			handle_sroll_bar(game.mouse, shop_rect, total_h, max_offset, &mut game.player.inventory.dropped_scroll);
+			let offset = game.player.inventory.dropped_scroll.scroll_pos * max_offset;
+
+			push_cut_rect(shop_rect);
 			for (i, item) in inventory.iter().enumerate() {
-				let line = shop_rect.y + 15.0 + i  as f32 * 55.0;
+				let line = shop_rect.y + 15.0 - offset + i  as f32 * 55.0;
 				let slot = Rect::new(
 					shop_rect.x + 10.0,
 					line + (50.0 - item_size) / 2.0,
@@ -222,6 +231,7 @@ fn handle_shop(game: &mut Game, npc: &Npc){
 				}
 
 			}
+			pop_cut_rect();
 		}
 	}
 }

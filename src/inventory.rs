@@ -168,7 +168,7 @@ pub fn get_slot_pos(rect: Rect, i: usize, columns: usize, offset: f32) -> Vec2 {
     )
 }
 
-fn push_cut_rect(rect: Rect) {
+pub fn push_cut_rect(rect: Rect) {
     unsafe {
         let mut gl = get_internal_gl();
         gl.flush();
@@ -182,7 +182,7 @@ fn push_cut_rect(rect: Rect) {
     }
 }
 
-fn pop_cut_rect() {
+pub fn pop_cut_rect() {
     unsafe {
         let mut gl = get_internal_gl();
         gl.flush();
@@ -193,7 +193,7 @@ fn pop_cut_rect() {
 
 pub fn draw_inv(game: &mut Game) {
     let mut inv_rect: Rect = get_inv_rect();
-    inv_rect.y -= 100.0;
+    inv_rect.y -= 110.0;
     let columns = 8;
     let total_h = ( game.player.inventory.data.len() as f32 / columns as f32).ceil() * SLOT_SIZE;
     let max_offset = (total_h - inv_rect.h).max(0.0);
@@ -225,7 +225,7 @@ pub fn draw_dropped(game: &mut Game) {
     
     let Some(mapdata) = game.map_data.clone() else { return };
     let mut dropped_rect: Rect = get_item_floor_rect();
-    dropped_rect.y += 175.0;
+    dropped_rect.y += 180.0;
     let columns = 8;
     let total_h = (mapdata.items.len() as f32 / columns as f32).ceil() * SLOT_SIZE;
     let max_offset = (total_h - dropped_rect.h).max(0.0);
@@ -253,7 +253,7 @@ pub fn draw_dropped(game: &mut Game) {
 }
 
 
-fn handle_sroll_bar(mouse: Vec2, rect: Rect, total_h:f32, max_offset: f32, scroll: &mut Scroll){
+pub fn handle_sroll_bar(mouse: Vec2, rect: Rect, total_h:f32, max_offset: f32, scroll: &mut Scroll){
 	let bar: Rect = Rect::new(rect.x + rect.w, rect.y, 15.0, rect.h);
 	let ratio = (rect.h / total_h).min(1.0);
 	let cursor_h = (bar.h * ratio).max(20.0);
