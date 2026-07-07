@@ -3,11 +3,8 @@ use std::time::{SystemTime, UNIX_EPOCH};
 use tracing::info;
 
 use crate::{
-    protocol::{EventType, Message},
-    state::ServerInfo,
-    structures::{
-        enums::{npc_kind::NPCKind, state::State},
-        player::Player,
+    protocol::{EventType, Message}, state::ServerInfo, structures::{
+        enums::{item_kind::ItemKind, npc_kind::NPCKind, state::State}, player::Player,
     },
 };
 
@@ -48,6 +45,18 @@ pub fn enemy_attack(opponent_id: &str, world: &mut ServerInfo) {
                 .player;
         }
         if let NPCKind::Enemy { damages, .. } = opponent_kind {
+
+			let mut defense = 0;
+			for id in target.inventory.keys() {
+				if let Some(item) = world.resolve_item(id) {
+					if let ItemKind::Armor { protection } = item.kind {
+						if protection > defense {
+							defense = protection;
+						}
+					}
+				}
+			}
+
             if damages < target.hp {
                 target.hp -= damages;
             } else {
