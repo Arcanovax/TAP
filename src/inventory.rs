@@ -89,7 +89,7 @@ pub fn draw_item_info(rect: Rect, item: &Item){
 	let width = text_size.width.max(ITEM_INFO.x) + 10.0;
 	let item_rect = Rect::new(rect.x + rect.w + 5.0, rect.y, width, ITEM_INFO.y);
 
-	draw_rectangle(item_rect.x, item_rect.y, item_rect.w, item_rect.h, Color::new(0.0, 0.0, 0.0, 0.8));
+	draw_rectangle(item_rect.x, item_rect.y, item_rect.w, item_rect.h, Color::new(0.0, 0.0, 0.0, 0.9));
     draw_rectangle(rect.x, rect.y, rect.w, rect.h, Color::new(0.0, 0.0, 0.0, 0.1));
 	draw_text_center_top(item_rect, item.name.as_ref(), 25, 25.0);
 

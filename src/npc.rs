@@ -169,11 +169,11 @@ pub fn handle_npc_interactions(game: &mut Game, place: Vec2, npc: Npc){
 fn handle_shop(game: &mut Game, npc: &Npc){
 	if let NPCKind::Merchant { inventory, .. } = &npc.kind {
 			let shop_rect = get_center_rect(vec2(400.0, 250.0));
-			draw_rectangle(shop_rect.x,shop_rect.y,shop_rect.w,shop_rect.h,Color::new(0.0, 0.0, 0.0, 1.0),);
-			let item_size = 40.0;
+			draw_rectangle(shop_rect.x,shop_rect.y,shop_rect.w,shop_rect.h,Color::new(0.0, 0.0, 0.0, 0.85));
+			let item_size = 50.0;
 
 			for (i, item) in inventory.iter().enumerate() {
-				let line = shop_rect.y + i as f32 * 55.0;
+				let line = shop_rect.y + 15.0 + i  as f32 * 55.0;
 				let slot = Rect::new(
 					shop_rect.x + 10.0,
 					line + (50.0 - item_size) / 2.0,
@@ -187,11 +187,11 @@ fn handle_shop(game: &mut Game, npc: &Npc){
 					&game.loaded_items[item].name,
 					slot.x + slot.w + 15.0,
 					slot.y + item_size * 0.75,
-					22.5,
+					25.0,
 					WHITE,
 				);
 
-				let btn_buy = Rect::new(shop_rect.x + shop_rect.w - 115.0,line + (50.0 - item_size) / 2.0, 50.0,37.5);
+				let btn_buy = Rect::new(shop_rect.x + shop_rect.w - 115.0,line + (50.0 - item_size) / 2.0, 50.0,50.0);
 				if let Some(info) = game.npc_shop.buy_info.as_ref() {
 					if get_time() - info.time > 0.5 {
 						game.npc_shop.buy_info = None;
@@ -206,7 +206,7 @@ fn handle_shop(game: &mut Game, npc: &Npc){
 					game.pending_action = PendingAction::Buy(item.to_string());
 				}
 
-				let btn_sell = Rect::new(shop_rect.x + shop_rect.w - 60.0, line + (50.0 - item_size) / 2.0, 50.0,37.5);
+				let btn_sell = Rect::new(shop_rect.x + shop_rect.w - 60.0, line + (50.0 - item_size) / 2.0, 50.0,50.0);
 				if let Some(info) = game.npc_shop.sell_info.as_ref() {
 					if get_time() - info.time > 0.5 {
 						game.npc_shop.sell_info = None;
