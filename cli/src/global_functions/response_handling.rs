@@ -1,11 +1,11 @@
-use std::{collections::VecDeque, fmt::format, fs::OpenOptions, io::Write};
+use std::{collections::VecDeque, fs::OpenOptions, io::Write};
 
 use crate::{
     enums::{
         actions::PendingAction, focus::Focus, item_kind::ItemKind, npc_kind::NPCKind,
         states::States,
     }, global_functions::check_goals::check_goals, structures::{
-        attack_results::AttackResult, fight::Fight, npc::NPC, quest::Quest, quest_view::{QuestView, QuestsView}, room::{Room, RoomPayload}, status_view::StatusView, world::World,
+        attack_results::AttackResult, fight::Fight, npc::NPC, quest::{Quest}, quest_view::{QuestStatus, QuestView, QuestsView}, room::{Room, RoomPayload}, status_view::StatusView, world::World,
     },
 };
 
@@ -57,17 +57,31 @@ pub fn response_handling(world: &mut World, answers: Vec<&str>) {
                             view_quest
                         ));
                         let _ = world.tx_to_serv.try_send("QUESTS\n".to_string());
-                        world.action = PendingAction::Quests;
+                        world.action = PendingAction::ClientQuests;
                     }
 
-                    PendingAction::QuestInfo(id) => {
+                    PendingAction::QuestInfo(id, status) => {
 						let mut new_quest: Quest = serde_json::from_str(&real_answer).unwrap();
 						check_goals(world.list_npcs.clone(), &mut new_quest);
+						match status {
+							QuestStatus::Active { progress } => {
+								let progress_split: Vec<&str> = progress.split("/").collect();
+								let number = progress_split[0].parse::<usize>().unwrap_or(0);
+								new_quest.finished_goals = number;
+								new_quest.completed = false;
+							},
+							QuestStatus::Completed => {
+								new_quest.completed = true;
+								new_quest.finished_goals = 0;
+							}
+						}
                         world
-                            .player
-                            .quests
-                            .insert(id.clone(), new_quest);
-                        let quests_number = world.player.quests.len();
+						.player
+						.quests
+						.insert(id.clone(), new_quest);
+					let quests_number = world.player.quests.len();
+					// if let Ok(mut file) = OpenOptions::new().create(true).append(true).open("debug_network.txt") {
+					// 	let _ = writeln!(file, "real (State {:?}) : {:#?}", quests_number, world.player.quests_views.len());}
                         if quests_number == world.player.quests_views.len() {
                             if world.rooms.len() == 0 {
                                 let _ = world.tx_to_serv.try_send("ROOMS\n".to_string());
@@ -76,10 +90,13 @@ pub fn response_handling(world: &mut World, answers: Vec<&str>) {
                                 world.action = PendingAction::None;
                             }
                         } else {
+							let quest_id = world.player.quests_views[quests_number].quest_id.clone();
+							let quest_status = world.player.quests_views[quests_number].status.clone();
                             let _ = world.tx_to_serv.try_send(format!(
                                 "QUEST_INFO {}\n",
-                                world.player.quests_views[quests_number].quest_id
+                                quest_id
                             ));
+							world.action = PendingAction::QuestInfo(quest_id, quest_status);
                         }
                     }
 
@@ -165,27 +182,45 @@ pub fn response_handling(world: &mut World, answers: Vec<&str>) {
                         let gold: Vec<&str> = real_answer.split("=").collect();
                         world.player.gold = gold[1].parse().unwrap();
                         let _ = world.tx_to_serv.try_send("QUESTS\n".to_string());
-                        world.action = PendingAction::Quests;
+                        world.action = PendingAction::ClientQuests;
                     }
 
-                    PendingAction::Quests => {
+                    PendingAction::Quests | PendingAction::ClientQuests => {
+						// if let Ok(mut file) = OpenOptions::new()
+                        //         .create(true)
+                        //         .append(true)
+                        //         .open("debug_network.txt")
+                        //     {
+                        //         let _ =
+                        //             writeln!(file, "real (State {:#?}) ", real_answer);
+                        //     }
                         let quests_list: Vec<QuestsView> =
                             serde_json::from_str(&real_answer).unwrap();
-                        if quests_list.len() > 0 && (quests_list.len() != world.player.quests.len())
-                        {
-							// world.player.quests = HashMap::new();
-                            let id = &quests_list[0].quest_id.clone();
-                            world.player.quests_views = quests_list;
-                            let _ = world.tx_to_serv.try_send(format!("QUEST_INFO {}\n", id));
-                            world.action = PendingAction::QuestInfo(id.clone());
-                        } else {
-							if world.rooms.len() == 0 {
-                                let _ = world.tx_to_serv.try_send("ROOMS\n".to_string());
-                                world.action = PendingAction::Rooms;
-                            } else {
-                                world.action = PendingAction::None;
-                            }
-                        }
+						if world.action == PendingAction::ClientQuests {
+							if quests_list.len() > 0 && (quests_list.len() != world.player.quests.len())
+							{
+								let id = &quests_list[0].quest_id.clone();
+								let status = quests_list[0].status.clone();
+								world.player.quests_views = quests_list;
+								let _ = world.tx_to_serv.try_send(format!("QUEST_INFO {}\n", id));
+								world.action = PendingAction::QuestInfo(id.clone(), status);
+							} else {
+								if world.rooms.len() == 0 {
+									let _ = world.tx_to_serv.try_send("ROOMS\n".to_string());
+									world.action = PendingAction::Rooms;
+								} else {
+									world.action = PendingAction::None;
+								}
+							}
+						} else {
+							let displayed_list = quests_list
+							.iter()
+							.map(|f|f.to_string())
+							.collect::<Vec<String>>()
+							.join("\n");
+
+							world.output.push_back(format!("Your quests are : \n{}", displayed_list));
+						}
                     }
 
                     PendingAction::Inventory | PendingAction::ClientInventory => {
@@ -229,8 +264,6 @@ pub fn response_handling(world: &mut World, answers: Vec<&str>) {
                     }
 
                     PendingAction::Consume(item) => {
-                        // if let Ok(mut file) = OpenOptions::new().create(true).append(true).open("debug_network.txt") {
-                        // 	let _ = writeln!(file, "real (State {:?}) : {:#?}", count, line);}
                         let quantity = world.player.inventory.get(item).unwrap();
                         if *quantity > 1 {
                             world.player.inventory.insert(item.clone(), quantity - 1);
@@ -417,14 +450,6 @@ pub fn response_handling(world: &mut World, answers: Vec<&str>) {
                         let mut cost = 0;
                         for elem in answers.iter() {
                             let elems: Vec<&str> = elem.split("=").collect();
-                            // if let Ok(mut file) = OpenOptions::new()
-                            //     .create(true)
-                            //     .append(true)
-                            //     .open("debug_network.txt")
-                            // {
-                            //     let _ =
-                            //         writeln!(file, "real (State {:#?}) :{:#?}", elems, real_answer);
-                            // }
                             match elems[0] {
                                 "amount" => amount = elems[1].parse::<u32>().unwrap(),
                                 "gold" => cost = elems[1].parse::<u32>().unwrap(),

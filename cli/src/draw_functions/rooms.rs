@@ -228,7 +228,11 @@ pub fn draw_room(world: &mut World, frame: &mut Frame) {
         .player
         .quests
         .values()
-        .map(|quest| ListItem::new(Line::from(quest.name.clone()).alignment(Alignment::Center)))
+        .map(|quest|
+			ListItem::new(
+			Line::from(format!("{} {}", quest.name.clone(), if quest.completed {"(Finished)".to_string()} else {"".to_string()}))
+			.alignment(Alignment::Center)
+			.style(if quest.completed {Color::Green} else {Color::White})))
         .collect();
     if quests.len() == 0 {
         quests.push(ListItem::new(
@@ -291,7 +295,7 @@ pub fn draw_room(world: &mut World, frame: &mut Frame) {
                     .nth(world.room.inventory_list_state.selected().unwrap())
                 {
                     if let Some(detailled_item) = world.list_items.get(selected_item) {
-                        Paragraph::new(Text::from(format!("{}", detailled_item)))
+                        Paragraph::new(Text::from(format!("({}) {}", selected_item, detailled_item)))
                     } else {
                         Paragraph::new(Text::from("Can't find details about this item."))
                     }
@@ -306,7 +310,7 @@ pub fn draw_room(world: &mut World, frame: &mut Frame) {
                     .values()
                     .nth(world.room.quests_list_state.selected().unwrap())
                 {
-                    Paragraph::new(Text::from(format!("{}", selected_quest)))
+                    Paragraph::new(Text::from(selected_quest))
                 } else {
                     Paragraph::new(Text::from("Can't find details about this quest."))
                 }

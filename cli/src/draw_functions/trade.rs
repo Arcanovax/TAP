@@ -49,7 +49,7 @@ pub fn draw_trade(world: &mut World, frame: &mut Frame, inventory: Vec<String>) 
 
     let right_layout = Layout::default()
         .direction(Vertical)
-        .constraints(vec![Length(10), Fill(1), Length(6)])
+        .constraints(vec![Length(10), Fill(1), Fill(1), Length(6)])
         .split(layout[1]);
 
     let lists_layout = Layout::default()
@@ -184,8 +184,8 @@ pub fn draw_trade(world: &mut World, frame: &mut Frame, inventory: Vec<String>) 
     // ITEMS TO BUY
     items_list = Vec::new();
 
-    for item in inventory {
-        if let Some(item_obj) = world.list_items.get(&item) {
+    for item in &inventory {
+        if let Some(item_obj) = world.list_items.get(item) {
             items_list.push(ListItem::new(
                 Line::from(format!(
                     "{} ({} golds)",
@@ -249,8 +249,58 @@ pub fn draw_trade(world: &mut World, frame: &mut Frame, inventory: Vec<String>) 
 
     frame.render_stateful_widget(
         exits_list,
-        right_layout[2],
+        right_layout[3],
         &mut world.room.exits_list_state,
+    );
+
+	//DETAILS
+    let details_block = Block::bordered()
+        .title("Item details")
+        .title_alignment(Alignment::Center)
+        .title_style(Color::Green)
+        .bold();
+
+    let details_content = {
+        match world.room.focus {
+            Focus::BUY => {
+                if let Some(selected_item) = inventory
+                    .iter()
+                    .nth(world.room.buy_list_state.selected().unwrap_or(0))
+                {
+                    if let Some(item) = world.list_items.get(selected_item) {
+                        Paragraph::new(Text::from(format!("({}) {}",selected_item, item)))
+                    } else {
+                        Paragraph::new(Text::from("Can't find details about this item."))
+                    }
+                } else {
+                    Paragraph::new(Text::from("Can't find details about this item."))
+                }
+            }
+            Focus::SELL => {
+                if let Some((selected_item, ..)) = world
+                    .player
+                    .inventory
+                    .iter()
+                    .nth(world.room.sell_list_state.selected().unwrap())
+                {
+                    if let Some(detailled_item) = world.list_items.get(selected_item) {
+                        Paragraph::new(Text::from(format!("({}) {}",selected_item, detailled_item)))
+                    } else {
+                        Paragraph::new(Text::from("Can't find details about this item."))
+                    }
+                } else {
+                    Paragraph::new(Text::from("Can't find details about this item."))
+                }
+            }
+            _ => Paragraph::new(Text::from("Nothing selected")),
+        }
+    };
+    frame.render_widget(
+        details_content
+            .block(details_block)
+            .wrap(Wrap { trim: true })
+            .centered(),
+        right_layout[2],
     );
 
     // CHAT

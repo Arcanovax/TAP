@@ -1,5 +1,5 @@
-use std::fmt::Display;
 
+use ratatui::{style::Color, text::{Line, Text}};
 use serde::{Deserialize, Serialize};
 
 use crate::enums::goals::Goal;
@@ -10,20 +10,28 @@ pub struct Quest {
     pub description: String,
     pub reward: String,
     pub goals: Vec<Goal>,
+	#[serde(skip)]
+	pub finished_goals: usize,
+	#[serde(skip)]
+	pub completed: bool
 }
 
-impl Display for Quest {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        let mut list_goals: Vec<String> = Vec::new();
-        for goal in &self.goals {
-            list_goals.push(format!("- {}", goal));
+impl<'a> From<&'a Quest> for Text<'a> {
+    fn from(quest: &'a Quest) -> Self {
+		
+        let mut list_goals: Vec<Line> = vec![
+			Line::from(quest.name.clone()),
+			Line::from(format!("Reward: {}", quest.reward))
+		];
+        for (i, goal) in quest.goals.iter().enumerate() {
+			let color = if i < quest.finished_goals || quest.completed {
+				Color::Green
+			} else {
+				Color::White
+			};
+
+            list_goals.push(Line::from(format!("- {}", goal)).style(color));
         }
-        write!(
-            f,
-            "{}\n Reward: {}\n Goals:\n{}",
-            self.name,
-            self.reward,
-            list_goals.join("\n")
-        )
-    }
+        Text::from(list_goals)
+	}
 }

@@ -11,5 +11,7 @@ pub mod quest_view;
 pub mod room;
 pub mod room_view;
 pub mod rooms_view;
+pub mod quest_udate;
+pub mod quest_finish;
 pub mod status_view;
 pub mod world;

@@ -1,14 +1,10 @@
 use std::{fs::OpenOptions, io::Write};
 
-
 use crate::{
-    enums::{focus::Focus, states::States},
-    structures::{fight::Fight, group::Invitation, world::World},
+    enums::{focus::Focus, goals::Goal, states::States}, structures::{fight::Fight, group::Invitation, quest_finish::FinishedQuest, quest_udate::UpdateView, world::World},
 };
 
 pub fn event_handling(world: &mut World, answer: Vec<&str>) {
-    // if let Ok(mut file) = OpenOptions::new().create(true).append(true).open("debug_draw.txt") {
-    // 	let _ = writeln!(file, "RECU (State {}) : {:#?}", answer[1], answer);}
     if answer.len() > 2 && answer[2] == "CHAT" {
         let channel = match answer[1] {
             "ROOM" => Some(&mut world.chat.room_messages),
@@ -107,7 +103,7 @@ pub fn event_handling(world: &mut World, answer: Vec<&str>) {
 						if let Ok(hp_enn) = enn_hp.parse::<u32>() {
 							world.room.fight.target_hp = hp_enn;
 							if hp_enn == 0 {
-								let loot_split: Vec<String> = answer[6].split("//").map(|f| format!("- {}", f)).collect();
+								let loot_split: Vec<String> = loot.split("//").map(|f| format!("- {}", f)).collect();
 								let loot_final = loot_split.join("\n");
 								world.state = States::Idle;
 								world.room.fight = Fight::new();
@@ -144,54 +140,46 @@ pub fn event_handling(world: &mut World, answer: Vec<&str>) {
                 world.room.output_scroll_pos.scroll_to_bottom();
             }
             "QUEST" => {
+				
 				match answer[2] {
 					"UPDATE" => {
-						let answers: Vec<&str> = answer[3].split_whitespace().collect();
-                        let mut quest_name = String::from("");
-                        let mut goal = String::from("");
-                        for elem in answers.iter() {
-                            let elems: Vec<&str> = elem.split(":").collect();
-                            match elems[0] {
-                                "quest" => {
-									if let Some(quest) = world.player.quests.get(elems[1]) {
-										quest_name = quest.name.clone();
-									} else {
-										quest_name = elems[1].to_string();
-									}
-								},
-                                "goal" => { goal = elems[1].to_string() },
-                                _ => {
-									world.output.push_back(format!("An error occurs with your quest update."));
-								}
-                            }
-                        }
-						world.output.push_back(format!("Congratulation! You validate the goal '{}' of the {} quest.", goal, quest_name));
+						let update: UpdateView = serde_json::from_str(answer[3]).unwrap();
+						let quest_name = {
+							if let Some(item_obj) = world.player.quests.get_mut(&update.quest) {
+								item_obj.finished_goals += 1;
+								item_obj.name.clone()
+							} else {
+								update.quest
+							}
+						};
+						world.output.push_back(format!("Congratulation! You validate the goal '{}' of the {} quest.", update.previous_goal, quest_name));
+						match update.previous_goal {
+							Goal::Retrieve { item, amount, .. } => {
+								world.player.inventory.entry(item).and_modify(|f| {*f -= amount});
+								world.player.inventory.retain(|_, quantity| *quantity > 0);
+							},
+							_ => {}
+						}
 					}
 					"FINISH" => {
-						let answers: Vec<&str> = answer[3].split_whitespace().collect();
-						let mut id_quest = String::from("");
-                        let mut quest_name = String::from("");
-                        let mut reward = String::from("");
-                        for elem in answers.iter() {
-                            let elems: Vec<&str> = elem.split(":").collect();
-                            match elems[0] {
-                                "quest" => {
-									id_quest = elems[1].to_string();
-									if let Some(quest) = world.player.quests.get(elems[1]) {
-										quest_name = quest.name.clone();
-									} else {
-										quest_name = elems[1].to_string();
-									}
-								},
-                                "reward" => { reward = elems[1].to_string() },
-                                _ => {
-									world.output.push_back(format!("An error occurs with your quest."));
-								}
-                            }
-                        }
-						world.output.push_back(format!("Unbelievable! You've completed the quest {} and earned {}.", quest_name, reward));
-						*world.player.inventory.entry(reward).or_insert(0) += 1;
-						world.player.quests.remove(&id_quest);
+						let finish: FinishedQuest = serde_json::from_str(answer[3]).unwrap();
+						let quest_name = {
+							if let Some(item_obj) = world.player.quests.get_mut(&finish.quest) {
+								item_obj.completed = true;
+								item_obj.name.clone()
+							} else {
+								finish.quest.clone()
+							}
+						};
+						world.output.push_back(format!("Unbelievable! You've completed the quest {} and earned {}.", quest_name, finish.reward));
+						*world.player.inventory.entry(finish.reward).or_insert(0) += 1;
+						// if let Ok(mut file) = OpenOptions::new()
+						// 	.create(true)
+						// 	.append(true)
+						// 	.open("debug_network.txt")
+						// {
+						// 	let _ = writeln!(file, "all (State {:?}) : {:#?}", finish.quest, world.player.quests);
+						// }
 					}
 					_ => {}
 				}

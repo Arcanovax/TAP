@@ -1,3 +1,5 @@
+use crate::structures::quest_view::QuestStatus;
+
 #[derive(Debug, Clone, PartialEq)]
 pub enum PendingAction {
     None,
@@ -30,6 +32,7 @@ pub enum PendingAction {
     ClientInventory,
     Quest,
     Quests,
-    QuestInfo(String),
+    ClientQuests,
+    QuestInfo(String, QuestStatus),
     Items,
 }

@@ -28,6 +28,7 @@ pub fn find_action(command: Vec<&str>, world: &mut World) {
         "quest" => world.action = PendingAction::Quest,
         "gold" => world.action = PendingAction::Gold,
         "npc" => world.action = PendingAction::Npc,
+		"quests" => world.action = PendingAction::Quests,
         _ => {}
     }
 }
