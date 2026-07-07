@@ -56,7 +56,7 @@ pub fn display_quests(game: &mut Game){
 		else{
 			draw_text(&quest_goal, title_quest_pos.x + 20.0, pos_y, 20.0, WHITE);
 		}
-        pos_y += 10.0;
+        pos_y += 20.0;
 
     }
 }

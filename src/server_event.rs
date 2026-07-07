@@ -114,7 +114,7 @@ pub async fn handle_events(game: &mut Game, answer: Vec<&str>){
 						if answer[3] == game.player.name{
 							if let Some(npc) = game.loaded_npcs.get_mut(&fight.enemy.id){
 								npc.npc_talk = Some(NpcTalk{
-									texts: "You lost".to_string(),
+									texts: vec!["You lost".to_string()],
 									text_i: 0,
 								});
 							}
