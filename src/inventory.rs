@@ -194,10 +194,11 @@ fn pop_cut_rect() {
 pub fn draw_inv(game: &mut Game) {
     let mut inv_rect: Rect = get_inv_rect();
     inv_rect.y -= 100.0;
-    let columns = 1;
+    let columns = 8;
     let total_h = ( game.player.inventory.data.len() as f32 / columns as f32).ceil() * SLOT_SIZE;
     let max_offset = (total_h - inv_rect.h).max(0.0);
 
+    draw_text_center_top(inv_rect, "INVENTORY", 35, -2.5);
     draw_rectangle(inv_rect.x, inv_rect.y, inv_rect.w, inv_rect.h, Color::new(0.0, 0.0, 0.0, 0.5));
 
     handle_sroll_bar(game.mouse, inv_rect, total_h, max_offset,&mut game.player.inventory.inv_scroll);
@@ -221,6 +222,7 @@ pub fn draw_inv(game: &mut Game) {
 
 
 pub fn draw_dropped(game: &mut Game) {
+    
     let Some(mapdata) = game.map_data.clone() else { return };
     let mut dropped_rect: Rect = get_item_floor_rect();
     dropped_rect.y += 175.0;
@@ -228,6 +230,7 @@ pub fn draw_dropped(game: &mut Game) {
     let total_h = (mapdata.items.len() as f32 / columns as f32).ceil() * SLOT_SIZE;
     let max_offset = (total_h - dropped_rect.h).max(0.0);
 
+    draw_text_center_top(dropped_rect, "ITEM FLOOR", 35, -2.5);
     draw_rectangle(dropped_rect.x, dropped_rect.y, dropped_rect.w, dropped_rect.h, Color::new(0.0, 0.0, 0.0, 0.5));
 
     handle_sroll_bar(game.mouse, dropped_rect, total_h, max_offset, &mut game.player.inventory.dropped_scroll);
