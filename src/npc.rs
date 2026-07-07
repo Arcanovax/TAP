@@ -38,7 +38,7 @@ pub struct InfoShop{
 #[derive(Clone, PartialEq, Debug)]
 pub struct NpcTalk{
 	pub text_i: usize,
-	pub texts: String,
+	pub texts: Vec<String>,
 }
 
 
@@ -70,62 +70,110 @@ pub fn handle_npc_interactions(game: &mut Game, place: Vec2, npc: Npc){
 	set_default_camera();
 
 	if let Some(npc_talk) = npc.npc_talk.clone() {
-		let talk_pos = vec2(s_pos.x, s_pos.y - 20.0);
-		draw_rectangle(talk_pos.x, talk_pos.y, 200.0,30.0, WHITE);
-		draw_text(npc_talk.texts.clone(), talk_pos.x, talk_pos.y + 20.0, 25.0, BLACK);
+		let text = npc_talk.texts[npc_talk.text_i % npc_talk.texts.len()].clone();
+		let font_size = 22.5;
+		let max_width = 200.0;
+		let line_height = font_size * 1.15;
+		let mut lines: Vec<String> = Vec::new();
+		let mut current = String::new();
+		for word in text.split_whitespace() {
+			if current.is_empty(){
+				current = format!("{} ",word.to_string())
+			}
+			else {
+				current.push_str(&format!("{} ",word).to_string());
+			};
+			let w = measure_text(&current, None, font_size as u16, 1.0).width;
+			if w > max_width{
+				lines.push(current);
+				current = String::new();
+			}
+		}
+		if !current.is_empty() {
+			lines.push(current);
+		}
+
+		let box_width = lines
+			.iter()
+			.map(|l| measure_text(l, None, font_size as u16, 1.0).width)
+			.fold(0.0_f32, f32::max);
+		let box_height = lines.len() as f32 * line_height + 10.0;
+
+		let talk_rect = Rect::new(s_pos.x, s_pos.y - 15.0 - box_height, box_width, box_height);
+
+		draw_rectangle(talk_rect.x , talk_rect.y, talk_rect.w, talk_rect.h, WHITE);
+		draw_rectangle_lines(talk_rect.x , talk_rect.y, talk_rect.w, talk_rect.h,2.5, BLACK);
+		for (i, line) in lines.iter().enumerate() {
+			let pos_y = talk_rect.y  + font_size + line_height * i as f32;
+			draw_text(line, talk_rect.x + 5.0, pos_y, font_size, BLACK);
+		}
 	}
 
-	let rect = Rect::new(s_pos.x + 62.5, s_pos.y, 175.0, 125.0);
+
+	let mouse = game.mouse;
+	let mut rect = Rect::new(s_pos.x + 62.5, s_pos.y, 175.0, 30.0);
+	let mut n_slots = 2;
+	if npc.has_quest {
+		n_slots += 1;
+	}
+	if matches!(npc.kind, NPCKind::Merchant { .. }) {
+		n_slots += 1;
+	}
+
+	rect.h += n_slots as f32 * 30.0;
 	draw_rectangle(rect.x, rect.y, rect.w, rect.h, Color::new(0.0, 0.0, 0.0, 0.5));
 
 	draw_text_center_top(rect, npc.name.as_str(), 30, 22.0);
+	let mut slot_y = 30.0;
 
-	let mouse = game.mouse;
-
-	let btn_talk:Rect = get_rect_centered_x(rect, vec2(125.0, 25.0), 30.0);
+	let btn_talk:Rect = get_rect_centered_x(rect, vec2(125.0, 25.0), slot_y);
+	slot_y += 30.0;
 	if get_button(btn_talk, "Talk", 25, WHITE, mouse){
 		if let Some(npc) = game.loaded_npcs.get_mut(&npc.id) {
-			// npc_talk.text_i = (npc_talk.text_i + 1) % npc_talk.texts.len();
 			let rq: String = format!("TALK {}\n",npc.id);
 			game.tx_to_serv.try_send(rq).ok();
 			game.pending_action = PendingAction::Talk(npc.id.clone());
 		}
+
 	}
+
 	if npc.has_quest{
-		let btn_quest = get_rect_centered_x(rect, vec2(125.0, 25.0), 60.0);
+		let btn_quest = get_rect_centered_x(rect, vec2(125.0, 25.0), slot_y);
+		slot_y += 30.0;
 		if get_button(btn_quest, "Quest", 25, WHITE, mouse){
 			let rq: String = format!("QUEST {}\n",npc.id);
 			game.tx_to_serv.try_send(rq).ok();
 			game.pending_action = PendingAction::Quest(npc.id.clone());
 		}
 	}
-	let btn_attack: Rect = get_rect_centered_x(rect, vec2(125.0, 25.0), 90.0);
+	let btn_attack: Rect = get_rect_centered_x(rect, vec2(125.0, 25.0), slot_y);
+	slot_y += 30.0;
 	if get_button(btn_attack, "Attack", 25, WHITE, mouse){
 		let rq: String = format!("ATTACK {}\n",npc.id);
 		game.tx_to_serv.try_send(rq).ok();
 		game.pending_action = PendingAction::Attack(npc.id.clone());
 
 	}
-
-	handle_shop(game, npc, rect);
-	camera_handler(game);
-
-}
-
-
-fn handle_shop(game: &mut Game, npc: Npc, rect: Rect){
-	if let NPCKind::Merchant { inventory, gold } = &npc.kind {
-		let btn_shop = get_rect_centered_x(rect, vec2(125.0, 25.0), 120.0);
+	if let NPCKind::Merchant { .. } = &npc.kind {
+		let btn_shop = get_rect_centered_x(rect, vec2(125.0, 25.0), slot_y);
 		if get_button(btn_shop, "Shop", 25, WHITE, game.mouse){
 			game.npc_shop.is_active = !game.npc_shop.is_active
 		}
 		if game.npc_shop.is_active {
+			handle_shop(game, &npc);
+		}
+	camera_handler(game);
+}
+
+
+fn handle_shop(game: &mut Game, npc: &Npc){
+	if let NPCKind::Merchant { inventory, .. } = &npc.kind {
 			let shop_rect = get_center_rect(vec2(400.0, 250.0));
-			draw_rectangle(shop_rect.x,shop_rect.y,shop_rect.w,shop_rect.h,Color::new(0.0, 0.0, 0.0, 1.0),);
-			let item_size = 40.0;
+			draw_rectangle(shop_rect.x,shop_rect.y,shop_rect.w,shop_rect.h,Color::new(0.0, 0.0, 0.0, 0.85));
+			let item_size = 50.0;
 
 			for (i, item) in inventory.iter().enumerate() {
-				let line = shop_rect.y + i as f32 * 55.0;
+				let line = shop_rect.y + 15.0 + i  as f32 * 55.0;
 				let slot = Rect::new(
 					shop_rect.x + 10.0,
 					line + (50.0 - item_size) / 2.0,
@@ -139,67 +187,39 @@ fn handle_shop(game: &mut Game, npc: Npc, rect: Rect){
 					&game.loaded_items[item].name,
 					slot.x + slot.w + 15.0,
 					slot.y + item_size * 0.75,
-					22.5,
+					25.0,
 					WHITE,
 				);
-				let btn_buy = Rect::new(shop_rect.x + shop_rect.w - 115.0, line + (50.0 - item_size) / 2.0, 50.0,37.5);
+
+				let btn_buy = Rect::new(shop_rect.x + shop_rect.w - 115.0,line + (50.0 - item_size) / 2.0, 50.0,50.0);
 				if let Some(info) = game.npc_shop.buy_info.as_ref() {
 					if get_time() - info.time > 0.5 {
 						game.npc_shop.buy_info = None;
 					}
-					else if btn_buy.contains(game.mouse){
-						let color = info.color;
-						if get_button(btn_buy, "Buy", 25, color,game.mouse) && !game.group.typed.is_empty(){
-							let rq: String = format!("BUY {} {} \n",npc.id,item);
-							game.tx_to_serv.try_send(rq).ok();
-							game.pending_action = PendingAction::Buy(item.to_string());
-						}
-					}
-					else{
-						if get_button(btn_buy, "Buy", 25, WHITE, game.mouse){
-							let rq: String = format!("BUY {} {} \n",npc.id,item);
-							game.tx_to_serv.try_send(rq).ok();
-							game.pending_action = PendingAction::Buy(item.to_string());
-						}
-					}
-
 				}
-				else{
-					if get_button(btn_buy, "Buy", 25, WHITE, game.mouse){
-							let rq: String = format!("BUY {} {} \n",npc.id,item);
-							game.tx_to_serv.try_send(rq).ok();
-							game.pending_action = PendingAction::Buy(item.to_string());
-				}}
+				let info = game.npc_shop.buy_info.as_ref().filter(|_| btn_buy.contains(game.mouse));
+				let color = info.map(|info| info.color).unwrap_or(WHITE);
+				let allowed = info.is_none();
+				if get_button(btn_buy, "Buy", 25, color, game.mouse) && allowed {
+					let rq = format!("BUY {} {} \n", npc.id, item);
+					game.tx_to_serv.try_send(rq).ok();
+					game.pending_action = PendingAction::Buy(item.to_string());
+				}
 
-
-				let btn_sell = Rect::new(shop_rect.x + shop_rect.w - 60.0, line + (50.0 - item_size) / 2.0, 50.0,37.5);
+				let btn_sell = Rect::new(shop_rect.x + shop_rect.w - 60.0, line + (50.0 - item_size) / 2.0, 50.0,50.0);
 				if let Some(info) = game.npc_shop.sell_info.as_ref() {
 					if get_time() - info.time > 0.5 {
 						game.npc_shop.sell_info = None;
 					}
-					else if btn_sell.contains(game.mouse){
-						let color = info.color;
-						if get_button(btn_sell, "Sell", 25, color,game.mouse) && !game.group.typed.is_empty(){
-							let rq: String = format!("SELL {} {} \n",npc.id,item);
-							game.tx_to_serv.try_send(rq).ok();
-							game.pending_action = PendingAction::Sell(item.to_string());
-						}
-					}
-					else{
-						if get_button(btn_sell, "Sell", 25, WHITE, game.mouse){
-							let rq: String = format!("SELL {} {} \n",npc.id,item);
-							game.tx_to_serv.try_send(rq).ok();
-							game.pending_action = PendingAction::Sell(item.to_string());
-						}
-					}
-
 				}
-				else{
-					if get_button(btn_sell, "Sell", 25, WHITE, game.mouse){
-							let rq: String = format!("SELL {} {} \n",npc.id,item);
-							game.tx_to_serv.try_send(rq).ok();
-							game.pending_action = PendingAction::Sell(item.to_string());
-				}}
+				let info = game.npc_shop.sell_info.as_ref().filter(|_| btn_sell.contains(game.mouse));
+				let color = info.map(|info| info.color).unwrap_or(WHITE);
+				let allowed = info.is_none();
+				if get_button(btn_sell, "Sell", 25, color, game.mouse) && allowed {
+					let rq = format!("SELL {} {} \n", npc.id, item);
+					game.tx_to_serv.try_send(rq).ok();
+					game.pending_action = PendingAction::Sell(item.to_string());
+				}
 
 			}
 		}

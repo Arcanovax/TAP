@@ -242,13 +242,24 @@ pub async fn handle_response(game: &mut Game, answer: &str, state: &str){
 
 
 		PendingAction::Talk(ref npc_id) => {
-		if state =="OK"{
-			if let Some(npc) = game.loaded_npcs.get_mut(npc_id){
-							npc.npc_talk = Some(NpcTalk{
-							texts: answer.to_string(),
-							text_i: 0,
-						})
+			if let Some(npc) = game.loaded_npcs.get_mut(npc_id) {
+    			let mut call = false;
+
+				if let Some(talk) = &mut npc.npc_talk {
+					talk.text_i += 1;
+					if talk.text_i >= talk.texts.len() {
+						call = true;
 					}
+				} else {
+					call = true;
+				}
+
+				if call {
+					npc.npc_talk = Some(NpcTalk {
+						texts: answer.split('\\').map(|s| s.to_string()).collect(),
+						text_i: 0,
+					});
+				}
 			}
 		}
 		PendingAction::Attack(ref npc_id) => {
@@ -285,7 +296,7 @@ pub async fn handle_response(game: &mut Game, answer: &str, state: &str){
 				if answer.contains("NPC_NOT_HOSTILE"){
 					if let Some(npc) = game.loaded_npcs.get_mut(npc_id){
 							npc.npc_talk = Some(NpcTalk{
-							texts:  "I am not Hostile".to_string(),
+							texts:  vec!["I am not Hostile".to_string()],
 							text_i: 0,
 						});
 					}
@@ -293,7 +304,7 @@ pub async fn handle_response(game: &mut Game, answer: &str, state: &str){
 				if answer.contains("DEFEATED_FIGHTER"){
 					if let Some(npc) = game.loaded_npcs.get_mut(npc_id){
 							npc.npc_talk = Some(NpcTalk{
-							texts:"You already lost".to_string(),
+							texts:vec!["You already lost".to_string()],
 							text_i: 0,
 						});
 					}

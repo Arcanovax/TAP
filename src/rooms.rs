@@ -249,7 +249,7 @@ pub async fn get_rooms() -> HashMap<String, Room> {
     rooms.insert(parc.id.clone(), parc);
 
 	let forge: Room = Room {
-        id: "room.blacksmith's_shop".to_string(),
+        id: "room.blacksmiths_shop".to_string(),
         colliders: [
 			[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,1,1,1,1,0,1],
 			[1,0,0,0,0,0,1,0,0,0,1,1,1,1,1,1,0,0,0,0,1,1,1,1,1],
