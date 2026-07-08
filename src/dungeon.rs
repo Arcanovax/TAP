@@ -24,89 +24,63 @@ impl Dungeon {
 	}
 }
 
-pub async fn get_dungeon_map(game: &mut Game, data: &RoomData) -> Room {
+pub async fn get_dungeon_map(dungeon: &mut Dungeon, data: &RoomData) -> Room {
 	let map = load_texture("assets/map/dungeon/floor.png").await.unwrap();
-	if let Some(dungeon) = &mut game.dungeon {
-		if !dungeon.walls_loaded{
-			dungeon.walls = Vec::new();
-			if data.exits.contains_key(&Direction::North) {
-				dungeon.walls.push(load_texture("assets/map/dungeon/top_on.png").await.unwrap());
-			} else {
-				dungeon.walls.push(load_texture("assets/map/dungeon/top_off.png").await.unwrap());
-			}
 
-			if data.exits.contains_key(&Direction::South) {
-				dungeon.walls.push(load_texture("assets/map/dungeon/bottom_on.png").await.unwrap());
-			} else {
-				dungeon.walls.push(load_texture("assets/map/dungeon/bottom_off.png").await.unwrap());
-			}
-			if data.exits.contains_key(&Direction::East) {
-				dungeon.walls.push(load_texture("assets/map/dungeon/right_on.png").await.unwrap());
-			} else {
-				dungeon.walls.push(load_texture("assets/map/dungeon/right_off.png").await.unwrap());
-			}
-			if data.exits.contains_key(&Direction::West) {
-				dungeon.walls.push(load_texture("assets/map/dungeon/left_on.png").await.unwrap());
-			} else {
-				dungeon.walls.push(load_texture("assets/map/dungeon/left_off.png").await.unwrap());
-			}
-			dungeon.walls_loaded = true;
+	if !dungeon.walls_loaded{
+		dungeon.walls = Vec::new();
+		if data.exits.contains_key(&Direction::North) {
+			dungeon.walls.push(load_texture("assets/map/dungeon/top_on.png").await.unwrap());
+		} else {
+			dungeon.walls.push(load_texture("assets/map/dungeon/top_off.png").await.unwrap());
 		}
 
-
-		Room { id: data.id.clone(), colliders:
-			[
-					[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-					[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-					[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-					[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-					[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-					[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-					[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-					[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-					[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-					[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-					[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-					[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-					[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-					[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-					[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-
-				], first_layer: map, second_layer: None, spawns: HashMap::from([
-					(Spawn::Center, vec2(150.0, 130.0)),
-					(Spawn::West, vec2(10.0, 130.0)),
-					(Spawn::East, vec2(380.0, 130.0)),
-					(Spawn::South, vec2(200.0, 190.0)),
-					(Spawn::North, vec2(240.0, 70.0)),])
-				}
+		if data.exits.contains_key(&Direction::South) {
+			dungeon.walls.push(load_texture("assets/map/dungeon/bottom_on.png").await.unwrap());
+		} else {
+			dungeon.walls.push(load_texture("assets/map/dungeon/bottom_off.png").await.unwrap());
+		}
+		if data.exits.contains_key(&Direction::East) {
+			dungeon.walls.push(load_texture("assets/map/dungeon/right_on.png").await.unwrap());
+		} else {
+			dungeon.walls.push(load_texture("assets/map/dungeon/right_off.png").await.unwrap());
+		}
+		if data.exits.contains_key(&Direction::West) {
+			dungeon.walls.push(load_texture("assets/map/dungeon/left_on.png").await.unwrap());
+		} else {
+			dungeon.walls.push(load_texture("assets/map/dungeon/left_off.png").await.unwrap());
+		}
+		dungeon.walls_loaded = true;
 	}
-	else{Room { id: data.id.clone(), colliders:
-			[
-					[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-					[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-					[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-					[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-					[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-					[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-					[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-					[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-					[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-					[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-					[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-					[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-					[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-					[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-					[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
 
-				], first_layer: map, second_layer: None, spawns: HashMap::from([
-					(Spawn::Center, vec2(150.0, 130.0)),
-					(Spawn::West, vec2(10.0, 130.0)),
-					(Spawn::East, vec2(380.0, 130.0)),
-					(Spawn::South, vec2(200.0, 190.0)),
-					(Spawn::North, vec2(240.0, 70.0)),])
-				}}
 
+	Room { id: data.id.clone(), colliders:
+		[
+				[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+				[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+				[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+				[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+				[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+				[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+				[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+				[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+				[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+				[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+				[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+				[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+				[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+				[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+				[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+
+			], first_layer: map, second_layer: None, spawns: HashMap::from([
+				(Spawn::Center, vec2(50.0, 150.0)),
+				(Spawn::West, vec2(10.0, 150.0)),
+				(Spawn::East, vec2(380.0, 150.0)),
+				(Spawn::South, vec2(200.0, 190.0)),
+				(Spawn::North, vec2(200.0, 70.0)),])
+			}
 }
+
 
 pub fn draw_dungeon_wall(game: &mut Game){
 	if let Some(dungeon) = &mut game.dungeon{

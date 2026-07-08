@@ -273,8 +273,9 @@ async fn main() {
 				else if dungeon.rooms.is_empty(){
 					game.tx_to_serv.try_send("ROOMS \n".to_string()).ok();
 					game.pending_action = PendingAction::Rooms;
+					game.player.x = 10.0;
+					game.player.y = 130.0;
 				}
-
 			}
 
 
@@ -329,6 +330,7 @@ async fn main() {
 
 					if let Some(map_data) = game.map_data.clone() {
 						if game.dungeon.is_some() {
+
 							let mut room_data = None;
 							if let Some(dungeon) = &game.dungeon {
 								if !dungeon.rooms.is_empty() {
@@ -336,15 +338,16 @@ async fn main() {
 										room_data = Some(rd.clone());
 									} else {
 										game.dungeon = None;
+										game.player.new_spawn = Spawn::North
 									}
 								}
 							}
 							if let Some(room_data) = room_data {
-								if let Some(dungeon) = &game.dungeon {
+								if let Some(dungeon) = &mut game.dungeon {
+									let map: Room = get_dungeon_map(dungeon, &room_data).await;
 
+									handle_game(&mut game, &map, map_data);
 								}
-								let map: Room = get_dungeon_map(&mut game, &room_data).await;
-								handle_game(&mut game, &map, map_data);
 							}
 							else {
 							let map = match rooms.get(&map_data.room.id) {

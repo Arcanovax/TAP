@@ -153,6 +153,7 @@ pub async fn get_rooms() -> HashMap<String, Room> {
 		spawns: HashMap::from([
             	(Spawn::West, vec2(10.0, 90.0)),
 				(Spawn::Center, vec2(200.0, 130.0)),
+				(Spawn::North, vec2(320.0, 170.0))
 		]),
 	};
     rooms.insert(tower.id.clone(), tower);
