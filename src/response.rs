@@ -230,8 +230,10 @@ pub async fn handle_response(game: &mut Game, answer: &str, state: &str){
 					match val_str.trim().parse::<String>() {
 						Ok(spawn) => {
 							game.player.new_spawn = new_spawn.clone();
+							if let Some(ref mut dungeon) = game.dungeon{
+								dungeon.walls_loaded = false;
+							}
 							if let Some(ref mut mapdata) = game.map_data{
-
 								mapdata.room.id =spawn.to_string();
 							}
 						}
@@ -489,7 +491,7 @@ pub async fn handle_response(game: &mut Game, answer: &str, state: &str){
 			else {
 				game.dungeon = Some(Dungeon::new());
 				if let Some(ref mut dungeon) = game.dungeon{
-					dungeon.not_owner = true;
+					dungeon.err_join = true;
 				}
 
 			}
@@ -497,7 +499,7 @@ pub async fn handle_response(game: &mut Game, answer: &str, state: &str){
 
 		PendingAction::DungeonJoin => {
 			if state=="OK"{
-				// game.map_data = None;
+				game.dungeon = Some(Dungeon::new());
 			}
 		}
 		PendingAction::Rooms => {

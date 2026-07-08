@@ -1,62 +1,128 @@
+use std::vec;
+
 use crate::*;
 
 #[derive(Clone, PartialEq, Debug)]
 pub struct Dungeon {
 	pub players: HashMap<String, i32>,
-	pub not_owner: bool,
-	pub rooms: HashMap <String,RoomData>
+	pub err_join: bool,
+	pub rooms: HashMap <String,RoomData>,
+	pub walls: Vec<Texture2D>,
+	pub walls_loaded: bool
+
 }
 
 impl Dungeon {
 	pub fn new() -> Self {
 		Self {
 			players:HashMap::new(),
-			not_owner: false,
-			rooms: HashMap::new()
+			err_join: false,
+			rooms: HashMap::new(),
+			walls: Vec::new(),
+			walls_loaded: false
 			}
 	}
 }
 
-pub async fn get_dungeon_map(data: &RoomData) -> Room {
-	Room { id: data.id.clone(), colliders:
-		[
-				[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-				[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-				[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-				[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-				[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-				[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-				[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-				[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-				[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-				[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-				[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-				[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-				[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-				[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-				[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+pub async fn get_dungeon_map(game: &mut Game, data: &RoomData) -> Room {
+	let map = load_texture("assets/map/dungeon/floor.png").await.unwrap();
+	if let Some(dungeon) = &mut game.dungeon {
+		if !dungeon.walls_loaded{
+			dungeon.walls = Vec::new();
+			if data.exits.contains_key(&Direction::North) {
+				dungeon.walls.push(load_texture("assets/map/dungeon/top_on.png").await.unwrap());
+			} else {
+				dungeon.walls.push(load_texture("assets/map/dungeon/top_off.png").await.unwrap());
+			}
 
-			], first_layer: load_texture("assets/map/mine/layer1.png").await.unwrap(), second_layer: None, spawns: HashMap::from([
-				(Spawn::Center, vec2(200.0, 130.0))]) }
+			if data.exits.contains_key(&Direction::South) {
+				dungeon.walls.push(load_texture("assets/map/dungeon/bottom_on.png").await.unwrap());
+			} else {
+				dungeon.walls.push(load_texture("assets/map/dungeon/bottom_off.png").await.unwrap());
+			}
+			if data.exits.contains_key(&Direction::East) {
+				dungeon.walls.push(load_texture("assets/map/dungeon/right_on.png").await.unwrap());
+			} else {
+				dungeon.walls.push(load_texture("assets/map/dungeon/right_off.png").await.unwrap());
+			}
+			if data.exits.contains_key(&Direction::West) {
+				dungeon.walls.push(load_texture("assets/map/dungeon/left_on.png").await.unwrap());
+			} else {
+				dungeon.walls.push(load_texture("assets/map/dungeon/left_off.png").await.unwrap());
+			}
+			dungeon.walls_loaded = true;
+		}
+
+
+		Room { id: data.id.clone(), colliders:
+			[
+					[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+					[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+					[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+					[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+					[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+					[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+					[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+					[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+					[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+					[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+					[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+					[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+					[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+					[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+					[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+
+				], first_layer: map, second_layer: None, spawns: HashMap::from([
+					(Spawn::Center, vec2(150.0, 130.0)),
+					(Spawn::West, vec2(10.0, 130.0)),
+					(Spawn::East, vec2(380.0, 130.0)),
+					(Spawn::South, vec2(200.0, 190.0)),
+					(Spawn::North, vec2(240.0, 70.0)),])
+				}
+	}
+	else{Room { id: data.id.clone(), colliders:
+			[
+					[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+					[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+					[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+					[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+					[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+					[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+					[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+					[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+					[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+					[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+					[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+					[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+					[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+					[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+					[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+
+				], first_layer: map, second_layer: None, spawns: HashMap::from([
+					(Spawn::Center, vec2(150.0, 130.0)),
+					(Spawn::West, vec2(10.0, 130.0)),
+					(Spawn::East, vec2(380.0, 130.0)),
+					(Spawn::South, vec2(200.0, 190.0)),
+					(Spawn::North, vec2(240.0, 70.0)),])
+				}}
+
 }
 
-use macroquad::prelude::*;
-
-fn merge_textures(tex_a: &Texture2D, tex_b: &Texture2D, width: u32, height: u32) -> Texture2D {
-    let render_target = render_target(width, height);
-    render_target.texture.set_filter(FilterMode::Nearest);
-
-    let mut cam = Camera2D::from_display_rect(
-        Rect::new(0., 0., width as f32, height as f32)
-    );
-    cam.render_target = Some(render_target.clone());
-
-    set_camera(&cam);
-    clear_background(BLANK);
-    draw_texture(tex_a, 0., 0., WHITE);
-    draw_texture(tex_b, 0., 0., WHITE);
-    set_default_camera();
-
-
-    render_target.texture.clone()
+pub fn draw_dungeon_wall(game: &mut Game){
+	if let Some(dungeon) = &mut game.dungeon{
+		for wall_text in dungeon.walls.clone(){
+			wall_text.set_filter(FilterMode::Nearest);
+			let map_params = DrawTextureParams {
+			dest_size: Some(vec2(wall_text.width(), wall_text.height())),
+			..Default::default()
+		};
+		draw_texture_ex(
+			&wall_text,
+			0.0,
+			0.0,
+			WHITE,
+			map_params,
+		);
+		}
+	}
 }

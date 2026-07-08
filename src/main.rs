@@ -264,12 +264,21 @@ async fn main() {
 			}
 			else{
 
-			if !game.dungeon.is_none() && game.dungeon.as_ref().expect("No dungeon").rooms.is_empty(){
-				game.tx_to_serv.try_send("ROOMS \n".to_string()).ok();
-				game.pending_action = PendingAction::Rooms;
+			if let Some(ref mut dungeon) = game.dungeon{
+
+				if dungeon.err_join{
+					game.tx_to_serv.try_send("DUNGEON JOIN \n".to_string()).ok();
+					game.pending_action = PendingAction::DungeonJoin;
+				}
+				else if dungeon.rooms.is_empty(){
+					game.tx_to_serv.try_send("ROOMS \n".to_string()).ok();
+					game.pending_action = PendingAction::Rooms;
+				}
+
 			}
 
-			else if game.map_data.is_none() && game.pending_action == PendingAction::None {
+
+			if game.map_data.is_none() && game.pending_action == PendingAction::None {
 				game.tx_to_serv.try_send("LOOK \n".to_string()).ok();
 				game.pending_action = PendingAction::Look;
 			}
@@ -319,26 +328,38 @@ async fn main() {
 					}
 
 					if let Some(map_data) = game.map_data.clone() {
-						if let Some(ref dungeon) = game.dungeon{
-							if !dungeon.rooms.is_empty(){
-								let room_data = match dungeon.rooms.get(&map_data.room.id) {
-									Some(room_data) => room_data,
-									None => {
-										continue;
+						if game.dungeon.is_some() {
+							let mut room_data = None;
+							if let Some(dungeon) = &game.dungeon {
+								if !dungeon.rooms.is_empty() {
+									if let Some(rd) = dungeon.rooms.get(&map_data.room.id) {
+										room_data = Some(rd.clone());
+									} else {
+										game.dungeon = None;
 									}
-								};
-								let map: Room = get_dungeon_map(room_data).await;
-								hangle_game(&mut game, &map, map_data);
+								}
 							}
-						}
-						else{
+							if let Some(room_data) = room_data {
+								if let Some(dungeon) = &game.dungeon {
+
+								}
+								let map: Room = get_dungeon_map(&mut game, &room_data).await;
+								handle_game(&mut game, &map, map_data);
+							}
+							else {
 							let map = match rooms.get(&map_data.room.id) {
 								Some(room_data) => room_data,
-								None => {
-									&get_empty_room()
-								}
+								None => &get_empty_room(),
 							};
-							hangle_game(&mut game, map, map_data);}
+							handle_game(&mut game, map, map_data);
+						}
+						} else {
+							let map = match rooms.get(&map_data.room.id) {
+								Some(room_data) => room_data,
+								None => &get_empty_room(),
+							};
+							handle_game(&mut game, map, map_data);
+						}
 					}
 
 				}
@@ -351,7 +372,7 @@ async fn main() {
 }
 
 
-fn hangle_game(game: &mut Game, map: &Room, map_data: LookData){
+fn handle_game(game: &mut Game, map: &Room, map_data: LookData){
 	if game.player.new_spawn != Spawn::None && game.player.new_spawn != Spawn::Center{
 			let spawn: Vec2 = map.spawns
 				.get(&game.player.new_spawn)
@@ -414,6 +435,7 @@ fn hangle_game(game: &mut Game, map: &Room, map_data: LookData){
 			map_params,
 		);
 
+		draw_dungeon_wall(game);
 
 		for player_name in map_data.players.iter(){
 			let cut_sheet = DrawTextureParams {
@@ -516,6 +538,7 @@ fn hangle_game(game: &mut Game, map: &Room, map_data: LookData){
 				builds_params,
 			);
 		}
+
 
 		set_default_camera();
 		draw_player_info(game);
