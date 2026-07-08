@@ -113,6 +113,7 @@ fn generate_rooms(return_room: String, gid: Uuid) -> HashMap<String, Room> {
 
     let id = format_dungeon_id("room", gid, 0);
     room_grid.insert((0, 0).into(), id.clone());
+    room_grid.insert((-1, 0).into(), return_room.clone());
     let mut start_room = Room::new(id.as_str());
     start_room.exits.insert(Direction::West, return_room);
     rooms.insert(id, start_room);
