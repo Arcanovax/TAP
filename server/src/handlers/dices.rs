@@ -97,6 +97,8 @@ pub fn dices_request(
     player.gold += gain;
     Message::Response {
         error: ErrorCode::SUCCESS,
-        payload: Payload::Pair(HashMap::from([("gold".to_string(), gain.to_string())])),
+        payload: Payload::Pair(HashMap::from([
+			("gold".to_string(), gain.to_string()),
+			("draw".to_string(), draw_copy.iter().map(|f|f.to_string()).collect::<Vec<String>>().join("//"))])),
     }
 }

@@ -163,7 +163,12 @@ fn dices_with_winning_roll_returns_success_with_gains() {
             ],
             [1, 1, 1, 2, 2, 1, 1, 1, 1, 2].to_vec()
         ),
-        ok_pair(&[("gold", "20")]) // 5 * 4 (because 4 valid numbers)
+        Message::Response {
+        error: ErrorCode::SUCCESS,
+        payload: Payload::Pair(HashMap::from([
+			("gold".to_string(), "20".to_string()),
+			("draw".to_string(), "1//1//1//2//2//1//1//1//1//2".to_string())])),
+    	}
     );
 }
 
