@@ -1,4 +1,4 @@
-use std::time::{SystemTime, UNIX_EPOCH};
+use std::{clone, time::{SystemTime, UNIX_EPOCH}};
 
 use tracing::info;
 
@@ -20,6 +20,33 @@ pub fn enemy_attack(opponent_id: &str, world: &mut ServerInfo) {
 
     let nb_fighters = list_fighters.len();
     let mut target_killed = false;
+
+	// let target_name = {
+	// 	if nb_fighters == 1 {
+	// 		list_fighters[0].clone()
+	// 	} else {
+	// 		let nanos = SystemTime::now()
+    //             .duration_since(UNIX_EPOCH)
+    //             .unwrap()
+    //             .subsec_nanos() as usize;
+    //         target_index = nanos % nb_fighters;
+	// 		list_fighters[target_index].clone()
+	// 	}
+	// };
+
+	// let defense = {
+	// 	let mut start_defense: u32 = 0;
+	// 	let target = world.connections.values().find(|f| f.player.name == na)
+	// 		for id in target.inventory.keys() {
+	// 			if let Some(item) = world.resolve_item(id) {
+	// 				if let ItemKind::Armor { protection } = item.kind {
+	// 					if protection > defense {
+	// 						defense = protection;
+	// 					}
+	// 				}
+	// 			}
+	// 		}
+	// };
 
     let (target_name, target_hp, e_damages) = {
         let target: &mut Player;
@@ -46,16 +73,7 @@ pub fn enemy_attack(opponent_id: &str, world: &mut ServerInfo) {
         }
         if let NPCKind::Enemy { damages, .. } = opponent_kind {
 
-			let mut defense = 0;
-			for id in target.inventory.keys() {
-				if let Some(item) = world.resolve_item(id) {
-					if let ItemKind::Armor { protection } = item.kind {
-						if protection > defense {
-							defense = protection;
-						}
-					}
-				}
-			}
+			
 
             if damages < target.hp {
                 target.hp -= damages;
