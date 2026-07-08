@@ -120,6 +120,9 @@ pub fn handle_global_events(key: KeyEvent, world: &mut World) {
                         let split_command: Vec<&str> = command.split(" ").collect();
                         let _ = world.tx_to_serv.try_send(split_command.join(" ") + "\n");
 
+						if command.to_lowercase() == "quit" {
+							world.quit = true;
+						}
                         if !["CHAT"].contains(&split_command[0].to_uppercase().as_str()) {
                             world
                                 .output

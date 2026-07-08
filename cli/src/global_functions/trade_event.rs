@@ -85,6 +85,22 @@ pub fn trade_event(world: &mut World, key: KeyEvent, inventory: Vec<String>, npc
             Focus::SELL => world.room.sell_list_state.select_next(),
             _ => world.room.focus = Focus::BUY,
         },
+		KeyCode::Right => match world.room.focus {
+			Focus::SELL => {
+				world.room.sell_list_state.select(None);
+				world.room.buy_list_state.select_first();
+				world.room.focus = Focus::BUY;
+			},
+			_ => world.room.focus = Focus::BUY
+		},
+		KeyCode::Left => match world.room.focus {
+			Focus::BUY => {
+				world.room.buy_list_state.select(None);
+				world.room.sell_list_state.select_first();
+				world.room.focus = Focus::SELL
+			},
+			_ => world.room.focus = Focus::SELL
+		},
         _ => {}
     }
 }
