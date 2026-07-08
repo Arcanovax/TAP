@@ -1,11 +1,11 @@
-use std::{collections::HashMap, time::{SystemTime, UNIX_EPOCH}};
+use std::{time::{SystemTime, UNIX_EPOCH}};
 
 use tracing::info;
 
 use crate::{
-    protocol::{EventType, Message}, state::ServerInfo, structures::{
-        enums::{item_kind::ItemKind, npc_kind::NPCKind, state::State}, player::Player
-    },
+    protocol::{EventType, Message},
+    state::ServerInfo,
+    structures::enums::{item_kind::ItemKind, npc_kind::NPCKind, state::State},
 };
 
 pub fn enemy_attack(opponent_id: &str, world: &mut ServerInfo) {
@@ -21,33 +21,40 @@ pub fn enemy_attack(opponent_id: &str, world: &mut ServerInfo) {
     let nb_fighters = list_fighters.len();
     let mut target_killed = false;
 
-	let target_name = {
-		if nb_fighters == 1 {
-			list_fighters[0].clone()
-		} else {
-			let nanos = SystemTime::now()
+    let target_name = {
+        if nb_fighters == 1 {
+            list_fighters[0].clone()
+        } else {
+            let nanos = SystemTime::now()
                 .duration_since(UNIX_EPOCH)
                 .unwrap()
                 .subsec_nanos() as usize;
             target_index = nanos % nb_fighters;
-			list_fighters[target_index].clone()
-		}
-	};
+            list_fighters[target_index].clone()
+        }
+    };
 
-	let defense = {
-		let mut start_defense: u32 = 0;
-		let inventory = world.connections.values().find(|f| f.player.name == target_name).unwrap().player.inventory.clone();
-			for id in inventory.keys() {
-				if let Some(item) = world.resolve_item(id) {
-					if let ItemKind::Armor { protection } = item.kind {
-						if protection > start_defense {
-							start_defense = protection;
-						}
-					}
-				}
-			}
-			start_defense
-	};
+    let defense = {
+        let mut start_defense: u32 = 0;
+        let inventory = world
+            .connections
+            .values()
+            .find(|f| f.player.name == target_name)
+            .unwrap()
+            .player
+            .inventory
+            .clone();
+        for id in inventory.keys() {
+            if let Some(item) = world.resolve_item(id) {
+                if let ItemKind::Armor { protection } = item.kind {
+                    if protection > start_defense {
+                        start_defense = protection;
+                    }
+                }
+            }
+        }
+        start_defense
+    };
 
     let (target_hp, e_damages) = {
 
