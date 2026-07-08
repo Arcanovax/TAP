@@ -1,17 +1,11 @@
-use std::{
-    clone,
-    time::{SystemTime, UNIX_EPOCH},
-};
+use std::time::{SystemTime, UNIX_EPOCH};
 
 use tracing::info;
 
 use crate::{
     protocol::{EventType, Message},
     state::ServerInfo,
-    structures::{
-        enums::{item_kind::ItemKind, npc_kind::NPCKind, state::State},
-        player::Player,
-    },
+    structures::enums::{item_kind::ItemKind, npc_kind::NPCKind, state::State},
 };
 
 pub fn enemy_attack(opponent_id: &str, world: &mut ServerInfo) {
