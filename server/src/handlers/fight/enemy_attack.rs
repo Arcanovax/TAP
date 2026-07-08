@@ -1,10 +1,10 @@
-use std::{clone, time::{SystemTime, UNIX_EPOCH}};
+use std::{collections::HashMap, time::{SystemTime, UNIX_EPOCH}};
 
 use tracing::info;
 
 use crate::{
     protocol::{EventType, Message}, state::ServerInfo, structures::{
-        enums::{item_kind::ItemKind, npc_kind::NPCKind, state::State}, player::Player,
+        enums::{item_kind::ItemKind, npc_kind::NPCKind, state::State}, player::Player
     },
 };
 
@@ -50,7 +50,7 @@ pub fn enemy_attack(opponent_id: &str, world: &mut ServerInfo) {
 	};
 
     let (target_hp, e_damages) = {
-		//Astrale
+
         let target = &mut world
 		.connections
 		.values_mut()
@@ -59,7 +59,6 @@ pub fn enemy_attack(opponent_id: &str, world: &mut ServerInfo) {
 		.player;
         
         if let NPCKind::Enemy { damages, .. } = opponent_kind {
-
 			let damages_after_defense = damages.saturating_sub(defense);
             if damages_after_defense < target.hp {
                 target.hp -= damages_after_defense;

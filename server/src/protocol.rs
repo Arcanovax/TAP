@@ -138,6 +138,7 @@ impl Message {
                     rendered if rendered.is_empty() => "OK\n".to_string(),
                     rendered => format!("OK {rendered}\n"),
                 },
+				ErrorCode::GAME_LOSE if matches!(payload, Payload::Text(..)) => format!("ERR {} {} {}\n", error.code(), error.name(), payload.to_str()),
                 _ => format!("ERR {} {}\n", error.code(), error.name()),
             },
             Message::Command { .. } => String::new(),

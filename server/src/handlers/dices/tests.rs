@@ -138,7 +138,10 @@ fn dices_with_losing_roll_returns_game_loose() {
             ],
             [1, 1, 1, 1, 1, 1, 1, 1, 1, 1].to_vec()
         ),
-        err(ErrorCode::GAME_LOSE)
+        Message::Response {
+            error: ErrorCode::GAME_LOSE,
+            payload: Payload::Text("1 1 1 1 1 1 1 1 1 1".to_string()),
+        }
     );
 }
 
@@ -182,7 +185,10 @@ fn dices_with_bad_roll_returns_game_lose() {
             ],
             [1, 1, 1, 2, 2, 1, 1, 1, 1, 1].to_vec()
         ),
-        err(ErrorCode::GAME_LOSE)
+        Message::Response {
+            error: ErrorCode::GAME_LOSE,
+            payload: Payload::Text("1 1 1 2 2 1 1 1 1 1".to_string()),
+        }
     );
 }
 
