@@ -1,11 +1,11 @@
-use std::{collections::VecDeque, fs::OpenOptions, io::Write};
+use std::{collections::{HashMap, VecDeque}, fs::OpenOptions, io::Write};
 
 use crate::{
     enums::{
         actions::PendingAction, focus::Focus, item_kind::ItemKind, npc_kind::NPCKind,
         states::States,
     }, global_functions::check_goals::check_goals, structures::{
-        attack_results::AttackResult, fight::Fight, npc::NPC, quest::{Quest}, quest_view::{QuestStatus, QuestView, QuestsView}, room::{Room, RoomPayload}, status_view::StatusView, world::World,
+        attack_results::AttackResult, fight::Fight, items::Item, npc::NPC, quest::Quest, quest_view::{QuestStatus, QuestView, QuestsView}, room::{Room, RoomPayload}, status_view::StatusView, world::World,
     },
 };
 
@@ -31,7 +31,13 @@ pub fn response_handling(world: &mut World, answers: Vec<&str>) {
             States::Idle | States::InFight { .. } => {
                 match &world.action {
 
-                    PendingAction::Look | PendingAction::ClientLook | PendingAction::MoveLook => {
+					PendingAction::DungeonCreate => {
+						world.dungeon = true;
+						let _ = world.tx_to_serv.try_send(String::from("ITEMS\n"));
+                    	world.action = PendingAction::DungeonItems;
+					},
+
+                    PendingAction::Look | PendingAction::ClientLook | PendingAction::MoveLook | PendingAction::DungeonLook => {
                         let payload: RoomPayload = serde_json::from_str(&real_answer).unwrap();
                         if world.action == PendingAction::Look {
                             world.room.apply_update(payload);
@@ -156,19 +162,33 @@ pub fn response_handling(world: &mut World, answers: Vec<&str>) {
                             let _ = world.tx_to_serv.try_send(String::from("INVENTORY\n"));
                             world.action = PendingAction::ClientInventory;
                         }
-                    }
+                    },
 
                     PendingAction::Items => {
                         world.list_items = serde_json::from_str(&real_answer).unwrap();
                         let _ = world.tx_to_serv.try_send(String::from("NPCS\n"));
                         world.action = PendingAction::Npcs;
-                    }
+                    },
+
+					PendingAction::DungeonItems => {
+						let dungeon_items: HashMap<String, Item> = serde_json::from_str(&real_answer).unwrap();
+                        world.list_items.extend(dungeon_items);
+                        let _ = world.tx_to_serv.try_send(String::from("NPCS\n"));
+                        world.action = PendingAction::DungeonNpcs;
+                    },
 
                     PendingAction::Npcs => {
                         world.list_npcs = serde_json::from_str(&real_answer).unwrap();
                         let _ = world.tx_to_serv.try_send(String::from("LOOK\n"));
                         world.action = PendingAction::ClientLook;
-                    }
+                    },
+
+					PendingAction::DungeonNpcs => {
+						let dungeon_npcs: HashMap<String, NPC> = serde_json::from_str(&real_answer).unwrap();
+                        world.list_npcs.extend(dungeon_npcs);
+                        let _ = world.tx_to_serv.try_send(String::from("LOOK\n"));
+                        world.action = PendingAction::DungeonLook;
+                    },
 
                     PendingAction::Flee => {
                         world
@@ -177,7 +197,7 @@ pub fn response_handling(world: &mut World, answers: Vec<&str>) {
                         world.state = States::Idle;
                         let _ = world.tx_to_serv.try_send("GOLD\n".to_string());
                         world.action = PendingAction::Gold;
-                    }
+                    },
 
                     PendingAction::Gold | PendingAction::ClientGold => {
                         let gold: Vec<&str> = real_answer.split("=").collect();

@@ -6,6 +6,7 @@ pub enum PendingAction {
     Gold,
     ClientGold,
     Npcs,
+    DungeonNpcs,
     Sell(String),
     Buy(String),
     Npc,
@@ -21,6 +22,7 @@ pub enum PendingAction {
     GroupInvite(String),
     SendChat(String, String),
     ClientLook,
+    DungeonLook,
     MoveLook,
     Look,
     Rooms,
@@ -36,6 +38,9 @@ pub enum PendingAction {
     ClientQuests,
     QuestInfo(String, QuestStatus),
     Items,
+    DungeonItems,
 	Dices(String),
-	Slot
+	Slot,
+	DungeonCreate,
+	DungeonJoin,
 }

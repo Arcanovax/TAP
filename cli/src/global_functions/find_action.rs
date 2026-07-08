@@ -31,6 +31,11 @@ pub fn find_action(command: Vec<&str>, world: &mut World) {
 		"quests" => world.action = PendingAction::Quests,
 		"dices" => world.action = PendingAction::Dices(command[1..].join(" ")),
 		"slot_machine" => world.action = PendingAction::Slot,
+		"dungeon" => match command[1].to_lowercase().as_str() {
+			"create" => world.action = PendingAction::DungeonCreate,
+			"invite" => world.action = PendingAction::DungeonJoin,
+			_ => {}
+		}
         _ => {}
     }
 }
