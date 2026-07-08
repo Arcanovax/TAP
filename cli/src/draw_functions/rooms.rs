@@ -310,7 +310,14 @@ pub fn draw_room(world: &mut World, frame: &mut Frame) {
                     .values()
                     .nth(world.room.quests_list_state.selected().unwrap())
                 {
-                    Paragraph::new(Text::from(selected_quest))
+					let reward = {
+						if let Some(reward_obj) = world.list_items.get(&selected_quest.reward) {
+							reward_obj.name.clone()
+						} else {
+							"Unknown name".to_string()
+						}
+					};
+                    Paragraph::new(selected_quest.to_text(reward))
                 } else {
                     Paragraph::new(Text::from("Can't find details about this quest."))
                 }

@@ -4,6 +4,7 @@ use crate::structures::quest_view::QuestStatus;
 pub enum PendingAction {
     None,
     Gold,
+    ClientGold,
     Npcs,
     Sell(String),
     Buy(String),
@@ -35,4 +36,6 @@ pub enum PendingAction {
     ClientQuests,
     QuestInfo(String, QuestStatus),
     Items,
+	Dices(String),
+	Slot
 }

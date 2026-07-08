@@ -30,6 +30,7 @@ pub fn response_handling(world: &mut World, answers: Vec<&str>) {
             }
             States::Idle | States::InFight { .. } => {
                 match &world.action {
+
                     PendingAction::Look | PendingAction::ClientLook | PendingAction::MoveLook => {
                         let payload: RoomPayload = serde_json::from_str(&real_answer).unwrap();
                         if world.action == PendingAction::Look {
@@ -178,11 +179,22 @@ pub fn response_handling(world: &mut World, answers: Vec<&str>) {
                         world.action = PendingAction::Gold;
                     }
 
-                    PendingAction::Gold => {
+                    PendingAction::Gold | PendingAction::ClientGold => {
                         let gold: Vec<&str> = real_answer.split("=").collect();
                         world.player.gold = gold[1].parse().unwrap();
-                        let _ = world.tx_to_serv.try_send("QUESTS\n".to_string());
-                        world.action = PendingAction::ClientQuests;
+						if world.action == PendingAction::Gold {
+							let end = {
+								if world.player.gold < 35 {
+									"The end of the month is going to be tight!"
+								} else {
+									"Have you thought about investing?"
+								}
+							};
+							world.output.push_back(format!("Currently, you have {} golds.\n{}", gold[1], end));
+						} else {
+							let _ = world.tx_to_serv.try_send("QUESTS\n".to_string());
+							world.action = PendingAction::ClientQuests;
+						}
                     }
 
                     PendingAction::Quests | PendingAction::ClientQuests => {
@@ -242,7 +254,7 @@ pub fn response_handling(world: &mut World, answers: Vec<&str>) {
                             }
                         }
                         let _ = world.tx_to_serv.try_send(String::from("GOLD\n"));
-                        world.action = PendingAction::Gold;
+                        world.action = PendingAction::ClientGold;
                     }
 
                     PendingAction::Talk(name) => {
@@ -365,11 +377,48 @@ pub fn response_handling(world: &mut World, answers: Vec<&str>) {
                         world.chat.room_messages = VecDeque::new();
                         let _ = world.tx_to_serv.try_send(String::from("LOOK\n"));
                         world.action = PendingAction::MoveLook;
-                    }
+                    },
+
+					PendingAction::Dices(played_dices) => {
+						// if let Ok(mut file) = OpenOptions::new().create(true).append(true).open("debug_network.txt") {
+						// 	let _ = writeln!(file, "ok (State {:#?}) :", real_answer);}
+						let split_list: Vec<&str> = real_answer.split_whitespace().collect();
+						let mut gold = 0;
+						let mut draw_dices = String::from("");
+						for elems in &split_list {
+							let split_str: Vec<&str> =  elems.split("=").collect();
+							match split_str[0] {
+								"gold" => gold = split_str[1].parse().unwrap(),
+								"draw" => {
+									let dices_draw: Vec<&str> = split_str[1].split("//").collect();
+									draw_dices = dices_draw.join(" ");
+								},
+								 _ => {}
+							}
+						}
+						world.player.gold -= 5;
+						world.player.gold += gold;
+						world.output.push_back(format!("Congratulation!\nYou chose {} and {} came up!\nYou won {} golds!\nReinvest them in a little last game and earn more money!", played_dices, draw_dices, gold));
+						world.action = PendingAction::None;
+					},
+					PendingAction::Slot => {
+						let split_list: Vec<&str> = real_answer.split("=").collect();
+						let item_id = split_list[1];
+						let item_name = {
+							if let Some(it_obj) = world.list_items.get(item_id) {
+								it_obj.name.clone()
+							} else {
+								"Unknown name".to_string()
+							}
+						};
+						world.player.gold -= 5;
+						*world.player.inventory.entry(item_id.to_string()).or_insert(0) += 1;
+						world.output.push_back(format!("Congratulation!\nLuck is on your side!\nYou won {} ({})!\nCome on! You're not really going to leave now that you're on a roll, are you?", item_name, item_id));
+						world.action = PendingAction::None;
+					},
+
                     PendingAction::Attack(name) => {
 						let result: AttackResult = serde_json::from_str(&real_answer).unwrap();
-						// if let Ok(mut file) = OpenOptions::new().create(true).append(true).open("debug_network.txt") {
-                        // 	let _ = writeln!(file, "ok (State {:#?}) :", result);}
                         world.player.hp = result.attacker_hp;
                         let fight = &mut world.room.fight;
                         if fight.target_name == "".to_string() {
@@ -468,10 +517,11 @@ pub fn response_handling(world: &mut World, answers: Vec<&str>) {
                         world.player.gold += cost;
                         world.output.push_back(format!("[Server Response] You successfully sold {} {}. That earned you {} golds!", amount, item_name, cost));
                         world.room.output_scroll_pos.scroll_to_bottom();
-                    }
+                    },
+
                     _ => {}
                 }
-            }
+            },
             _ => {}
         }
     } else {
@@ -481,6 +531,37 @@ pub fn response_handling(world: &mut World, answers: Vec<&str>) {
             world.click = true;
         } else {
             match &world.action {
+				PendingAction::Dices(played_dices) => {
+					match answers[2] {
+						"GAME_LOSE" => {
+							world.player.gold -= 5;
+							let dices = answers[3 ..].join(" ");
+							world.output.push_back(format!("You chose {}\nUnfortunately, {} came up!\nBetter luck next time!\nThanks for the 5 golds!", played_dices, dices));
+							world.action = PendingAction::None;
+						},
+						_ => {
+							world
+								.output
+								.push_back(format!("[Error] {:#?}, {}", world.action, real_answer));
+							world.action = PendingAction::None;
+						}
+					}
+				},
+				PendingAction::Slot => {
+					match answers[2] {
+						"GAME_LOSE" => {
+							world.player.gold -= 5;
+							world.output.push_back("Unfortunately, luck wasn't on your side!\nYou'll have better luck next time!\nThanks for the 5 golds!".to_string());
+							world.action = PendingAction::None;
+						},
+						_ => {
+							world
+								.output
+								.push_back(format!("[Error] {:#?}, {}", world.action, real_answer));
+							world.action = PendingAction::None;
+						}
+					}
+				},
                 PendingAction::Items => {
                     let _ = world.tx_to_serv.try_send(String::from("NPCS\n"));
                     world.action = PendingAction::Npcs;
@@ -494,7 +575,7 @@ pub fn response_handling(world: &mut World, answers: Vec<&str>) {
                     world.output.push_back(format!("> {command} {args}"));
                     world.output.push_back(format!("[Error] {}", real_answer));
                     world.action = PendingAction::None;
-                }
+                },
                 _ => {
                     world
                         .output

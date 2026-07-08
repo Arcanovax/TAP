@@ -16,15 +16,15 @@ pub struct Quest {
 	pub completed: bool
 }
 
-impl<'a> From<&'a Quest> for Text<'a> {
-    fn from(quest: &'a Quest) -> Self {
+impl Quest{
+    pub fn to_text<'a>(&'a self, name: String) -> Text<'a> {
 		
         let mut list_goals: Vec<Line> = vec![
-			Line::from(quest.name.clone()),
-			Line::from(format!("Reward: {}", quest.reward))
+			Line::from(self.name.clone()),
+			Line::from(format!("Reward: {} ({})", name, self.reward))
 		];
-        for (i, goal) in quest.goals.iter().enumerate() {
-			let color = if i < quest.finished_goals || quest.completed {
+        for (i, goal) in self.goals.iter().enumerate() {
+			let color = if i < self.finished_goals || self.completed {
 				Color::Green
 			} else {
 				Color::White

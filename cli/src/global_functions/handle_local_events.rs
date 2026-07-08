@@ -123,6 +123,7 @@ pub fn handle_global_events(key: KeyEvent, world: &mut World) {
 						if command.to_lowercase() == "quit" {
 							world.quit = true;
 						}
+
                         if !["CHAT"].contains(&split_command[0].to_uppercase().as_str()) {
                             world
                                 .output
