@@ -21,69 +21,55 @@ pub fn enemy_attack(opponent_id: &str, world: &mut ServerInfo) {
     let nb_fighters = list_fighters.len();
     let mut target_killed = false;
 
-	// let target_name = {
-	// 	if nb_fighters == 1 {
-	// 		list_fighters[0].clone()
-	// 	} else {
-	// 		let nanos = SystemTime::now()
-    //             .duration_since(UNIX_EPOCH)
-    //             .unwrap()
-    //             .subsec_nanos() as usize;
-    //         target_index = nanos % nb_fighters;
-	// 		list_fighters[target_index].clone()
-	// 	}
-	// };
-
-	// let defense = {
-	// 	let mut start_defense: u32 = 0;
-	// 	let target = world.connections.values().find(|f| f.player.name == na)
-	// 		for id in target.inventory.keys() {
-	// 			if let Some(item) = world.resolve_item(id) {
-	// 				if let ItemKind::Armor { protection } = item.kind {
-	// 					if protection > defense {
-	// 						defense = protection;
-	// 					}
-	// 				}
-	// 			}
-	// 		}
-	// };
-
-    let (target_name, target_hp, e_damages) = {
-        let target: &mut Player;
-        if nb_fighters == 1 {
-            target = &mut world
-                .connections
-                .values_mut()
-                .find(|c| c.player.name == *list_fighters.get(0).unwrap())
-                .unwrap()
-                .player;
-        } else {
-            let nanos = SystemTime::now()
+	let target_name = {
+		if nb_fighters == 1 {
+			list_fighters[0].clone()
+		} else {
+			let nanos = SystemTime::now()
                 .duration_since(UNIX_EPOCH)
                 .unwrap()
                 .subsec_nanos() as usize;
             target_index = nanos % nb_fighters;
-            let target_name = list_fighters.get(target_index).unwrap();
-            target = &mut world
-                .connections
-                .values_mut()
-                .find(|c| c.player.name == *target_name)
-                .unwrap()
-                .player;
-        }
+			list_fighters[target_index].clone()
+		}
+	};
+
+	let defense = {
+		let mut start_defense: u32 = 0;
+		let inventory = world.connections.values().find(|f| f.player.name == target_name).unwrap().player.inventory.clone();
+			for id in inventory.keys() {
+				if let Some(item) = world.resolve_item(id) {
+					if let ItemKind::Armor { protection } = item.kind {
+						if protection > start_defense {
+							start_defense = protection;
+						}
+					}
+				}
+			}
+			start_defense
+	};
+
+    let (target_hp, e_damages) = {
+		//Astrale
+        let target = &mut world
+		.connections
+		.values_mut()
+		.find(|f| f.player.name == target_name)
+		.unwrap()
+		.player;
+        
         if let NPCKind::Enemy { damages, .. } = opponent_kind {
 
-			
-
-            if damages < target.hp {
-                target.hp -= damages;
+			let damages_after_defense = damages.saturating_sub(defense);
+            if damages_after_defense < target.hp {
+                target.hp -= damages_after_defense;
             } else {
                 target_killed = true;
                 target.hp = target.max_hp - 10;
                 target.location = String::from("room.city_square");
                 target.status = State::Idle;
             }
-            (target.name.clone(), target.hp, damages)
+            (target.hp, damages_after_defense)
         } else {
             unreachable!("No enemy here!");
         }
