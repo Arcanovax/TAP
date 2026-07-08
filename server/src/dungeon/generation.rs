@@ -115,7 +115,9 @@ fn generate_rooms(return_room: String, gid: Uuid) -> HashMap<String, Room> {
     room_grid.insert((0, 0).into(), id.clone());
     room_grid.insert((-1, 0).into(), return_room.clone());
     let mut start_room = Room::new(id.as_str());
-    start_room.exits.insert(Direction::West, return_room);
+    start_room
+        .exits
+        .insert(Direction::West, return_room.clone());
     rooms.insert(id, start_room);
 
     let n = rand::rng().random_range(MIN_ROOM..=MAX_ROOM);
@@ -124,6 +126,12 @@ fn generate_rooms(return_room: String, gid: Uuid) -> HashMap<String, Room> {
         let Some(coord) = room_grid.keys().choose(&mut rand::rng()) else {
             continue;
         };
+
+        if let Some(room_id) = room_grid.get(&coord) {
+            if *room_id == return_room {
+                continue;
+            }
+        }
 
         let Some(dir) = [
             (Direction::North, TO_NORTH),
