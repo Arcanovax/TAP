@@ -154,6 +154,7 @@ fn generate_rooms(return_room: String, gid: Uuid) -> HashMap<String, Room> {
         i += 1;
     }
 
+    room_grid.remove(&(-1, 0).into());
     link_all_rooms(room_grid, &mut rooms);
     rooms
 }
