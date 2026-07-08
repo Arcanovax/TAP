@@ -106,6 +106,10 @@ fn handle_move(game: &mut Game, current_tile: i32){
 		game.tx_to_serv.try_send("MOVE North\n".to_string()).ok();
 		game.pending_action = PendingAction::Move(Spawn::South);
 	}
+	if current_tile == 7{
+		game.tx_to_serv.try_send("DUNGEON CREATE\n".to_string()).ok();
+		game.pending_action = PendingAction::DungeonCreate;
+	}
 }
 
 
@@ -128,7 +132,8 @@ fn get_current_tile(rect: Rect, map: &[[i32; 25]; 15], tile_size: f32) -> i32 {
 	return 0;
 }
 
-pub fn draw_player_info(game: &mut Game, state: PlayerState){
+pub fn draw_player_info(game: &mut Game){
+	if let Some(state) = game.player.state.clone() {
 	let info: Rect = Rect::new(10.0, 10.0, 350.0, 120.0);
 	draw_rectangle(info.x, info.y, info.w, info.h, Color::new(0.0, 0.0, 0.0, 0.5));
 
@@ -163,6 +168,7 @@ pub fn draw_player_info(game: &mut Game, state: PlayerState){
 	let hp_info = format!("{}/{}",state.hp,state.max_hp);
 	draw_text_center(lifebar, &hp_info, 20);
 	draw_rectangle_lines(lifebar.x, lifebar.y, lifebar.w, lifebar.h, 5.0, GRAY);
+}
 }
 
 fn rect_collides_map(rect: Rect, map: &[[i32; 25]; 15], tile_size: f32) -> bool {

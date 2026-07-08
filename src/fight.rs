@@ -82,9 +82,7 @@ pub fn handle_fight(game: &mut Game, floor: &Texture2D) {
 
 	draw_all_players(game, players);
 	set_default_camera();
-	if let Some(state) = game.player.state.clone(){
-		draw_player_info(game, state);
-	}
+	draw_player_info(game);
 	draw_enemy_info(game, enemy.clone());
 
 

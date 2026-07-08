@@ -13,6 +13,7 @@ mod response;
 mod camera;
 mod fight;
 mod quest;
+mod dungeon;
 
 use fight::*;
 use player::*;
@@ -21,6 +22,7 @@ use server_event::*;
 use camera::*;
 use response::*;
 use quest::*;
+use dungeon::*;
 
 use utils::*;
 use npc::*;
@@ -111,7 +113,8 @@ struct Game {
 	pub active_fight: Option<Fight>,
 	pub quests: Quests,
 	pub npc_shop: NpcShop,
-	mouse: Vec2
+	pub mouse: Vec2,
+	pub dungeon: Option<Dungeon>
 }
 
 
@@ -220,8 +223,8 @@ async fn main() {
 		active_fight: None,
 		quests: Quests { all: Vec::new(), is_load: false},
 		npc_shop: NpcShop { is_active: false, buy_info: None, sell_info: None},
-		mouse: Vec2::new(0.0, 0.0)
-
+		mouse: Vec2::new(0.0, 0.0),
+		dungeon: None
     };
 
 
@@ -261,7 +264,12 @@ async fn main() {
 			}
 			else{
 
-			if game.map_data.is_none() && game.pending_action == PendingAction::None {
+			if !game.dungeon.is_none() && game.dungeon.as_ref().expect("No dungeon").rooms.is_empty(){
+				game.tx_to_serv.try_send("ROOMS \n".to_string()).ok();
+				game.pending_action = PendingAction::Rooms;
+			}
+
+			else if game.map_data.is_none() && game.pending_action == PendingAction::None {
 				game.tx_to_serv.try_send("LOOK \n".to_string()).ok();
 				game.pending_action = PendingAction::Look;
 			}
@@ -306,205 +314,31 @@ async fn main() {
 						game.tx_to_serv.try_send("INVENTORY \n".to_string()).ok();
 						game.pending_action = PendingAction::Inventory;
 					}
-
-					if let Some(map_data) = game.map_data.clone() {
-						let map = match rooms.get(&map_data.room.id) {
-							Some(room_data) => room_data,
-							None => {
-								continue;
-							}
-
-						};
-
-					if game.player.new_spawn != Spawn::None && game.player.new_spawn != Spawn::Center{
-						let spawn: Vec2 = map.spawns[&game.player.new_spawn];
-						game.player.x = spawn.x;
-						game.player.y = spawn.y;
-						game.player.new_spawn = Spawn::None;
-						game.tx_to_serv.try_send("LOOK\n".to_string()).ok();
-						game.pending_action = PendingAction::Look;
-					}
-
-
-					else if game.player.new_spawn != Spawn::None{
-						let spawn: Vec2 = map.spawns[&game.player.new_spawn];
-						game.player.x = spawn.x;
-						game.player.y = spawn.y;
-						game.player.new_spawn = Spawn::None;
-					}
-
-
-					let floor: Texture2D = map.first_layer.clone();
-					let builds: Option<Texture2D> = map.second_layer.clone();
-					let map_obstacles = map.colliders;
-					if let Some(builds_texture) = builds.as_ref() {
-						builds_texture.set_filter(FilterMode::Nearest);
-					}
-					floor.set_filter(FilterMode::Nearest);
-
-					clear_background(BLACK);
-
-					camera_handler(&mut game);
-
-					if game.focus == InputFocus::Game{
-						player_handler(&mut game, &map_obstacles);
-					}
-
-					let current_skin_texture = game.skin.clone();
-					let sprite_width: f32 = game.config.sprite_width;
-					let sprite_height: f32 = game.config.sprite_height;
-					let source_x: f32 = game.player.row as f32 * sprite_width;
-					let source_y: f32 = game.player.line as f32 * sprite_height;
-
-
-
-
-					let map_params = DrawTextureParams {
-						dest_size: Some(vec2(floor.width(), floor.height())),
-						..Default::default()
-					};
-
-
-
-					draw_texture_ex(
-						&floor,
-						0.0,
-						0.0,
-						WHITE,
-						map_params,
-					);
-
-
-					for player_name in map_data.players.iter(){
-						let cut_sheet = DrawTextureParams {
-						source: Some(Rect::new(0.0, 0.0, sprite_width, sprite_height - 1.0)),
-						dest_size: Some(vec2(sprite_width, sprite_height - 1.0)),
-						..Default::default()
-						};
-						if player_name.as_ref() == game.player.name{
-							continue;
-						}
-						if let Some(coords) = map.spawns.get(&Spawn::Center) {
-						draw_texture_ex(
-							&current_skin_texture,
-							coords.x,
-							coords.y,
-							WHITE,
-							cut_sheet.clone());
-
-						let screen_pos = world_to_screen_pos(*coords);
-						let sprite_rect = world_to_screen_pos(vec2(sprite_width, sprite_height));
-						set_default_camera();
-						let rect_width = 80.0;
-    					let rect_height = 15.0;
-						let rect = Rect::new(screen_pos.x + (sprite_rect.x / 2.0) - (rect_width / 2.0), screen_pos.y-rect_height, rect_width, rect_height);
-						draw_text_center(rect, player_name, 20);
-						camera_handler(&mut game);
-						}
-					}
-
-
-					let mut npc_slots: Vec<Vec2> = find_npc_spawns(&map.colliders, game.config.tile_size);
-					let texture_param = DrawTextureParams {
-						dest_size: Some(vec2(sprite_width, sprite_height)),
-						..Default::default()
-					};
-
-					let activation_distance = 20.0;
-					let mut active_npc: Option<(Vec2, Npc)> = None;
-
-					for npc_id in map_data.npcs.iter() {
-						if let Some(place) = npc_slots.pop() {
-							let npc: Option<Npc> = game.loaded_npcs.get(npc_id).cloned();
-							if let Some(npc) = npc {
-
-								let npc_texture: Texture2D = npc.clone().texture;
-
-								let distance = place.distance(vec2(game.player.x, game.player.y));
-								if distance < activation_distance {
-									active_npc = Some((place, npc));
-								}
-
-								draw_texture_ex(
-									&npc_texture,
-									place.x,
-									place.y,
-									WHITE,
-									texture_param.clone()
-								);
-
-								npc_texture.set_filter(FilterMode::Nearest);
-							}
-
-						} else {
-							break;
-						}
-					}
-
-
-					let cut_sheet = DrawTextureParams {
-						source: Some(Rect::new(source_x, source_y + 1.0, sprite_width, sprite_height - 1.0)),
-						dest_size: Some(vec2(sprite_width, sprite_height - 1.0)),
-						..Default::default()
-					};
-					draw_texture_ex(
-						&current_skin_texture,
-						game.player.x.round(), game.player.y.round(),
-						WHITE,
-						cut_sheet
-					);
-
-					if let Some((place, npc)) = active_npc {
-						handle_npc_interactions(&mut game, place, npc);
-					}
-					else{
-						game.npc_shop.is_active = false;
-					}
-
-
-					if let Some(builds_texture) = builds.as_ref() {
-						let builds_params = DrawTextureParams {
-							dest_size: Some(vec2(builds_texture.width(), builds_texture.height())),
-							..Default::default()
-						};
-
-						draw_texture_ex(
-							builds_texture,
-							0.0,
-							0.0,
-							WHITE,
-							builds_params,
-						);
-					}
-
-					set_default_camera();
-					draw_player_info(&mut game, state);
-
-
-					display_quests(&mut game);
-
-
-
-					if game.focus == InputFocus::Game {
-						while get_char_pressed().is_some() {}
-					}
 					if is_key_pressed(KeyCode::C) && game.focus == InputFocus::Game{
 						break;
 					}
 
-					handle_menu(&mut game);
-
-					handle_inv(&mut game);
-					handle_chat(&mut game);
-					handle_group(&mut game);
-					if let Some((rect, item)) = game.player.inventory.active_item_info.clone(){
-						draw_item_info(rect, &item);
-					};
-					game.player.inventory.active_item_info = None;
-					draw_menu(&mut game);
-
-				}
-
+					if let Some(map_data) = game.map_data.clone() {
+						if let Some(ref dungeon) = game.dungeon{
+							if !dungeon.rooms.is_empty(){
+								let room_data = match dungeon.rooms.get(&map_data.room.id) {
+									Some(room_data) => room_data,
+									None => {
+										continue;
+									}
+								};
+								let map: Room = get_dungeon_map(room_data).await;
+								hangle_game(&mut game, &map, map_data);
+							}
+						}
+						else{
+							let map = match rooms.get(&map_data.room.id) {
+								Some(room_data) => room_data,
+								None => {
+									&get_empty_room()
+								}
+							};
+							hangle_game(&mut game, map, map_data);}
 					}
 
 				}
@@ -517,3 +351,195 @@ async fn main() {
 }
 
 
+fn hangle_game(game: &mut Game, map: &Room, map_data: LookData){
+	if game.player.new_spawn != Spawn::None && game.player.new_spawn != Spawn::Center{
+			let spawn: Vec2 = map.spawns
+				.get(&game.player.new_spawn)
+				.or_else(|| map.spawns.get(&Spawn::Center))
+				.copied()
+				.unwrap_or(Vec2::ZERO);
+			game.player.x = spawn.x;
+			game.player.y = spawn.y;
+			game.player.new_spawn = Spawn::None;
+			game.tx_to_serv.try_send("LOOK\n".to_string()).ok();
+			game.pending_action = PendingAction::Look;
+		}
+
+
+		else if game.player.new_spawn != Spawn::None{
+			let spawn: Vec2 = map.spawns[&game.player.new_spawn];
+			game.player.x = spawn.x;
+			game.player.y = spawn.y;
+			game.player.new_spawn = Spawn::None;
+		}
+
+
+		let floor: Texture2D = map.first_layer.clone();
+		let builds: Option<Texture2D> = map.second_layer.clone();
+		let map_obstacles = map.colliders;
+		if let Some(builds_texture) = builds.as_ref() {
+			builds_texture.set_filter(FilterMode::Nearest);
+		}
+		floor.set_filter(FilterMode::Nearest);
+
+		clear_background(BLACK);
+
+		camera_handler(game);
+
+		if game.focus == InputFocus::Game{
+			player_handler(game, &map_obstacles);
+		}
+
+		let current_skin_texture = game.skin.clone();
+		let sprite_width: f32 = game.config.sprite_width;
+		let sprite_height: f32 = game.config.sprite_height;
+		let source_x: f32 = game.player.row as f32 * sprite_width;
+		let source_y: f32 = game.player.line as f32 * sprite_height;
+
+
+
+
+		let map_params = DrawTextureParams {
+			dest_size: Some(vec2(floor.width(), floor.height())),
+			..Default::default()
+		};
+
+
+
+		draw_texture_ex(
+			&floor,
+			0.0,
+			0.0,
+			WHITE,
+			map_params,
+		);
+
+
+		for player_name in map_data.players.iter(){
+			let cut_sheet = DrawTextureParams {
+			source: Some(Rect::new(0.0, 0.0, sprite_width, sprite_height - 1.0)),
+			dest_size: Some(vec2(sprite_width, sprite_height - 1.0)),
+			..Default::default()
+			};
+			if player_name.as_ref() == game.player.name{
+				continue;
+			}
+			if let Some(coords) = map.spawns.get(&Spawn::Center) {
+			draw_texture_ex(
+				&current_skin_texture,
+				coords.x,
+				coords.y,
+				WHITE,
+				cut_sheet.clone());
+
+			let screen_pos = world_to_screen_pos(*coords);
+			let sprite_rect = world_to_screen_pos(vec2(sprite_width, sprite_height));
+			set_default_camera();
+			let rect_width = 80.0;
+			let rect_height = 15.0;
+			let rect = Rect::new(screen_pos.x + (sprite_rect.x / 2.0) - (rect_width / 2.0), screen_pos.y-rect_height, rect_width, rect_height);
+			draw_text_center(rect, player_name, 20);
+			camera_handler(game);
+			}
+		}
+
+
+		let mut npc_slots: Vec<Vec2> = find_npc_spawns(&map.colliders, game.config.tile_size);
+		let texture_param = DrawTextureParams {
+			dest_size: Some(vec2(sprite_width, sprite_height)),
+			..Default::default()
+		};
+
+		let activation_distance = 20.0;
+		let mut active_npc: Option<(Vec2, Npc)> = None;
+
+		for npc_id in map_data.npcs.iter() {
+			if let Some(place) = npc_slots.pop() {
+				let npc: Option<Npc> = game.loaded_npcs.get(npc_id).cloned();
+				if let Some(npc) = npc {
+
+					let npc_texture: Texture2D = npc.clone().texture;
+
+					let distance = place.distance(vec2(game.player.x, game.player.y));
+					if distance < activation_distance {
+						active_npc = Some((place, npc));
+					}
+
+					draw_texture_ex(
+						&npc_texture,
+						place.x,
+						place.y,
+						WHITE,
+						texture_param.clone()
+					);
+
+					npc_texture.set_filter(FilterMode::Nearest);
+				}
+
+			} else {
+				break;
+			}
+		}
+
+
+		let cut_sheet = DrawTextureParams {
+			source: Some(Rect::new(source_x, source_y + 1.0, sprite_width, sprite_height - 1.0)),
+			dest_size: Some(vec2(sprite_width, sprite_height - 1.0)),
+			..Default::default()
+		};
+		draw_texture_ex(
+			&current_skin_texture,
+			game.player.x.round(), game.player.y.round(),
+			WHITE,
+			cut_sheet
+		);
+
+		if let Some((place, npc)) = active_npc {
+			handle_npc_interactions(game, place, npc);
+		}
+		else{
+			game.npc_shop.is_active = false;
+		}
+
+
+		if let Some(builds_texture) = builds.as_ref() {
+			let builds_params = DrawTextureParams {
+				dest_size: Some(vec2(builds_texture.width(), builds_texture.height())),
+				..Default::default()
+			};
+
+			draw_texture_ex(
+				builds_texture,
+				0.0,
+				0.0,
+				WHITE,
+				builds_params,
+			);
+		}
+
+		set_default_camera();
+		draw_player_info(game);
+
+
+		display_quests(game);
+
+
+
+		if game.focus == InputFocus::Game {
+			while get_char_pressed().is_some() {}
+		}
+
+
+		handle_menu(game);
+
+		handle_inv(game);
+		handle_chat(game);
+		handle_group(game);
+		if let Some((rect, item)) = game.player.inventory.active_item_info.clone(){
+			draw_item_info(rect, &item);
+		};
+		game.player.inventory.active_item_info = None;
+		draw_menu(game);
+
+	}
+}

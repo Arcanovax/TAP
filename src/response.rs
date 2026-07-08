@@ -28,7 +28,10 @@ pub enum PendingAction {
 	Flee,
 	Consume(String),
 	Buy(String),
-	Sell(String)
+	Sell(String),
+	DungeonCreate,
+	DungeonJoin,
+	Rooms
 }
 
 
@@ -479,6 +482,42 @@ pub async fn handle_response(game: &mut Game, answer: &str, state: &str){
 				}
     		}
 		}
+		PendingAction::DungeonCreate => {
+			if state=="OK"{
+				game.dungeon = Some(Dungeon::new());
+			}
+			else {
+				game.dungeon = Some(Dungeon::new());
+				if let Some(ref mut dungeon) = game.dungeon{
+					dungeon.not_owner = true;
+				}
+
+			}
+		}
+
+		PendingAction::DungeonJoin => {
+			if state=="OK"{
+				// game.map_data = None;
+			}
+		}
+		PendingAction::Rooms => {
+			if state=="OK"{
+
+				if let Some(ref mut dungeon) = game.dungeon{
+					match serde_json::from_str::<std::collections::HashMap<String, RoomData>>(answer) {
+						Ok(room_data) => {
+							dungeon.rooms = room_data;
+							game.map_data = None;
+						}
+						Err(e) => {
+							eprintln!("dungeon Room error: {}", e);
+						}
+					}
+
+				}
+			}
+		}
+
 		_ => {
 			game.pending_action = PendingAction::None;
 		}
@@ -549,7 +588,7 @@ pub enum Direction {
     West,
 }
 
-#[derive(Deserialize, Debug, Clone)]
+#[derive(Deserialize, Debug, Clone, PartialEq)]
 pub struct RoomData {
     pub id: String,
     pub name: String,
