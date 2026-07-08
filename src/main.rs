@@ -273,7 +273,7 @@ async fn main() {
 				else if dungeon.rooms.is_empty(){
 					game.tx_to_serv.try_send("ROOMS \n".to_string()).ok();
 					game.pending_action = PendingAction::Rooms;
-					game.player.x = 10.0;
+					game.player.x = 15.0;
 					game.player.y = 130.0;
 				}
 			}

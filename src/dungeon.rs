@@ -73,11 +73,11 @@ pub async fn get_dungeon_map(dungeon: &mut Dungeon, data: &RoomData) -> Room {
 				[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
 
 			], first_layer: map, second_layer: None, spawns: HashMap::from([
-				(Spawn::Center, vec2(50.0, 150.0)),
-				(Spawn::West, vec2(10.0, 150.0)),
-				(Spawn::East, vec2(380.0, 150.0)),
+				(Spawn::Center, vec2(200.0, 150.0)),
+				(Spawn::West, vec2(10.0, 130.0)),
+				(Spawn::East, vec2(380.0, 130.0)),
 				(Spawn::South, vec2(200.0, 190.0)),
-				(Spawn::North, vec2(200.0, 70.0)),])
+				(Spawn::North, vec2(200.0, 0.0)),])
 			}
 }
 
