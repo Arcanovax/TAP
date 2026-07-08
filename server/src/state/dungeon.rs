@@ -72,6 +72,9 @@ impl ServerInfo {
     }
 
     pub fn close_dungeon(&mut self, gid: Uuid) {
+        let Some(dungeon) = self.dungeons.get(&gid) else {
+            return;
+        };
         let entrance = self.world.dungeon_entrance.clone();
 
         let addrs = match self.groups.get(&gid) {
@@ -85,6 +88,8 @@ impl ServerInfo {
             .filter(|con| con.player.location == entrance)
             .map(|con| con.tx.clone())
             .collect();
+
+        self.world.items.extend(dungeon.items.clone());
 
         for addr in addrs {
             if let Some(con) = self.connections.get_mut(&addr) {
@@ -106,7 +111,8 @@ impl ServerInfo {
 mod tests {
     use super::*;
     use crate::test_utils::{
-        addr, connect, dg_room, group_with, populated_server, test_dungeon, test_gid,
+        addr, connect, dg_item, dg_room, dungeon_server, group_with, populated_server,
+        test_dungeon, test_gid,
     };
 
     // --- close_dungeon (la fonction elle-même) ---
@@ -197,5 +203,42 @@ mod tests {
         guard.try_leave_group(addr(1)).unwrap();
 
         assert!(!guard.dungeons.contains_key(&gid));
+    }
+
+    // --- Pipeline : les items de donjon survivent à la fermeture ---
+
+    #[test]
+    fn close_dungeon_migrates_items_into_world() {
+        let server = dungeon_server();
+        let mut guard = server.lock().unwrap();
+
+        // pré-condition : l'item de donjon n'existe QUE dans le donjon, pas dans le world
+        assert!(!guard.world.items.contains_key(&dg_item(0)));
+
+        guard.close_dungeon(test_gid());
+
+        // le donjon a disparu, mais son item a été copié dans world.items
+        assert!(!guard.dungeons.contains_key(&test_gid()));
+        assert!(guard.world.items.contains_key(&dg_item(0)));
+    }
+
+    #[test]
+    fn resolve_item_finds_dungeon_item_before_and_after_close() {
+        let server = dungeon_server();
+        let mut guard = server.lock().unwrap();
+
+        // avant fermeture : résolu via le donjon
+        let before = guard.resolve_item(&dg_item(0));
+        assert_eq!(before.map(|i| i.name.as_str()), Some("sword"));
+
+        guard.close_dungeon(test_gid());
+
+        // après fermeture : le donjon n'existe plus, mais le fallback retombe sur world.items
+        let after = guard.resolve_item(&dg_item(0));
+        assert_eq!(
+            after.map(|i| i.name.as_str()),
+            Some("sword"),
+            "l'item emporté doit rester résoluble après la fermeture du donjon"
+        );
     }
 }

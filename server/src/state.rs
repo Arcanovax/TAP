@@ -108,7 +108,7 @@ impl ServerInfo {
         match parse_dungeon_id(id) {
             Some(gid) => match self.dungeons.get(&gid) {
                 Some(dungeon) => dungeon.items.get(id),
-                None => None,
+                None => self.world.items.get(id),
             },
             None => self.world.items.get(id),
         }
