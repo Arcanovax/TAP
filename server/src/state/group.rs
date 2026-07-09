@@ -136,15 +136,15 @@ impl ServerInfo {
                 enemy_attack(&target, self);
             }
         } else {
-            let enemy = self.world.npcs.get_mut(&target).unwrap();
-
-            if let NPCKind::Enemy {
-                ref mut hp, max_hp, ..
-            } = enemy.kind
-            {
-                *hp = max_hp;
-            }
-            self.fights.remove(&target);
+			if let Some(enemy) = self.resolve_npc_mut(&target) {
+				if let NPCKind::Enemy {
+					ref mut hp, max_hp, ..
+				} = enemy.kind
+				{
+					*hp = max_hp;
+				}
+				self.fights.remove(&target);
+			}
         }
         Ok(())
     }
