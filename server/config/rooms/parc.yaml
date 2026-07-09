@@ -21,8 +21,8 @@ npc:
     name: "Damducédéix"
     dialog:
       default:
-        - "A book, traveler? No batteries, no updates, no terms and conditions to accept."
-        - "In this quiet corner, the only spoilers are the ones printed on page one hundred."
+        - "A book, traveler? For your evenings by the fire."
+        - "Young people don't read anymore. It's a disaster."
       quest.lostbook.2:
         - "You found it — my missing final page! A hundred readings and I never knew how the tale ended. I'm... not sure I dare look. Take this helmet for your trouble; wear it when you think hard. It helps. Somehow."
     kind: Citizen
@@ -32,7 +32,7 @@ npc:
     name: "Iwanttobreakfrix"
     dialog:
       default:
-        - "I want to break freeee... ah, sorry. That one's been stuck in my head for years."
+        - "Do you know my friend Frédimercurix?"
         - "Don't stop me now — I'm having far too good a time wandering this park."
     kind: Citizen
 

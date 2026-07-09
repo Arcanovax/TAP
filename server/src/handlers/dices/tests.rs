@@ -1,5 +1,5 @@
 use super::*;
-use crate::test_utils::{addr, connect, err, give_gold, ok_pair, test_server};
+use crate::test_utils::{addr, connect, err, give_gold, test_server};
 
 #[test]
 fn dices_not_connected_returns_invalid_command() {
