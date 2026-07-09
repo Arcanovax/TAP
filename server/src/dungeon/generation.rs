@@ -69,7 +69,7 @@ fn populate_rooms(world: &World, dungeon: &mut Dungeon, gid: Uuid) {
         .map(|(_, npc)| npc);
 
     let mut ennemy_index = 0;
-    let mut item_index = 0;
+    // let mut item_index = 0;
 
     for room in dungeon.rooms.values_mut() {
         let nb_ennemy = rand::rng().random_range(MIN_ENNEMY..=MAX_ENNEMY);
@@ -89,21 +89,21 @@ fn populate_rooms(world: &World, dungeon: &mut Dungeon, gid: Uuid) {
 
         let mut i = 0;
         while i < nb_item {
-            let id = format_dungeon_id("item", gid, item_index + i);
-            let Some(item) = world
+            // let id = format_dungeon_id("item", gid, item_index + i);
+            let Some((id, item)) = world
                 .items
                 .iter()
-                .map(|(_, item)| item)
+                .map(|(id, item)| (id, item))
                 .clone()
                 .choose(&mut rand::rng())
             else {
                 break;
             };
             room.items.push(id.clone().into());
-            dungeon.items.insert(id, item.clone());
+            dungeon.items.insert(id.to_string(), item.clone());
             i += 1;
         }
-        item_index += i;
+        // item_index += i;
     }
 }
 
