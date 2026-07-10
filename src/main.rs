@@ -42,7 +42,7 @@ use crate::chat::handle_chat;
 use serde::Deserialize;
 
 
-
+pub const CHANNELS: [&str; 3] = ["Room", "Global", "Group"];
 
 
 
@@ -267,8 +267,8 @@ async fn main() {
 			if let Some(ref mut dungeon) = game.dungeon{
 
 				if dungeon.err_join{
-					game.tx_to_serv.try_send("DUNGEON JOIN \n".to_string()).ok();
-					game.pending_action = PendingAction::DungeonJoin;
+					game.tx_to_serv.try_send("DUNGEON CREATE \n".to_string()).ok();
+					game.pending_action = PendingAction::DungeonCreate;
 				}
 				else if dungeon.rooms.is_empty(){
 					game.tx_to_serv.try_send("ROOMS \n".to_string()).ok();

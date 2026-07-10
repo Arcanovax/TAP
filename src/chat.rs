@@ -1,5 +1,5 @@
 use macroquad::prelude::*;
-const CHANNELS: [&str; 3] = ["Room", "Global", "Group"];
+
 const ALLOWED_COMMANDS: &[&str] = &[
     "/LOOK",
     "/WHO",
@@ -17,7 +17,7 @@ pub struct Chat {
     sended_messages: Vec<String>,
     pub is_active: bool,
 	prev: i32,
-    channel: i32,
+    pub channel: i32,
     pub global_messages: Vec<String>,
 	pub room_messages: Vec<String>,
 	pub group_messages: Vec<String>,

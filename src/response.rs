@@ -491,12 +491,12 @@ pub async fn handle_response(game: &mut Game, answer: &str, state: &str){
 			if state=="OK"{
 				game.dungeon = Some(Dungeon::new());
 			}
-			else {
-				game.dungeon = Some(Dungeon::new());
-				if let Some(ref mut dungeon) = game.dungeon{
-					dungeon.err_join = true;
-				}
-
+			else if answer.contains("NOT_GROUP_LEADER"){
+				game.player.y += 10.0;
+				game.chat.channel = 2;
+				let rp: String = format!("[Error] You are not the leader");
+				game.chat.group_messages.push(rp);
+				game.dungeon = None;
 			}
 		}
 
@@ -504,6 +504,13 @@ pub async fn handle_response(game: &mut Game, answer: &str, state: &str){
 			if state=="OK"{
 				game.dungeon = Some(Dungeon::new());
 			}
+			else{
+				game.dungeon = Some(Dungeon::new());
+				if let Some(ref mut dungeon) = game.dungeon{
+					dungeon.err_join = true;
+				}
+			}
+
 		}
 		PendingAction::Rooms => {
 			if state=="OK"{

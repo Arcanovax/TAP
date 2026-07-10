@@ -107,8 +107,8 @@ fn handle_move(game: &mut Game, current_tile: i32){
 		game.pending_action = PendingAction::Move(Spawn::South);
 	}
 	if current_tile == 7{
-		game.tx_to_serv.try_send("DUNGEON CREATE\n".to_string()).ok();
-		game.pending_action = PendingAction::DungeonCreate;
+		game.tx_to_serv.try_send("DUNGEON JOIN\n".to_string()).ok();
+		game.pending_action = PendingAction::DungeonJoin;
 	}
 }
 
