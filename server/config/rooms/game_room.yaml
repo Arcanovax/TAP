@@ -26,7 +26,17 @@ npc:
        - "J'ai rendu mille amants envieux de mon sort,"
        - "Je me repais de sang et je trouve ma vie,"
        - "Dans les bras de celui qui recherche ma mort."
+      quest.brainstorming.1:
+       - "I have a French riddle for you. Give me the right answer (in French) to win a wonderful golden token."
+       - "Listen carefrefrwrfefully:"
+       - "Du repos des humains, implacable ennemi,"
+       - "J'ai rendu mille amants envieux de mon sort,"
+       - "Je me repais de sang et je trouve ma vie,"
+       - "Dans les bras de celui qui recherche ma mort."
+      quest.brainstorming.2:
+        - "Unbelievable! You're amazing! You won this wonderful golden token!"
     kind: Citizen
+    quest: "quest.brainstorming"
 
 quest:
   brainstorming:
@@ -34,5 +44,10 @@ quest:
     description: "Find the answer."
     reward: "item.golden_token"
     goals:
+      - Talk:
+          dialog: "npc.dealer.dialog.quest.brainstorming.0"
       - Answer:
           answer: "moustique"
+          room: "room.game_room"
+      - Talk:
+          dialog: "npc.dealer.dialog.quest.brainstorming.2"

@@ -1,24 +1,7 @@
 use crate::{
     handlers::{
-        buy::buy_request,
-        consume::consume,
-        dices::dices_request,
-        dungeon::dungeon_request,
-        flee::flee,
-        gold::gold_request,
-        help::help_request,
-        item::{item_request, items_request},
-        npc::{npc_request, npcs_request},
-        quest::quest_request,
-        quest_info::quest_info_request,
-        quests::quests_request,
-        room::{room_request, rooms_request},
-        sell::sell_request,
-        slot_machine::slot_machine_request,
-    },
-    protocol::Payload,
-    state::{SharedServer, Tx},
-    structures::{
+        answer::handle_answer, buy::buy_request, consume::consume, dices::dices_request, dungeon::dungeon_request, flee::flee, gold::gold_request, help::help_request, item::{item_request, items_request}, npc::{npc_request, npcs_request}, quest::quest_request, quest_info::quest_info_request, quests::quests_request, room::{room_request, rooms_request}, sell::sell_request, slot_machine::slot_machine_request,
+    }, protocol::Payload, state::{SharedServer, Tx}, structures::{
         enums::{command::Command, error::ErrorCode, state::State},
         handler_outcome::HandlerOutcome,
     },
@@ -106,7 +89,7 @@ pub fn handle_request(
                 Some(Command::HELP) => help_request().into(),
                 Some(Command::ROOM) => room_request(server_info, args).into(),
                 Some(Command::ROOMS) => rooms_request(server_info, peer_addr).into(),
-                Some(Command::ANSWER) => rooms_request(server_info, peer_addr).into(),
+                Some(Command::ANSWER) => handle_answer(peer_addr, server_info, args),
                 Some(Command::SLOT_MACHINE) => {
                     let pool: Vec<String> = server_info
                         .lock()
