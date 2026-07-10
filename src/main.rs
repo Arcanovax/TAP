@@ -276,6 +276,11 @@ async fn main() {
 					game.player.x = 15.0;
 					game.player.y = 130.0;
 				}
+				else if !game.group.in_group{
+					game.group.in_group = true;
+					let name: String = format!("{}'s Group ",game.player.name);
+					game.group.name = name;
+				}
 			}
 
 

@@ -63,9 +63,11 @@ pub async fn handle_response(game: &mut Game, answer: &str, state: &str){
 		PendingAction::GroupCreate(group_name) => {
 			if state =="OK"{
 				game.group.in_group = true;
+				game.group.owner = game.player.name.clone();
 				if group_name.is_empty(){
 					let name: String = format!("{}'s Group ",game.player.name.clone());
-					game.group.name = name;}
+					game.group.name = name;
+				}
 				else{
 					let name: String = format!("Group {}",group_name);
 					game.group.name = name;
@@ -80,6 +82,7 @@ pub async fn handle_response(game: &mut Game, answer: &str, state: &str){
 				game.group.in_group = true;
 				let name: String = format!("{}'s Group ",sender);
 				game.group.name = name;
+				game.group.owner = sender.to_string();
 
 			} else{
 				println!("Failed join");

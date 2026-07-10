@@ -18,7 +18,8 @@ pub struct Group {
 	pub invitation: Option<Invitation>,
 	pub name: String,
 	pub grouplist: Vec<String>,
-	pub invite_info: Option<InviteInfo>
+	pub invite_info: Option<InviteInfo>,
+	pub owner: String
 }
 
 
@@ -39,7 +40,8 @@ impl Group {
 			invitation: None,
 			name: String::new(),
 			grouplist: Vec::new(),
-			invite_info: None
+			invite_info: None,
+			owner: String::new()
 			}
 	}
 }
