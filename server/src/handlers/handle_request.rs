@@ -29,7 +29,7 @@ pub fn handle_request(
         Message::Command { name, args } => {
             let (is_in_fight, is_in_dungeon) = {
                 if let Ok(player) = server_info.lock().unwrap().get_player_mut(peer_addr) {
-                    (matches!(player.status, State::InFight { .. }), player.in_dungeon)
+                    (matches!(player.status, State::InFight { .. }), player.in_dungeon())
                 } else {
                     (false, false)
                 }

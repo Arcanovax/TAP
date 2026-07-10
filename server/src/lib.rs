@@ -1,11 +1,9 @@
 use crate::config::load;
 use crate::handlers::handle_request::handle_request;
-use crate::persistence::players::save_player;
 use crate::persistence::world::{load_world, save_world};
 use crate::protocol::{Message, Payload};
 use crate::state::{ServerInfo, SharedServer};
 use crate::structures::enums::error::ErrorCode;
-use crate::structures::enums::state::State;
 use crate::structures::room::Owner;
 use redb::Database;
 use std::net::SocketAddr;
@@ -42,48 +40,29 @@ fn parse_command(line: &str) -> Message {
     }
 }
 
-fn cleanup_tcp_connection(
+async fn cleanup_tcp_connection(
     server_info: &SharedServer,
     peer_addr: SocketAddr,
     mut write_half: OwnedWriteHalf,
 ) {
-    let mut binding = server_info.lock().unwrap();
-    let _ = binding.try_leave_group(peer_addr);
+    let result = {
+        let mut binding = server_info.lock().unwrap();
+        binding.disconnect_player(peer_addr)
+    };
 
-    let player_res = binding.get_player(peer_addr).cloned();
-
-    match player_res {
-        Ok(player) => match player.status {
-            State::InFight { target_id } => {
-                let _ = binding.try_leave_fight(peer_addr, target_id.clone());
-            }
-            _ => {}
-        },
-        Err(_code) => {}
-    }
-
-    match binding.try_save_player(peer_addr) {
-        Ok(()) => {
-            debug!("Player info saved");
-        }
-        Err(code) => {
-            let _ = write_half.write_all(
+    if let Err(code) = result {
+        let _ = write_half
+            .write_all(
                 Message::Response {
                     error: code,
                     payload: Payload::Empty,
                 }
                 .to_str()
                 .as_bytes(),
-            );
-            return;
-        }
+            )
+            .await;
     }
 
-    match binding.try_remove_player(peer_addr) {
-        Ok(name) => info!("{} disconnected", name),
-        Err(_) => {}
-    }
-    binding.send_players_event(peer_addr);
     debug!("TCP connection closed");
 }
 
@@ -213,7 +192,7 @@ pub async fn run(addr: String, port: String) -> Result<(), Box<dyn std::error::E
                         }
                     }
 
-                    cleanup_tcp_connection(&server_info_copy, peer_addr, write_half);
+                    cleanup_tcp_connection(&server_info_copy, peer_addr, write_half).await;
                     Ok::<(), std::io::Error>(())
                 }
                 .instrument(span),
@@ -233,15 +212,16 @@ pub async fn run(addr: String, port: String) -> Result<(), Box<dyn std::error::E
 
 fn server_shutdown(db: &Database, server_info: &SharedServer) {
     debug!("Server closing...");
-    let binding = server_info.lock().unwrap();
+    let mut binding = server_info.lock().unwrap();
 
     debug!("Saving world...");
     let _ = save_world(db, &binding.world);
     debug!("World saved");
 
     debug!("Saving players...");
-    for (_, con) in &binding.connections {
-        let _ = save_player(db, &con.player);
+    let addrs: Vec<SocketAddr> = binding.connections.keys().copied().collect();
+    for peer_addr in addrs {
+        let _ = binding.disconnect_player(peer_addr);
     }
     debug!("Players saved");
     debug!("Server is shuting down now");

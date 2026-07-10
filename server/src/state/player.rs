@@ -24,7 +24,9 @@ impl ServerInfo {
         let player = match load_player(&db, name.as_str()) {
             Ok(Some(mut player)) => {
                 debug!(player = %name, "player data loaded");
-                if !self.world.rooms.contains_key(&player.location) {
+                if player.in_dungeon() {
+                    player.location = self.world.dungeon_entrance.clone();
+                } else if !self.world.rooms.contains_key(&player.location) {
                     player.location = self.world.spawn_room.clone();
                 }
                 player

@@ -3,6 +3,7 @@ use uuid::Uuid;
 
 use std::collections::{HashMap, HashSet};
 
+use crate::structures::dungeon::parse_dungeon_id;
 use crate::structures::enums::state::State;
 
 #[derive(Debug, Serialize, Deserialize, Clone, PartialEq)]
@@ -10,7 +11,6 @@ pub struct Player {
     pub name: String,
     pub hp: u32,
     pub max_hp: u32,
-	pub in_dungeon: bool,
     pub location: String,
     pub status: State,
     pub inventory: HashMap<String, u32>,
@@ -29,7 +29,6 @@ impl Player {
             max_hp: 100,
             location: spawn_point,
             status: State::Idle,
-			in_dungeon: false,
             inventory: HashMap::new(),
             available_quests: Vec::new(),
             group_id: None,
@@ -37,5 +36,11 @@ impl Player {
             quests_in_progress: HashMap::new(),
             gold: 50,
         }
+    }
+
+    /// Le joueur est en donjon si et seulement si sa `location` est un id de donjon.
+    /// Source de vérité unique : pas de flag à synchroniser.
+    pub fn in_dungeon(&self) -> bool {
+        parse_dungeon_id(&self.location).is_some()
     }
 }
