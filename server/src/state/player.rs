@@ -1,7 +1,10 @@
 use super::*;
 use crate::{
     persistence::players::{load_player, save_player},
-    structures::{enums::error::ErrorCode, room::OwnedItem},
+    structures::{
+        enums::{error::ErrorCode, item_kind::ItemKind},
+        room::OwnedItem,
+    },
 };
 use tracing::debug;
 
@@ -99,6 +102,11 @@ impl ServerInfo {
     ) -> Result<String, ErrorCode> {
         if !self.connections.contains_key(&peer_addr) {
             return Err(ErrorCode::INVALID_COMMAND);
+        }
+        if let Some(item) = self.resolve_item(item) {
+            if matches!(item.kind, ItemKind::QuestItem) {
+                return Err(ErrorCode::FORBIDDEN_ACTION);
+            }
         }
         let con = self.connections.get_mut(&peer_addr).unwrap();
         let location = con.player.location.clone();
