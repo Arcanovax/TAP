@@ -8,3 +8,13 @@ item:
     name: "Goblin Tooth"
     price: 8
     kind: Miscellaneous
+
+  sacred_seashell:
+    name: "Sacred Seashell"
+    price: 8
+    kind: Miscellaneous
+
+  golden_token:
+    name: "Golden Token"
+    price: 8
+    kind: Miscellaneous

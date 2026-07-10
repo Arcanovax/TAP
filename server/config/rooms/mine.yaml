@@ -7,3 +7,20 @@ room:
     description: "A dark, dripping mine where the only sounds are water falling from the stalactites and the leathery flap of bats overhead. An old mine car sits dead-center on its rails, patiently awaiting a shove it will never receive."
     exits:
       South: "room.quarry"
+
+npc:
+  door:
+    name: "Portix"
+    dialog:
+      default:
+        - "The door remain silent."
+      quest.search.2:
+        - "If you want to come in, you have to bring me three items: A goblin tooth, a sacred seashell, and a golden token."
+        - "Travel the world to find them and bring them back to me."
+      quest.search.3:
+        - "Now that's a magnificent goblin tooth! The first lock has popped open."
+      quest.search.4:
+        - "What a wonderful golden token! The second lock has popped open."
+      quest.search.5:
+        - "I can hear the sounds of the sea in this sacred seashell. The last lock has popped open."
+    kind: Citizen

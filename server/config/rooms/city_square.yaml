@@ -33,30 +33,65 @@ npc:
         - "By the gods, an actual goblin tooth. So the rumours were true."
         - "You've done this square a real service, traveler. Take this blade — it's seen better centuries, but it'll serve you far better than it ever served me. And whatever you saw down there... don't go back alone."
     kind: Citizen
-    quest: "quest.threat"
+    quest: "quest.search"
 
 quest:
-  threat:
-    name: "The Threat Beneath"
-    description: "Rumours speak of goblins massing in the old quarry, guarding something down in the mine. Arm yourself, learn what sleeps beneath, and put an end to it — before it finds us."
-    reward: "item.sword"
-    goals:
-      - Talk:
-          dialog: "npc.blacksmith.dialog.quest.threat.0"
-      - Collect:
-          item: "item.dagger"
-          amount: 1
-      - Talk:
-          dialog: "npc.old_man.dialog.quest.threat.2"
-      - Collect:
-          item: "item.pint"
-          amount: 1
-      - Collect:
-          item: "item.goblin_tooth"
-          amount: 1
-      - Talk:
-          dialog: "npc.blacksmith.dialog.quest.threat.5"
-      - Retrieve:
-          item: "item.goblin_tooth"
-          amount: 1
-          dialog: "npc.city_gard.dialog.quest.threat.6"
+  search:
+      name: "Where are they"
+      description: "The farmer's daughter and the blacksmith's son have disappeared. Everyone thinks they ran away together, but their respective fathers don't agree. Try to find them."
+      reward: "item.gold"
+      goals:
+        - Talk:
+            dialog: "npc.blacksmith.dialog.quest.search.0"
+        - Talk:
+            dialog: "npc.farmer.dialog.quest.search.1"
+        - Talk:
+            dialog: "npc.door.dialog.quest.search.2"
+        - Collect:
+            item: "item.goblin_tooth"
+            amount: 1
+        - Collect:
+            item: "item.golden_token"
+            amount: 1
+        - Collect:
+            item: "item.sacred_seashell"
+            amount: 1
+        - Retrieve:
+            item: "item.goblin_tooth"
+            amount: 1
+            dialog: "npc.door.dialog.quest.search.3"
+        - Retrieve:
+            item: "item.golden_token"
+            amount: 1
+            dialog: "npc.door.dialog.quest.search.4"
+        - Retrieve:
+            item: "item.sacred_seashell"
+            amount: 1
+            dialog: "npc.door.dialog.quest.search.5"
+        - Talk:
+            dialog: "npc.door.dialog.quest.search.2"
+        - Talk:
+            dialog: "npc.door.dialog.quest.search.2"
+    # name: "The Threat Beneath"
+    # description: "Rumours speak of goblins massing in the old quarry, guarding something down in the mine. Arm yourself, learn what sleeps beneath, and put an end to it — before it finds us."
+    # reward: "item.sword"
+    # goals:
+    #   - Talk:
+    #       dialog: "npc.blacksmith.dialog.quest.threat.0"
+    #   - Collect:
+    #       item: "item.dagger"
+    #       amount: 1
+    #   - Talk:
+    #       dialog: "npc.old_man.dialog.quest.threat.2"
+    #   - Collect:
+    #       item: "item.pint"
+    #       amount: 1
+    #   - Collect:
+    #       item: "item.goblin_tooth"
+    #       amount: 1
+    #   - Talk:
+    #       dialog: "npc.blacksmith.dialog.quest.threat.5"
+    #   - Retrieve:
+    #       item: "item.goblin_tooth"
+    #       amount: 1
+    #       dialog: "npc.city_gard.dialog.quest.threat.6"

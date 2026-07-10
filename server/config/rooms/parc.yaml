@@ -33,7 +33,7 @@ npc:
     dialog:
       default:
         - "Do you know my friend Frédimercurix?"
-        - "Don't stop me now — I'm having far too good a time wandering this park."
+        - "Great singer!"
     kind: Citizen
 
   citizen_6:
