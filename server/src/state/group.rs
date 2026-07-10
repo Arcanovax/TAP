@@ -136,15 +136,15 @@ impl ServerInfo {
                 enemy_attack(&target, self);
             }
         } else {
-			if let Some(enemy) = self.resolve_npc_mut(&target) {
-				if let NPCKind::Enemy {
-					ref mut hp, max_hp, ..
-				} = enemy.kind
-				{
-					*hp = max_hp;
-				}
-				self.fights.remove(&target);
-			}
+            if let Some(enemy) = self.resolve_npc_mut(&target) {
+                if let NPCKind::Enemy {
+                    ref mut hp, max_hp, ..
+                } = enemy.kind
+                {
+                    *hp = max_hp;
+                }
+                self.fights.remove(&target);
+            }
         }
         Ok(())
     }
@@ -172,7 +172,6 @@ impl ServerInfo {
             .retain(|&addr| addr != con.addr);
         info!(player = %con.player.name, group = %group_id, "left group");
         con.player.group_id = None;
-		con.player.in_dungeon = false;
         let group_leader = self.groups.get(&group_id).unwrap().group_leader;
         let is_deleted = self.try_delete_group(group_id);
         if !is_deleted && group_leader == peer_addr {

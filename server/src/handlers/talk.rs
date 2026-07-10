@@ -60,15 +60,18 @@ pub fn talk_request(
     let mut dialogs = None;
     for (quest_id, step) in &player.quests_in_progress {
         let key = format!("{quest_id}.{step}");
-        // let quest = binding.world.quests.get(quest_id).unwrap();
-        // if !quest.goals[*step].is_satisfied(
-        //     player,
-        //     Some(&GameEvent::Talked {
-        //         dialog: format!("{npc_ref}.dialog.{key}"),
-        //     }),
-        // ) {
-        //     continue;
-        // }
+        let quest = binding.world.quests.get(quest_id).unwrap();
+        if matches!(
+            quest.goals[*step],
+            crate::structures::quest::Goal::Retrieve { .. }
+        ) && !quest.goals[*step].is_satisfied(
+            player,
+            Some(&GameEvent::Talked {
+                dialog: format!("{npc_ref}.dialog.{key}"),
+            }),
+        ) {
+            continue;
+        }
         if let Some(dialog) = npc.dialog.get(&key) {
             dialogs = Some((dialog.to_vec(), key));
             break;
