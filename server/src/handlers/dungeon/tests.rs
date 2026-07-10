@@ -1,7 +1,7 @@
 use super::*;
 use crate::{
     protocol::EventType,
-    test_utils::{addr, connect, err, group_with, response_error, test_server},
+    test_utils::{addr, connect, err, group_with, populated_server, response_error, test_server},
 };
 
 // --- DISPATCH ---
@@ -31,7 +31,7 @@ fn dungeon_create_without_connected_returns_invalid_command() {
 
 #[test]
 fn dungeon_create_without_group_returns_success() {
-    let server = test_server();
+    let server = populated_server();
     let a = addr(20001);
     connect(&server, a, "hero");
     let result = dungeon_create_request(&server, a);
@@ -40,7 +40,7 @@ fn dungeon_create_without_group_returns_success() {
 
 #[test]
 fn dungeon_create_moves_creator_into_dungeon() {
-    let server = test_server();
+    let server = populated_server();
     let a = addr(20001);
     connect(&server, a, "hero");
     dungeon_create_request(&server, a);
@@ -59,7 +59,7 @@ fn dungeon_create_moves_creator_into_dungeon() {
 
 #[test]
 fn dungeon_create_when_already_in_dungeon_returns_already_in_progress() {
-    let server = test_server();
+    let server = populated_server();
     let a = addr(20001);
     connect(&server, a, "hero");
     let entrance = server.lock().unwrap().world.dungeon_entrance.clone();
@@ -85,7 +85,7 @@ fn dungeon_create_when_not_group_leader_returns_not_group_leader() {
 
 #[test]
 fn dungeon_create_when_group_already_has_dungeon_returns_already_in_progress() {
-    let server = test_server();
+    let server = populated_server();
     let members = vec![(addr(20001), "leader"), (addr(20002), "member")];
     group_with(&server, &members);
     let entrance = server.lock().unwrap().world.dungeon_entrance.clone();
@@ -105,7 +105,7 @@ fn dungeon_create_when_group_already_has_dungeon_returns_already_in_progress() {
 
 #[test]
 fn dungeon_create_notifies_group_members() {
-    let server = test_server();
+    let server = populated_server();
     let members = vec![(addr(20001), "leader"), (addr(20002), "member")];
     let mut rxs = group_with(&server, &members);
     let result = dungeon_create_request(&server, members[0].0);
@@ -164,7 +164,7 @@ fn dungeon_join_without_dungeon_returns_no_dungeon_in_progress() {
 
 #[test]
 fn dungeon_join_moves_member_into_dungeon() {
-    let server = test_server();
+    let server = populated_server();
     let members = vec![(addr(20001), "leader"), (addr(20002), "member")];
     group_with(&server, &members);
     dungeon_create_request(&server, members[0].0);
@@ -185,7 +185,7 @@ fn dungeon_join_moves_member_into_dungeon() {
 
 #[test]
 fn dungeon_join_when_already_in_dungeon_returns_forbidden_action() {
-    let server = test_server();
+    let server = populated_server();
     let members = vec![(addr(20001), "leader"), (addr(20002), "member")];
     group_with(&server, &members);
     dungeon_create_request(&server, members[0].0);

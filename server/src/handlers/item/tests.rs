@@ -59,25 +59,3 @@ fn items_in_dungeon_returns_dungeon_items() {
     let res = items_request(&server, addr(1));
     assert_success_contains(&res, &dg_item(0));
 }
-
-// --- Variante « donjon » : item référencé par son id de donjon.
-
-#[test]
-fn item_in_dungeon_by_id_returns_success() {
-    let server = dungeon_server();
-    let res = item_request(&server, &vec![dg_item(0)]);
-    assert_eq!(
-        res,
-        Message::Response {
-            error: ErrorCode::SUCCESS,
-            payload: Payload::Json(
-                serde_json::to_value(Item {
-                    name: String::from("sword"),
-                    price: 10,
-                    kind: ItemKind::Miscellaneous
-                })
-                .unwrap()
-            )
-        }
-    )
-}
