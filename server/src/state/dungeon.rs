@@ -33,6 +33,12 @@ impl ServerInfo {
             return Err(ErrorCode::DUNGEON_ALREADY_IN_PROGRESS);
         }
 
+        let room_receivers: Vec<_> = self
+            .get_room_receivers(peer_addr)?
+            .iter()
+            .map(|con| con.tx.clone())
+            .collect();
+        let player_name = player.name.clone();
         let dungeon = generate_dungeon(&self.base_world, gid);
         self.dungeons.insert(gid, dungeon);
 
@@ -41,6 +47,12 @@ impl ServerInfo {
 
         for con in self.get_group_receivers(peer_addr)? {
             let _ = con.tx.send(Message::Event(EventType::DUNGEON_CREATE));
+        }
+
+        for tx in room_receivers {
+            let _ = tx.send(Message::Event(EventType::ROOM_LEAVE {
+                player_name: player_name.clone(),
+            }));
         }
 
         Ok(())
@@ -53,7 +65,7 @@ impl ServerInfo {
             return Err(ErrorCode::FORBIDDEN_ACTION);
         }
 
-        if player.in_dungeon() {
+        if let Some(_) = parse_dungeon_id(&player.location) {
             return Err(ErrorCode::DUNGEON_ALREADY_IN_PROGRESS);
         };
 
@@ -106,7 +118,8 @@ impl ServerInfo {
 mod tests {
     use super::*;
     use crate::test_utils::{
-        addr, connect, dg_room, group_with, populated_server, test_dungeon, test_gid,
+        addr, connect, dg_room, dungeon_server, group_with, populated_server, test_dungeon,
+        test_gid,
     };
 
     // --- close_dungeon (la fonction elle-même) ---
