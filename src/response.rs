@@ -198,6 +198,7 @@ pub async fn handle_response(game: &mut Game, answer: &str, state: &str){
 
 							game.loaded_npcs.insert(npc_id, npc);
 						}
+						game.need_load_npcs = false;
 					}
 					Err(e) => {
 					eprintln!("Npcs error: {}", e);
@@ -520,6 +521,8 @@ pub async fn handle_response(game: &mut Game, answer: &str, state: &str){
 						Ok(room_data) => {
 							dungeon.rooms = room_data;
 							game.map_data = None;
+							game.need_load_npcs = true
+
 						}
 						Err(e) => {
 							eprintln!("dungeon Room error: {}", e);

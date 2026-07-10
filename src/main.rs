@@ -108,6 +108,7 @@ struct Game {
 	pub map_data: Option<LookData>,
 	pub loaded_items:HashMap<String, Item>,
 	pub loaded_npcs: HashMap<String,Npc>,
+	pub need_load_npcs: bool,
 	pub nb_players: i32,
 	pub config: GameConfig,
 	pub active_fight: Option<Fight>,
@@ -213,6 +214,7 @@ async fn main() {
 		map_data: None,
 		loaded_items: HashMap::new(),
 		loaded_npcs: HashMap::new(),
+		need_load_npcs:true,
 		nb_players: 0,
 		config: GameConfig{
 			sprite_width: 16.0,
@@ -275,6 +277,7 @@ async fn main() {
 					game.pending_action = PendingAction::Rooms;
 					game.player.x = 15.0;
 					game.player.y = 130.0;
+
 				}
 				else if !game.group.in_group{
 					game.group.in_group = true;
@@ -294,7 +297,7 @@ async fn main() {
 				game.pending_action = PendingAction::Items;
 			}
 
-			else if game.loaded_npcs.is_empty() && game.pending_action == PendingAction::None{
+			else if game.need_load_npcs && game.pending_action == PendingAction::None{
 				game.tx_to_serv.try_send("NPCS \n".to_string()).ok();
 				game.pending_action = PendingAction::Npcs;
 			}
