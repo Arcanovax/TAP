@@ -2,7 +2,6 @@ use crate::{
     protocol::{Message, Payload},
     state::SharedServer,
     structures::{
-        dungeon::parse_dungeon_id,
         enums::{error::ErrorCode, npc_kind::NPCKind},
         npc::NPC,
     },
@@ -97,7 +96,7 @@ pub(super) fn npcs_request(server_info: &SharedServer, peer_addr: SocketAddr) ->
     }
 
     match binding.get_player(peer_addr) {
-        Ok(player) if parse_dungeon_id(&player.location).is_some() && player.group_id.is_some() => {
+        Ok(player) if player.in_dungeon() && player.group_id.is_some() => {
             match binding.dungeons.get(&player.group_id.unwrap()) {
                 Some(dungeon) => {
                     let mut npcs: HashMap<String, NPCView> = HashMap::new();
