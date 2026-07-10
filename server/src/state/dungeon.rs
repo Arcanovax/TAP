@@ -77,8 +77,22 @@ impl ServerInfo {
             return Err(ErrorCode::NO_DUNGEON_IN_PROGRESS);
         };
 
+        let player_name = player.name.clone();
+
+        for con in self.get_room_receivers(peer_addr)? {
+            let _ = con.tx.send(Message::Event(EventType::ROOM_LEAVE {
+                player_name: player_name.clone(),
+            }));
+        }
+
         let player = self.get_player_mut(peer_addr)?;
         player.location = format_dungeon_id("room", gid, 0);
+
+        for con in self.get_room_receivers(peer_addr)? {
+            let _ = con.tx.send(Message::Event(EventType::ROOM_JOIN {
+                player_name: player_name.clone(),
+            }));
+        }
 
         Ok(())
     }
