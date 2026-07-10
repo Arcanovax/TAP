@@ -48,7 +48,7 @@ impl From<(i8, i8)> for Coord {
 }
 
 pub fn generate_dungeon(base_world: &World, gid: Uuid) -> Dungeon {
-    let rooms = generate_rooms(base_world.dungeon_entrance.clone(), gid);
+    let rooms = generate_rooms(base_world, base_world.dungeon_entrance.clone(), gid);
 
     let mut dungeon = Dungeon {
         rooms,
@@ -69,7 +69,6 @@ fn populate_rooms(world: &World, dungeon: &mut Dungeon, gid: Uuid) {
         .map(|(_, npc)| npc);
 
     let mut ennemy_index = 0;
-    let mut item_index = 0;
 
     for room in dungeon.rooms.values_mut() {
         let nb_ennemy = rand::rng().random_range(MIN_ENNEMY..=MAX_ENNEMY);
@@ -89,32 +88,38 @@ fn populate_rooms(world: &World, dungeon: &mut Dungeon, gid: Uuid) {
 
         let mut i = 0;
         while i < nb_item {
-            let id = format_dungeon_id("item", gid, item_index + i);
-            let Some(item) = world
+            let Some((id, item)) = world
                 .items
                 .iter()
-                .map(|(_, item)| item)
+                .map(|(id, item)| (id, item))
                 .clone()
                 .choose(&mut rand::rng())
             else {
                 break;
             };
             room.items.push(id.clone().into());
-            dungeon.items.insert(id, item.clone());
+            dungeon.items.insert(id.to_string(), item.clone());
             i += 1;
         }
-        item_index += i;
     }
 }
 
-fn generate_rooms(return_room: String, gid: Uuid) -> HashMap<String, Room> {
+fn generate_rooms(world: &World, return_room: String, gid: Uuid) -> HashMap<String, Room> {
+	let mut rooms_pool: Vec<&Room> = world
+        .rooms
+        .iter()
+        .map(|(_, room)| room)
+		.collect();
+
     let mut room_grid: HashMap<Coord, String> = HashMap::new();
     let mut rooms: HashMap<String, Room> = HashMap::new();
 
+	let mut chosen_room = rooms_pool.remove(rand::rng().random_range(0..rooms_pool.len()));
     let id = format_dungeon_id("room", gid, 0);
     room_grid.insert((0, 0).into(), id.clone());
     room_grid.insert((-1, 0).into(), return_room.clone());
-    let mut start_room = Room::new(id.as_str());
+    let mut start_room = Room::new(&format!("(Dungeon) {}", &chosen_room.name));
+	start_room.description = chosen_room.description.clone();
     start_room
         .exits
         .insert(Direction::West, return_room.clone());
@@ -146,8 +151,10 @@ fn generate_rooms(return_room: String, gid: Uuid) -> HashMap<String, Room> {
             continue;
         };
 
+		chosen_room = rooms_pool.remove(rand::rng().random_range(0..rooms_pool.len()));
         let new_id = format_dungeon_id("room", gid, i);
-        let new_room = Room::new(&new_id);
+        let mut new_room = Room::new(&format!("(Dungeon) {}", &chosen_room.name));
+		new_room.description = chosen_room.description.clone();
 
         let new_coord = match dir {
             Direction::North => *coord + TO_NORTH,

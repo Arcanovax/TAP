@@ -35,8 +35,10 @@ impl ServerInfo {
 
         let dungeon = generate_dungeon(&self.base_world, gid);
         self.dungeons.insert(gid, dungeon);
-
+		
+		
         let player = self.get_player_mut(peer_addr)?;
+		player.in_dungeon = true;
         player.location = format_dungeon_id("room", gid, 0);
 
         for con in self.get_group_receivers(peer_addr)? {
@@ -66,6 +68,7 @@ impl ServerInfo {
         };
 
         let player = self.get_player_mut(peer_addr)?;
+		player.in_dungeon = true;
         player.location = format_dungeon_id("room", gid, 0);
 
         Ok(())
@@ -94,6 +97,7 @@ impl ServerInfo {
         for addr in addrs {
             if let Some(con) = self.connections.get_mut(&addr) {
                 con.player.location = entrance.clone();
+				con.player.in_dungeon = false;
                 for tx in &receiver_txs {
                     let _ = tx.send(Message::Event(EventType::ROOM_JOIN {
                         player_name: con.player.name.clone(),

@@ -44,14 +44,23 @@ pub fn handle_request(
 ) -> Message {
     let handler_result: HandlerOutcome = match &request {
         Message::Command { name, args } => {
-            let is_in_fight = {
+            let (is_in_fight, is_in_dungeon) = {
                 if let Ok(player) = server_info.lock().unwrap().get_player_mut(peer_addr) {
-                    matches!(player.status, State::InFight { .. })
+                    (matches!(player.status, State::InFight { .. }), player.in_dungeon)
                 } else {
-                    false
+                    (false, false)
                 }
             };
 
+			if is_in_dungeon && ["GROUP"].contains(&name.to_uppercase().as_str()) {
+				if args[0] == "LEAVE".to_string() {
+					return Message::Response {
+						error: ErrorCode::FORBIDDEN_ACTION,
+						payload: Payload::Empty,
+					}
+					.into();
+				}
+			}
             if is_in_fight
                 && ["TAKE", "DROP", "QUEST", "BUY", "SELL", "TALK", "MOVE"]
                     .contains(&name.to_uppercase().as_str())
