@@ -14,6 +14,7 @@ mod camera;
 mod fight;
 mod quest;
 mod dungeon;
+mod gambling;
 
 use fight::*;
 use player::*;
@@ -23,6 +24,7 @@ use camera::*;
 use response::*;
 use quest::*;
 use dungeon::*;
+use gambling::*;
 
 use utils::*;
 use npc::*;
@@ -115,7 +117,8 @@ struct Game {
 	pub quests: Quests,
 	pub npc_shop: NpcShop,
 	pub mouse: Vec2,
-	pub dungeon: Option<Dungeon>
+	pub dungeon: Option<Dungeon>,
+	pub gambling: Games
 }
 
 
@@ -226,17 +229,12 @@ async fn main() {
 		quests: Quests { all: Vec::new(), is_load: false},
 		npc_shop: NpcShop { is_active: false, buy_info: None, sell_info: None},
 		mouse: Vec2::new(0.0, 0.0),
-		dungeon: None
+		dungeon: None,
+		gambling: Games::new()
     };
 
-
-
 	let rooms: std::collections::HashMap<String, rooms::Room> = get_rooms().await;
-
-
 	let floor: Texture2D = load_texture("assets/map/fightmap.png").await.unwrap();
-
-
 
     loop {
 		while let Ok(msg) = game.rx_from_serv.try_recv() {
@@ -569,6 +567,7 @@ fn handle_game(game: &mut Game, map: &Room, map_data: LookData){
 		handle_inv(game);
 		handle_chat(game);
 		handle_group(game);
+		handle_games(game);
 		if let Some((rect, item)) = game.player.inventory.active_item_info.clone(){
 			draw_item_info(rect, &item);
 		};
