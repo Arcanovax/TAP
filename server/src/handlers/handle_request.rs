@@ -106,6 +106,7 @@ pub fn handle_request(
                 Some(Command::HELP) => help_request().into(),
                 Some(Command::ROOM) => room_request(server_info, args).into(),
                 Some(Command::ROOMS) => rooms_request(server_info, peer_addr).into(),
+                Some(Command::ANSWER) => rooms_request(server_info, peer_addr).into(),
                 Some(Command::SLOT_MACHINE) => {
                     let pool: Vec<String> = server_info
                         .lock()

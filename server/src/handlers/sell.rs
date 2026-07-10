@@ -1,7 +1,7 @@
 use crate::{
     protocol::{Message, Payload},
     state::SharedServer,
-    structures::enums::{error::ErrorCode, npc_kind::NPCKind},
+    structures::enums::{error::ErrorCode, item_kind::ItemKind, npc_kind::NPCKind},
 };
 use std::{collections::HashMap, net::SocketAddr};
 
@@ -73,7 +73,13 @@ pub(super) fn sell_request(
     }
 
     let price = match binding.resolve_item(&item_ref) {
-        Some(item) => item.price * amount,
+        Some(item) if !matches!(item.kind, ItemKind::QuestItem) => item.price * amount,
+        Some(_) => {
+            return Message::Response {
+                error: ErrorCode::FORBIDDEN_ACTION,
+                payload: Payload::Empty,
+            };
+        }
         None => {
             return Message::Response {
                 error: ErrorCode::ITEM_NOT_FOUND,

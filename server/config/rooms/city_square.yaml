@@ -27,11 +27,8 @@ npc:
     name: "Haltlarix"
     dialog:
       default:
-        - "Halt! Who goes— oh. It's you again. Fine, proceed."
-        - "Thirty years guarding this square and nothing ever happens. Please, do something interesting."
-      quest.threat.6:
-        - "By the gods, an actual goblin tooth. So the rumours were true."
-        - "You've done this square a real service, traveler. Take this blade — it's seen better centuries, but it'll serve you far better than it ever served me. And whatever you saw down there... don't go back alone."
+        - "Hello adventurer! Keep safe!"
+        - "I used to be an adventurer like you. Then I took an arrow in the knee."
     kind: Citizen
     quest: "quest.search"
 

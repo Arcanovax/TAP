@@ -4,7 +4,6 @@ use crate::persistence::players::save_player;
 use crate::persistence::world::{load_world, save_world};
 use crate::protocol::{Message, Payload};
 use crate::state::{ServerInfo, SharedServer};
-use crate::structures::dungeon::parse_dungeon_id;
 use crate::structures::enums::error::ErrorCode;
 use crate::structures::enums::state::State;
 use crate::structures::room::Owner;
@@ -126,13 +125,6 @@ pub async fn run(addr: String, port: String) -> Result<(), Box<dyn std::error::E
                 );
             }
         }
-        world.items.extend(
-            saved
-                .items
-                .iter()
-                .filter(|(id, _)| parse_dungeon_id(id).is_some())
-                .map(|(id, item)| (id.clone(), item.clone())),
-        );
     }
 
     let server_info: SharedServer =

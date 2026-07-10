@@ -24,14 +24,12 @@ npc:
     name: "Métallurgix"
     dialog:
       default:
-        - "Steel never lies. Forged well, it will outlast you. No pressure."
-        - "Sword, shield, helmet — take two if you're brave, all three if you're wise."
-      quest.threat.0:
-        - "The quarry? Aye, north of here. Goblins moved in a while back — hunched little things, guarding the old mine like it owes them money."
-        - "So the guard's finally sending someone. Good. Buy yourself a blade first — walking in there unarmed is how you become a rumour yourself."
-      quest.threat.5:
-        - "Let me see that tooth. ...By the anvil. This is no quarry stock — these markings come from deeper. From the dungeon itself."
-        - "Haltlarix needs to see this, now. Go — and tell him the real problem hasn't even surfaced yet."
+        - "“Have kids,” they used to say!"
+        - "We spend more time worrying about them than loving them!"
+      quest.search.0:
+        - "My son? I know what everyone says. But I assure you, he would never have given up his job just to pursue a little fling."
+        - "But it's true that lately he's been spending more time in the mountains than at the blacksmith's shop!"
+        - "You could start your research there."
       quest.tempering.1:
         - "You brought the ale! Perfect. Forget water — a blade quenched in a good amber holds its edge AND a fine bouquet. Here, this breastplate is yours. 'Plot Armor,' I call it: never seen a hero die in one."
     kind:

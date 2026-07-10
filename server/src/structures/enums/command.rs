@@ -35,6 +35,7 @@ pub enum Command {
     QUEST_INFO,
     HELP,
     ROOMS,
+    ANSWER,
     ROOM,
     DICES,
 }
@@ -71,6 +72,7 @@ impl Command {
             Command::QUEST_INFO => "Show detailed information about a quest.",
             Command::HELP => "List all available commands and what they do.",
             Command::ROOMS => "List the rooms",
+            Command::ANSWER => "Answer to a riddle",
             Command::ROOM => "Show the details of a specific room",
             Command::DICES => "Play the dices game in the gambling room",
         }

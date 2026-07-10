@@ -23,4 +23,10 @@ npc:
         - "What a wonderful golden token! The second lock has popped open."
       quest.search.5:
         - "I can hear the sounds of the sea in this sacred seashell. The last lock has popped open."
+        - "Just as you start pushing the door to finally get inside, it slams shut."
+        - "From inside, you hear a woman's voice saying to you :"
+        - "'Who are you? Can't you just leave us alone?'"
+        - "It's almost our fathers' birthdays (they were born on the same day), and we're planning a surprise for them."
+        - "It's taking a few longer than expected but we are almost ready."
+        - "Take these 50 golds and leave us alone! Don't come back!"
     kind: Citizen

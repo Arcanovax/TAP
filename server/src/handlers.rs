@@ -8,6 +8,7 @@ pub mod dungeon;
 pub mod fight;
 pub mod flee;
 pub mod gold;
+pub mod answer;
 pub mod group;
 pub mod handle_request;
 pub mod help;

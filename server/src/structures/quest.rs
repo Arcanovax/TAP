@@ -16,6 +16,9 @@ pub enum Goal {
         amount: u32,
         dialog: String,
     },
+	Answer {
+        answer: String,
+    },
 }
 
 impl Goal {
@@ -35,6 +38,7 @@ impl Goal {
                 player.inventory.get(item).copied().unwrap_or(0) >= *amount
                     && matches!(event, Some(GameEvent::Talked { dialog: d }) if d == dialog)
             }
+			Goal::Answer { answer } => matches!(event, Some(GameEvent::Answer { answer: a }) if a.to_lowercase() == answer.to_lowercase())
         }
     }
 }
@@ -43,6 +47,7 @@ impl Into<String> for Goal {
     fn into(self) -> String {
         match self {
             Goal::Collect { item, amount } => format!("Collect {} {}", amount, item),
+            Goal::Answer { .. } => format!("Find the answer of his riddle"),
             Goal::Talk { dialog } => {
                 let mut splitted = dialog.splitn(3, ".");
                 let npc = splitted.next().unwrap().to_owned() + "." + splitted.next().unwrap();
@@ -79,6 +84,7 @@ impl Quest {
                 Goal::Retrieve { item, dialog, .. } => {
                     refs.extend([item.as_str(), dialog.as_str()])
                 }
+				Goal::Answer { .. } => {}
             }
         }
         refs
