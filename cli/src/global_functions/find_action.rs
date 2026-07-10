@@ -18,7 +18,7 @@ pub fn find_action(command: Vec<&str>, world: &mut World) {
             "join" => world.action = PendingAction::GroupJoin(command[2..].join(" ")),
             "invite" => world.action = PendingAction::GroupInvite(command[2..].join(" ")),
             "create" => world.action = PendingAction::GroupCreate(command[2..].join(" ")),
-            "leave" => world.action = PendingAction::GroupLeave(command[2..].join(" ")),
+            "leave" => world.action = PendingAction::GroupLeave,
             _ => {}
         },
         "status" => world.action = PendingAction::Status,
@@ -36,6 +36,7 @@ pub fn find_action(command: Vec<&str>, world: &mut World) {
 			"invite" => world.action = PendingAction::DungeonJoin,
 			_ => {}
 		}
+		"answer" => world.action = PendingAction::Answer,
         _ => {}
     }
 }

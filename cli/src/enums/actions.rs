@@ -3,8 +3,10 @@ use crate::structures::quest_view::QuestStatus;
 #[derive(Debug, Clone, PartialEq)]
 pub enum PendingAction {
     None,
+	Answer,
     Gold,
     ClientGold,
+    FleeGold,
     Npcs,
     DungeonNpcs,
     Sell(String),
@@ -18,7 +20,7 @@ pub enum PendingAction {
     Auth,
     GroupCreate(String),
     GroupJoin(String),
-    GroupLeave(String),
+    GroupLeave,
     GroupInvite(String),
     SendChat(String, String),
     ClientLook,
@@ -26,6 +28,7 @@ pub enum PendingAction {
     MoveLook,
     Look,
     Rooms,
+    DungeonRooms,
     Status,
     ClientStatus,
     Move,

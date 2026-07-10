@@ -16,6 +16,10 @@ pub enum Goal {
         amount: u32,
         dialog: String,
     },
+	Answer {
+        answer: String,
+		room: String
+    }
 }
 
 impl Display for Goal {
@@ -31,6 +35,9 @@ impl Display for Goal {
                 amount,
                 dialog,
             } => write!(f, "Gave {} {} to {}\n", amount, item, dialog),
+			Goal::Answer { room, .. } => {
+				write!(f, "Answer to his riddle at {}.", room)
+			}
         }
     }
 }

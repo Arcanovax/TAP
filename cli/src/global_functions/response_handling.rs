@@ -5,7 +5,7 @@ use crate::{
         actions::PendingAction, focus::Focus, item_kind::ItemKind, npc_kind::NPCKind,
         states::States,
     }, global_functions::check_goals::check_goals, structures::{
-        attack_results::AttackResult, fight::Fight, items::Item, npc::NPC, quest::Quest, quest_view::{QuestStatus, QuestView, QuestsView}, room::{Room, RoomPayload}, status_view::StatusView, world::World,
+        attack_results::AttackResult, fight::Fight, items::Item, npc::NPC, quest::Quest, quest_view::{QuestStatus, QuestView, QuestsView}, room::{Room, RoomPayload}, rooms_view::RoomsView, status_view::StatusView, world::World,
     },
 };
 
@@ -32,23 +32,32 @@ pub fn response_handling(world: &mut World, answers: Vec<&str>) {
                 match &world.action {
 
 					PendingAction::DungeonCreate => {
-						world.dungeon = true;
+						let _ = world.tx_to_serv.try_send(String::from("ITEMS\n"));
+                    	world.action = PendingAction::DungeonItems;
+					},
+
+					PendingAction::DungeonJoin => {
 						let _ = world.tx_to_serv.try_send(String::from("ITEMS\n"));
                     	world.action = PendingAction::DungeonItems;
 					},
 
                     PendingAction::Look | PendingAction::ClientLook | PendingAction::MoveLook | PendingAction::DungeonLook => {
-                        let payload: RoomPayload = serde_json::from_str(&real_answer).unwrap();
+						let payload: RoomPayload = serde_json::from_str(&real_answer).unwrap();
+						// if let Ok(mut file) = OpenOptions::new().create(true).append(true).open("debug_network.txt") {
+   						//  	let _ = writeln!(file, "Payload (State {:?}) : ", payload, );}
                         if world.action == PendingAction::Look {
-                            world.room.apply_update(payload);
+							world.room.apply_update(payload);
                             world
-                                .output
-                                .push_back(format!("[Server response]\n{}", world.room));
-                            world.action = PendingAction::None;
-                        } else {
-                            world.room = Room::new();
-                            world.room.apply_update(payload);
-                            if world.action == PendingAction::ClientLook {
+							.output
+							.push_back(format!("[Server response]\n{}", world.room));
+							world.action = PendingAction::None;
+						} else {
+							world.room = Room::new();
+							world.room.apply_update(payload);
+							world.dungeon = world.in_dungeon();
+							// if world.action == PendingAction::DungeonLook && let Ok(mut file) = OpenOptions::new().create(true).append(true).open("debug_network.txt") {
+							// 	let _ = writeln!(file, "Look {:#?}\n{:#?}", real_answer, world.room);}
+							if world.action == PendingAction::ClientLook {
                                 let _ = world.tx_to_serv.try_send(String::from("STATUS\n"));
                                 world.action = PendingAction::ClientStatus;
                             } else {
@@ -56,6 +65,10 @@ pub fn response_handling(world: &mut World, answers: Vec<&str>) {
                             }
                         }
                     }
+
+					PendingAction::Answer => {
+						world.action = PendingAction::None;
+					},
 
                     PendingAction::Quest => {
                         let view_quest: QuestView = serde_json::from_str(&real_answer).unwrap();
@@ -107,9 +120,18 @@ pub fn response_handling(world: &mut World, answers: Vec<&str>) {
                         }
                     }
 
-                    PendingAction::Rooms => {
-                        world.rooms = serde_json::from_str(&real_answer).unwrap();
-                        world.action = PendingAction::None;
+                    PendingAction::Rooms | PendingAction::DungeonRooms => {
+						if world.action == PendingAction::DungeonRooms {
+							let new_rooms: HashMap<String, RoomsView> = serde_json::from_str(&real_answer).unwrap();
+							world.rooms.extend(new_rooms);
+							// if let Ok(mut file) = OpenOptions::new().create(true).append(true).open("debug_network.txt") {
+							// 	let _ = writeln!(file, "Rooms {:#?}\n{:#?}", real_answer, world.rooms);}
+							let _ = world.tx_to_serv.try_send("LOOK\n".to_string());
+							world.action = PendingAction::DungeonLook;
+						} else {
+							world.rooms = serde_json::from_str(&real_answer).unwrap();
+							world.action = PendingAction::None;
+						}
                     }
 
                     PendingAction::Drop(item) => {
@@ -173,6 +195,8 @@ pub fn response_handling(world: &mut World, answers: Vec<&str>) {
 					PendingAction::DungeonItems => {
 						let dungeon_items: HashMap<String, Item> = serde_json::from_str(&real_answer).unwrap();
                         world.list_items.extend(dungeon_items);
+						// if let Ok(mut file) = OpenOptions::new().create(true).append(true).open("debug_network.txt") {
+						// 		let _ = writeln!(file, "Items {:#?}\n{:#?}", real_answer, world.list_items);}
                         let _ = world.tx_to_serv.try_send(String::from("NPCS\n"));
                         world.action = PendingAction::DungeonNpcs;
                     },
@@ -186,8 +210,10 @@ pub fn response_handling(world: &mut World, answers: Vec<&str>) {
 					PendingAction::DungeonNpcs => {
 						let dungeon_npcs: HashMap<String, NPC> = serde_json::from_str(&real_answer).unwrap();
                         world.list_npcs.extend(dungeon_npcs);
-                        let _ = world.tx_to_serv.try_send(String::from("LOOK\n"));
-                        world.action = PendingAction::DungeonLook;
+						// if let Ok(mut file) = OpenOptions::new().create(true).append(true).open("debug_network.txt") {
+						// 		let _ = writeln!(file, "Npcs {:#?}\n{:#?}", real_answer, world.list_npcs);}
+                        let _ = world.tx_to_serv.try_send(String::from("ROOMS\n"));
+                        world.action = PendingAction::DungeonRooms;
                     },
 
                     PendingAction::Flee => {
@@ -196,10 +222,10 @@ pub fn response_handling(world: &mut World, answers: Vec<&str>) {
                             .push_back(format!("[Server response] {}", real_answer));
                         world.state = States::Idle;
                         let _ = world.tx_to_serv.try_send("GOLD\n".to_string());
-                        world.action = PendingAction::Gold;
+                        world.action = PendingAction::FleeGold;
                     },
 
-                    PendingAction::Gold | PendingAction::ClientGold => {
+                    PendingAction::Gold | PendingAction::ClientGold | PendingAction::FleeGold => {
                         let gold: Vec<&str> = real_answer.split("=").collect();
                         world.player.gold = gold[1].parse().unwrap();
 						if world.action == PendingAction::Gold {
@@ -211,9 +237,12 @@ pub fn response_handling(world: &mut World, answers: Vec<&str>) {
 								}
 							};
 							world.output.push_back(format!("Currently, you have {} golds.\n{}", gold[1], end));
-						} else {
+							world.action = PendingAction::None;
+						} else if world.action == PendingAction::ClientGold {
 							let _ = world.tx_to_serv.try_send("QUESTS\n".to_string());
 							world.action = PendingAction::ClientQuests;
+						} else {
+							world.action = PendingAction::None;
 						}
                     }
 
@@ -354,13 +383,21 @@ pub fn response_handling(world: &mut World, answers: Vec<&str>) {
                     PendingAction::Npc => {
                         let npc_view: NPC = serde_json::from_str(&real_answer).unwrap();
                         world.output.push_back(format!("{npc_view}"));
-                    }
+                    },
+
+					PendingAction::GroupLeave => {
+						world.group.in_group = false;
+						world.output.push_back("You successfully leave your group.".to_string());
+						world.chat.group_messages.clear();
+						world.action = PendingAction::None;
+					}
 
                     PendingAction::GroupJoin(name) => {
                         world.group.in_group = true;
                         world
                             .output
                             .push_back(format!("{name} group successfully joined."));
+						world.group.invitation.clear();
                         world.action = PendingAction::None;
                     }
 
@@ -556,7 +593,7 @@ pub fn response_handling(world: &mut World, answers: Vec<&str>) {
 						"GAME_LOSE" => {
 							world.player.gold -= 5;
 							let dices = answers[3 ..].join(" ");
-							world.output.push_back(format!("You chose {}\nUnfortunately, {} came up!\nBetter luck next time!\nThanks for the 5 golds!", played_dices, dices));
+							world.output.push_back(format!("You chose {}.\nUnfortunately, {} came up!\nBetter luck next time!\nThanks for the 5 golds!", played_dices, dices));
 							world.action = PendingAction::None;
 						},
 						_ => {

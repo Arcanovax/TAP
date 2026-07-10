@@ -2,7 +2,6 @@ use std::{collections::VecDeque, fs::OpenOptions, io::Write};
 
 use ratatui::{
     Frame,
-    backend::TestBackend,
     layout::{
         Alignment,
         Constraint::{Fill, Length, Percentage},
@@ -23,6 +22,9 @@ use crate::{
 };
 
 pub fn draw_room(world: &mut World, frame: &mut Frame) {
+
+	let global_color = if world.dungeon {Color::Red} else {Color::Green};
+
     let main_layout = Layout::default()
         .direction(Vertical)
         .constraints(vec![Fill(1), Length(3)])
@@ -70,7 +72,7 @@ pub fn draw_room(world: &mut World, frame: &mut Frame) {
     let mut lines = vec![
         Line::from(Span::styled(
             world.player.name.as_str(),
-            Style::default().fg(Color::Green).bold(),
+            Style::default().fg(global_color).bold(),
         )),
         Line::default(),
     ];
@@ -94,7 +96,7 @@ pub fn draw_room(world: &mut World, frame: &mut Frame) {
             Color::White
         })
         .title(world.room.room.name.as_str())
-        .title_style(Color::Green)
+        .title_style(global_color)
         .bold()
         .title_alignment(Alignment::Center);
 
@@ -149,7 +151,7 @@ pub fn draw_room(world: &mut World, frame: &mut Frame) {
         for elem in &world.room.npcs {
             if let Some(npc) = world.list_npcs.get(elem) {
                 npcs_list.push(ListItem::new(
-                    Line::from(format!("{} ({})", npc.name.clone(), elem.clone()))
+                    Line::from(format!("{} ({})", npc.name.clone(), if !world.dungeon {elem.clone()} else {"Enemy".to_string()}))
                         .alignment(Alignment::Center)
                         .style(match npc.kind {
                             NPCKind::Citizen => Color::White,
@@ -175,7 +177,7 @@ pub fn draw_room(world: &mut World, frame: &mut Frame) {
                 })
                 .title("You can talk to:")
                 .title_alignment(Alignment::Center)
-                .title_style(Color::Green)
+                .title_style(global_color)
                 .bold(),
         )
         .style(Color::LightCyan)
@@ -211,7 +213,7 @@ pub fn draw_room(world: &mut World, frame: &mut Frame) {
                 })
                 .title("In your bag:")
                 .title_alignment(Alignment::Center)
-                .title_style(Color::Green)
+                .title_style(global_color)
                 .bold(),
         )
         .style(Color::LightCyan)
@@ -250,7 +252,7 @@ pub fn draw_room(world: &mut World, frame: &mut Frame) {
                 })
                 .title("Quests:")
                 .title_alignment(Alignment::Center)
-                .title_style(Color::Green)
+                .title_style(global_color)
                 .bold(),
         )
         .style(Color::LightCyan)
@@ -266,7 +268,7 @@ pub fn draw_room(world: &mut World, frame: &mut Frame) {
     let details_block = Block::bordered()
         .title("More details")
         .title_alignment(Alignment::Center)
-        .title_style(Color::Green)
+        .title_style(global_color)
         .bold();
 
     let details_content = {
@@ -381,7 +383,7 @@ pub fn draw_room(world: &mut World, frame: &mut Frame) {
                 })
                 .title("You can move to:")
                 .title_alignment(Alignment::Center)
-                .title_style(Color::Green)
+                .title_style(global_color)
                 .bold(),
         )
         .style(Color::LightCyan)
@@ -428,7 +430,7 @@ pub fn draw_room(world: &mut World, frame: &mut Frame) {
         })
         .title("Chat")
         .title_alignment(Alignment::Center)
-        .title_style(Color::Green);
+        .title_style(global_color);
 
     let inner_chat = chat_space[1].inner(Margin {
         horizontal: 1,
@@ -498,7 +500,7 @@ pub fn draw_room(world: &mut World, frame: &mut Frame) {
         })
         .title("Output")
         .title_alignment(Alignment::Center)
-        .title_style(Color::Green);
+        .title_style(global_color);
 
     str_lines = "".to_string();
 
@@ -534,7 +536,7 @@ pub fn draw_room(world: &mut World, frame: &mut Frame) {
         Block::bordered()
             .title("Send messages here:")
             .title_alignment(Alignment::Center)
-            .title_style(Color::Green)
+            .title_style(global_color)
             .bold()
             .border_style(if world.room.focus == Focus::CHATTEXT {
                 Color::LightBlue
@@ -550,7 +552,7 @@ pub fn draw_room(world: &mut World, frame: &mut Frame) {
         Block::bordered()
             .title("You can write your command here:")
             .title_alignment(Alignment::Center)
-            .title_style(Color::Green)
+            .title_style(global_color)
             .bold()
             .border_style(if world.room.focus == Focus::COMMAND {
                 Color::LightBlue

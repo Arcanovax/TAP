@@ -17,15 +17,9 @@ use crate::{
     draw_functions::{
         discuss::draw_room_discuss, fights::draw_room_fight, login::login_draw, rooms::draw_room,
         trade::draw_trade, wait_server::draw_wait,
-    },
-    enums::{actions::PendingAction, states::States},
-    global_functions::{
-        discuss_event::discuss_event, escape_handling::escape_handling,
-        event_handling::event_handling, handle_escape::handle_escape,
-        handle_local_events::handle_global_events, handle_mouse::handle_mouse,
-        login_event::login_event, response_handling::response_handling, trade_event::trade_event,
-    },
-    structures::{
+    }, enums::{actions::PendingAction, states::States}, global_functions::{
+        discuss_event::discuss_event, escape_handling::escape_handling, event_handling::event_handling, handle_escape::handle_escape, handle_local_events::handle_global_events, handle_mouse::handle_mouse, login_event::login_event, parse_dungeon_id::parse_dungeon_id, response_handling::response_handling, trade_event::trade_event,
+    }, structures::{
         chat::Chat, group::Group, items::Item, npc::NPC, player::Player, room::Room,
         rooms_view::RoomsView,
     },
@@ -84,6 +78,10 @@ impl World<'_> {
             tx_to_serv: tx_to_serv,
             rx_from_serv: rx_from_serv,
         }
+    }
+
+	pub fn in_dungeon(&self) -> bool {
+        parse_dungeon_id(&self.room.room.id).is_some()
     }
 
     pub fn run(&mut self, terminal: &mut DefaultTerminal) -> io::Result<()> {

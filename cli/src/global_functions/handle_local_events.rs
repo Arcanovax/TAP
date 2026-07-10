@@ -114,7 +114,7 @@ pub fn handle_global_events(key: KeyEvent, world: &mut World) {
             KeyCode::Enter => match world.room.focus {
                 Focus::COMMAND => {
                     if !world.room.text_area.is_empty() {
-                        let command = world.room.text_area.lines().join(" ");
+                        let command = world.room.text_area.lines().join(" ").trim().to_string();
                         world.index_command = 0;
                         world.old_command.push_front(command.clone());
                         let split_command: Vec<&str> = command.split(" ").collect();
