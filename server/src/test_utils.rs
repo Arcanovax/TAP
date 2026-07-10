@@ -193,6 +193,15 @@ pub(crate) fn test_world() -> World {
         },
     );
 
+    world.items.insert(
+        "quest_item".to_string(),
+        Item {
+            name: "quest_item".to_string(),
+            price: 10,
+            kind: ItemKind::QuestItem,
+        },
+    );
+
     world.npcs.insert(
         "guard".to_string(),
         NPC {

@@ -6,4 +6,5 @@ pub enum ItemKind {
     Armor { protection: u32 },
     Potion { healing: u32 },
     Miscellaneous,
+    QuestItem,
 }

@@ -129,7 +129,10 @@ fn sell_existing_item_removes_it_and_credits_gold() {
         &server,
         addr(1),
     );
-    assert_eq!(result, ok_pair(&[("sold", "sword"), ("gold", "10"), ("amount", "1")]));
+    assert_eq!(
+        result,
+        ok_pair(&[("sold", "sword"), ("gold", "10"), ("amount", "1")])
+    );
 
     let guard = server.lock().unwrap();
     let player = guard.get_player(addr(1)).unwrap();
@@ -148,10 +151,27 @@ fn sell_with_amount_credits_and_decrements() {
         &server,
         addr(1),
     );
-    assert_eq!(result, ok_pair(&[("gold", "20"), ("sold", "sword"), ("amount", "2"),]));
+    assert_eq!(
+        result,
+        ok_pair(&[("gold", "20"), ("sold", "sword"), ("amount", "2"),])
+    );
 
     let guard = server.lock().unwrap();
     let player = guard.get_player(addr(1)).unwrap();
     assert_eq!(player.gold, 70); // 50 + 2 * 10
     assert_eq!(player.inventory.get("sword"), Some(&1)); // 3 - 2
+}
+
+#[test]
+fn sell_with_quest_item_returns_forbidden_action() {
+    let server = populated_server();
+    connect(&server, addr(1), "alice");
+    give_item(&server, addr(1), "quest_item", 1);
+    let result = sell_request(
+        &vec!["merchant".to_string(), "quest_item".to_string()],
+        &server,
+        addr(1),
+    );
+
+    assert_eq!(result, err(ErrorCode::FORBIDDEN_ACTION));
 }
