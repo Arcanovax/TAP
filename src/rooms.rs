@@ -158,6 +158,34 @@ pub async fn get_rooms() -> HashMap<String, Room> {
 	};
     rooms.insert(tower.id.clone(), tower);
 
+	let gambling: Room = Room {
+        id: "room.game_room".to_string(),
+        colliders: [
+			[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,1],
+			[1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+			[1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+			[1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+			[1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+			[1,0,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,1],
+			[1,1,0,1,0,0,0,0,0,1,0,1,0,0,1,1,0,0,0,0,0,0,0,0,1],
+			[1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,1],
+			[1,0,0,0,0,1,1,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,1],
+			[1,0,0,0,0,1,1,0,1,1,1,1,1,0,0,1,0,0,0,0,0,0,0,0,1],
+			[1,0,0,0,0,0,0,0,1,1,1,1,1,0,0,1,0,0,0,0,0,0,0,0,1],
+			[1,1,0,0,0,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0,1],
+			[1,1,0,0,0,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,1],
+			[1,1,1,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+			[1,1,1,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
+        ],
+        first_layer: load_texture("assets/map/gambling/gambling.png").await.unwrap(),
+        second_layer: None,
+		spawns: HashMap::from([
+            	(Spawn::South, vec2(50.0, 190.0)),
+				(Spawn::Center, vec2(50.0, 130.0)),
+		]),
+	};
+    rooms.insert(gambling.id.clone(), gambling);
+
 	let beach: Room = Room {
         id: "room.beach".to_string(),
         colliders: [
@@ -239,6 +267,7 @@ pub async fn get_rooms() -> HashMap<String, Room> {
         first_layer: load_texture("assets/map/saloon/layer1.png").await.unwrap(),
         second_layer: None,
 		spawns: HashMap::from([
+				(Spawn::North, vec2(50.0, 0.0)),
 				(Spawn::South, vec2(240.0, 190.0)),
 				(Spawn::Center, vec2(180.0, 150.0)),
 		]),

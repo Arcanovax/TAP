@@ -100,6 +100,7 @@ pub fn draw_item_info(rect: Rect, item: &Item){
         ItemKind::Weapon { damages } => ("Weapon", Some(format!("Damages: {}", damages))),
         ItemKind::Armor { protection } => ("Armor", Some(format!("Protection: {}", protection))),
         ItemKind::Miscellaneous => ("Miscellaneous", None),
+		ItemKind::QuestItem => ("Quest Item", None),
     };
 	let item_type = format!("Type: {}", type_name);
 
@@ -222,7 +223,7 @@ pub fn draw_inv(game: &mut Game) {
 
 
 pub fn draw_dropped(game: &mut Game) {
-    
+
     let Some(mapdata) = game.map_data.clone() else { return };
     let mut dropped_rect: Rect = get_item_floor_rect();
     dropped_rect.y += 180.0;
