@@ -53,7 +53,7 @@ pub fn handle_request(
             };
 
 			if is_in_dungeon && ["GROUP"].contains(&name.to_uppercase().as_str()) {
-				if args[0] == "LEAVE".to_string() {
+				if args.len() > 0 && args[0] == "LEAVE".to_string() {
 					return Message::Response {
 						error: ErrorCode::FORBIDDEN_ACTION,
 						payload: Payload::Empty,
@@ -61,6 +61,7 @@ pub fn handle_request(
 					.into();
 				}
 			}
+
             if is_in_fight
                 && ["TAKE", "DROP", "QUEST", "BUY", "SELL", "TALK", "MOVE"]
                     .contains(&name.to_uppercase().as_str())
