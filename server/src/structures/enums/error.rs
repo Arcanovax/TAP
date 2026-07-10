@@ -6,6 +6,7 @@ pub enum ErrorCode {
     NAME_IN_USE,
     NO_EXIT,
     NOT_IN_GROUP,
+	WRONG_ANSWER_OR_PLACE_OR_BOTH,
     NOT_GROUP_LEADER,
     ALREADY_IN_GROUP,
     ITEM_NOT_FOUND,
@@ -49,6 +50,7 @@ impl ErrorCode {
             | ErrorCode::NOT_AN_ITEM
             | ErrorCode::ROOM_NOT_FOUND
             | ErrorCode::FORBIDDEN_ACTION
+            | ErrorCode::WRONG_ANSWER_OR_PLACE_OR_BOTH
             | ErrorCode::UNUSABLE_ITEM
             | ErrorCode::DEFEATED_ENEMY
             | ErrorCode::NOT_YOUR_TURN
