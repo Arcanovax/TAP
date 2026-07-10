@@ -119,7 +119,6 @@ fn generate_rooms(world: &World, return_room: String, gid: Uuid) -> HashMap<Stri
     room_grid.insert((0, 0).into(), id.clone());
     room_grid.insert((-1, 0).into(), return_room.clone());
     let mut start_room = Room::new(&format!("(Dungeon) {}", &chosen_room.name));
-	start_room.description = chosen_room.description.clone();
     start_room
         .exits
         .insert(Direction::West, return_room.clone());
@@ -153,8 +152,7 @@ fn generate_rooms(world: &World, return_room: String, gid: Uuid) -> HashMap<Stri
 
 		chosen_room = rooms_pool.remove(rand::rng().random_range(0..rooms_pool.len()));
         let new_id = format_dungeon_id("room", gid, i);
-        let mut new_room = Room::new(&format!("(Dungeon) {}", &chosen_room.name));
-		new_room.description = chosen_room.description.clone();
+        let new_room = Room::new(&format!("(Dungeon) {}", &chosen_room.name));
 
         let new_coord = match dir {
             Direction::North => *coord + TO_NORTH,
