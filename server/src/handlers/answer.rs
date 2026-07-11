@@ -23,7 +23,7 @@ pub fn handle_answer(peer_addr: SocketAddr, server_info: &SharedServer, args: &V
         }
     };
 
-	let mut message = Message::Response { error: ErrorCode::NO_QUEST_AVAILABLE, payload: Payload::Empty };
+	let mut message = Message::Response { error: ErrorCode::NO_RIDDLE_QUEST, payload: Payload::Empty };
 
 	for (quest_ref, step) in &player.quests_in_progress {
 		let Some(quest) = binding.world.quests.get(quest_ref) else {

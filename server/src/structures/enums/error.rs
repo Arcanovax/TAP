@@ -21,6 +21,7 @@ pub enum ErrorCode {
     NOT_YOUR_TURN,
     DEFEATED_FIGHTER,
     NO_QUEST_AVAILABLE,
+    NO_RIDDLE_QUEST,
     CONNECTION_FAILED,
     SEND_FAILED,
     INVALID_ARGS,
@@ -50,6 +51,7 @@ impl ErrorCode {
             | ErrorCode::NOT_AN_ITEM
             | ErrorCode::ROOM_NOT_FOUND
             | ErrorCode::FORBIDDEN_ACTION
+            | ErrorCode::NO_RIDDLE_QUEST
             | ErrorCode::WRONG_ANSWER_OR_PLACE_OR_BOTH
             | ErrorCode::UNUSABLE_ITEM
             | ErrorCode::DEFEATED_ENEMY
