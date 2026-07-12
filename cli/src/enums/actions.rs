@@ -28,6 +28,7 @@ pub enum PendingAction {
     MoveLook,
     Look,
     Rooms,
+    Help,
     DungeonRooms,
     Status,
     ClientStatus,

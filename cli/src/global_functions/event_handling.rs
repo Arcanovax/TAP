@@ -164,15 +164,19 @@ pub fn event_handling(world: &mut World, answer: Vec<&str>) {
 					"FINISH" => {
 						let finish: FinishedQuest = serde_json::from_str(answer[3]).unwrap();
 						let quest_name = {
-							if let Some(item_obj) = world.player.quests.get_mut(&finish.quest) {
-								item_obj.completed = true;
-								item_obj.name.clone()
+							if let Some(quest_obj) = world.player.quests.get_mut(&finish.quest) {
+								quest_obj.completed = true;
+								quest_obj.name.clone()
 							} else {
 								finish.quest.clone()
 							}
 						};
 						world.output.push_back(format!("Unbelievable! You've completed the quest {} and earned {}.", quest_name, finish.reward));
-						*world.player.inventory.entry(finish.reward).or_insert(0) += 1;
+                        if finish.reward == "item.gold" {
+                            world.player.gold += 50;
+                        } else {
+                            *world.player.inventory.entry(finish.reward).or_insert(0) += 1;
+                        }
 						// if let Ok(mut file) = OpenOptions::new()
 						// 	.create(true)
 						// 	.append(true)

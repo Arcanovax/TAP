@@ -5,7 +5,7 @@ use crate::{
         actions::PendingAction, focus::Focus, item_kind::ItemKind, npc_kind::NPCKind,
         states::States,
     }, global_functions::check_goals::check_goals, structures::{
-        attack_results::AttackResult, fight::Fight, items::Item, npc::NPC, quest::Quest, quest_view::{QuestStatus, QuestView, QuestsView}, room::{Room, RoomPayload}, rooms_view::RoomsView, status_view::StatusView, world::World,
+        attack_results::AttackResult, fight::Fight, help_commands::CommandHelp, items::Item, npc::NPC, quest::Quest, quest_view::{QuestStatus, QuestView, QuestsView}, room::{Room, RoomPayload}, rooms_view::RoomsView, status_view::StatusView, world::World,
     },
 };
 
@@ -65,6 +65,14 @@ pub fn response_handling(world: &mut World, answers: Vec<&str>) {
                             }
                         }
                     }
+
+                    PendingAction::Help => {
+                        let list_commands: Vec<CommandHelp> = serde_json::from_str(&real_answer).unwrap_or(Vec::new());
+                        for command in list_commands {
+                            world.output.push_back(format!("{}", command));
+                        }
+                        world.action = PendingAction::None;
+                    },
 
 					PendingAction::Answer => {
 						world.action = PendingAction::None;
@@ -636,7 +644,7 @@ pub fn response_handling(world: &mut World, answers: Vec<&str>) {
                 _ => {
                     world
                         .output
-                        .push_back(format!("[Error] {:#?}, {}", world.action, real_answer));
+                        .push_back(format!("[Error] {}", real_answer));
                     world.action = PendingAction::None;
                 }
             }

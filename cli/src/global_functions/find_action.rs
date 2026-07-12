@@ -37,6 +37,7 @@ pub fn find_action(command: Vec<&str>, world: &mut World) {
 			_ => {}
 		}
 		"answer" => world.action = PendingAction::Answer,
+		"help" => world.action = PendingAction::Help,
         _ => {}
     }
 }
