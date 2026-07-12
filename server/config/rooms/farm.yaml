@@ -19,7 +19,7 @@ npc:
       default:
         - "Everything here is one hundred percent organic. The weeds, sadly, included."
         - "No pesticides on my land. The bugs and I have reached an understanding."
-      quest.search.1:
+      quest.search.2:
         - "My daughter? I'm not worried about her. She's resourceful!"
         - "But it's true that she spent a lot of time in the mountains these last few days."
         - "I hope she's fine!"

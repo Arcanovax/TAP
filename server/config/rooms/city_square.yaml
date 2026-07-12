@@ -1,12 +1,11 @@
 import:
-  - "tavern.yaml"      # exit North
-  - "blacksmith.yaml"  # exit East (+ dialog quest.threat.0 et .5)
-  - "farm.yaml"        # exit West
-  - "market.yaml"      # exit South
-  - "beach.yaml"       # quest.threat : dialog quest.threat.2 (old_man)
-  - "../items/potions.yaml"   # item.ale au sol + quest.threat : pint (goal)
-  - "../items/weapons.yaml"   # quest.threat : dagger (goal), sword (reward)
-  - "../items/misc.yaml"      # quest.threat : goblin_tooth
+  - "tavern.yaml"
+  - "blacksmith.yaml"
+  - "farm.yaml"
+  - "market.yaml"
+  - "beach.yaml"
+  - "../items/potions.yaml"
+  - "../items/misc.yaml"
 
 room:
   city_square:
@@ -29,6 +28,8 @@ npc:
       default:
         - "Hello adventurer! Keep safe!"
         - "I used to be an adventurer like you. Then I took an arrow in the knee."
+      quest.search.0:
+        - "The farmer's daughter and the blacksmith's son have disappeared. Everyone seems to think they ran away together. But their parents think there's another reason and are worried. Go see them to find out more."
     kind: Citizen
     quest: "quest.search"
 
@@ -39,56 +40,31 @@ quest:
       reward: "item.gold"
       goals:
         - Talk:
-            dialog: "npc.blacksmith.dialog.quest.search.0"
+            dialog: "npc.city_gard.dialog.quest.search.0"
         - Talk:
-            dialog: "npc.farmer.dialog.quest.search.1"
+            dialog: "npc.blacksmith.dialog.quest.search.1"
         - Talk:
-            dialog: "npc.door.dialog.quest.search.2"
-        - Collect:
-            item: "item.goblin_tooth"
-            amount: 1
-        - Collect:
-            item: "item.golden_token"
-            amount: 1
-        - Collect:
-            item: "item.sacred_seashell"
-            amount: 1
-        - Retrieve:
-            item: "item.goblin_tooth"
-            amount: 1
+            dialog: "npc.farmer.dialog.quest.search.2"
+        - Talk:
             dialog: "npc.door.dialog.quest.search.3"
+        - Collect:
+            item: "item.goblin_tooth"
+            amount: 1
+        - Collect:
+            item: "item.golden_token"
+            amount: 1
+        - Collect:
+            item: "item.sacred_seashell"
+            amount: 1
+        - Retrieve:
+            item: "item.goblin_tooth"
+            amount: 1
+            dialog: "npc.door.dialog.quest.search.7"
         - Retrieve:
             item: "item.golden_token"
             amount: 1
-            dialog: "npc.door.dialog.quest.search.4"
+            dialog: "npc.door.dialog.quest.search.8"
         - Retrieve:
             item: "item.sacred_seashell"
             amount: 1
-            dialog: "npc.door.dialog.quest.search.5"
-        - Talk:
-            dialog: "npc.door.dialog.quest.search.2"
-        - Talk:
-            dialog: "npc.door.dialog.quest.search.2"
-    # name: "The Threat Beneath"
-    # description: "Rumours speak of goblins massing in the old quarry, guarding something down in the mine. Arm yourself, learn what sleeps beneath, and put an end to it — before it finds us."
-    # reward: "item.sword"
-    # goals:
-    #   - Talk:
-    #       dialog: "npc.blacksmith.dialog.quest.threat.0"
-    #   - Collect:
-    #       item: "item.dagger"
-    #       amount: 1
-    #   - Talk:
-    #       dialog: "npc.old_man.dialog.quest.threat.2"
-    #   - Collect:
-    #       item: "item.pint"
-    #       amount: 1
-    #   - Collect:
-    #       item: "item.goblin_tooth"
-    #       amount: 1
-    #   - Talk:
-    #       dialog: "npc.blacksmith.dialog.quest.threat.5"
-    #   - Retrieve:
-    #       item: "item.goblin_tooth"
-    #       amount: 1
-    #       dialog: "npc.city_gard.dialog.quest.threat.6"
+            dialog: "npc.door.dialog.quest.search.9"

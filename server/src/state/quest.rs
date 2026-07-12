@@ -73,7 +73,11 @@ impl ServerInfo {
                 {
                     let reward = quest.reward.clone();
                     let player = self.get_player_mut(peer_addr).unwrap();
-                    *player.inventory.entry(reward).or_insert(0) += 1;
+                    if reward == "item.gold" {
+                        player.gold += 50;
+                    } else {
+                        *player.inventory.entry(reward).or_insert(0) += 1;
+                    }
                     player.finished_quest.insert(id.to_string());
                     player.quests_in_progress.remove(id);
                 }

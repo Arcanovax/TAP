@@ -1,5 +1,6 @@
 import:
   - "market.yaml"   # exit North
+  - "../items/misc.yaml"
 
 room:
   beach:
@@ -19,7 +20,35 @@ npc:
         - "I once knew a great secret. I've forgotten it — but I'm certain it was great."
       quest.lostbook.0:
         - "A page, you say? Loose leaf, ink still smug with secrets? The tide brought one in — days ago. Or was it a gull. Ask the one who watches stories for a living; he devours endings the way the sea devours sandcastles."
-      quest.threat.2:
-        - "Down to the mine, are you? Heh. The goblins are fleas on a sleeping dog. It's what they GUARD you should fear — it was old when the mine was young, and it does not like to be woken."
-        - "...What was I saying? Ah. Lovely weather."
+      quest.brainstorming.0:
+       - "I have a French riddle for you. Give me the right answer (in French) to win a wonderful sacred seashell."
+       - "Listen carefully:"
+       - "Du repos des humains, implacable ennemi,"
+       - "J'ai rendu mille amants envieux de mon sort,"
+       - "Je me repais de sang et je trouve ma vie,"
+       - "Dans les bras de celui qui recherche ma mort."
+      quest.brainstorming.1:
+       - "I have a French riddle for you. Give me the right answer (in French) to win a wonderful sacred seashell."
+       - "Listen carefully:"
+       - "Du repos des humains, implacable ennemi,"
+       - "J'ai rendu mille amants envieux de mon sort,"
+       - "Je me repais de sang et je trouve ma vie,"
+       - "Dans les bras de celui qui recherche ma mort."
+      quest.brainstorming.2:
+        - "Unbelievable! You're amazing! You won this wonderful sacred seashell!"
     kind: Citizen
+    quest: "quest.brainstorming"
+
+quest:
+  brainstorming:
+    name: "Guess"
+    description: "Find the answer."
+    reward: "item.sacred_seashell"
+    goals:
+      - Talk:
+          dialog: "npc.old_man.dialog.quest.brainstorming.0"
+      - Answer:
+          answer: "moustique"
+          room: "room.beach"
+      - Talk:
+          dialog: "npc.old_man.dialog.quest.brainstorming.2"

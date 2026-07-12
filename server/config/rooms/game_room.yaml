@@ -19,35 +19,23 @@ npc:
         - "SLOT_MACHINE — five gold a pull. Line up a combo and an item is yours; miss, and I thank you for the generous donation."
         - "DICES — also five gold. Guess which numbers, one to ten, I'll roll. Bet on several at once and the payout multiplies... but every single one must come up."
         - "The house always wins. Still, who knows — maybe today you're its favorite charity."
-      quest.brainstorming.0:
-       - "I have a French riddle for you. Give me the right answer (in French) to win a wonderful golden token."
-       - "Listen carefully:"
-       - "Du repos des humains, implacable ennemi,"
-       - "J'ai rendu mille amants envieux de mon sort,"
-       - "Je me repais de sang et je trouve ma vie,"
-       - "Dans les bras de celui qui recherche ma mort."
-      quest.brainstorming.1:
-       - "I have a French riddle for you. Give me the right answer (in French) to win a wonderful golden token."
-       - "Listen carefully:"
-       - "Du repos des humains, implacable ennemi,"
-       - "J'ai rendu mille amants envieux de mon sort,"
-       - "Je me repais de sang et je trouve ma vie,"
-       - "Dans les bras de celui qui recherche ma mort."
-      quest.brainstorming.2:
-        - "Unbelievable! You're amazing! You won this wonderful golden token!"
+      quest.percentage.0:
+       - "Guess your chances of winning if you play my dice game and place a bet on only two dice."
+      quest.percentage.2:
+        - "Exactly! You're amazing! You won this wonderful golden token! What now? Want to play a quick dice game?"
     kind: Citizen
-    quest: "quest.brainstorming"
+    quest: "quest.percentage"
 
 quest:
-  brainstorming:
-    name: "Guess"
+  percentage:
+    name: "Win rate"
     description: "Find the answer."
     reward: "item.golden_token"
     goals:
       - Talk:
-          dialog: "npc.dealer.dialog.quest.brainstorming.0"
+          dialog: "npc.dealer.dialog.quest.percentage.0"
       - Answer:
-          answer: "moustique"
+          answer: "25"
           room: "room.game_room"
       - Talk:
-          dialog: "npc.dealer.dialog.quest.brainstorming.2"
+          dialog: "npc.dealer.dialog.quest.percentage.2"

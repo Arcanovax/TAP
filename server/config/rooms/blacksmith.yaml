@@ -26,7 +26,7 @@ npc:
       default:
         - "“Have kids,” they used to say!"
         - "We spend more time worrying about them than loving them!"
-      quest.search.0:
+      quest.search.1:
         - "My son? I know what everyone says. But I assure you, he would never have given up his job just to pursue a little fling."
         - "But it's true that lately he's been spending more time in the mountains than at the blacksmith's shop!"
         - "You could start your research there."
