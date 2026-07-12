@@ -14,7 +14,7 @@ use ratatui::{
     widgets::{Block, Clear, Gauge, Paragraph, Wrap},
 };
 
-use crate::structures::world::World;
+use crate::{global_functions::estimate_height::estimate_height, structures::world::World};
 
 pub fn escape_handling(
     world: &mut World,
@@ -56,6 +56,7 @@ pub fn escape_handling(
         None => {
             // if let Ok(mut file) = OpenOptions::new().create(true).append(true).open("debug_network.txt") {
             // 	let _ = writeln!(file, "all (State {:?})", step);}
+            let mut lines = String::from("");
             match step {
                 1 => {
                     content = vec![
@@ -64,7 +65,13 @@ pub fn escape_handling(
                         Line::from("Enter => Cancel"),
                     ];
 
-                    popup_area = frame.area().centered(Percentage(50), Length(5));
+                    for (i, line) in content.iter().enumerate() {
+                        if i > 0 {
+                            lines += "\n";
+                        }
+                        lines.push_str(&line.to_string());
+                    }
+                    popup_area = frame.area().centered(Percentage(50), Length(estimate_height(frame.area(), &lines)));
                 }
                 2 => {
                     content = vec![
@@ -72,7 +79,13 @@ pub fn escape_handling(
                         Line::from("ESCAPE => Confirm"),
                         Line::from("Enter => Cancel"),
                     ];
-                    popup_area = frame.area().centered(Percentage(50), Length(5));
+                    for (i, line) in content.iter().enumerate() {
+                        if i > 0 {
+                            lines += "\n";
+                        }
+                        lines.push_str(&line.to_string());
+                    }
+                    popup_area = frame.area().centered(Percentage(50), Length(estimate_height(frame.area(), &lines)));
                 }
                 3 => {
                     content = vec![
@@ -80,7 +93,13 @@ pub fn escape_handling(
                         Line::from("ESCAPE => I dare"),
                         Line::from("Enter => Sorry"),
                     ];
-                    popup_area = frame.area().centered(Percentage(50), Length(5));
+                    for (i, line) in content.iter().enumerate() {
+                        if i > 0 {
+                            lines += "\n";
+                        }
+                        lines.push_str(&line.to_string());
+                    }
+                    popup_area = frame.area().centered(Percentage(50), Length(estimate_height(frame.area(), &lines)));
                 }
                 4 => {
                     content = vec![
@@ -88,7 +107,13 @@ pub fn escape_handling(
                         Line::from("ESCAPE => Ok"),
                         Line::from("Enter => Oh no!"),
                     ];
-                    popup_area = frame.area().centered(Percentage(50), Length(5));
+                    for (i, line) in content.iter().enumerate() {
+                        if i > 0 {
+                            lines += "\n";
+                        }
+                        lines.push_str(&line.to_string());
+                    }
+                    popup_area = frame.area().centered(Percentage(50), Length(estimate_height(frame.area(), &lines)));
                 }
                 5 => {
                     content = vec![
@@ -98,7 +123,13 @@ pub fn escape_handling(
                         Line::from("ESCAPE => Make a donation and leave"),
                         Line::from("Enter => Sorry, I don't have any money on me."),
                     ];
-                    popup_area = frame.area().centered(Percentage(50), Length(6));
+                    for (i, line) in content.iter().enumerate() {
+                        if i > 0 {
+                            lines += "\n";
+                        }
+                        lines.push_str(&line.to_string());
+                    }
+                    popup_area = frame.area().centered(Percentage(50), Length(estimate_height(frame.area(), &lines)));
                 }
                 6 => {
                     content = vec![
@@ -106,7 +137,13 @@ pub fn escape_handling(
                         Line::from("ESCAPE => For sure! Please, let me out!"),
                         Line::from("Enter => For sure! But it made me laugh."),
                     ];
-                    popup_area = frame.area().centered(Percentage(50), Length(5));
+                    for (i, line) in content.iter().enumerate() {
+                        if i > 0 {
+                            lines += "\n";
+                        }
+                        lines.push_str(&line.to_string());
+                    }
+                    popup_area = frame.area().centered(Percentage(50), Length(estimate_height(frame.area(), &lines)));
                 }
                 7 => world.quit = true,
                 _ => {}
