@@ -76,6 +76,15 @@ pub fn draw_text_center_top(rect: Rect,text: &str, font_size: u16, y: f32){
 	draw_text(text, text_pos.x, text_pos.y, font_size as f32, WHITE);
 }
 
+pub fn draw_text_center_top_c(rect: Rect,text: &str, font_size: u16, y: f32, color: Color){
+	let text_size = measure_text(text, None, font_size, 1.0);
+	let text_pos = Vec2::new(
+            	rect.x + (rect.w - text_size.width) / 2.0,
+            	rect.y + y
+        	);
+	draw_text(text, text_pos.x, text_pos.y, font_size as f32, color);
+}
+
 pub fn draw_text_bottom(rect: Rect,text: &str, font_size: u16, x: f32){
 	let text_size = measure_text(text, None, font_size, 1.0);
 	let text_pos = Vec2::new(

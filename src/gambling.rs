@@ -13,7 +13,8 @@ pub struct Dice {
 }
 
 pub struct Slot {
-	pub result: String
+	pub result: String,
+	pub color: Color
 }
 
 
@@ -21,7 +22,7 @@ impl Games {
     pub fn new() -> Self {
         Self {
 			dice: Dice { is_active: false },
-			slot: Slot {  result: "-----".to_string()}
+			slot: Slot {  result: "-----".to_string(), color: WHITE}
         }
     }
 }
@@ -44,9 +45,10 @@ fn draw_slotmachine(game: &mut Game){
 	draw_text_center_top(rect, "Slot Machine", 17, 12.5);
 	let start_button = get_rect_centered_x(rect, vec2(75.0, 35.0), 25.0);
 	if get_button(start_button, "Start", 20, WHITE, game.mouse){
-
+		game.tx_to_serv.try_send("SLOT_MACHINE \n".to_string()).ok();
+		game.pending_action = PendingAction::SlotMachine;
 	}
-	draw_text_center_top(rect, &game.gambling.slot.result.to_string(), 25, 100.0);
+	draw_text_center_top_c(rect, &game.gambling.slot.result.to_string(), 30, 100.0,game.gambling.slot.color);
 }
 
 

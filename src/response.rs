@@ -31,7 +31,8 @@ pub enum PendingAction {
 	Sell(String),
 	DungeonCreate,
 	DungeonJoin,
-	Rooms
+	Rooms,
+	SlotMachine
 }
 
 
@@ -531,6 +532,23 @@ pub async fn handle_response(game: &mut Game, answer: &str, state: &str){
 
 				}
 			}
+		}
+		PendingAction::SlotMachine => {
+			if answer.contains("NOT_ENOUGH_GOLD"){
+				game.gambling.slot = Slot { result: "NO GOLD".to_string(), color: YELLOW }
+			}
+			else{
+				if state=="OK"{
+					game.gambling.slot = Slot { result: "WIN".to_string(), color: GREEN };
+					game.player.inventory.is_load = false}
+				else {
+					game.gambling.slot = Slot { result: "LOSE".to_string(), color: RED };
+				}
+				if let Some(gold) = game.player.gold.as_mut(){
+					*gold -= 5;
+				}
+				
+			}				
 		}
 
 		_ => {
