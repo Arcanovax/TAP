@@ -110,12 +110,6 @@ fn handle_move(game: &mut Game, current_tile: i32){
 		game.tx_to_serv.try_send("DUNGEON JOIN\n".to_string()).ok();
 		game.pending_action = PendingAction::DungeonJoin;
 	}
-	if current_tile == 4{
-		game.gambling.slot.is_active = true;
-	}
-	else if current_tile == 0{
-		game.gambling.slot.is_active = false;
-	}
 }
 
 

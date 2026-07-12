@@ -1,3 +1,5 @@
+
+
 use crate::*;
 
 const SLOT_SIZE: Vec2 = vec2(100.0, 125.0);
@@ -11,7 +13,6 @@ pub struct Dice {
 }
 
 pub struct Slot {
-	pub is_active: bool,
 	pub result: String
 }
 
@@ -20,7 +21,7 @@ impl Games {
     pub fn new() -> Self {
         Self {
 			dice: Dice { is_active: false },
-			slot: Slot { is_active: false, result: "-----".to_string()}
+			slot: Slot {  result: "-----".to_string()}
         }
     }
 }
@@ -50,8 +51,15 @@ fn draw_slotmachine(game: &mut Game){
 
 
 pub fn handle_games(game: &mut Game){
-	if game.gambling.slot.is_active {
-		draw_slotmachine(game);
+	if let Some(map) = game.map_data.clone(){
+		let slot_place = vec2(45.0, 95.0);
+		let range = 20.0;
+		let is_next: bool = (game.player.x - slot_place.x).abs() <= range 
+						&& (game.player.y - slot_place.y).abs() <= range;
+		
+		if map.room.id == "room.game_room" && is_next{
+			draw_slotmachine(game);
+		}
 	}
 }
 
