@@ -1,4 +1,4 @@
-use std::net::SocketAddr;
+use std::{net::SocketAddr};
 
 use crate::{protocol::{Message, Payload}, state::SharedServer, structures::{enums::{error::ErrorCode, game_event::GameEvent}, handler_outcome::HandlerOutcome, quest::Goal}};
 
@@ -36,8 +36,6 @@ pub fn handle_answer(peer_addr: SocketAddr, server_info: &SharedServer, args: &V
 				message = Message::Response { error: ErrorCode::SUCCESS, payload: Payload::Empty };
 				break;
 			}
-		} else {
-			message = Message::Response { error: ErrorCode::INVALID_COMMAND, payload: Payload::Empty }
 		}
 	}
 
