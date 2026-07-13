@@ -31,7 +31,7 @@ npc:
         - "But it's true that lately he's been spending more time in the mountains than at the blacksmith's shop!"
         - "You could start your research there."
       quest.tempering.1:
-        - "You brought the ale! Perfect. Forget water — a blade quenched in a good amber holds its edge AND a fine bouquet. Here, this breastplate is yours. 'Plot Armor,' I call it: never seen a hero die in one."
+        - "You brought the ale! Perfect. Temperatures like this at this time of year! Makes you think the alchemists are actually right about their 'global warming'! Yet our King Pomald CRUMP claims it's fake news."
     kind:
       Merchant:
         gold: 45
@@ -46,7 +46,7 @@ npc:
 quest:
   tempering:
     name: "A Fine Tempering"
-    description: "Métallurgix swears a blade quenched in good ale outlasts one cooled in mere water. Bring him an amber beer from the pub to prove it."
+    description: "It's really hot today, and Métallurgix has a lot of work to do. Bring him an amber beer so he can cool off."
     reward: "item.breastplate"
     goals:
       - Collect:

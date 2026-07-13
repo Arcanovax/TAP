@@ -15,10 +15,9 @@ npc:
     name: "Donnetonfrix"
     dialog:
       default:
-        - "Welcome, welcome! The name's Donnetonfrix, and yes, I fully intend to take your gold. Two ways to lose it here:"
+        - "Welcome, welcome! Did you know that 100% of winners played? Be one of them by playing one of my two games:"
         - "SLOT_MACHINE — five gold a pull. Line up a combo and an item is yours; miss, and I thank you for the generous donation."
-        - "DICES — also five gold. Guess which numbers, one to ten, I'll roll. Bet on several at once and the payout multiplies... but every single one must come up."
-        - "The house always wins. Still, who knows — maybe today you're its favorite charity."
+        - "DICES — also five gold. I'm going to roll 10 ten-sided dice. You can bet on the numbers that will come up for as many dice as you want. If all your predicted numbers are rolled, you win your bet multiplied by the number of predictions"
       quest.percentage.0:
        - "Guess your chances of winning if you play my dice game and place a bet on only two dice. For example, if you think you have a 100% chance of winning, just answer '100'"
       quest.percentage.2:

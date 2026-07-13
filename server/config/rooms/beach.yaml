@@ -16,8 +16,8 @@ npc:
     name: "Enigmatix"
     dialog:
       default:
-        - "The tide takes what it takes, and gives what it gives... mostly seaweed."
-        - "I once knew a great secret. I've forgotten it — but I'm certain it was great."
+        - "Hello adventurer!"
+        - "It's a beautiful day for fishing, isn't it?"
       quest.lostbook.0:
         - "A page, you say? Loose leaf, ink still smug with secrets? The tide brought one in — days ago. Or was it a gull. Ask the one who watches stories for a living; he devours endings the way the sea devours sandcastles."
       quest.brainstorming.0:

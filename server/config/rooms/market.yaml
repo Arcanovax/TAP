@@ -22,8 +22,7 @@ npc:
     name: "Oncassléprix"
     dialog:
       default:
-        - "Prices SMASHED! Everything must go — especially the things nobody wants!"
-        - "For you, my friend, a special price. Same as everyone else, but I say it with more warmth."
+        - "Come on over, ladies and gentlemen! My cheese smells wonderful! Come taste it and experience a culinary orgasm!"
     kind:
       Merchant:
         gold: 45
@@ -37,16 +36,16 @@ npc:
     name: "Alavavix"
     dialog:
       default:
-        - "Can't stop, deals to catch, bargains to grab. It's all go, go, go!"
-        - "Out of the way, please — the good tomatoes are nearly gone!"
+        - "Have you heard about those runaway teens? I've always said that boy was a bad influence."
+        - "The guard will tell you more."
     kind: Citizen
 
   citizen_4:
     name: "Cinematix"
     dialog:
       default:
-        - "This market reminds me of a film. Everything reminds me of a film, honestly."
-        - "I'd tell you how it ends, but I don't do spoilers. Unlike some people."
+        - "That's all anyone is talking about in the village square: their running away. I find it sad that such a sensible boy would let himself be influenced by a girl of ill repute."
+        - "The guard will tell you more."
       quest.lostbook.1:
         - "A page? Oh, THAT page. I may have... read it. And left it back in the reading corner where it belongs. I don't do spoilers, remember — but between us, the butler absolutely did it. Go tell the old bookseller it's home."
     kind: Citizen
