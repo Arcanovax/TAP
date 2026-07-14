@@ -226,7 +226,7 @@ async fn main() {
 			camera: Camera2D::default()
 		},
 		active_fight: None,
-		quests: Quests { all: Vec::new(), is_load: false},
+		quests: Quests { all: Vec::new(), is_load: false, i:0},
 		npc_shop: NpcShop { is_active: false, buy_info: None, sell_info: None},
 		mouse: Vec2::new(0.0, 0.0),
 		dungeon: None,
@@ -310,6 +310,8 @@ async fn main() {
 				game.pending_action = PendingAction::Quests;
 			}
 
+
+
 			else if game.player.gold.is_none() && game.pending_action == PendingAction::None{
 				game.tx_to_serv.try_send("GOLD \n".to_string()).ok();
 				game.pending_action = PendingAction::Gold;
@@ -325,6 +327,13 @@ async fn main() {
 						}
 					}
 					else{
+
+					if let Some(quest) = game.quests.all.iter().find(|quest| quest.info.is_none()) {
+						let msg = format!("QUEST_INFO {} \n", quest.quest_id.clone());
+						game.tx_to_serv.try_send(msg).ok();
+						game.pending_action = PendingAction::QuestInfo(quest.quest_id.clone());
+						
+					}
 
 					if !game.player.inventory.is_load && game.pending_action == PendingAction::None{
 						game.tx_to_serv.try_send("INVENTORY \n".to_string()).ok();

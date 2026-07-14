@@ -32,7 +32,9 @@ pub enum PendingAction {
 	DungeonCreate,
 	DungeonJoin,
 	Rooms,
-	SlotMachine
+	SlotMachine,
+	Dices,
+	QuestInfo(String)
 }
 
 
@@ -393,7 +395,7 @@ pub async fn handle_response(game: &mut Game, answer: &str, state: &str){
 							game.quests.is_load = true;
 							for quest in quests{
 								game.quests.all.push(
-									Quest { npc_id: String::new(), quest_id: quest.quest_id, description: quest.progress, reward: String::new(), goal: None}
+									Quest { npc_id: String::new(), quest_id: quest.quest_id, description: quest.progress, reward: String::new(), goal: None, info:None}
 								)
 							}
 
@@ -416,8 +418,23 @@ pub async fn handle_response(game: &mut Game, answer: &str, state: &str){
 							quest_id: quest.quest_id,
 							description: quest.description,
 							reward: quest.reward,
-							goal: None
+							goal: None,
+							info:None
 						});
+					}
+					Err(e) => {
+						eprintln!("QUEST error: {}", e);
+					}
+				}
+			}
+		}
+		PendingAction::QuestInfo(id) => {
+			if  state =="OK"{
+				match serde_json::from_str::<QuestInfo>(answer) {
+					Ok(quest_info) => {
+						if let Some(quest) = game.quests.all.iter_mut().find(|q| &q.quest_id == id) {
+							quest.info = Some(quest_info);
+                		}
 					}
 					Err(e) => {
 						eprintln!("QUEST error: {}", e);
@@ -547,7 +564,18 @@ pub async fn handle_response(game: &mut Game, answer: &str, state: &str){
 				if let Some(gold) = game.player.gold.as_mut(){
 					*gold -= 5;
 				}
-				
+			}				
+		}
+		PendingAction::Dices => {
+			if answer.contains("NOT_ENOUGH_GOLD"){
+				game.gambling.slot = Slot { result: "NO GOLD".to_string(), color: YELLOW }
+			}
+			else{
+				if state=="OK"{
+				}
+				if let Some(gold) = game.player.gold.as_mut(){
+					*gold -= 5;
+				}
 			}				
 		}
 

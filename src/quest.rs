@@ -7,11 +7,22 @@ pub struct Quest{
     pub description: String,
     pub reward: String,
     pub goal: Option<Goal>,
+	pub info: Option<QuestInfo>
+}
+
+
+#[derive(Deserialize, Debug, PartialEq)]
+pub struct QuestInfo{
+	pub name: String,
+    pub description: String,
+    pub reward: String,
+    pub goals: Vec<Goal>,
 }
 
 pub struct Quests{
     pub all: Vec<Quest>,
-	pub is_load: bool
+	pub is_load: bool,
+	pub i: usize
 }
 
 
@@ -28,35 +39,47 @@ pub enum Goal {
 pub fn display_quests(game: &mut Game){
     let rect_info: Rect = get_rect_right(vec2(350.0, 150.0), 0.0);
     draw_rectangle(rect_info.x, rect_info.y, rect_info.w, rect_info.h, Color::new(0.0, 0.0, 0.0, 0.40));
-
-    let title_quest_pos = vec2(rect_info.x+5.0, rect_info.y+25.0);
-    draw_text("Quests:",title_quest_pos.x , title_quest_pos.y, 35.0, WHITE);
-
-    let mut pos_y = title_quest_pos.y + 30.0;
-
-    for quest in game.quests.all.iter(){
-        let quest_info = format!("- {}", quest.quest_id);
-        draw_text(quest_info, title_quest_pos.x, pos_y, 25.0, YELLOW);
-        pos_y += 20.0;
-		let quest_goal = match quest.goal.clone() {
-			Some(Goal::Collect { item, amount }) => {
-				format!("- Collect {} x{}", item, amount)
-			}
-			Some(Goal::Talk { dialog }) => {
-				format!("- Talk to {}", dialog)
-			}
-			Some(Goal::Retrieve {amount, dialog,item}) => {
-				format!("- Retrieve {} {}", amount,item)
-			}
-			_ => String::new()
-		};
-		if quest_goal.is_empty(){
-			draw_text(&quest.description, title_quest_pos.x + 20.0, pos_y, 20.0, WHITE);
+	let quest = &game.quests.all[game.quests.i];
+	
+	if let Some(info) = &quest.info{
+		let rect_name: Rect = get_rect_centered_x(rect_info, vec2(350.0, 25.0), 0.0);
+		draw_rectangle(rect_name.x, rect_name.y, rect_name.w, rect_name.h, Color::new(0.0, 0.0, 0.0, 0.80));
+		draw_text_center(rect_name,&info.name , 30);
+		let btn_left: Rect = Rect::new(rect_name.x, rect_name.y, 25.0, 25.0);
+		if get_button(btn_left, "<", 25, WHITE, game.mouse){
+			game.quests.i = (game.quests.i + game.quests.all.len() - 1) % game.quests.all.len();
 		}
-		else{
-			draw_text(&quest_goal, title_quest_pos.x + 20.0, pos_y, 20.0, WHITE);
+		let btn_left: Rect = Rect::new(rect_name.x +rect_name.w-25.0, rect_name.y, 25.0, 25.0);
+		if get_button(btn_left, ">", 25, WHITE, game.mouse){
+			game.quests.i = (game.quests.i + game.quests.all.len() + 1) % game.quests.all.len();
 		}
-        pos_y += 20.0;
-
-    }
+	}
+    
 }
+
+    // for quest in game.quests.all.iter(){
+	// 	if let Some(info) = &quest.info{
+	// 		 let quest_info = format!("- {}", info.name);
+    //     	draw_text(quest_info, title_quest_pos.x, pos_y, 25.0, YELLOW);
+	// 		 pos_y += 20.0;
+	// 	let quest_goal = match quest.goal.clone() {
+	// 		Some(Goal::Collect { item, amount }) => {
+	// 			format!("- Collect {} x{}", item, amount)
+	// 		}
+	// 		Some(Goal::Talk { dialog }) => {
+	// 			format!("- Talk to {}", dialog)
+	// 		}
+	// 		Some(Goal::Retrieve {amount, dialog,item}) => {
+	// 			format!("- Retrieve {} {}", amount,item)
+	// 		}
+	// 		_ => String::new()
+	// 	};
+
+	// 	draw_text(&quest_goal, title_quest_pos.x + 20.0, pos_y, 20.0, WHITE);
+    //     pos_y += 20.0;
+	// 	}
+       
+       
+
+    
+
