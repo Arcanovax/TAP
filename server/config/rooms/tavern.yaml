@@ -20,8 +20,8 @@ npc:
     name: "Grossbarrix"
     dialog:
       default:
-        - "Welcome to The Awesome Pub! First rule: pay your tab. There is no second rule."
-        - "Ale, pint, peanuts — the three essential food groups."
+        - "Welcome to The Awesome Pub! Take a seat and look at the menu."
+        - "Did the guard tell you about those missing teenagers?"
       quest.restock.1:
         - "You found cheese? Real, actual cheese? The regulars have been eyeing the furniture. You're a lifesaver — here, a proper pint, on the house."
     kind:
@@ -37,16 +37,16 @@ npc:
     name: "Nésousix"
     dialog:
       default:
-        - "I'm not drunk. I'm just... emotionally horizontal."
-        - "Have you ever really looked at a pint? I mean, truly looked at it?"
+        - "These runaway teens don't think about how worried their parents will be."
+        - "The guard is looking for people to help find them."
     kind: Citizen
 
   client_2:
     name: "Spacix"
     dialog:
       default:
-        - "Sorry, were you saying something? I drifted off. My happy place has more ale."
-        - "Give me some space, friend. Literally. You're standing on my foot."
+        - "It's a good thing when young people spread their wings and fly."
+        - "It's too bad that the guard is looking for people to help him find them."
     kind: Citizen
 
 quest:

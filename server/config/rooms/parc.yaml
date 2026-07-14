@@ -24,7 +24,7 @@ npc:
         - "A book, traveler? For your evenings by the fire."
         - "Young people don't read anymore. It's a disaster."
       quest.lostbook.2:
-        - "You found it — my missing final page! A hundred readings and I never knew how the tale ended. I'm... not sure I dare look. Take this helmet for your trouble; wear it when you think hard. It helps. Somehow."
+        - "You found it — my missing final page! Maybe I should be less judgmental about movies. Some of them are probably really good."
     kind: Citizen
     quest: "quest.lostbook"
 
@@ -40,8 +40,8 @@ npc:
     name: "Soirénetflix"
     dialog:
       default:
-        - "I only came outside because my screen asked if I was still watching. I felt judged."
-        - "Fresh air is overrated. You can't even pause it."
+        - "Kids these days will come up with anything just to get attention. Back in my day, this wouldn't have happened!"
+        - "The guard will tell you more."
     kind: Citizen
 
 quest:

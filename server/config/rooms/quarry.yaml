@@ -18,8 +18,7 @@ npc:
     name: "Sansabrix"
     dialog:
       default:
-        - "No sabers on us, sure — but we've got numbers. And attitude. Mostly attitude."
-        - "Turn back, tall one. This mine is ours. Though, honestly, the rent is dreadful."
+        - "Turn back, human. This mine is ours."
     kind:
       Enemy:
         hp: 120

@@ -19,7 +19,7 @@ npc:
         - "Hello adventurer!"
         - "It's a beautiful day for fishing, isn't it?"
       quest.lostbook.0:
-        - "A page, you say? Loose leaf, ink still smug with secrets? The tide brought one in — days ago. Or was it a gull. Ask the one who watches stories for a living; he devours endings the way the sea devours sandcastles."
+        - "The last page of his book? Why would I have it? Is it because I'm old, is that it? Always the same thing. Go check out Cinematix at the market."
       quest.brainstorming.0:
        - "I have a French riddle for you. Give me the right answer (in French) to win a wonderful sacred seashell."
        - "Listen carefully:"
