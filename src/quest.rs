@@ -12,7 +12,7 @@ pub struct Quest{
 }
 
 
-#[derive(Deserialize, Debug, PartialEq)]
+#[derive(Deserialize, Debug, PartialEq, Clone)]
 pub struct QuestInfo{
 	pub name: String,
     pub description: String,

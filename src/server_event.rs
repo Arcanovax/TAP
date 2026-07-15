@@ -46,8 +46,12 @@ pub async fn handle_events(game: &mut Game, answer: Vec<&str>){
 						for quest in &mut game.quests.all{
 							if quest.quest_id == quest_upt.quest{
 								quest.goal = Some(quest_upt.goal.clone());
-								println!("up {}", quest_upt.quest);
+								if let Some((pos, all)) = quest.progress.split_once('/') {
+								let i: usize = pos.parse().unwrap_or(0) + 1;
+								quest.progress = format!("{}/{}", i, all);
+								}
 								
+
 							}
 						}
 					}

@@ -434,7 +434,15 @@ pub async fn handle_response(game: &mut Game, answer: &str, state: &str){
 				match serde_json::from_str::<QuestInfo>(answer) {
 					Ok(quest_info) => {
 						if let Some(quest) = game.quests.all.iter_mut().find(|q| &q.quest_id == id) {
-							quest.info = Some(quest_info);
+							quest.info = Some(quest_info.clone());
+							// if quest.progress.is_empty(){
+							// 	quest.progress = format!("0/{}", quest_info.goals.len())
+							// }
+							if let Some((pos, _)) = quest.progress.split_once('/') {
+								let i: usize = pos.parse().unwrap_or(0);
+								quest.goal = Some(quest_info.goals[i].clone())
+							}
+							 
                 		}
 					}
 					Err(e) => {
