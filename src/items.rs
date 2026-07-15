@@ -22,6 +22,7 @@ pub struct Item {
 	pub kind: ItemKind
 }
 
+
 pub async fn get_item_texture(item_id: &str) -> Texture2D {
     let path = match item_id {
         "item.ale" => "assets/items/ale.png",

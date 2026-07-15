@@ -395,7 +395,7 @@ pub async fn handle_response(game: &mut Game, answer: &str, state: &str){
 							game.quests.is_load = true;
 							for quest in quests{
 								game.quests.all.push(
-									Quest { npc_id: String::new(), quest_id: quest.quest_id, description: quest.progress, reward: String::new(), goal: None, info:None}
+									Quest { npc_id: String::new(), quest_id: quest.quest_id, description: String::new() , reward: String::new(), goal: None, info:None, progress: quest.progress}, 
 								)
 							}
 
@@ -419,7 +419,8 @@ pub async fn handle_response(game: &mut Game, answer: &str, state: &str){
 							description: quest.description,
 							reward: quest.reward,
 							goal: None,
-							info:None
+							info: None,
+							progress: String::new()
 						});
 					}
 					Err(e) => {

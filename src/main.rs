@@ -561,11 +561,10 @@ fn handle_game(game: &mut Game, map: &Room, map_data: LookData){
 		set_default_camera();
 		draw_player_info(game);
 
-
-		display_quests(game);
-
-
-
+		if !game.quests.all.is_empty(){
+			display_quests(game);
+		}
+		
 		if game.focus == InputFocus::Game {
 			while get_char_pressed().is_some() {}
 		}
