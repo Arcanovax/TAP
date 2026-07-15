@@ -577,14 +577,27 @@ pub async fn handle_response(game: &mut Game, answer: &str, state: &str){
 		}
 		PendingAction::Dices => {
 			if answer.contains("NOT_ENOUGH_GOLD"){
-				game.gambling.slot = Slot { result: "NO GOLD".to_string(), color: YELLOW }
+				game.gambling.dice.result = Slot { result: "NO GOLD".to_string(), color: YELLOW }
 			}
 			else{
-				if state=="OK"{
-				}
 				if let Some(gold) = game.player.gold.as_mut(){
-					*gold -= 5;
+					if answer.contains("GAME_LOSE"){
+						game.gambling.dice.result = Slot {result: "LOOSE".to_string(), color: RED};
+						*gold -= 5;
+					}
+					else{
+						match parse_dices_data(answer) {
+							Some(data) => {
+								*gold -= 5;
+								game.gambling.dice.result = Slot {result: format!("WIN {} Gold", data.gold), color: GREEN};
+								*gold += data.gold;
+							}
+							None => { }
+						}
+					}
 				}
+
+				
 			}				
 		}
 
@@ -667,5 +680,9 @@ pub struct RoomData {
 
 }
 
-
+#[derive(Deserialize, Debug)]
+pub struct DicesData {
+	pub gold: i32,
+    pub draw: String,
+}
 
