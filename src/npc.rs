@@ -162,7 +162,6 @@ pub fn handle_npc_interactions(game: &mut Game, place: Vec2, npc: Npc){
 		if game.npc_shop.is_active {
 			handle_shop(game, &npc);
 		}
-	camera_handler(game);
 }
 
 

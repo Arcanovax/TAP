@@ -6,9 +6,9 @@ const ALLOWED_COMMANDS: &[&str] = &[
 	"/STATUS",
 	"/QUESTS",
 	"/INVENTORY",
-	"/QUESTS",
+	"/QUEST_INFO",
 	"/GOLD",
-	"/BUY"
+	"/ANSWER"
 ];
 use crate::*;
 
@@ -208,14 +208,20 @@ pub fn handle_chat(game: &mut Game) {
 }
 
 fn handle_direct_command(game: &mut Game){
-	let rq: String = format!("{}\n",game.chat.current_input.clone()[1..].to_string());
-	let cmd: String = format!("[{}] {}\n",game.player.name, game.chat.current_input);
-	if !ALLOWED_COMMANDS.contains(&game.chat.current_input.to_ascii_uppercase().as_str()) {
+	let command_line = game.chat.current_input.trim();
+	let command_name = command_line
+		.split_whitespace()
+		.next()
+		.unwrap_or("")
+		.to_ascii_uppercase();
+
+	if !ALLOWED_COMMANDS.contains(&command_name.as_str()) {
 		game.tx_to_serv.try_send("\n".to_string()).ok();
-    }
-	else{
-		game.tx_to_serv.try_send(rq.clone()).ok();
+		return;
 	}
-	game.pending_action = PendingAction::Command(CHANNELS[game.chat.channel as usize].to_string(), cmd);
+
+	let rq: String = format!("{}\n", &command_line[1..]);
+	game.tx_to_serv.try_send(rq.clone()).ok();
+	game.pending_action = PendingAction::Command(CHANNELS[game.chat.channel as usize].to_string(), rq);
 }
 

@@ -567,12 +567,7 @@ fn handle_game(game: &mut Game, map: &Room, map_data: LookData){
 			cut_sheet
 		);
 
-		if let Some((place, npc)) = active_npc {
-			handle_npc_interactions(game, place, npc);
-		}
-		else{
-			game.npc_shop.is_active = false;
-		}
+		
 
 
 		if let Some(builds_texture) = builds.as_ref() {
@@ -588,6 +583,14 @@ fn handle_game(game: &mut Game, map: &Room, map_data: LookData){
 				WHITE,
 				builds_params,
 			);
+		}
+		
+		if let Some((place, npc)) = active_npc {
+			handle_npc_interactions(game, place, npc);
+			camera_handler(game);
+		}
+		else{
+			game.npc_shop.is_active = false;
 		}
 
 

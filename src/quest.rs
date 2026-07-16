@@ -31,7 +31,8 @@ pub struct Quests{
 pub enum Goal {
     Collect {item: String, amount: u32 },
     Talk { dialog: String },
-	Retrieve {amount: i32, dialog:String, item:String}
+	Retrieve {amount: i32, dialog:String, item:String},
+	Answer {answer: String, room: String}
 }
 
 
@@ -82,6 +83,9 @@ pub fn display_quests(game: &mut Game){
 			}
 			Goal::Retrieve {amount, dialog,item} => {
 				draw_text("Cole",goal_coord.x, goal_coord.y , 20.0, WHITE);
+			}
+			Goal::Answer { answer, room } => {
+				draw_text("Answer with /answer [word]",goal_coord.x, goal_coord.y , 25.0, WHITE);
 			}
 		};
 		
