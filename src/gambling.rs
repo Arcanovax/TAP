@@ -76,7 +76,7 @@ fn draw_dice(game: &mut Game){
 				cmd.push_str(&(count).to_string());
 			}
 		}
-		println!("{}", cmd);
+
 		cmd.push('\n');
 		game.tx_to_serv.try_send(cmd).ok();
 		game.pending_action = PendingAction::Dices;
