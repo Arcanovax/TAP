@@ -163,7 +163,6 @@ pub async fn handle_events(game: &mut Game, answer: Vec<&str>){
 				if answer[3] == "ENTER"{
 					if let Some(ref mut map_data) = game.map_data{
 						map_data.players.push(name);
-						// game.map_data = None
 					}
 				}
 				else if answer[3] == "LEAVE"{

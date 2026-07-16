@@ -72,12 +72,11 @@ fn draw_dice(game: &mut Game){
 		for i in 0..10 {
 			let count = game.gambling.dice.picks[i];
 			if count > 0 {
-				for _ in 0..count {
-					cmd.push(' ');
-					cmd.push_str(&(i + 1).to_string());
-				}
+				cmd.push(' ');
+				cmd.push_str(&(count).to_string());
 			}
 		}
+		println!("{}", cmd);
 		cmd.push('\n');
 		game.tx_to_serv.try_send(cmd).ok();
 		game.pending_action = PendingAction::Dices;
