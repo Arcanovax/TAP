@@ -39,7 +39,7 @@ pub fn draw_enemy_info(game: &mut Game, npc: Npc){
 		draw_rectangle(lifebar.x, lifebar.y, lifebar.w, lifebar.h,BLACK);
 		let hp_ratio: f32 = fight.enemy_hp as f32 / max_hp as f32;
 		draw_rectangle(lifebar.x, lifebar.y+2.5, lifebar.w * hp_ratio, 20.0,RED);
-		let hp_info = format!("{}/{}",fight.enemy_hp,2000);
+		let hp_info = format!("{}/{}",fight.enemy_hp,max_hp);
 		draw_text_center(lifebar, &hp_info, 20);
 		draw_rectangle_lines(lifebar.x, lifebar.y, lifebar.w, lifebar.h, 5.0, GRAY);
 	}

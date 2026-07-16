@@ -34,6 +34,12 @@ pub async fn get_item_texture(item_id: &str) -> Texture2D {
         "item.shield" => "assets/items/shield.png",
         "item.helmet" => "assets/items/helmet.png",
         "item.gold" => "assets/items/gold.png",
+        "item.golden_token" => "assets/items/gold_token.png",
+        "item.sacred_seashell" => "assets/items/sacred_seashell.png",
+        "item.goblin_tooth" => "assets/items/goblin_tooth.png",
+        "item.dagger" => "assets/items/dagger.png",
+        "item.cheese" => "assets/items/cheese.png",
+        "item.bread" => "assets/items/bread.png",
         _ => return Texture2D::empty(),
     };
 

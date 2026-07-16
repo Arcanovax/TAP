@@ -285,7 +285,17 @@ pub async fn handle_response(game: &mut Game, answer: &str, state: &str){
 							state.hp = fight_data.attacker_hp;
 							if let Some(ref mut fight) = &mut game.active_fight{
 								fight.enemy_hp = fight_data.target_hp;
-								fight.chat.push(format!("You attack and deal {} damage", fight_data.damage));
+								if fight_data.target_hp <= 0{
+									fight.chat.push(format!("You deal {} damage and killed the enemy", fight_data.damage));
+									game.player.state = None;
+									game.active_fight = None;
+									game.player.gold = None;
+									game.player.inventory.is_load = false;
+								}
+								else{
+									fight.chat.push(format!("You attack and deal {} damage", fight_data.damage));
+								}
+								
 							}
 							else{
 								state.status= fight_data.status;
@@ -320,6 +330,14 @@ pub async fn handle_response(game: &mut Game, answer: &str, state: &str){
 					if let Some(npc) = game.loaded_npcs.get_mut(npc_id){
 							npc.npc_talk = Some(NpcTalk{
 							texts:vec!["You already lost".to_string()],
+							text_i: 0,
+						});
+					}
+				}
+				if answer.contains("DEFEATED_ENEMY"){
+					if let Some(npc) = game.loaded_npcs.get_mut(npc_id){
+							npc.npc_talk = Some(NpcTalk{
+							texts:vec!["You beat me, nice fight".to_string()],
 							text_i: 0,
 						});
 					}
@@ -397,9 +415,17 @@ pub async fn handle_response(game: &mut Game, answer: &str, state: &str){
 						Ok(quests) => {
 							game.quests.is_load = true;
 							for quest in quests{
-								game.quests.all.push(
-									Quest { npc_id: String::new(), quest_id: quest.quest_id, description: String::new() , reward: String::new(), goal: None, info:None, progress: quest.progress}, 
-								)
+								if let Some(progress) = quest.progress{
+									game.quests.all.push(
+									Quest { npc_id: String::new(), quest_id: quest.quest_id, description: String::new() , reward: String::new(), goal: None, info:None, progress: progress}, 
+									)
+								}
+								else{
+									game.quests.all.push(
+									Quest { npc_id: String::new(), quest_id: quest.quest_id, description: String::new() , reward: String::new(), goal: None, info:None, progress:"Finished".to_string()}, 
+									)
+								}
+								
 							}
 
 						}
@@ -641,7 +667,7 @@ pub struct QuestData {
 
 #[derive(Deserialize, Debug)]
 pub struct QuestsData {
-	pub progress: String,
+	pub progress: Option<String>,
     pub quest_id: String,
     pub status: String,
 }

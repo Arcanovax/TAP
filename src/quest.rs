@@ -89,7 +89,7 @@ pub fn display_quests(game: &mut Game){
 			}
 		};
 		
-		draw_text(quest.progress.clone(), rect_info.x + 20.0, 100.0, 35.0, WHITE);
+		draw_text(quest.progress.clone(), rect_info.x + 20.0, 100.0, 30.0, WHITE);
 		draw_text("Reward:", rect_info.x + 20.0, 130.0, 35.0, WHITE);
 		let reward_rect = Rect::new(rect_info.x + 145.0, 110.0, 15.0, 15.0);
 		if let Some(reward) = game.loaded_items.get(&info.reward){
