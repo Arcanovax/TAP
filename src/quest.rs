@@ -41,6 +41,9 @@ pub enum Goal {
 pub fn display_quests(game: &mut Game){
     let rect_info: Rect = get_rect_right(vec2(350.0, 150.0), 0.0);
     draw_rectangle(rect_info.x, rect_info.y, rect_info.w, rect_info.h, Color::new(0.0, 0.0, 0.0, 0.40));
+	if game.quests.i >= game.quests.all.len() {
+		game.quests.i = 0;
+	}
 	let quest = &game.quests.all[game.quests.i];
 	
 	if let Some(info) = &quest.info{
