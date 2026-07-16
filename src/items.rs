@@ -40,6 +40,7 @@ pub async fn get_item_texture(item_id: &str) -> Texture2D {
         "item.dagger" => "assets/items/dagger.png",
         "item.cheese" => "assets/items/cheese.png",
         "item.bread" => "assets/items/bread.png",
+        "item.breastplate" => "assets/items/breastplate.png",
         _ => return Texture2D::empty(),
     };
 

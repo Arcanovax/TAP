@@ -167,11 +167,11 @@ pub fn handle_npc_interactions(game: &mut Game, place: Vec2, npc: Npc){
 
 fn handle_shop(game: &mut Game, npc: &Npc){
 	if let NPCKind::Merchant { inventory, .. } = &npc.kind {
-			let shop_rect = get_center_rect(vec2(400.0, 250.0));
+			let shop_rect = get_center_rect(vec2(400.0, 200.0));
 			draw_rectangle(shop_rect.x,shop_rect.y,shop_rect.w,shop_rect.h,Color::new(0.0, 0.0, 0.0, 0.85));
 			let item_size = 50.0;
 			let columns = 1;
-			let total_h = (inventory.len() as f32 / columns as f32).ceil() * 50.0;
+			let total_h = (inventory.len() as f32 / columns as f32).ceil() * 55.0 + 15.0;
 			let max_offset = (total_h - shop_rect.h).max(0.0);
 
 			draw_rectangle(shop_rect.x, shop_rect.y, shop_rect.w, shop_rect.h, Color::new(0.0, 0.0, 0.0, 0.5));
