@@ -118,7 +118,8 @@ struct Game {
 	pub npc_shop: NpcShop,
 	pub mouse: Vec2,
 	pub dungeon: Option<Dungeon>,
-	pub gambling: Games
+	pub gambling: Games,
+	pub is_connected: bool,
 }
 
 
@@ -130,37 +131,51 @@ struct GameConfig {
 }
 
 async fn network_task(tx: mpsc::Sender<String>, mut rx: tokio::sync::mpsc::Receiver<String>) {
-    let stream = TcpStream::connect("127.0.0.1:8080").await.unwrap();
-    let (mut reader, mut writer) = stream.into_split();
+    loop {
+        let stream = match TcpStream::connect("127.0.0.1:8080").await {
+            Ok(stream) => stream,
+            Err(_) => {
+                tx.send("SYS DISCONNECTED".to_string()).ok();
+                tokio::time::sleep(std::time::Duration::from_secs(2)).await;
+                continue;
+            }
+        };
 
+        tx.send("SYS CONNECTED".to_string()).ok();
 
-	let read_task = tokio::spawn(async move {
+        let (mut reader, mut writer) = stream.into_split();
         let mut buf = [0u8; 1024];
         let mut accumulator = String::new();
-        loop {
-            let n = reader.read(&mut buf).await.unwrap();
-            if n == 0 { break; }
-            accumulator.push_str(&String::from_utf8_lossy(&buf[..n]));
 
-            while let Some(pos) = accumulator.find('\n') {
-                let line = accumulator[..pos].trim().to_string();
-                if !line.is_empty() {
-                    tx.send(line).ok();
+        'session: loop {
+            tokio::select! {
+                read_result = reader.read(&mut buf) => {
+                    match read_result {
+                        Ok(0) | Err(_) => break 'session,
+                        Ok(n) => {
+                            accumulator.push_str(&String::from_utf8_lossy(&buf[..n]));
+                            while let Some(pos) = accumulator.find('\n') {
+                                let line = accumulator[..pos].trim().to_string();
+                                if !line.is_empty() {
+                                    tx.send(line).ok();
+                                }
+                                accumulator = accumulator[pos + 1..].to_string();
+                            }
+                        }
+                    }
                 }
-                accumulator = accumulator[pos + 1..].to_string();
+                Some(msg) = rx.recv() => {
+                    if writer.write_all(msg.as_bytes()).await.is_err() {
+                        break 'session;
+                    }
+                }
             }
         }
-    });
 
-    let write_task = tokio::spawn(async move {
-        while let Some(msg) = rx.recv().await {
-            writer.write_all(msg.as_bytes()).await.unwrap();
-        }
-    });
-
-    let _ = tokio::join!(read_task, write_task);
+        tx.send("SYS DISCONNECTED".to_string()).ok();
+        tokio::time::sleep(std::time::Duration::from_secs(2)).await;
+    }
 }
-
 
 fn config() -> Conf {
     Conf {
@@ -230,7 +245,8 @@ async fn main() {
 		npc_shop: NpcShop { is_active: false, buy_info: None, sell_info: None},
 		mouse: Vec2::new(0.0, 0.0),
 		dungeon: None,
-		gambling: Games::new()
+		gambling: Games::new(),
+		is_connected: false
     };
 
 	let rooms: std::collections::HashMap<String, rooms::Room> = get_rooms().await;
@@ -241,22 +257,39 @@ async fn main() {
 			println!("Send: {:?}", game.pending_action);
             println!("GET: {}", msg);
 			let parts: Vec<&str> = msg.split_whitespace().collect();
-			if parts.is_empty() { return; }
+			if parts.is_empty() { continue; } 
+
 			let answer = parts[1..].join(" ");
 			let state: &str = parts[0];
 
 			match state {
-				"OK" | "ERR" => handle_response(&mut game, answer.as_str(), state).await,
-				"EVT" => handle_events(&mut game, parts).await,
-				_ => {}
-			}
+            "SYS" => {
+                match answer.as_str() {
+                    "CONNECTED" => game.is_connected = true,
+                    "DISCONNECTED" => game.is_connected = false,
+                    _ => {}
+                }
+            }
+            "OK" | "ERR" => handle_response(&mut game, answer.as_str(), state).await,
+            "EVT" => handle_events(&mut game, parts).await,
+            _ => {}
+        	}
 
 		}
 		game.mouse = vec2(mouse_position().0, mouse_position().1);
+
+		
+		
+
 		if !game.is_auth{
-					handle_starter(&mut game);
-					next_frame().await
-				}
+			handle_starter(&mut game);
+			
+			next_frame().await;
+			if !game.is_connected {
+				continue;
+			}
+		}
+		
 		else {
 			if game.nb_players == 0 && game.pending_action == PendingAction::None{
 				game.tx_to_serv.try_send("WHO \n".to_string()).ok();

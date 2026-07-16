@@ -65,6 +65,8 @@ pub fn handle_starter(game: &mut Game){
 
 	let rect = Rect::new(0.0, 0.0, screen_width(), screen_height());
 	draw_text_bottom(rect, "Made by: mthetcha, relaforg, bfitte", 30, 0.0);
+   let state = if game.is_connected {"Connected"} else { "Offline"};
+    draw_text_bottom(rect, state, 30, screen_width() - 120.0);
 
 
 }
