@@ -93,11 +93,28 @@ pub async fn handle_events(game: &mut Game, answer: Vec<&str>){
 					}
 			}
 			"ATTACK" => {
-				if let Some(ref mut fight) = game.active_fight{
+				let mut fight_over = false;
+				if let Some(fight) = game.active_fight.as_mut() {
 					if let Ok(new_life) = answer[5].parse::<i32>() {
 						fight.enemy_hp = new_life;
-						fight.chat.push(format!("{} attack and deal {} damage", answer[3], answer[4]));
+
+						if fight.enemy_hp <= 0 {
+							fight.chat.push(format!("{} attacked and killed the enemy", answer[3]));
+							fight_over = true;
+						} else {
+							fight.chat.push(format!(
+								"{} attacked and dealt {} damage",
+								answer[3], answer[4]
+							));
+						}
 					}
+				}
+
+				if fight_over {
+					game.player.state = None;
+					game.active_fight = None;
+					game.player.gold = None;
+					game.player.inventory.is_load = false;
 				}
 			}
 			"ENEMY" => {
