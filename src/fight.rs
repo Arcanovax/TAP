@@ -7,7 +7,8 @@ pub struct Fight{
 	pub players: HashMap<String, i32>,
 	pub enemy_hp: i32,
 	pub chat: Vec<String>,
-	pub consume_menu_open: bool
+	pub consume_menu_open: bool,
+	pub scroll: Scroll,
 }
 
 pub fn draw_enemy_info(game: &mut Game, npc: Npc){
@@ -121,10 +122,20 @@ pub fn handle_fight(game: &mut Game, floor: &Texture2D) {
 	}
 
 	let chat_rect = get_center_rect_x(vec2(400.0, 250.0), 125.0);
+	let columns = 1;
+	let total_h = (chat.len() as f32 / columns as f32).ceil() * 20.0 + 15.0;
+	let max_offset = (total_h - chat_rect.h).max(0.0);
+
 	draw_rectangle(chat_rect.x, chat_rect.y, chat_rect.w, chat_rect.h, Color::new(0.0, 0.0, 0.0, 0.75));
+
+	handle_sroll_bar(game.mouse, chat_rect, total_h, max_offset, &mut fight.scroll);
+	let offset = fight.scroll.scroll_pos * max_offset;
+
+	push_cut_rect(chat_rect);
 	for (i, msg) in chat.iter().enumerate(){
-		draw_text(msg, chat_rect.x + 10.0 , chat_rect.y + (20 + (i* 20))as f32, 20.0, WHITE);
+		draw_text(msg, chat_rect.x + 10.0 , chat_rect.y + (20 + (i * 20))as f32 - offset, 20.0, WHITE);
 	}
+	pop_cut_rect();
 
 	if fight.consume_menu_open {
 		handle_consume(game);

@@ -304,7 +304,9 @@ pub async fn handle_response(game: &mut Game, answer: &str, state: &str){
 									players: fight_data.fighters,
 									enemy_hp: fight_data.target_hp,
 									chat:vec!["You joined the fight".to_string()],
-									consume_menu_open: false
+									consume_menu_open: false,
+									scroll: Scroll::new()
+								
 								});
 
 							}
