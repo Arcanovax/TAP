@@ -18,7 +18,7 @@ fn draw_name_input(rect:Rect,game: &mut Game){
 	}
 
     while let Some(character) = get_char_pressed() {
-        if character.is_ascii_graphic() || character == ' ' {
+        if character.is_ascii_graphic(){
             if game.player.name.len() < 12 {
                 game.player.name.push(character);
             }
