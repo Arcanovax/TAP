@@ -63,7 +63,9 @@ pub async fn handle_events(game: &mut Game, answer: Vec<&str>){
 			"FINISH" => {
 				match serde_json::from_str::<QuestFinishEvent>(answer[3..].join(" ").as_str()) {
 					Ok(quest_rm) => {
-						game.quests.all.retain(|quest| quest.quest_id != quest_rm.quest);
+						if let Some(quest) = game.quests.all.iter_mut().find(|q| &q.quest_id == &quest_rm.quest) {
+							quest.progress = "Finished".to_string();
+						}
 						game.player.inventory.is_load = false;
         			}
 					Err(e) => {

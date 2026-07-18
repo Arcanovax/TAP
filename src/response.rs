@@ -459,6 +459,16 @@ pub async fn handle_response(game: &mut Game, answer: &str, state: &str){
 					}
 				}
 			}
+			else {
+				if answer.contains("NO_QUEST_AVAILABLE"){
+					if let Some(npc) = game.loaded_npcs.get_mut(npc_id){
+							npc.npc_talk = Some(NpcTalk{
+							texts:  vec!["You already accepted my quest".to_string()],
+							text_i: 0,
+						});
+					}
+				}
+			}
 		}
 		PendingAction::QuestInfo(id) => {
 			if  state =="OK"{

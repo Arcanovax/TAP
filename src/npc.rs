@@ -240,7 +240,23 @@ pub async fn get_npc_texture(item_id: &str) -> Texture2D {
         "npc.city_gard" => "assets/npc/city_gard.png",
 		"npc.goblins" => "assets/npc/goblin.png",
 		"npc.h" => "assets/npc/goblin.png",
-        _ => "assets/npc/black-smith.png",
+		"npc.blacksmith" => "assets/npc/black-smith.png",
+		"npc.old_man" => "assets/npc/old_man.png",
+		"npc.farmer" => "assets/npc/farmer.png",
+		"npc.cow" => "assets/npc/cow.png",
+		"npc.dealer" => "assets/npc/dealer.png",
+		"npc.seller" => "assets/npc/seller.png",
+		"npc.citizen_3" => "assets/npc/citizen_3.png",
+		"npc.citizen_4" => "assets/npc/citizen_4.png",
+		"npc.citizen_5" => "assets/npc/citizen_5.png",
+		"npc.citizen_6" => "assets/npc/citizen_6.png",
+		"npc.door" => "assets/npc/door.png",
+		"npc.bookseller" => "assets/npc/bookseller.png",
+		"npc.client_1" => "assets/npc/client_1.png",
+		"npc.client_2" => "assets/npc/client_2.png",
+		"npc.bar_owner" => "assets/npc/bar_owner.png",
+		
+        _ => "assets/npc/monster.png",
     };
 
     load_texture(path).await.unwrap()
