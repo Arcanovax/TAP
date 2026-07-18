@@ -34,24 +34,3 @@ pub fn world_to_screen_pos(world_pos: Vec2) -> Vec2 {
         offset_y + world_pos.y * scale,
     )
 }
-
-pub fn world_to_screen_rect(world_rect: Rect) -> Rect {
-    let map_w = 25.0 * 16.0;
-    let map_h = 14.0 * 16.0;
-
-    let scale_x = screen_width() / map_w;
-    let scale_y = screen_height() / map_h;
-    let scale = scale_x.min(scale_y);
-
-    let rendered_w = map_w * scale;
-    let rendered_h = map_h * scale;
-    let offset_x = (screen_width() - rendered_w) / 2.0;
-    let offset_y = (screen_height() - rendered_h) / 2.0;
-
-    Rect::new(
-        offset_x + world_rect.x * scale,
-        offset_y + world_rect.y * scale,
-        world_rect.w * scale,
-        world_rect.h * scale,
-    )
-}

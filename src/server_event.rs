@@ -222,6 +222,7 @@ pub async fn handle_events(game: &mut Game, answer: Vec<&str>){
 pub struct QuestUpdateEvent {
 	pub quest: String,
 	pub goal: Goal,
+	#[allow(dead_code)]
 	pub previous_goal: Goal
 }
 
@@ -229,5 +230,6 @@ pub struct QuestUpdateEvent {
 #[derive(Deserialize, Debug)]
 pub struct QuestFinishEvent {
 	pub quest: String,
+	#[allow(dead_code)]
 	pub reward: String
 }

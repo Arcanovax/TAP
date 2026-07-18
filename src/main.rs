@@ -91,11 +91,6 @@ pub enum Status {
 }
 
 
-struct Skin {
-    texture: Texture2D,
-    name: String,
-}
-
 struct Game {
 	pub focus: InputFocus,
     pub menu: Menu,

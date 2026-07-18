@@ -1,7 +1,3 @@
-
-
-use std::range;
-
 use crate::*;
 
 const GAME_SIZE: Vec2 = vec2(100.0, 125.0);
@@ -134,7 +130,7 @@ pub fn parse_dices_data(answer: &str) -> Option<DicesData> {
 
     Some(DicesData {
         gold: gold?,
-        draw: draw?,
+        _draw: draw?,
     })
 }
 

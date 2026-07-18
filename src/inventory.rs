@@ -258,7 +258,6 @@ pub fn handle_sroll_bar(mouse: Vec2, rect: Rect, total_h:f32, max_offset: f32, s
 	let bar: Rect = Rect::new(rect.x + rect.w, rect.y, 15.0, rect.h);
 	let ratio = (rect.h / total_h).min(1.0);
 	let cursor_h = (bar.h * ratio).max(20.0);
-	let mut cursor_y = scroll.scroll_pos * (bar.h - cursor_h);
 	let mouse_y = mouse.y;
 	let (_, wheel_y) = mouse_wheel();
 
@@ -282,7 +281,8 @@ pub fn handle_sroll_bar(mouse: Vec2, rect: Rect, total_h:f32, max_offset: f32, s
 		scroll.scroll_pos = ((new_y - bar.y) / (bar.h - cursor_h)).clamp(0.0, 1.0);
     }
 
-	cursor_y = bar.y + scroll.scroll_pos * (bar.h - cursor_h);
+
+	let cursor_y = bar.y + scroll.scroll_pos * (bar.h - cursor_h);
 
 	let handle_color = if scroll.is_dragging { WHITE } else { LIGHTGRAY };
 	if cursor_h != bar.h{

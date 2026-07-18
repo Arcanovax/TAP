@@ -663,6 +663,7 @@ pub struct QuestData {
 	pub quest_id: String,
     pub description: String,
     pub reward: String,
+	#[allow(dead_code)]
     pub status: String,
 }
 
@@ -671,12 +672,14 @@ pub struct QuestData {
 pub struct QuestsData {
 	pub progress: Option<String>,
     pub quest_id: String,
+	#[allow(dead_code)]
     pub status: String,
 }
 
 #[derive(Deserialize, Debug)]
 pub struct FightData  {
 	pub attacker_hp: i32,
+	#[allow(dead_code)]
     pub attacker_name: String,
 	pub damage: i32,
     pub fighters: HashMap<String,i32>,
@@ -714,6 +717,7 @@ pub struct RoomData {
 #[derive(Deserialize, Debug)]
 pub struct DicesData {
 	pub gold: i32,
-    pub draw: String,
+    #[serde(rename = "draw")]
+    pub _draw: String,
 }
 

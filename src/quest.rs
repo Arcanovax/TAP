@@ -94,7 +94,7 @@ pub fn display_quests(game: &mut Game){
 					}
 				}	
 			}
-			Goal::Answer { answer, room } => {
+			Goal::Answer { answer:_, room } => {
 				draw_text("Answer with /answer [word]",goal_coord.x, goal_coord.y - 10.0, 25.0, WHITE);
 				if let Some((_, room_name)) = room.rsplit_once('.'){
 					draw_text(format!("in {}", room_name),goal_coord.x, goal_coord.y + 10.0, 25.0, WHITE);
@@ -157,29 +157,7 @@ fn draw_quest_descr(info: &QuestInfo){
 		draw_text(line, descr_rect.x + 5.0, pos_y, font_size, WHITE);
 	}
 }
-    // for quest in game.quests.all.iter(){
-	// 	if let Some(info) = &quest.info{
-	// 		 let quest_info = format!("- {}", info.name);
-    //     	draw_text(quest_info, title_quest_pos.x, pos_y, 25.0, YELLOW);
-	// 		 pos_y += 20.0;
-	// 	let quest_goal = match quest.goal.clone() {
-	// 		Some(Goal::Collect { item, amount }) => {
-	// 			format!("- Collect {} x{}", item, amount)
-	// 		}
-	// 		Some(Goal::Talk { dialog }) => {
-	// 			format!("- Talk to {}", dialog)
-	// 		}
-	// 		Some(Goal::Retrieve {amount, dialog,item}) => {
-	// 			format!("- Retrieve {} {}", amount,item)
-	// 		}
-	// 		_ => String::new()
-	// 	};
 
-	// 	draw_text(&quest_goal, title_quest_pos.x + 20.0, pos_y, 20.0, WHITE);
-    //     pos_y += 20.0;
-	// 	}
-       
-       
 
     
 
