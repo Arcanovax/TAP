@@ -66,8 +66,8 @@ pub fn display_quests(game: &mut Game){
 		};
 		match current_goal {
 			Goal::Collect { item, amount } => {
-				draw_text(format!("Collect:    x{}", amount),goal_coord.x, goal_coord.y , 35.0, WHITE);
-				let item_rect = Rect::new(goal_coord.x + 150.0, goal_coord.y - 25.0, 15.0, 15.0);
+				draw_text(format!("Collect:   x{}", amount),goal_coord.x, goal_coord.y , 35.0, WHITE);
+				let item_rect = Rect::new(goal_coord.x + 135.0, goal_coord.y - 20.0, 15.0, 15.0);
 				if let Some(item) = game.loaded_items.get(&item){
 					draw_item_center(item_rect, item);
 				}
@@ -85,10 +85,21 @@ pub fn display_quests(game: &mut Game){
 				
 			}
 			Goal::Retrieve {amount, dialog,item} => {
-				draw_text("Cole",goal_coord.x, goal_coord.y , 20.0, WHITE);
+				let npc_id = dialog.split('.').take(2).collect::<Vec<_>>().join(".");
+				if let Some(npc) = game.loaded_npcs.get(&npc_id){
+					draw_text(format!("Retrive:   x{} to {}", amount, npc.name),goal_coord.x, goal_coord.y , 25.0, WHITE);
+					let item_rect = Rect::new(goal_coord.x + 105.0, goal_coord.y - 20.0, 2.5, 2.5);
+					if let Some(item) = game.loaded_items.get(&item){
+						draw_item_center(item_rect, item);
+					}
+				}	
 			}
 			Goal::Answer { answer, room } => {
-				draw_text("Answer with /answer [word]",goal_coord.x, goal_coord.y , 25.0, WHITE);
+				draw_text("Answer with /answer [word]",goal_coord.x, goal_coord.y - 10.0, 25.0, WHITE);
+				if let Some((_, room_name)) = room.rsplit_once('.'){
+					draw_text(format!("in {}", room_name),goal_coord.x, goal_coord.y + 10.0, 25.0, WHITE);
+				}
+				
 			}
 		};
 		

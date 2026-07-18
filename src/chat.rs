@@ -215,12 +215,14 @@ fn handle_direct_command(game: &mut Game){
 		.unwrap_or("")
 		.to_ascii_uppercase();
 
+	let rq: String = format!("{}\n", &command_line[1..]);
 	if !ALLOWED_COMMANDS.contains(&command_name.as_str()) {
 		game.tx_to_serv.try_send("\n".to_string()).ok();
+		game.pending_action = PendingAction::Command(CHANNELS[game.chat.channel as usize].to_string(), rq);
 		return;
 	}
 
-	let rq: String = format!("{}\n", &command_line[1..]);
+	
 	game.tx_to_serv.try_send(rq.clone()).ok();
 	game.pending_action = PendingAction::Command(CHANNELS[game.chat.channel as usize].to_string(), rq);
 }

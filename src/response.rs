@@ -142,7 +142,7 @@ pub async fn handle_response(game: &mut Game, answer: &str, state: &str){
 						return;
 					}
 				};
-				let msg: String = format!("[{}] {}\n",game.player.name, cmd);
+				let msg: String = format!("[{}] /{}\n",game.player.name, cmd);
 				channel.push(msg.to_string());
 				if state =="OK" {
 					if !answer.is_empty(){
