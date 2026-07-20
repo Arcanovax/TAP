@@ -87,6 +87,8 @@ pub fn handle_menu(game: &mut Game) {
             return
         }
         3 => {
+			game.tx_to_serv.try_send("QUIT \n".to_string()).ok();
+			game.pending_action = PendingAction::Quit;
             std::process::exit(0);
         }
         _ => {}

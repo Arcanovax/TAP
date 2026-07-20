@@ -34,7 +34,8 @@ pub enum PendingAction {
 	Rooms,
 	SlotMachine,
 	Dices,
-	QuestInfo(String)
+	QuestInfo(String),
+	Quit
 }
 
 
@@ -295,7 +296,7 @@ pub async fn handle_response(game: &mut Game, answer: &str, state: &str){
 								else{
 									fight.chat.push(format!("You attack and deal {} damage", fight_data.damage));
 								}
-								
+
 							}
 							else{
 								state.status= fight_data.status;
@@ -306,7 +307,7 @@ pub async fn handle_response(game: &mut Game, answer: &str, state: &str){
 									chat:vec!["You joined the fight".to_string()],
 									consume_menu_open: false,
 									scroll: Scroll::new()
-								
+
 								});
 
 							}
@@ -419,15 +420,15 @@ pub async fn handle_response(game: &mut Game, answer: &str, state: &str){
 							for quest in quests{
 								if let Some(progress) = quest.progress{
 									game.quests.all.push(
-									Quest { npc_id: String::new(), quest_id: quest.quest_id, description: String::new() , reward: String::new(), goal: None, info:None, progress: progress}, 
+									Quest { npc_id: String::new(), quest_id: quest.quest_id, description: String::new() , reward: String::new(), goal: None, info:None, progress: progress},
 									)
 								}
 								else{
 									game.quests.all.push(
-									Quest { npc_id: String::new(), quest_id: quest.quest_id, description: String::new() , reward: String::new(), goal: None, info:None, progress:"Finished".to_string()}, 
+									Quest { npc_id: String::new(), quest_id: quest.quest_id, description: String::new() , reward: String::new(), goal: None, info:None, progress:"Finished".to_string()},
 									)
 								}
-								
+
 							}
 
 						}
@@ -476,14 +477,11 @@ pub async fn handle_response(game: &mut Game, answer: &str, state: &str){
 					Ok(quest_info) => {
 						if let Some(quest) = game.quests.all.iter_mut().find(|q| &q.quest_id == id) {
 							quest.info = Some(quest_info.clone());
-							// if quest.progress.is_empty(){
-							// 	quest.progress = format!("0/{}", quest_info.goals.len())
-							// }
 							if let Some((pos, _)) = quest.progress.split_once('/') {
 								let i: usize = pos.parse().unwrap_or(0);
 								quest.goal = Some(quest_info.goals[i].clone())
 							}
-							 
+
                 		}
 					}
 					Err(e) => {
@@ -614,7 +612,7 @@ pub async fn handle_response(game: &mut Game, answer: &str, state: &str){
 				if let Some(gold) = game.player.gold.as_mut(){
 					*gold -= 5;
 				}
-			}				
+			}
 		}
 		PendingAction::Dices => {
 			if answer.contains("NOT_ENOUGH_GOLD"){
@@ -638,8 +636,8 @@ pub async fn handle_response(game: &mut Game, answer: &str, state: &str){
 					}
 				}
 
-				
-			}				
+
+			}
 		}
 
 		_ => {

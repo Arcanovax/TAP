@@ -118,6 +118,8 @@ struct Game {
 }
 
 
+
+
 struct GameConfig {
 	sprite_width: f32,
     sprite_height: f32,
@@ -252,7 +254,7 @@ async fn main() {
 			println!("Send: {:?}", game.pending_action);
             println!("GET: {}", msg);
 			let parts: Vec<&str> = msg.split_whitespace().collect();
-			if parts.is_empty() { continue; } 
+			if parts.is_empty() { continue; }
 
 			let answer = parts[1..].join(" ");
 			let state: &str = parts[0];
@@ -273,18 +275,18 @@ async fn main() {
 		}
 		game.mouse = vec2(mouse_position().0, mouse_position().1);
 
-		
-		
+
+
 
 		if !game.is_auth{
 			handle_starter(&mut game);
-			
+
 			next_frame().await;
 			if !game.is_connected {
 				continue;
 			}
 		}
-		
+
 		else {
 			if game.nb_players == 0 && game.pending_action == PendingAction::None{
 				game.tx_to_serv.try_send("WHO \n".to_string()).ok();
@@ -360,7 +362,7 @@ async fn main() {
 						let msg = format!("QUEST_INFO {} \n", quest.quest_id.clone());
 						game.tx_to_serv.try_send(msg).ok();
 						game.pending_action = PendingAction::QuestInfo(quest.quest_id.clone());
-						
+
 					}
 
 					if !game.player.inventory.is_load && game.pending_action == PendingAction::None{
@@ -368,6 +370,8 @@ async fn main() {
 						game.pending_action = PendingAction::Inventory;
 					}
 					if is_key_pressed(KeyCode::C) && game.focus == InputFocus::Game{
+						game.tx_to_serv.try_send("QUIT \n".to_string()).ok();
+						game.pending_action = PendingAction::Quit;
 						break;
 					}
 
@@ -562,7 +566,7 @@ fn handle_game(game: &mut Game, map: &Room, map_data: LookData){
 			cut_sheet
 		);
 
-		
+
 
 
 		if let Some(builds_texture) = builds.as_ref() {
@@ -579,7 +583,7 @@ fn handle_game(game: &mut Game, map: &Room, map_data: LookData){
 				builds_params,
 			);
 		}
-		
+
 		if let Some((place, npc)) = active_npc {
 			handle_npc_interactions(game, place, npc);
 			camera_handler(game);
@@ -595,7 +599,7 @@ fn handle_game(game: &mut Game, map: &Room, map_data: LookData){
 		if !game.quests.all.is_empty(){
 			display_quests(game);
 		}
-		
+
 		if game.focus == InputFocus::Game {
 			while get_char_pressed().is_some() {}
 		}

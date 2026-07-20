@@ -166,4 +166,44 @@ pub fn draw_flat_triangle(x: f32, y: f32){
 	draw_triangle_lines(top_left_point, top_right_point, bottom_point, 0.5, BLACK);
 }
 
+pub fn draw_centered_descr(text: &String) {
+    let font_size = 22.5;
+    let max_width = 400.0;
+    let line_height = font_size * 1.15;
+    let mut lines: Vec<String> = Vec::new();
 
+    for segment in text.split('/') {
+        let mut current = String::new();
+
+        for word in segment.split_whitespace() {
+            let test_line = if current.is_empty() {
+                format!("{} ", word)
+            } else {
+                format!("{}{} ", current, word)
+            };
+            let w = measure_text(&test_line, None, font_size as u16, 1.0).width;
+            if w > max_width && !current.is_empty() {
+                lines.push(current);
+                current = format!("{} ", word);
+            } else {
+
+                current = test_line;
+            }
+        }
+        lines.push(current);
+    }
+
+    let box_width = lines
+        .iter()
+        .map(|l| measure_text(l, None, font_size as u16, 1.0).width)
+        .fold(0.0_f32, f32::max);
+    let box_height = lines.len() as f32 * line_height + 10.0;
+
+    let descr_rect = get_center_rect(vec2(box_width, box_height));
+
+    draw_rectangle(descr_rect.x, descr_rect.y, descr_rect.w, descr_rect.h, BLACK);
+    for (i, line) in lines.iter().enumerate() {
+        let pos_y = descr_rect.y + font_size + line_height * i as f32;
+        draw_text(line, descr_rect.x + 5.0, pos_y, font_size, WHITE);
+    }
+}

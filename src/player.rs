@@ -134,42 +134,56 @@ fn get_current_tile(rect: Rect, map: &[[i32; 25]; 15], tile_size: f32) -> i32 {
 
 pub fn draw_player_info(game: &mut Game){
 	if let Some(state) = game.player.state.clone() {
-	let info: Rect = Rect::new(10.0, 10.0, 350.0, 120.0);
-	draw_rectangle(info.x, info.y, info.w, info.h, Color::new(0.0, 0.0, 0.0, 0.5));
+		let info: Rect = Rect::new(10.0, 10.0, 350.0, 120.0);
+		draw_rectangle(info.x, info.y, info.w, info.h, Color::new(0.0, 0.0, 0.0, 0.5));
 
 
-	let frame = Rect::new(info.x+10.0, info.y+10.0, 100.0, 100.0);
-	draw_rectangle(frame.x, frame.y, frame.w, frame.h,BLACK);
+		let frame = Rect::new(info.x+10.0, info.y+10.0, 100.0, 100.0);
+		draw_rectangle(frame.x, frame.y, frame.w, frame.h,BLACK);
 
-	let cut_sheet_head = DrawTextureParams {
-		source: Some(Rect::new(0.0, 0.0, game.config.sprite_width, 20.0)),
-		dest_size: Some(vec2(75.0, 100.0 )),
-		..Default::default()
-	};
-	draw_texture_ex(
-		&game.skin.clone(),
-		frame.x+12.5, frame.y,
-		WHITE,
-		cut_sheet_head
-	);
-	draw_rectangle_lines(frame.x, frame.y, frame.w, frame.h, 10.0, Color::new(0.53, 0.31, 0.16, 1.0));
+		let cut_sheet_head = DrawTextureParams {
+			source: Some(Rect::new(0.0, 0.0, game.config.sprite_width, 20.0)),
+			dest_size: Some(vec2(75.0, 100.0 )),
+			..Default::default()
+		};
+		draw_texture_ex(
+			&game.skin.clone(),
+			frame.x+12.5, frame.y,
+			WHITE,
+			cut_sheet_head
+		);
+		draw_rectangle_lines(frame.x, frame.y, frame.w, frame.h, 10.0, Color::new(0.53, 0.31, 0.16, 1.0));
 
 
-	draw_text(&game.player.name, frame.x + frame.w + 5.0, frame.y + 30.0, 40.0, WHITE);
-	if let Some(gold) = game.player.gold{
-		let text_gold = format!("Gold: {}", gold);
-		draw_text(&text_gold, frame.x + frame.w + 5.0, frame.y + 60.0, 30.0, YELLOW);
+		draw_text(&game.player.name, frame.x + frame.w + 5.0, frame.y + 30.0, 40.0, WHITE);
+		if let Some(gold) = game.player.gold{
+			let text_gold = format!("Gold: {}", gold);
+			draw_text(&text_gold, frame.x + frame.w + 5.0, frame.y + 60.0, 30.0, YELLOW);
+		}
+
+		let lifebar = Rect::new(frame.x + frame.w + 5.0, frame.y + 70.0, 200.0, 25.0);
+		draw_rectangle(lifebar.x, lifebar.y, lifebar.w, lifebar.h,BLACK);
+		let hp_ratio: f32 = state.hp as f32 / state.max_hp as f32;
+		draw_rectangle(lifebar.x, lifebar.y+2.5, lifebar.w * hp_ratio, 20.0,RED);
+		let hp_info = format!("{}/{}",state.hp,state.max_hp);
+		draw_text_center(lifebar, &hp_info, 20);
+		draw_rectangle_lines(lifebar.x, lifebar.y, lifebar.w, lifebar.h, 5.0, GRAY);
+
+		if let Some(data) = game.map_data.clone(){
+			let btn_descr = Rect::new(info.x + info.w - 60.0, 15.0, 50.0, 40.0);
+			draw_rectangle(btn_descr.x, btn_descr.y, btn_descr.w, btn_descr.h, Color::new(0.0, 0.0, 0.0, 0.80));
+			draw_text_center(btn_descr, "Info", 25);
+			let room_info = format!("Room: {} // Description: {} // Total players: {} / Players in the room: {}", data.room.name, data.room.description, game.nb_players,  data.players.len());
+			if btn_descr.contains(game.mouse){
+				draw_centered_descr(&room_info);
+			}
+		}
+
 	}
+}
 
-	let lifebar = Rect::new(frame.x + frame.w + 5.0, frame.y + 70.0, 200.0, 25.0);
-	draw_rectangle(lifebar.x, lifebar.y, lifebar.w, lifebar.h,BLACK);
-	let hp_ratio: f32 = state.hp as f32 / state.max_hp as f32;
-	draw_rectangle(lifebar.x, lifebar.y+2.5, lifebar.w * hp_ratio, 20.0,RED);
-	let hp_info = format!("{}/{}",state.hp,state.max_hp);
-	draw_text_center(lifebar, &hp_info, 20);
-	draw_rectangle_lines(lifebar.x, lifebar.y, lifebar.w, lifebar.h, 5.0, GRAY);
-}
-}
+
+
 
 fn rect_collides_map(rect: Rect, map: &[[i32; 25]; 15], tile_size: f32) -> bool {
 	let origin = vec2(0.0, 0.0);
