@@ -347,10 +347,20 @@ pub fn draw_trade(world: &mut World, frame: &mut Frame, inventory: Vec<String>) 
 
     let mut str_lines: String = "".to_string();
 
-    for message in messages {
+    let mut formatted_lines: Vec<Line> = Vec::new();
+
+    for message in &messages {
         for text_line in message.lines() {
-            str_lines += text_line;
+			str_lines += text_line;
             str_lines += "\n";
+			let color = {
+				if text_line.starts_with("[me]") {
+					Color::Yellow
+				} else {
+					Color::White
+				}
+			};
+            formatted_lines.push(Line::from(text_line).style(color));
         }
     }
 
@@ -358,7 +368,7 @@ pub fn draw_trade(world: &mut World, frame: &mut Frame, inventory: Vec<String>) 
     content_height = textwrap::wrap(&str_lines, content_width as usize).len() as u16;
     scroll_output = ScrollView::new(Size::new(content_width, content_height));
 
-    let chat_content = Paragraph::new(Text::from(str_lines)).wrap(Wrap { trim: true });
+    let chat_content = Paragraph::new(Text::from(formatted_lines)).wrap(Wrap { trim: true });
 
     frame.render_widget(chat, left_layout[2]);
     scroll_output.render_widget(chat_content, Rect::new(0, 0, content_width, content_height));

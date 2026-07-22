@@ -1,7 +1,7 @@
 use std::{fs::OpenOptions, io::Write};
 
 use crate::{
-    enums::{focus::Focus, goals::Goal, states::States}, structures::{fight::Fight, group::Invitation, quest_finish::FinishedQuest, quest_udate::UpdateView, world::World},
+    enums::{actions::PendingAction, focus::Focus, goals::Goal, states::States}, structures::{fight::Fight, group::Invitation, quest_finish::FinishedQuest, quest_udate::UpdateView, world::World},
 };
 
 pub fn event_handling(world: &mut World, answer: Vec<&str>) {
@@ -103,11 +103,13 @@ pub fn event_handling(world: &mut World, answer: Vec<&str>) {
 						if let Ok(hp_enn) = enn_hp.parse::<u32>() {
 							world.room.fight.target_hp = hp_enn;
 							if hp_enn == 0 {
-								let loot_split: Vec<String> = loot.split("//").map(|f| format!("- {}", f)).collect();
+								let loot_split: Vec<String> = loot.split("//").map(|f| format!("- {} x{}", f, if f == "item.gold" {50} else {1})).collect();
 								let loot_final = loot_split.join("\n");
 								world.state = States::Idle;
 								world.room.fight = Fight::new();
 								world.output.push_back(format!("Congratulation! The enemy is defeated! You earned :\n{}", loot_final));
+								let _ = world.tx_to_serv.try_send(String::from("INVENTORY\n"));
+                            	world.action = PendingAction::ClientInventory;
 							}
 						} else {
 							world.state = States::Idle;
