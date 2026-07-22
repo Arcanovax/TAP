@@ -8,8 +8,8 @@ use rand::{RngExt, seq::IteratorRandom};
 use std::{collections::HashMap, ops::Add};
 use uuid::Uuid;
 
-const MIN_ROOM: u8 = 3;
-const MAX_ROOM: u8 = 6;
+const MIN_ROOM: usize = 3;
+const MAX_ROOM: usize = 6;
 
 const MIN_ITEM: u8 = 1;
 const MAX_ITEM: u8 = 2;
@@ -76,7 +76,7 @@ fn populate_rooms(world: &World, dungeon: &mut Dungeon, gid: Uuid) {
 
         let mut i = 0;
         while i < nb_ennemy {
-            let id = format_dungeon_id("npc", gid, ennemy_index + i);
+            let id = format_dungeon_id("npc", gid, (ennemy_index + i).into());
             let Some(ennemy) = ennemy_pool.clone().choose(&mut rand::rng()) else {
                 break;
             };
@@ -105,19 +105,12 @@ fn populate_rooms(world: &World, dungeon: &mut Dungeon, gid: Uuid) {
 }
 
 fn generate_rooms(world: &World, return_room: String, gid: Uuid) -> HashMap<String, Room> {
-	let rooms_pool: Vec<&Room> = world
-        .rooms
-        .iter()
-        .map(|(_, room)| room)
-		.collect();
+    let mut rooms_pool: Vec<&Room> = world.rooms.iter().map(|(_, room)| room).collect();
 
     let mut room_grid: HashMap<Coord, String> = HashMap::new();
     let mut rooms: HashMap<String, Room> = HashMap::new();
 
-	let mut chosen_room = *rooms_pool
-		.iter()
-		.choose(&mut rand::rng())
-		.expect("world has at least one room");
+    let mut chosen_room = rooms_pool.remove(rand::rng().random_range(0..rooms_pool.len()));
     let id = format_dungeon_id("room", gid, 0);
     room_grid.insert((0, 0).into(), id.clone());
     room_grid.insert((-1, 0).into(), return_room.clone());
@@ -127,7 +120,9 @@ fn generate_rooms(world: &World, return_room: String, gid: Uuid) -> HashMap<Stri
         .insert(Direction::West, return_room.clone());
     rooms.insert(id, start_room);
 
-    let n = rand::rng().random_range(MIN_ROOM..=MAX_ROOM);
+    let n = rand::rng()
+        .random_range(MIN_ROOM..=MAX_ROOM)
+        .min(world.rooms.len());
     let mut i = 1;
     while i < n {
         let Some(coord) = room_grid.keys().choose(&mut rand::rng()) else {
@@ -153,10 +148,10 @@ fn generate_rooms(world: &World, return_room: String, gid: Uuid) -> HashMap<Stri
             continue;
         };
 
-		chosen_room = *rooms_pool
-			.iter()
-			.choose(&mut rand::rng())
-			.expect("world has at least one room");
+        chosen_room = *rooms_pool
+            .iter()
+            .choose(&mut rand::rng())
+            .expect("world has at least one room");
         let new_id = format_dungeon_id("room", gid, i);
         let new_room = Room::new(&format!("(Dungeon) {}", &chosen_room.name));
 

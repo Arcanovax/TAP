@@ -21,7 +21,7 @@ pub fn parse_dungeon_id(id: &str) -> Option<Uuid> {
     }
 }
 
-pub fn format_dungeon_id(category: &str, gid: Uuid, n: u8) -> String {
+pub fn format_dungeon_id(category: &str, gid: Uuid, n: usize) -> String {
     format!("{category}.dg_{gid}_{n}")
 }
 

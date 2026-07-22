@@ -315,17 +315,17 @@ pub(crate) fn test_gid() -> Uuid {
 
 /// Id de la `n`-ième room du donjon de test.
 pub(crate) fn dg_room(n: u8) -> String {
-    format_dungeon_id("room", test_gid(), n)
+    format_dungeon_id("room", test_gid(), n as usize)
 }
 
 /// Id du `n`-ième item du donjon de test.
 pub(crate) fn dg_item(n: u8) -> String {
-    format_dungeon_id("item", test_gid(), n)
+    format_dungeon_id("item", test_gid(), n as usize)
 }
 
 /// Id du `n`-ième npc du donjon de test.
 pub(crate) fn dg_npc(n: u8) -> String {
-    format_dungeon_id("npc", test_gid(), n)
+    format_dungeon_id("npc", test_gid(), n as usize)
 }
 
 /// Un `Dungeon` déterministe à deux salles :
