@@ -151,7 +151,12 @@ pub fn draw_room(world: &mut World, frame: &mut Frame) {
         for elem in &world.room.npcs {
             if let Some(npc) = world.list_npcs.get(elem) {
                 npcs_list.push(ListItem::new(
-                    Line::from(format!("{} ({})", npc.name.clone(), if !world.dungeon {elem.clone()} else {"Enemy".to_string()}))
+                    Line::from(format!("{} ({})", npc.name.clone(), if !world.dungeon {elem.clone()} else {
+						match &npc.kind {
+							NPCKind::Enemy { hp: _, max_hp: _, kind, .. } => kind.to_string(),
+							_ => {"Not an enemy".to_string()}
+						}
+					}))
                         .alignment(Alignment::Center)
                         .style(match npc.kind {
                             NPCKind::Citizen => Color::White,

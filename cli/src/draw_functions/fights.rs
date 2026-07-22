@@ -144,7 +144,7 @@ pub fn draw_room_fight(world: &mut World, frame: &mut Frame) {
     // if let Ok(mut file) = OpenOptions::new().create(true).append(true).open("debug_network.txt") {
     // 		let _ = writeln!(file, "ok (State {:#?}) : {:#?}", world.room.fight.target_hp, world.room.fight.target_max_hp);}
 
-    let percent = world.room.fight.target_hp * 100 / world.room.fight.target_max_hp;
+    let percent = (world.room.fight.target_hp * 100 / world.room.fight.target_max_hp).min(100);
     hp_bar = Gauge::default()
         .block(
             Block::bordered()

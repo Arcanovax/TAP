@@ -10,6 +10,7 @@ pub enum NPCKind {
     Enemy {
         hp: u32,
         max_hp: u32,
+		kind: String,
         defeated: bool,
     },
     Citizen,
@@ -25,7 +26,7 @@ impl Display for NPCKind {
                 }
                 write!(f, "Merchant\nItems you can buy:\n{}", list_items.join("\n"))
             }
-            NPCKind::Enemy { hp, max_hp, .. } => write!(f, "Enemy\nHP: {}/{}", hp, max_hp),
+            NPCKind::Enemy { hp, max_hp, kind, .. } => write!(f, "Enemy\nHP: {}/{}\nType: {}", hp, max_hp, kind),
             NPCKind::Citizen => write!(f, "Citizen"),
         }
     }
