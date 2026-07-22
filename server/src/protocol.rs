@@ -195,7 +195,13 @@ impl Message {
                     enemy_hp,
                     loot,
                 } => {
-                    let loot_list = loot.join("//");
+                    let loot_list = {
+						if loot.len() > 0 {
+							loot.join("//")
+						} else {
+							"Nothing".to_string()
+						}
+					};
                     format!("EVT FIGHT ATTACK {player_name} {damages} {enemy_hp} {loot_list}\n")
                 }
                 EventType::ROOM_DROP { player_name, item } => {

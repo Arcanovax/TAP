@@ -36,6 +36,7 @@ npc:
         - "What did you expect? I'm a cow."
     kind: Citizen
 
+quest:
   crows:
     name: "A Murder in the Corn"
     description: "Crows from the awkward forest keep raiding Sanpesticix's crops. Fetch some peanuts to bait them away from the fields."
