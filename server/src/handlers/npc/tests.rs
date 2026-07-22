@@ -73,6 +73,7 @@ fn npc_in_dungeon_by_id_returns_success() {
                     kind: NPCKindView::Enemy {
                         hp: 30,
                         max_hp: 30,
+						kind: "goblin".to_string(),
                         defeated: false
                     },
                     has_quest: false

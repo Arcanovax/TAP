@@ -239,6 +239,7 @@ pub(crate) fn test_world() -> World {
             kind: NPCKind::Enemy {
                 hp: 30,
                 max_hp: 30,
+				kind: "goblin".to_string(),
                 damages: 5,
                 loot: Vec::new(),
                 defeated: false,
@@ -364,6 +365,7 @@ pub(crate) fn test_dungeon() -> Dungeon {
             kind: NPCKind::Enemy {
                 hp: 30,
                 max_hp: 30,
+				kind: "goblin".to_string(),
                 damages: 5,
                 loot: Vec::new(),
                 defeated: false,

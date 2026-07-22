@@ -159,6 +159,7 @@ fn defeating_enemy_with_remaining_enemies_keeps_dungeon_open() {
                 kind: NPCKind::Enemy {
                     hp: 30,
                     max_hp: 30,
+					kind: "orc".to_string(),
                     damages: 5,
                     loot: Vec::new(),
                     defeated: false,
