@@ -79,7 +79,12 @@ fn take_in_empty_dungeon_room_returns_item_not_found() {
     let server = dungeon_server();
     connect_in_dungeon(&server, addr(1), "alice");
     // dg_room(1) est vide : on y place le joueur puis on tente de ramasser l'item de l'entrée
-    server.lock().unwrap().get_player_mut(addr(1)).unwrap().location = dg_room(1);
+    server
+        .lock()
+        .unwrap()
+        .get_player_mut(addr(1))
+        .unwrap()
+        .location = dg_room(1);
     let result = take_request(&server, addr(1), &vec![dg_item(0)]);
     assert_eq!(result, err(ErrorCode::ITEM_NOT_FOUND));
 }

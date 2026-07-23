@@ -261,7 +261,12 @@ fn move_when_dungeon_missing_returns_room_not_found() {
     // Le joueur est dans une salle de donjon dont le donjon n'existe pas (ex: expiré).
     let server = populated_server();
     connect(&server, addr(1), "alice");
-    server.lock().unwrap().get_player_mut(addr(1)).unwrap().location = dg_room(0);
+    server
+        .lock()
+        .unwrap()
+        .get_player_mut(addr(1))
+        .unwrap()
+        .location = dg_room(0);
     let result = move_request(&server, addr(1), &vec!["North".to_string()]);
     assert_eq!(result, err(ErrorCode::ROOM_NOT_FOUND));
 }

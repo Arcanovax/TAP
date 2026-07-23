@@ -20,7 +20,7 @@ enum NPCKindView {
     Enemy {
         hp: u32,
         max_hp: u32,
-		kind: String,
+        kind: String,
         defeated: bool,
     },
     Citizen,
@@ -43,13 +43,13 @@ impl<'a> From<&'a NPC> for NPCView<'a> {
             NPCKind::Enemy {
                 hp,
                 max_hp,
-				kind,
+                kind,
                 defeated,
                 ..
             } => NPCKindView::Enemy {
                 hp: *hp,
                 max_hp: *max_hp,
-				kind: kind.to_string(),
+                kind: kind.to_string(),
                 defeated: *defeated,
             },
         };

@@ -8,7 +8,7 @@ pub enum NPCKind {
     Enemy {
         hp: u32,
         max_hp: u32,
-		kind: String,
+        kind: String,
         damages: u32,
         loot: Vec<String>,
         defeated: bool,

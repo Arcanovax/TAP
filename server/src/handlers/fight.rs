@@ -10,7 +10,6 @@ use crate::{
     },
 };
 use std::{collections::HashMap, net::SocketAddr};
-
 mod attack;
 pub mod enemy_attack;
 pub mod is_it_my_turn;
@@ -159,7 +158,7 @@ pub fn fight_request(
                             target_id: args[0].to_string(),
                         },
                         fighters: Some(fighters),
-						loot: Vec::new()
+                        loot: Vec::new(),
                     })
                     .unwrap(),
                 ),

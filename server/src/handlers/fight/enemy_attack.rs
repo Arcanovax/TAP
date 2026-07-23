@@ -1,4 +1,4 @@
-use std::{time::{SystemTime, UNIX_EPOCH}};
+use std::time::{SystemTime, UNIX_EPOCH};
 
 use tracing::info;
 
@@ -57,16 +57,15 @@ pub fn enemy_attack(opponent_id: &str, world: &mut ServerInfo) {
     };
 
     let (target_hp, e_damages) = {
-
         let target = &mut world
-		.connections
-		.values_mut()
-		.find(|f| f.player.name == target_name)
-		.unwrap()
-		.player;
-        
+            .connections
+            .values_mut()
+            .find(|f| f.player.name == target_name)
+            .unwrap()
+            .player;
+
         if let NPCKind::Enemy { damages, .. } = opponent_kind {
-			let damages_after_defense = damages.saturating_sub(defense);
+            let damages_after_defense = damages.saturating_sub(defense);
             if damages_after_defense < target.hp {
                 target.hp -= damages_after_defense;
             } else {

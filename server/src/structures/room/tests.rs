@@ -15,7 +15,8 @@ fn references_collects_npcs_items_and_exit_targets() {
     let mut room = Room::new("room.hub");
     room.npc.push("npc.guard".to_string());
     room.items.push("item.sword".to_string().into());
-    room.exits.insert(Direction::North, "room.market".to_string());
+    room.exits
+        .insert(Direction::North, "room.market".to_string());
 
     let refs = room.references();
     assert!(refs.contains(&"npc.guard"));

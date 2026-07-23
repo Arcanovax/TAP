@@ -154,6 +154,8 @@ pub fn execute_attack<'a>(
             }
         }
 
+        world_mut.fights.remove(target_id);
+
         return AttackResult {
             attacker_hp: player_hp,
             attacker_name: player_name,

@@ -11,5 +11,5 @@ pub struct AttackResult {
     pub damage: u32,
     pub status: State,
     pub fighters: Option<HashMap<String, u32>>,
-	pub loot: Vec<String>
+    pub loot: Vec<String>,
 }

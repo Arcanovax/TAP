@@ -16,9 +16,9 @@ pub enum Goal {
         amount: u32,
         dialog: String,
     },
-	Answer {
+    Answer {
         answer: String,
-		room: String
+        room: String,
     },
 }
 
@@ -39,10 +39,10 @@ impl Goal {
                 player.inventory.get(item).copied().unwrap_or(0) >= *amount
                     && matches!(event, Some(GameEvent::Talked { dialog: d }) if d == dialog)
             }
-			Goal::Answer { answer, room } => {
-				*room == player.location
-				&& matches!(event, Some(GameEvent::Answer { answer: a }) if a.to_lowercase() == answer.to_lowercase())
-			} 
+            Goal::Answer { answer, room } => {
+                *room == player.location
+                    && matches!(event, Some(GameEvent::Answer { answer: a }) if a.to_lowercase() == answer.to_lowercase())
+            }
         }
     }
 }
@@ -88,7 +88,7 @@ impl Quest {
                 Goal::Retrieve { item, dialog, .. } => {
                     refs.extend([item.as_str(), dialog.as_str()])
                 }
-				Goal::Answer { .. } => {}
+                Goal::Answer { .. } => {}
             }
         }
         refs

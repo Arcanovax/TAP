@@ -72,7 +72,7 @@ pub fn dices_request(
         };
     }
 
-	let draw_copy = draw.clone();
+    let draw_copy = draw.clone();
     player.gold -= DICES_COST as u32;
     let multiplier = guesses.len() as u32;
 
@@ -89,7 +89,13 @@ pub fn dices_request(
     if !all_match {
         return Message::Response {
             error: ErrorCode::GAME_LOSE,
-            payload: Payload::Text(draw_copy.iter().map(|f| f.to_string()).collect::<Vec<String>>().join(" ")),
+            payload: Payload::Text(
+                draw_copy
+                    .iter()
+                    .map(|f| f.to_string())
+                    .collect::<Vec<String>>()
+                    .join(" "),
+            ),
         };
     }
 
@@ -98,7 +104,15 @@ pub fn dices_request(
     Message::Response {
         error: ErrorCode::SUCCESS,
         payload: Payload::Pair(HashMap::from([
-			("gold".to_string(), gain.to_string()),
-			("draw".to_string(), draw_copy.iter().map(|f|f.to_string()).collect::<Vec<String>>().join("//"))])),
+            ("gold".to_string(), gain.to_string()),
+            (
+                "draw".to_string(),
+                draw_copy
+                    .iter()
+                    .map(|f| f.to_string())
+                    .collect::<Vec<String>>()
+                    .join("//"),
+            ),
+        ])),
     }
 }
