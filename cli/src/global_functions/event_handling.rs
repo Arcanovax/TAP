@@ -24,7 +24,14 @@ pub fn event_handling(world: &mut World, answer: Vec<&str>) {
         }
     } else {
         match answer[1] {
-            "ROOM" => {}
+            "ROOM" => {
+				let name = answer[4..].join(" ");
+				match answer[3] {
+					"ENTER" => world.output.push_back(format!("[Server info] {} walks into the room.", name)),
+					"LEAVE" => world.output.push_back(format!("[Server info] {} leave the room.", name)),
+					_ => {}
+				}
+			}
             "GROUP" => match answer[2] {
                 "JOIN" => {
                     let player_name = answer[3];
