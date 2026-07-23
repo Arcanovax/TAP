@@ -18,7 +18,14 @@ pub fn handle_escape(world: &mut World) {
         States::Trade(..) => {
             world.room.focus = Focus::COMMAND;
             world.state = States::Idle;
-        }
-        _ => world.state = States::Quit(1, Box::new(world.state.clone()), None),
+        },
+        _ => {
+			if let Focus::CHOICE(..) = world.room.focus {
+				world.room.focus = Focus::NPC;
+				world.room.npc_list_state.select_first();
+			} else {
+				world.state = States::Quit(1, Box::new(world.state.clone()), None)
+			}
+		},
     }
 }

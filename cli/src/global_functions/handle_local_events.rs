@@ -24,6 +24,7 @@ pub fn handle_global_events(key: KeyEvent, world: &mut World) {
                 Focus::INVENTORY => world.room.inventory_list_state.select_next(),
                 Focus::EXITS => world.room.exits_list_state.select_next(),
                 Focus::QUESTS => world.room.quests_list_state.select_next(),
+				Focus::CHOICE(..) => world.room.choice_list_state.select_next(),
                 Focus::COMMAND => {
                     if world.index_command > 0 {
                         world.index_command = world.index_command.saturating_sub(1);
@@ -80,6 +81,7 @@ pub fn handle_global_events(key: KeyEvent, world: &mut World) {
                 Focus::INVENTORY => world.room.inventory_list_state.select_previous(),
                 Focus::EXITS => world.room.exits_list_state.select_previous(),
                 Focus::QUESTS => world.room.quests_list_state.select_previous(),
+				Focus::CHOICE(..) => world.room.choice_list_state.select_previous(),
                 Focus::COMMAND => {
                     if world.index_command < world.old_command.len() {
                         world.index_command += 1;
@@ -145,7 +147,7 @@ pub fn handle_global_events(key: KeyEvent, world: &mut World) {
                     _ => {}
                 }
             }
-            KeyCode::Enter => match world.room.focus {
+            KeyCode::Enter => match &world.room.focus {
                 Focus::COMMAND => {
                     if !world.room.text_area.is_empty() {
                         let command = world.room.text_area.lines().join(" ").trim().to_string();
@@ -197,13 +199,24 @@ pub fn handle_global_events(key: KeyEvent, world: &mut World) {
                         }
                     }
                 }
-                Focus::NPC => {
-                    if let Some(index) = world.room.npc_list_state.selected() {
-                        if let Some(selected_npc) = world.room.npcs.get(index) {
-                            if let Some(npc) = world.list_npcs.get(selected_npc) {
-                                match &npc.kind {
-                                    NPCKind::Enemy { .. } => {
-                                        world.output.push_back(format!(
+				Focus::CHOICE(second, selected_npc, inventory) => {
+					if let Some(index) = world.room.choice_list_state.selected() {
+						match index {
+							0 => {
+								world.output.push_back(format!(
+									"\n> {}",
+									format!("TALK {}\n", selected_npc)
+								));
+								world.room.output_scroll_pos.scroll_to_bottom();
+								let _ = world
+									.tx_to_serv
+									.try_send(format!("TALK {}\n", selected_npc));
+								world.action = PendingAction::Talk(selected_npc.clone());
+							},
+							1 => {
+								match second.as_str() {
+									"Attack" => {
+										world.output.push_back(format!(
                                             "\n> {}",
                                             format!("ATTACK {}\n", selected_npc)
                                         ));
@@ -212,7 +225,24 @@ pub fn handle_global_events(key: KeyEvent, world: &mut World) {
                                             .tx_to_serv
                                             .try_send(format!("ATTACK {}\n", selected_npc));
                                         world.action = PendingAction::Attack(selected_npc.clone());
-                                    }
+									},
+									"Shop" => {
+										world.room.sell_list_state.select_first();
+                                        world.state = States::Trade(inventory.clone(), selected_npc.clone());
+										world.room.focus = Focus::SELL;
+									},
+									_ => {}
+								}
+							},
+							_ => {}
+						}
+					}
+				}
+                Focus::NPC => {
+                    if let Some(index) = world.room.npc_list_state.selected() {
+                        if let Some(selected_npc) = world.room.npcs.get(index) {
+                            if let Some(npc) = world.list_npcs.get(selected_npc) {
+                                match &npc.kind {
                                     NPCKind::Citizen => {
                                         world.output.push_back(format!(
                                             "\n> {}",
@@ -223,13 +253,15 @@ pub fn handle_global_events(key: KeyEvent, world: &mut World) {
                                             .tx_to_serv
                                             .try_send(format!("TALK {}\n", selected_npc));
                                         world.action = PendingAction::Talk(selected_npc.clone());
-                                    }
-                                    NPCKind::Merchant { inventory } => {
-                                        world.room.focus = Focus::SELL;
-                                        world.room.sell_list_state.select_first();
-                                        world.state =
-                                            States::Trade(inventory.clone(), selected_npc.clone());
-                                    }
+                                    },
+									NPCKind::Enemy { .. } => {
+										world.room.focus = Focus::CHOICE("Attack".to_string(), selected_npc.clone(), Vec::new());
+										world.room.choice_list_state.select_first();
+									},
+									NPCKind::Merchant { inventory } => {
+										world.room.focus = Focus::CHOICE("Shop".to_string(), selected_npc.clone(), inventory.clone());
+										world.room.choice_list_state.select_first();
+									},
                                 }
                             }
                         }

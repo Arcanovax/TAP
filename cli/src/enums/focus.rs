@@ -19,6 +19,7 @@ pub enum Focus {
     QUESTS,
     EXITS,
     BAG,
+	CHOICE(String, String, Vec<String>)
 }
 
 impl Focus {

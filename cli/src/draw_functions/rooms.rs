@@ -1,18 +1,14 @@
 use std::{collections::VecDeque, fs::OpenOptions, io::Write};
 
 use ratatui::{
-    Frame,
-    layout::{
+    Frame, layout::{
         Alignment,
         Constraint::{Fill, Length, Percentage},
         Direction::{Horizontal, Vertical},
         Flex,
         HorizontalAlignment::Center,
         Layout, Margin, Rect, Size,
-    },
-    style::{Color, Modifier, Style, Stylize},
-    text::{Line, Span, Text},
-    widgets::{Block, Borders, Gauge, List, ListItem, Paragraph, Wrap},
+    }, style::{Color, Modifier, Style, Stylize}, text::{Line, Span, Text}, widgets::{Block, Borders, Clear, Gauge, List, ListItem, Paragraph, Wrap},
 };
 use tui_widgets::scrollview::ScrollView;
 
@@ -579,4 +575,27 @@ pub fn draw_room(world: &mut World, frame: &mut Frame) {
     );
 
     frame.render_widget(&world.room.text_area, main_layout[1]);
+
+	// CHOICE
+    if let Focus::CHOICE(second, ..) = &world.room.focus {
+        let choice_area = frame.area().centered(Percentage(30), Length(4));
+        let border_choice = Block::new()
+            .borders(Borders::ALL)
+            .border_style(Color::LightBlue);
+
+        let choice_content: Vec<ListItem> = vec![
+			ListItem::new(
+				Line::from("Talk").alignment(Alignment::Center)
+			),
+			ListItem::new(
+				Line::from(second.to_string()).alignment(Alignment::Center)
+			),
+		];
+
+		let choice = List::new(choice_content)
+			.block(border_choice)
+			.highlight_style(Modifier::REVERSED);
+		frame.render_widget(Clear, choice_area);
+		frame.render_stateful_widget(choice, choice_area, &mut world.room.choice_list_state);
+	}
 }
