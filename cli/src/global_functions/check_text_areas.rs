@@ -10,6 +10,15 @@ pub fn check_text_areas(world: &mut World, key: KeyEvent) -> bool {
             KeyCode::Up,
             KeyCode::Down,
             KeyCode::BackTab,
+			KeyCode::F(1),
+			KeyCode::F(2),
+			KeyCode::F(3),
+			KeyCode::F(4),
+			KeyCode::F(5),
+			KeyCode::F(6),
+			KeyCode::F(7),
+			KeyCode::F(8),
+			KeyCode::F(9)
         ]
         .contains(&key.code)
     {

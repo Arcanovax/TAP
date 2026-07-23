@@ -38,6 +38,40 @@ pub fn handle_global_events(key: KeyEvent, world: &mut World) {
                 Focus::BAG => world.room.bag_state.select_next(),
                 _ => {}
             },
+			KeyCode::F(number) => {
+				match number {
+					1 => world.room.focus = Focus::COMMAND,
+					2 => world.room.focus = Focus::CHATTEXT,
+					7 => world.chat.channel = Channels::GLOBAL,
+					8 => world.chat.channel = Channels::ROOM,
+					9 => world.chat.channel = Channels::GROUP,
+					_ => {
+						match world.state {
+							States::InFight { .. } => {},
+							_ => {
+								match number {
+									3 => world.room.focus = Focus::NPC,
+									4 => world.room.focus = Focus::INVENTORY,
+									5 => world.room.focus = Focus::QUESTS,
+									6 => world.room.focus = Focus::EXITS,
+									_ => {}
+								}
+							}
+						}
+					}
+				}
+				world.room.exits_list_state.select(None);
+                world.room.inventory_list_state.select(None);
+                world.room.npc_list_state.select(None);
+                world.room.quests_list_state.select(None);
+                match world.room.focus {
+                    Focus::EXITS => world.room.exits_list_state.select_first(),
+                    Focus::INVENTORY => world.room.inventory_list_state.select_first(),
+                    Focus::NPC => world.room.npc_list_state.select_first(),
+                    Focus::QUESTS => world.room.quests_list_state.select_first(),
+                    _ => {}
+                }
+			}
             KeyCode::Up => match world.room.focus {
                 Focus::CHAT => world.room.chat_scroll_pos.scroll_up(),
                 Focus::DESCR => world.room.descr_scroll_pos.scroll_up(),

@@ -180,7 +180,7 @@ pub fn draw_room(world: &mut World, frame: &mut Frame) {
                 } else {
                     Color::White
                 })
-                .title("You can talk to:")
+                .title("(F3) You can talk to:")
                 .title_alignment(Alignment::Center)
                 .title_style(global_color)
                 .bold(),
@@ -216,7 +216,7 @@ pub fn draw_room(world: &mut World, frame: &mut Frame) {
                 } else {
                     Color::White
                 })
-                .title("In your bag:")
+                .title("(F4) In your bag:")
                 .title_alignment(Alignment::Center)
                 .title_style(global_color)
                 .bold(),
@@ -255,7 +255,7 @@ pub fn draw_room(world: &mut World, frame: &mut Frame) {
                 } else {
                     Color::White
                 })
-                .title("Quests:")
+                .title("(F5) Quests:")
                 .title_alignment(Alignment::Center)
                 .title_style(global_color)
                 .bold(),
@@ -386,7 +386,7 @@ pub fn draw_room(world: &mut World, frame: &mut Frame) {
                 } else {
                     Color::White
                 })
-                .title("You can move to:")
+                .title("(F6) You can move to:")
                 .title_alignment(Alignment::Center)
                 .title_style(global_color)
                 .bold(),
@@ -472,7 +472,7 @@ pub fn draw_room(world: &mut World, frame: &mut Frame) {
     frame.render_stateful_widget(scroll_output, inner_chat, &mut world.room.chat_scroll_pos);
 
     // CHANNELS
-    let global_channel = Paragraph::new("Global")
+    let global_channel = Paragraph::new("(F7) Global")
         .fg(if world.chat.channel == Channels::GLOBAL {
             Color::LightBlue
         } else {
@@ -480,7 +480,7 @@ pub fn draw_room(world: &mut World, frame: &mut Frame) {
         })
         .block(Block::new().borders(Borders::ALL));
 
-    let room_channel = Paragraph::new("Room")
+    let room_channel = Paragraph::new("(F8) Room")
         .fg(if world.chat.channel == Channels::ROOM {
             Color::LightBlue
         } else {
@@ -488,7 +488,7 @@ pub fn draw_room(world: &mut World, frame: &mut Frame) {
         })
         .block(Block::new().borders(Borders::ALL));
 
-    let group_channel = Paragraph::new("Group")
+    let group_channel = Paragraph::new("(F9) Group")
         .fg(if world.chat.channel == Channels::GROUP {
             Color::LightBlue
         } else {
@@ -549,7 +549,7 @@ pub fn draw_room(world: &mut World, frame: &mut Frame) {
     // CHAT TEXT AREA
     world.room.chat_text_area.set_block(
         Block::bordered()
-            .title("Send messages here:")
+            .title("(F2) Send messages here:")
             .title_alignment(Alignment::Center)
             .title_style(global_color)
             .bold()
@@ -565,7 +565,7 @@ pub fn draw_room(world: &mut World, frame: &mut Frame) {
     // COMMAND
     world.room.text_area.set_block(
         Block::bordered()
-            .title("You can write your command here:")
+            .title("(F1) You can write your command here:")
             .title_alignment(Alignment::Center)
             .title_style(global_color)
             .bold()
