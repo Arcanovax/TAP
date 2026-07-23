@@ -180,7 +180,7 @@ pub fn draw_room(world: &mut World, frame: &mut Frame) {
                 } else {
                     Color::White
                 })
-                .title("(F3) You can talk to:")
+                .title("(F3) YOU CAN TALK TO:")
                 .title_alignment(Alignment::Center)
                 .title_style(global_color)
                 .bold(),
@@ -216,7 +216,7 @@ pub fn draw_room(world: &mut World, frame: &mut Frame) {
                 } else {
                     Color::White
                 })
-                .title("(F4) In your bag:")
+                .title("(F4) IN YOUR BAG:")
                 .title_alignment(Alignment::Center)
                 .title_style(global_color)
                 .bold(),
@@ -255,7 +255,7 @@ pub fn draw_room(world: &mut World, frame: &mut Frame) {
                 } else {
                     Color::White
                 })
-                .title("(F5) Quests:")
+                .title("(F5) QUESTS:")
                 .title_alignment(Alignment::Center)
                 .title_style(global_color)
                 .bold(),
@@ -271,7 +271,7 @@ pub fn draw_room(world: &mut World, frame: &mut Frame) {
 
     //DETAILS
     let details_block = Block::bordered()
-        .title("More details")
+        .title("MORE DETAILS")
         .title_alignment(Alignment::Center)
         .title_style(global_color)
         .bold();
@@ -386,7 +386,7 @@ pub fn draw_room(world: &mut World, frame: &mut Frame) {
                 } else {
                     Color::White
                 })
-                .title("(F6) You can move to:")
+                .title("(F6) YOU CAN MOVE TO:")
                 .title_alignment(Alignment::Center)
                 .title_style(global_color)
                 .bold(),
@@ -433,9 +433,10 @@ pub fn draw_room(world: &mut World, frame: &mut Frame) {
         } else {
             Color::White
         })
-        .title("Chat")
+        .title("CHAT")
         .title_alignment(Alignment::Center)
-        .title_style(global_color);
+        .title_style(global_color)
+		.bold();
 
     let inner_chat = chat_space[1].inner(Margin {
         horizontal: 1,
@@ -513,9 +514,10 @@ pub fn draw_room(world: &mut World, frame: &mut Frame) {
         } else {
             Color::White
         })
-        .title("Output")
+        .title("OUTPUT")
         .title_alignment(Alignment::Center)
-        .title_style(global_color);
+        .title_style(global_color)
+		.bold();
 
     str_lines = "".to_string();
 
@@ -549,7 +551,7 @@ pub fn draw_room(world: &mut World, frame: &mut Frame) {
     // CHAT TEXT AREA
     world.room.chat_text_area.set_block(
         Block::bordered()
-            .title("(F2) Send messages here:")
+            .title("(F2) SEND MESSAGES HERE:")
             .title_alignment(Alignment::Center)
             .title_style(global_color)
             .bold()
@@ -565,7 +567,7 @@ pub fn draw_room(world: &mut World, frame: &mut Frame) {
     // COMMAND
     world.room.text_area.set_block(
         Block::bordered()
-            .title("(F1) You can write your command here:")
+            .title("(F1) YOU CAN WRITE YOUR COMMANDS HERE:")
             .title_alignment(Alignment::Center)
             .title_style(global_color)
             .bold()

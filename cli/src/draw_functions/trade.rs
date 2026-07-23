@@ -167,7 +167,7 @@ pub fn draw_trade(world: &mut World, frame: &mut Frame, inventory: Vec<String>) 
                 } else {
                     Color::White
                 })
-                .title("You can sell:")
+                .title("YOU CAN SELL:")
                 .title_alignment(Alignment::Center)
                 .title_style(Color::Green)
                 .bold(),
@@ -210,7 +210,7 @@ pub fn draw_trade(world: &mut World, frame: &mut Frame, inventory: Vec<String>) 
                 } else {
                     Color::White
                 })
-                .title("You can buy:")
+                .title("YOU CAN BUY:")
                 .title_alignment(Alignment::Center)
                 .title_style(Color::Green)
                 .bold(),
@@ -239,7 +239,7 @@ pub fn draw_trade(world: &mut World, frame: &mut Frame, inventory: Vec<String>) 
                 } else {
                     Color::White
                 })
-                .title("(F6) You can move to:")
+                .title("(F6) YOU CAN MOVE TO:")
                 .title_alignment(Alignment::Center)
                 .title_style(Color::Green)
                 .bold(),
@@ -255,7 +255,7 @@ pub fn draw_trade(world: &mut World, frame: &mut Frame, inventory: Vec<String>) 
 
 	//DETAILS
     let details_block = Block::bordered()
-        .title("Item details")
+        .title("ITEM DETAILS")
         .title_alignment(Alignment::Center)
         .title_style(Color::Green)
         .bold();
@@ -336,9 +336,10 @@ pub fn draw_trade(world: &mut World, frame: &mut Frame, inventory: Vec<String>) 
         } else {
             Color::White
         })
-        .title("Chat")
+        .title("CHAT")
         .title_alignment(Alignment::Center)
-        .title_style(Color::Green);
+        .title_style(Color::Green)
+		.bold();
 
     let inner_chat = chat_space[1].inner(Margin {
         horizontal: 1,
@@ -416,9 +417,10 @@ pub fn draw_trade(world: &mut World, frame: &mut Frame, inventory: Vec<String>) 
         } else {
             Color::White
         })
-        .title("Output")
+        .title("OUTPUT")
         .title_alignment(Alignment::Center)
-        .title_style(Color::Green);
+        .title_style(Color::Green)
+		.bold();
 
     str_lines = "".to_string();
 
@@ -452,7 +454,7 @@ pub fn draw_trade(world: &mut World, frame: &mut Frame, inventory: Vec<String>) 
     // CHAT TEXT AREA
     world.room.chat_text_area.set_block(
         Block::bordered()
-            .title("(F2) Send messages here:")
+            .title("(F2) SEND MESSAGES HERE:")
             .title_alignment(Alignment::Center)
             .title_style(Color::Green)
             .bold()
@@ -468,7 +470,7 @@ pub fn draw_trade(world: &mut World, frame: &mut Frame, inventory: Vec<String>) 
     // COMMAND
     world.room.text_area.set_block(
         Block::bordered()
-            .title("(F1) You can write your command here:")
+            .title("(F1) YOU CAN WRITE YOUR COMMANDS HERE:")
             .title_alignment(Alignment::Center)
             .title_style(Color::Green)
             .bold()

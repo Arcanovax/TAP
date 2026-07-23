@@ -283,9 +283,10 @@ pub fn draw_room_fight(world: &mut World, frame: &mut Frame) {
         } else {
             Color::White
         })
-        .title("Chat")
+        .title("CHAT")
         .title_alignment(Alignment::Center)
-        .title_style(Color::Green);
+        .title_style(Color::Green)
+		.bold();
 
     let inner_chat = chat_space[1].inner(Margin {
         horizontal: 1,
@@ -363,9 +364,10 @@ pub fn draw_room_fight(world: &mut World, frame: &mut Frame) {
         } else {
             Color::White
         })
-        .title("Output")
+        .title("OUTPUT")
         .title_alignment(Alignment::Center)
-        .title_style(Color::Green);
+        .title_style(Color::Green)
+		.bold();
 
     str_lines = "".to_string();
 
@@ -399,7 +401,7 @@ pub fn draw_room_fight(world: &mut World, frame: &mut Frame) {
     // CHAT TEXT AREA
     world.room.chat_text_area.set_block(
         Block::bordered()
-            .title("(F2) Send messages here:")
+            .title("(F2) SEND MESSAGES HERE:")
             .title_alignment(Alignment::Center)
             .title_style(Color::Green)
             .bold()
@@ -420,7 +422,7 @@ pub fn draw_room_fight(world: &mut World, frame: &mut Frame) {
             } else {
                 Color::White
             })
-            .title("(F1) You can write your command here:")
+            .title("(F1) YOU CAN WRITE YOUR COMMANDS HERE:")
             .title_alignment(Alignment::Center)
             .title_style(Color::Green)
             .bold(),
@@ -435,9 +437,10 @@ pub fn draw_room_fight(world: &mut World, frame: &mut Frame) {
         let border_bag = Block::new()
             .borders(Borders::ALL)
             .border_style(Color::LightBlue)
-            .title("You can use :")
+            .title("YOU CAN USE :")
             .title_alignment(Alignment::Center)
-            .title_style(Color::Green);
+            .title_style(Color::Green)
+			.bold();
 
         let mut bag_content: Vec<ListItem> = Vec::new();
         world.room.bag = Vec::new();
