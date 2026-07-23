@@ -1,7 +1,8 @@
 use ratatui::crossterm::event::{KeyCode, KeyEvent};
 
 use crate::{
-    enums::{actions::PendingAction, channels::Channels, focus::Focus, states::States}, structures::world::World,
+    enums::{actions::PendingAction, channels::Channels, focus::Focus, states::States},
+    structures::world::World,
 };
 
 pub fn trade_event(world: &mut World, key: KeyEvent, inventory: Vec<String>, npc_id: String) {
@@ -84,30 +85,28 @@ pub fn trade_event(world: &mut World, key: KeyEvent, inventory: Vec<String>, npc
             Focus::SELL => world.room.sell_list_state.select_next(),
             _ => world.room.focus = Focus::BUY,
         },
-		KeyCode::Right => match world.room.focus {
-			Focus::SELL => {
-				world.room.sell_list_state.select(None);
-				world.room.buy_list_state.select_first();
-				world.room.focus = Focus::BUY;
-			},
-			_ => world.room.focus = Focus::BUY
-		},
-		KeyCode::Left => match world.room.focus {
-			Focus::BUY => {
-				world.room.buy_list_state.select(None);
-				world.room.sell_list_state.select_first();
-				world.room.focus = Focus::SELL
-			},
-			_ => world.room.focus = Focus::SELL
-		},
-		KeyCode::F(number) => {
-			match number {
-				7 => world.chat.channel = Channels::GLOBAL,
-				8 => world.chat.channel = Channels::ROOM,
-				9 => world.chat.channel = Channels::GROUP,
-				_ => {}
-			}
-		}
+        KeyCode::Right => match world.room.focus {
+            Focus::SELL => {
+                world.room.sell_list_state.select(None);
+                world.room.buy_list_state.select_first();
+                world.room.focus = Focus::BUY;
+            }
+            _ => world.room.focus = Focus::BUY,
+        },
+        KeyCode::Left => match world.room.focus {
+            Focus::BUY => {
+                world.room.buy_list_state.select(None);
+                world.room.sell_list_state.select_first();
+                world.room.focus = Focus::SELL
+            }
+            _ => world.room.focus = Focus::SELL,
+        },
+        KeyCode::F(number) => match number {
+            7 => world.chat.channel = Channels::GLOBAL,
+            8 => world.chat.channel = Channels::ROOM,
+            9 => world.chat.channel = Channels::GROUP,
+            _ => {}
+        },
         _ => {}
     }
 }

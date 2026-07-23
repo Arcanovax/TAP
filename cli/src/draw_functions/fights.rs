@@ -1,5 +1,3 @@
-use std::{fs::OpenOptions, io::Write};
-
 use ratatui::{
     Frame,
     layout::{
@@ -140,9 +138,6 @@ pub fn draw_room_fight(world: &mut World, frame: &mut Frame) {
     } else {
         Color::Green
     };
-
-    // if let Ok(mut file) = OpenOptions::new().create(true).append(true).open("debug_network.txt") {
-    // 		let _ = writeln!(file, "ok (State {:#?}) : {:#?}", world.room.fight.target_hp, world.room.fight.target_max_hp);}
 
     let percent = (world.room.fight.target_hp * 100 / world.room.fight.target_max_hp).min(100);
     hp_bar = Gauge::default()
@@ -286,7 +281,7 @@ pub fn draw_room_fight(world: &mut World, frame: &mut Frame) {
         .title("CHAT")
         .title_alignment(Alignment::Center)
         .title_style(Color::Green)
-		.bold();
+        .bold();
 
     let inner_chat = chat_space[1].inner(Margin {
         horizontal: 1,
@@ -299,15 +294,15 @@ pub fn draw_room_fight(world: &mut World, frame: &mut Frame) {
 
     for message in &messages {
         for text_line in message.lines() {
-			str_lines += text_line;
+            str_lines += text_line;
             str_lines += "\n";
-			let color = {
-				if text_line.starts_with("[me]") {
-					Color::Yellow
-				} else {
-					Color::White
-				}
-			};
+            let color = {
+                if text_line.starts_with("[me]") {
+                    Color::Yellow
+                } else {
+                    Color::White
+                }
+            };
             formatted_lines.push(Line::from(text_line).style(color));
         }
     }
@@ -367,7 +362,7 @@ pub fn draw_room_fight(world: &mut World, frame: &mut Frame) {
         .title("OUTPUT")
         .title_alignment(Alignment::Center)
         .title_style(Color::Green)
-		.bold();
+        .bold();
 
     str_lines = "".to_string();
 
@@ -440,7 +435,7 @@ pub fn draw_room_fight(world: &mut World, frame: &mut Frame) {
             .title("YOU CAN USE :")
             .title_alignment(Alignment::Center)
             .title_style(Color::Green)
-			.bold();
+            .bold();
 
         let mut bag_content: Vec<ListItem> = Vec::new();
         world.room.bag = Vec::new();

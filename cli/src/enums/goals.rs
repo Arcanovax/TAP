@@ -16,10 +16,10 @@ pub enum Goal {
         amount: u32,
         dialog: String,
     },
-	Answer {
+    Answer {
         answer: String,
-		room: String
-    }
+        room: String,
+    },
 }
 
 impl Display for Goal {
@@ -27,17 +27,16 @@ impl Display for Goal {
         match self {
             Goal::Collect { item, amount } => write!(f, "Collect {} {}\n", amount, item),
             Goal::Talk { dialog } => {
-				
-				write!(f, "Talk to {}\n", dialog)
-			},
+                write!(f, "Talk to {}\n", dialog)
+            }
             Goal::Retrieve {
                 item,
                 amount,
                 dialog,
             } => write!(f, "Gave {} {} to {}\n", amount, item, dialog),
-			Goal::Answer { room, .. } => {
-				write!(f, "Answer to his riddle at {}.", room)
-			}
+            Goal::Answer { room, .. } => {
+                write!(f, "Answer to his riddle at {}.", room)
+            }
         }
     }
 }

@@ -1,5 +1,4 @@
 use ratatui::layout::Rect;
-use std::{fs::OpenOptions, io::Write};
 
 pub fn estimate_height(frame: Rect, content: &str) -> u16 {
     let window_width = (frame.width * 50) / 100;

@@ -13,8 +13,6 @@ pub fn login_event(key: KeyEvent, world: &mut World) {
             world.input.pop();
         }
         KeyCode::Enter => {
-            // if let Ok(mut file) = OpenOptions::new().create(true).append(true).open("debug_draw.txt") {
-            // 	let _ = writeln!(file, "dir (State) {:#?}", world.input);}
             let _ = world
                 .tx_to_serv
                 .try_send(format!("CONNECT {}\n", world.input));

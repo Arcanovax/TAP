@@ -1,7 +1,9 @@
-use std::{fs::OpenOptions, io::Write};
-
 use crate::{
-    enums::{actions::PendingAction, focus::Focus, goals::Goal, states::States}, structures::{fight::Fight, group::Invitation, quest_finish::FinishedQuest, quest_udate::UpdateView, world::World},
+    enums::{actions::PendingAction, focus::Focus, goals::Goal, states::States},
+    structures::{
+        fight::Fight, group::Invitation, quest_finish::FinishedQuest, quest_udate::UpdateView,
+        world::World,
+    },
 };
 
 pub fn event_handling(world: &mut World, answer: Vec<&str>) {
@@ -94,28 +96,41 @@ pub fn event_handling(world: &mut World, answer: Vec<&str>) {
                         }
                     }
                     "ATTACK" => {
-                        let (player_name, damages, enn_hp, loot) = (answer[3], answer[4], answer[5], answer[6]);
+                        let (player_name, damages, enn_hp, loot) =
+                            (answer[3], answer[4], answer[5], answer[6]);
                         world.output.push_back("".to_string());
                         world.output.push_back(format!(
                             "[FIGHT] {} dealt {} damages to the enemy. {} has {} HP remaining.",
                             player_name, damages, world.room.fight.target_name, enn_hp
                         ));
-						if let Ok(hp_enn) = enn_hp.parse::<u32>() {
-							world.room.fight.target_hp = hp_enn;
-							if hp_enn == 0 {
-								let loot_split: Vec<String> = loot.split("//").map(|f| format!("- {} x{}", f, if f == "item.gold" {50} else {1})).collect();
-								let loot_final = loot_split.join("\n");
-								world.state = States::Idle;
-								world.room.fight = Fight::new();
-								world.output.push_back(format!("Congratulation! The enemy is defeated! You earned :\n{}", loot_final));
-								let _ = world.tx_to_serv.try_send(String::from("INVENTORY\n"));
-                            	world.action = PendingAction::ClientInventory;
-							}
-						} else {
-							world.state = States::Idle;
-							world.room.fight = Fight::new();
-							world.output.push_back(format!("An error occurs with enemy HP so I decided to evacuate you immediately."));
-						}
+                        if let Ok(hp_enn) = enn_hp.parse::<u32>() {
+                            world.room.fight.target_hp = hp_enn;
+                            if hp_enn == 0 {
+                                let loot_split: Vec<String> = loot
+                                    .split("//")
+                                    .map(|f| {
+                                        format!(
+                                            "- {} x{}",
+                                            f,
+                                            if f == "item.gold" { 50 } else { 1 }
+                                        )
+                                    })
+                                    .collect();
+                                let loot_final = loot_split.join("\n");
+                                world.state = States::Idle;
+                                world.room.fight = Fight::new();
+                                world.output.push_back(format!(
+                                    "Congratulation! The enemy is defeated! You earned :\n{}",
+                                    loot_final
+                                ));
+                                let _ = world.tx_to_serv.try_send(String::from("INVENTORY\n"));
+                                world.action = PendingAction::ClientInventory;
+                            }
+                        } else {
+                            world.state = States::Idle;
+                            world.room.fight = Fight::new();
+                            world.output.push_back(format!("An error occurs with enemy HP so I decided to evacuate you immediately."));
+                        }
                     }
                     "HEALING" => {
                         let (player_name, heal) = (answer[3], answer[4]);
@@ -141,55 +156,55 @@ pub fn event_handling(world: &mut World, answer: Vec<&str>) {
                 }
                 world.room.output_scroll_pos.scroll_to_bottom();
             }
-            "QUEST" => {
-				
-				match answer[2] {
-					"UPDATE" => {
-						let update: UpdateView = serde_json::from_str(answer[3]).unwrap();
-						let quest_name = {
-							if let Some(item_obj) = world.player.quests.get_mut(&update.quest) {
-								item_obj.finished_goals += 1;
-								item_obj.name.clone()
-							} else {
-								update.quest
-							}
-						};
-						world.output.push_back(format!("Congratulation! You validate the goal '{}' of the {} quest.", update.previous_goal, quest_name));
-						match update.previous_goal {
-							Goal::Retrieve { item, amount, .. } => {
-								world.player.inventory.entry(item).and_modify(|f| {*f -= amount});
-								world.player.inventory.retain(|_, quantity| *quantity > 0);
-							},
-							_ => {}
-						}
-					}
-					"FINISH" => {
-						let finish: FinishedQuest = serde_json::from_str(answer[3]).unwrap();
-						let quest_name = {
-							if let Some(quest_obj) = world.player.quests.get_mut(&finish.quest) {
-								quest_obj.completed = true;
-								quest_obj.name.clone()
-							} else {
-								finish.quest.clone()
-							}
-						};
-						world.output.push_back(format!("Unbelievable! You've completed the quest {} and earned {}.", quest_name, finish.reward));
-                        if finish.reward == "item.gold" {
-                            world.player.gold += 50;
+            "QUEST" => match answer[2] {
+                "UPDATE" => {
+                    let update: UpdateView = serde_json::from_str(answer[3]).unwrap();
+                    let quest_name = {
+                        if let Some(item_obj) = world.player.quests.get_mut(&update.quest) {
+                            item_obj.finished_goals += 1;
+                            item_obj.name.clone()
                         } else {
-                            *world.player.inventory.entry(finish.reward).or_insert(0) += 1;
+                            update.quest
                         }
-						// if let Ok(mut file) = OpenOptions::new()
-						// 	.create(true)
-						// 	.append(true)
-						// 	.open("debug_network.txt")
-						// {
-						// 	let _ = writeln!(file, "all (State {:?}) : {:#?}", finish.quest, world.player.quests);
-						// }
-					}
-					_ => {}
-				}
-			}
+                    };
+                    world.output.push_back(format!(
+                        "Congratulation! You validate the goal '{}' of the {} quest.",
+                        update.previous_goal, quest_name
+                    ));
+                    match update.previous_goal {
+                        Goal::Retrieve { item, amount, .. } => {
+                            world
+                                .player
+                                .inventory
+                                .entry(item)
+                                .and_modify(|f| *f -= amount);
+                            world.player.inventory.retain(|_, quantity| *quantity > 0);
+                        }
+                        _ => {}
+                    }
+                }
+                "FINISH" => {
+                    let finish: FinishedQuest = serde_json::from_str(answer[3]).unwrap();
+                    let quest_name = {
+                        if let Some(quest_obj) = world.player.quests.get_mut(&finish.quest) {
+                            quest_obj.completed = true;
+                            quest_obj.name.clone()
+                        } else {
+                            finish.quest.clone()
+                        }
+                    };
+                    world.output.push_back(format!(
+                        "Unbelievable! You've completed the quest {} and earned {}.",
+                        quest_name, finish.reward
+                    ));
+                    if finish.reward == "item.gold" {
+                        world.player.gold += 50;
+                    } else {
+                        *world.player.inventory.entry(finish.reward).or_insert(0) += 1;
+                    }
+                }
+                _ => {}
+            },
             _ => {}
         }
     }

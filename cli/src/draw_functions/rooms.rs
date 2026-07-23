@@ -1,14 +1,18 @@
-use std::{collections::VecDeque, fs::OpenOptions, io::Write};
+use std::collections::VecDeque;
 
 use ratatui::{
-    Frame, layout::{
+    Frame,
+    layout::{
         Alignment,
         Constraint::{Fill, Length, Percentage},
         Direction::{Horizontal, Vertical},
         Flex,
         HorizontalAlignment::Center,
         Layout, Margin, Rect, Size,
-    }, style::{Color, Modifier, Style, Stylize}, text::{Line, Span, Text}, widgets::{Block, Borders, Clear, Gauge, List, ListItem, Paragraph, Wrap},
+    },
+    style::{Color, Modifier, Style, Stylize},
+    text::{Line, Span, Text},
+    widgets::{Block, Borders, Clear, Gauge, List, ListItem, Paragraph, Wrap},
 };
 use tui_widgets::scrollview::ScrollView;
 
@@ -18,8 +22,11 @@ use crate::{
 };
 
 pub fn draw_room(world: &mut World, frame: &mut Frame) {
-
-	let global_color = if world.dungeon {Color::Red} else {Color::Green};
+    let global_color = if world.dungeon {
+        Color::Red
+    } else {
+        Color::Green
+    };
 
     let main_layout = Layout::default()
         .direction(Vertical)
@@ -147,18 +154,29 @@ pub fn draw_room(world: &mut World, frame: &mut Frame) {
         for elem in &world.room.npcs {
             if let Some(npc) = world.list_npcs.get(elem) {
                 npcs_list.push(ListItem::new(
-                    Line::from(format!("{} ({})", npc.name.clone(), if !world.dungeon {elem.clone()} else {
-						match &npc.kind {
-							NPCKind::Enemy { hp: _, max_hp: _, kind, .. } => kind.to_string(),
-							_ => {"Not an enemy".to_string()}
-						}
-					}))
-                        .alignment(Alignment::Center)
-                        .style(match npc.kind {
-                            NPCKind::Citizen => Color::White,
-                            NPCKind::Enemy { .. } => Color::Red,
-                            NPCKind::Merchant { .. } => Color::Yellow,
-                        }),
+                    Line::from(format!(
+                        "{} ({})",
+                        npc.name.clone(),
+                        if !world.dungeon {
+                            elem.clone()
+                        } else {
+                            match &npc.kind {
+                                NPCKind::Enemy {
+                                    hp: _,
+                                    max_hp: _,
+                                    kind,
+                                    ..
+                                } => kind.to_string(),
+                                _ => "Not an enemy".to_string(),
+                            }
+                        }
+                    ))
+                    .alignment(Alignment::Center)
+                    .style(match npc.kind {
+                        NPCKind::Citizen => Color::White,
+                        NPCKind::Enemy { .. } => Color::Red,
+                        NPCKind::Merchant { .. } => Color::Yellow,
+                    }),
                 ));
             } else {
                 npcs_list.push(ListItem::new(
@@ -192,7 +210,11 @@ pub fn draw_room(world: &mut World, frame: &mut Frame) {
         .inventory
         .iter()
         .map(|item| {
-			let item_name = if let Some(it) = world.list_items.get(item.0) {it.name.clone()} else {item.0.clone()};
+            let item_name = if let Some(it) = world.list_items.get(item.0) {
+                it.name.clone()
+            } else {
+                item.0.clone()
+            };
             ListItem::new(
                 Line::from(format!("{} x{}", item_name, item.1)).alignment(Alignment::Center),
             )
@@ -231,11 +253,25 @@ pub fn draw_room(world: &mut World, frame: &mut Frame) {
         .player
         .quests
         .values()
-        .map(|quest|
-			ListItem::new(
-			Line::from(format!("{} {}", quest.name.clone(), if quest.completed {"(Finished)".to_string()} else {"".to_string()}))
-			.alignment(Alignment::Center)
-			.style(if quest.completed {Color::Green} else {Color::White})))
+        .map(|quest| {
+            ListItem::new(
+                Line::from(format!(
+                    "{} {}",
+                    quest.name.clone(),
+                    if quest.completed {
+                        "(Finished)".to_string()
+                    } else {
+                        "".to_string()
+                    }
+                ))
+                .alignment(Alignment::Center)
+                .style(if quest.completed {
+                    Color::Green
+                } else {
+                    Color::White
+                }),
+            )
+        })
         .collect();
     if quests.len() == 0 {
         quests.push(ListItem::new(
@@ -298,7 +334,10 @@ pub fn draw_room(world: &mut World, frame: &mut Frame) {
                     .nth(world.room.inventory_list_state.selected().unwrap())
                 {
                     if let Some(detailled_item) = world.list_items.get(selected_item) {
-                        Paragraph::new(Text::from(format!("({}) {}", selected_item, detailled_item)))
+                        Paragraph::new(Text::from(format!(
+                            "({}) {}",
+                            selected_item, detailled_item
+                        )))
                     } else {
                         Paragraph::new(Text::from("Can't find details about this item."))
                     }
@@ -313,13 +352,13 @@ pub fn draw_room(world: &mut World, frame: &mut Frame) {
                     .values()
                     .nth(world.room.quests_list_state.selected().unwrap())
                 {
-					let reward = {
-						if let Some(reward_obj) = world.list_items.get(&selected_quest.reward) {
-							reward_obj.name.clone()
-						} else {
-							"Unknown name".to_string()
-						}
-					};
+                    let reward = {
+                        if let Some(reward_obj) = world.list_items.get(&selected_quest.reward) {
+                            reward_obj.name.clone()
+                        } else {
+                            "Unknown name".to_string()
+                        }
+                    };
                     Paragraph::new(selected_quest.to_text(reward))
                 } else {
                     Paragraph::new(Text::from("Can't find details about this quest."))
@@ -432,7 +471,7 @@ pub fn draw_room(world: &mut World, frame: &mut Frame) {
         .title("CHAT")
         .title_alignment(Alignment::Center)
         .title_style(global_color)
-		.bold();
+        .bold();
 
     let inner_chat = chat_space[1].inner(Margin {
         horizontal: 1,
@@ -445,15 +484,15 @@ pub fn draw_room(world: &mut World, frame: &mut Frame) {
 
     for message in &messages {
         for text_line in message.lines() {
-			str_lines += text_line;
+            str_lines += text_line;
             str_lines += "\n";
-			let color = {
-				if text_line.starts_with("[me]") {
-					Color::Yellow
-				} else {
-					Color::White
-				}
-			};
+            let color = {
+                if text_line.starts_with("[me]") {
+                    Color::Yellow
+                } else {
+                    Color::White
+                }
+            };
             formatted_lines.push(Line::from(text_line).style(color));
         }
     }
@@ -513,7 +552,7 @@ pub fn draw_room(world: &mut World, frame: &mut Frame) {
         .title("OUTPUT")
         .title_alignment(Alignment::Center)
         .title_style(global_color)
-		.bold();
+        .bold();
 
     str_lines = "".to_string();
 
@@ -576,7 +615,7 @@ pub fn draw_room(world: &mut World, frame: &mut Frame) {
 
     frame.render_widget(&world.room.text_area, main_layout[1]);
 
-	// CHOICE
+    // CHOICE
     if let Focus::CHOICE(second, ..) = &world.room.focus {
         let choice_area = frame.area().centered(Percentage(30), Length(4));
         let border_choice = Block::new()
@@ -584,18 +623,14 @@ pub fn draw_room(world: &mut World, frame: &mut Frame) {
             .border_style(Color::LightBlue);
 
         let choice_content: Vec<ListItem> = vec![
-			ListItem::new(
-				Line::from("Talk").alignment(Alignment::Center)
-			),
-			ListItem::new(
-				Line::from(second.to_string()).alignment(Alignment::Center)
-			),
-		];
+            ListItem::new(Line::from("Talk").alignment(Alignment::Center)),
+            ListItem::new(Line::from(second.to_string()).alignment(Alignment::Center)),
+        ];
 
-		let choice = List::new(choice_content)
-			.block(border_choice)
-			.highlight_style(Modifier::REVERSED);
-		frame.render_widget(Clear, choice_area);
-		frame.render_stateful_widget(choice, choice_area, &mut world.room.choice_list_state);
-	}
+        let choice = List::new(choice_content)
+            .block(border_choice)
+            .highlight_style(Modifier::REVERSED);
+        frame.render_widget(Clear, choice_area);
+        frame.render_stateful_widget(choice, choice_area, &mut world.room.choice_list_state);
+    }
 }

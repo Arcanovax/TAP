@@ -1,7 +1,6 @@
 use std::{
     collections::{HashMap, VecDeque},
-    fs::OpenOptions,
-    io::{self, Write},
+    io::{self},
     sync::mpsc::{Receiver, TryRecvError},
     time::{Duration, Instant},
 };
@@ -17,9 +16,16 @@ use crate::{
     draw_functions::{
         discuss::draw_room_discuss, fights::draw_room_fight, login::login_draw, rooms::draw_room,
         trade::draw_trade, wait_server::draw_wait,
-    }, enums::{actions::PendingAction, states::States}, global_functions::{
-        discuss_event::discuss_event, escape_handling::escape_handling, event_handling::event_handling, handle_escape::handle_escape, handle_local_events::handle_global_events, handle_mouse::handle_mouse, login_event::login_event, parse_dungeon_id::parse_dungeon_id, response_handling::response_handling, trade_event::trade_event,
-    }, structures::{
+    },
+    enums::{actions::PendingAction, states::States},
+    global_functions::{
+        discuss_event::discuss_event, escape_handling::escape_handling,
+        event_handling::event_handling, handle_escape::handle_escape,
+        handle_local_events::handle_global_events, handle_mouse::handle_mouse,
+        login_event::login_event, parse_dungeon_id::parse_dungeon_id,
+        response_handling::response_handling, trade_event::trade_event,
+    },
+    structures::{
         chat::Chat, group::Group, items::Item, npc::NPC, player::Player, room::Room,
         rooms_view::RoomsView,
     },
@@ -36,8 +42,8 @@ pub struct World<'a> {
     pub action: PendingAction,
     pub group: Group,
     pub counter: u32,
-	pub dungeon: bool,
-	pub index_sentence: usize,
+    pub dungeon: bool,
+    pub index_sentence: usize,
     pub old_command: VecDeque<String>,
     pub index_command: usize,
     pub error: bool,
@@ -61,7 +67,7 @@ impl World<'_> {
             message: String::from(""),
             chat: Chat::new(),
             output: VecDeque::new(),
-			dungeon: false,
+            dungeon: false,
             old_command: VecDeque::new(),
             index_command: 0,
             action: PendingAction::None,
@@ -80,7 +86,7 @@ impl World<'_> {
         }
     }
 
-	pub fn in_dungeon(&self) -> bool {
+    pub fn in_dungeon(&self) -> bool {
         parse_dungeon_id(&self.room.room.id).is_some()
     }
 
@@ -158,13 +164,6 @@ impl World<'_> {
         loop {
             match self.rx_from_serv.try_recv() {
                 Ok(msg) => {
-                    // if let Ok(mut file) = OpenOptions::new()
-                    //     .create(true)
-                    //     .append(true)
-                    //     .open("debug_network.txt")
-                    // {
-                    //     let _ = writeln!(file, "all (State {:?}) : {:#?}", self.room.focus, msg);
-                    // }
                     let answers = msg.lines();
                     for answer in answers {
                         let parts: Vec<&str> = answer.split_whitespace().collect();

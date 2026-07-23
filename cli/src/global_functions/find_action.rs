@@ -28,16 +28,16 @@ pub fn find_action(command: Vec<&str>, world: &mut World) {
         "quest" => world.action = PendingAction::Quest,
         "gold" => world.action = PendingAction::Gold,
         "npc" => world.action = PendingAction::Npc,
-		"quests" => world.action = PendingAction::Quests,
-		"dices" => world.action = PendingAction::Dices(command[1..].join(" ")),
-		"slot_machine" => world.action = PendingAction::Slot,
-		"dungeon" => match command[1].to_lowercase().as_str() {
-			"create" => world.action = PendingAction::DungeonCreate,
-			"join" => world.action = PendingAction::DungeonJoin,
-			_ => {}
-		}
-		"answer" => world.action = PendingAction::Answer,
-		"help" => world.action = PendingAction::Help,
+        "quests" => world.action = PendingAction::Quests,
+        "dices" => world.action = PendingAction::Dices(command[1..].join(" ")),
+        "slot_machine" => world.action = PendingAction::Slot,
+        "dungeon" => match command[1].to_lowercase().as_str() {
+            "create" => world.action = PendingAction::DungeonCreate,
+            "join" => world.action = PendingAction::DungeonJoin,
+            _ => {}
+        },
+        "answer" => world.action = PendingAction::Answer,
+        "help" => world.action = PendingAction::Help,
         _ => {}
     }
 }

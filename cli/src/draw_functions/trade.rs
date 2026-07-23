@@ -1,4 +1,4 @@
-use std::{collections::VecDeque, fs::OpenOptions, io::Write};
+use std::collections::VecDeque;
 
 use ratatui::{
     Frame,
@@ -16,7 +16,7 @@ use ratatui::{
 use tui_widgets::scrollview::ScrollView;
 
 use crate::{
-    enums::{channels::Channels, focus::Focus, npc_kind::NPCKind},
+    enums::{channels::Channels, focus::Focus},
     structures::world::World,
 };
 
@@ -118,8 +118,6 @@ pub fn draw_trade(world: &mut World, frame: &mut Frame, inventory: Vec<String>) 
         Color::Green
     };
 
-    // if let Ok(mut file) = OpenOptions::new().create(true).append(true).open("debug_network.txt") {
-    // 			let _ = writeln!(file, "ok (State {:?}) :", world.player.hp);}
     let hp_bar = Gauge::default()
         .block(
             Block::new()
@@ -253,7 +251,7 @@ pub fn draw_trade(world: &mut World, frame: &mut Frame, inventory: Vec<String>) 
         &mut world.room.exits_list_state,
     );
 
-	//DETAILS
+    //DETAILS
     let details_block = Block::bordered()
         .title("ITEM DETAILS")
         .title_alignment(Alignment::Center)
@@ -268,7 +266,7 @@ pub fn draw_trade(world: &mut World, frame: &mut Frame, inventory: Vec<String>) 
                     .nth(world.room.buy_list_state.selected().unwrap_or(0))
                 {
                     if let Some(item) = world.list_items.get(selected_item) {
-                        Paragraph::new(Text::from(format!("({}) {}",selected_item, item)))
+                        Paragraph::new(Text::from(format!("({}) {}", selected_item, item)))
                     } else {
                         Paragraph::new(Text::from("Can't find details about this item."))
                     }
@@ -284,7 +282,10 @@ pub fn draw_trade(world: &mut World, frame: &mut Frame, inventory: Vec<String>) 
                     .nth(world.room.sell_list_state.selected().unwrap())
                 {
                     if let Some(detailled_item) = world.list_items.get(selected_item) {
-                        Paragraph::new(Text::from(format!("({}) {}",selected_item, detailled_item)))
+                        Paragraph::new(Text::from(format!(
+                            "({}) {}",
+                            selected_item, detailled_item
+                        )))
                     } else {
                         Paragraph::new(Text::from("Can't find details about this item."))
                     }
@@ -339,7 +340,7 @@ pub fn draw_trade(world: &mut World, frame: &mut Frame, inventory: Vec<String>) 
         .title("CHAT")
         .title_alignment(Alignment::Center)
         .title_style(Color::Green)
-		.bold();
+        .bold();
 
     let inner_chat = chat_space[1].inner(Margin {
         horizontal: 1,
@@ -352,15 +353,15 @@ pub fn draw_trade(world: &mut World, frame: &mut Frame, inventory: Vec<String>) 
 
     for message in &messages {
         for text_line in message.lines() {
-			str_lines += text_line;
+            str_lines += text_line;
             str_lines += "\n";
-			let color = {
-				if text_line.starts_with("[me]") {
-					Color::Yellow
-				} else {
-					Color::White
-				}
-			};
+            let color = {
+                if text_line.starts_with("[me]") {
+                    Color::Yellow
+                } else {
+                    Color::White
+                }
+            };
             formatted_lines.push(Line::from(text_line).style(color));
         }
     }
@@ -420,7 +421,7 @@ pub fn draw_trade(world: &mut World, frame: &mut Frame, inventory: Vec<String>) 
         .title("OUTPUT")
         .title_alignment(Alignment::Center)
         .title_style(Color::Green)
-		.bold();
+        .bold();
 
     str_lines = "".to_string();
 

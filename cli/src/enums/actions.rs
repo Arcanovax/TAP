@@ -3,7 +3,7 @@ use crate::structures::quest_view::QuestStatus;
 #[derive(Debug, Clone, PartialEq)]
 pub enum PendingAction {
     None,
-	Answer,
+    Answer,
     Gold,
     ClientGold,
     FleeGold,
@@ -43,8 +43,8 @@ pub enum PendingAction {
     QuestInfo(String, QuestStatus),
     Items,
     DungeonItems,
-	Dices(String),
-	Slot,
-	DungeonCreate,
-	DungeonJoin,
+    Dices(String),
+    Slot,
+    DungeonCreate,
+    DungeonJoin,
 }

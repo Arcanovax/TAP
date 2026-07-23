@@ -1,5 +1,3 @@
-use std::{fs::OpenOptions, io::Write};
-
 use crate::{global_functions::estimate_height::estimate_height, structures::world::World};
 use ratatui::prelude::Stylize;
 use ratatui::{
@@ -48,9 +46,6 @@ pub fn login_draw(world: &mut World, frame: &mut Frame) {
     } else if world.counter % 2 == 0 {
         world.message.push(descr.chars().nth(mess_len).unwrap());
     }
-
-    // if let Ok(mut file) = OpenOptions::new().create(true).append(true).open("debug_network.txt") {
-    // 			let _ = writeln!(file, "len {:?} counter {:#?}", mess_len, world.counter);}
 
     let presentation = Paragraph::new(world.message.clone())
         .wrap(Wrap { trim: true })

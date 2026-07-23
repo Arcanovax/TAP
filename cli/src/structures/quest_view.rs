@@ -12,7 +12,7 @@ pub enum QuestStatus {
 #[derive(Serialize, Debug, Deserialize)]
 pub struct QuestsView {
     pub quest_id: String,
-	#[serde(flatten)]
+    #[serde(flatten)]
     pub status: QuestStatus,
 }
 
@@ -25,7 +25,7 @@ pub struct QuestView {
 }
 
 impl Display for QuestsView {
-	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-		write!(f, "Id: {}\nStatus: {:#?}", self.quest_id, self.status)
-	}
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "Id: {}\nStatus: {:#?}", self.quest_id, self.status)
+    }
 }

@@ -1,5 +1,3 @@
-use std::{fs::OpenOptions, io::Write};
-
 use ratatui::{
     Frame,
     layout::{
@@ -131,17 +129,14 @@ pub fn draw_room_discuss(world: &mut World, frame: &mut Frame, name: String, sen
 
     if world.index_sentence < mess_len {
         world.counter += 1;
-		
-		if world.counter % 2 == 0 {
-			world.message.push(sentence[world.index_sentence]);
-			world.index_sentence += 1;
-    	}
-    } else {
-		world.counter = 0;
-	}
 
-    // if let Ok(mut file) = OpenOptions::new().create(true).append(true).open("debug_network.txt") {
-    // 	let _ = writeln!(file, "ok (State {:?}) : {:#?}", world.message, sentence);}
+        if world.counter % 2 == 0 {
+            world.message.push(sentence[world.index_sentence]);
+            world.index_sentence += 1;
+        }
+    } else {
+        world.counter = 0;
+    }
 
     lines = vec![
         Line::raw("(Press enter => Skip)").centered(),
@@ -220,7 +215,7 @@ pub fn draw_room_discuss(world: &mut World, frame: &mut Frame, name: String, sen
         .title("CHAT")
         .title_alignment(Alignment::Center)
         .title_style(Color::Green)
-		.bold();
+        .bold();
 
     let inner_chat = chat_space[1].inner(Margin {
         horizontal: 1,
@@ -233,15 +228,15 @@ pub fn draw_room_discuss(world: &mut World, frame: &mut Frame, name: String, sen
 
     for message in &messages {
         for text_line in message.lines() {
-			str_lines += text_line;
+            str_lines += text_line;
             str_lines += "\n";
-			let color = {
-				if text_line.starts_with("[me]") {
-					Color::Yellow
-				} else {
-					Color::White
-				}
-			};
+            let color = {
+                if text_line.starts_with("[me]") {
+                    Color::Yellow
+                } else {
+                    Color::White
+                }
+            };
             formatted_lines.push(Line::from(text_line).style(color));
         }
     }
@@ -296,7 +291,7 @@ pub fn draw_room_discuss(world: &mut World, frame: &mut Frame, name: String, sen
         .title("OUTPUT")
         .title_alignment(Alignment::Center)
         .title_style(Color::Green)
-		.bold();
+        .bold();
 
     str_lines = "".to_string();
 
