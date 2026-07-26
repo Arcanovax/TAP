@@ -42,7 +42,6 @@ pub fn trade_event(world: &mut World, key: KeyEvent, inventory: Vec<String>, npc
                         } else {
                             world.action = PendingAction::Buy(item.clone());
                         }
-                    } else {
                     }
                 }
             }
@@ -68,7 +67,6 @@ pub fn trade_event(world: &mut World, key: KeyEvent, inventory: Vec<String>, npc
                             } else {
                                 world.action = PendingAction::Sell(item.clone());
                             }
-                        } else {
                         }
                     }
                 }

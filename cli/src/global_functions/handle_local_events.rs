@@ -187,7 +187,6 @@ pub fn handle_global_events(key: KeyEvent, world: &mut World) {
                             world.room.output_scroll_pos.scroll_to_bottom();
                             let _ = world.tx_to_serv.try_send(format!("MOVE {}\n", dir));
                             world.action = PendingAction::Move;
-                        } else {
                         }
                     }
                 }

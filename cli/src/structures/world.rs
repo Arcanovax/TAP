@@ -81,8 +81,8 @@ impl World<'_> {
             click: false,
             input: "".to_string(),
             state: States::ServerWait,
-            tx_to_serv: tx_to_serv,
-            rx_from_serv: rx_from_serv,
+            tx_to_serv,
+            rx_from_serv,
         }
     }
 
