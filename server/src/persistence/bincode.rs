@@ -28,7 +28,7 @@ where
         Self: 'a,
     {
         let (val, _len) = bincode::serde::decode_from_slice(data, config::standard())
-            .expect(format!("redb: {} decoding impossible.", std::any::type_name::<T>()).as_str());
+            .unwrap_or_else(|_| panic!("redb: {} decoding impossible.", std::any::type_name::<T>()));
         val
     }
 
@@ -37,7 +37,7 @@ where
         Self: 'b,
     {
         let bytes: Vec<u8> = bincode::serde::encode_to_vec(value, config::standard())
-            .expect(format!("redb: {} encoding impossible.", std::any::type_name::<T>()).as_str());
+            .unwrap_or_else(|_| panic!("redb: {} encoding impossible.", std::any::type_name::<T>()));
         bytes
     }
 

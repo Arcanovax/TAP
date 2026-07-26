@@ -10,7 +10,7 @@ use crate::{
 #[test]
 fn item_right_name_returns_success() {
     let server = populated_server();
-    let res = item_request(&server, &vec![String::from("sword")]);
+    let res = item_request(&server, &[String::from("sword")]);
     assert_eq!(
         res,
         Message::Response {
@@ -30,7 +30,7 @@ fn item_right_name_returns_success() {
 #[test]
 fn npc_wrong_name_returns_npc_not_found() {
     let server = populated_server();
-    let res = item_request(&server, &vec![String::from("no_item")]);
+    let res = item_request(&server, &[String::from("no_item")]);
     assert_eq!(
         res,
         Message::Response {

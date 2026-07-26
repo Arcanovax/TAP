@@ -9,7 +9,7 @@ use std::net::SocketAddr;
 mod tests;
 
 pub(super) fn dungeon_request(
-    args: &Vec<String>,
+    args: &[String],
     server_info: &SharedServer,
     peer_addr: SocketAddr,
 ) -> Message {
@@ -24,10 +24,10 @@ pub(super) fn dungeon_request(
         "CREATE" => dungeon_create_request(server_info, peer_addr),
         "JOIN" => dungeon_join_request(server_info, peer_addr),
         _ => {
-            return Message::Response {
+            Message::Response {
                 error: ErrorCode::INVALID_ARGS,
                 payload: Payload::Empty,
-            };
+            }
         }
     }
 }

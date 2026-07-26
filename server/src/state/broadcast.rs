@@ -5,7 +5,7 @@ impl ServerInfo {
     pub fn get_global_receivers(&mut self, peer_addr: SocketAddr) -> Vec<&Connection> {
         let mut receivers = Vec::new();
 
-        for (_, con) in &self.connections {
+        for con in self.connections.values() {
             if con.addr != peer_addr {
                 receivers.push(con);
             }
@@ -34,8 +34,8 @@ impl ServerInfo {
     pub fn get_room_receivers(&self, peer_addr: SocketAddr) -> Result<Vec<&Connection>, ErrorCode> {
         let room = &self.get_player(peer_addr)?.location;
         let mut receivers: Vec<&Connection> = Vec::new();
-        for (_, con) in &self.connections {
-            if con.addr != peer_addr && con.player.location == room.to_string() {
+        for con in self.connections.values() {
+            if con.addr != peer_addr && con.player.location == *room {
                 receivers.push(con);
             }
         }

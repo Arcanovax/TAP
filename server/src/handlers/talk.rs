@@ -13,7 +13,7 @@ use crate::{
 
 pub fn talk_request(
     peer_addr: SocketAddr,
-    args: &Vec<String>,
+    args: &[String],
     server_info: &SharedServer,
 ) -> HandlerOutcome {
     if args.len() != 1 {
@@ -46,7 +46,7 @@ pub fn talk_request(
         }
         .into();
     }
-    let npc = match binding.resolve_npc(&npc_ref) {
+    let npc = match binding.resolve_npc(npc_ref) {
         Some(npc) => npc,
         None => {
             return Message::Response {
@@ -78,10 +78,10 @@ pub fn talk_request(
         }
     }
 
-    if dialogs.is_none() {
-        if let Some(dialog) = npc.dialog.get("default") {
-            dialogs = Some((dialog.to_vec(), "default".to_string()));
-        }
+    if dialogs.is_none()
+        && let Some(dialog) = npc.dialog.get("default")
+    {
+        dialogs = Some((dialog.to_vec(), "default".to_string()));
     }
 
     if dialogs.is_none() {

@@ -9,7 +9,7 @@ use std::{collections::HashMap, net::SocketAddr};
 #[cfg(test)]
 mod tests;
 
-pub(super) fn room_request(server_info: &SharedServer, args: &Vec<String>) -> Message {
+pub(super) fn room_request(server_info: &SharedServer, args: &[String]) -> Message {
     if args.len() != 1 {
         return Message::Response {
             error: ErrorCode::INVALID_ARGS,
@@ -52,7 +52,7 @@ pub(super) fn rooms_request(server_info: &SharedServer, peer_addr: SocketAddr) -
         rooms.insert(
             id,
             RoomView {
-                id: id,
+                id,
                 name: &room.name,
                 description: &room.description,
                 exits: &room.exits,
@@ -69,7 +69,7 @@ pub(super) fn rooms_request(server_info: &SharedServer, peer_addr: SocketAddr) -
                         rooms.insert(
                             id,
                             RoomView {
-                                id: id,
+                                id,
                                 name: &room.name,
                                 description: &room.description,
                                 exits: &room.exits,

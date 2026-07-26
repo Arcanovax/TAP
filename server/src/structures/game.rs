@@ -1,11 +1,11 @@
-use crate::structures::{item::Item, npc::NPC, quest::Quest, room::Room};
+use crate::structures::{item::Item, npc::Npc, quest::Quest, room::Room};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct World {
     pub rooms: HashMap<String, Room>,
-    pub npcs: HashMap<String, NPC>,
+    pub npcs: HashMap<String, Npc>,
     pub items: HashMap<String, Item>,
     pub quests: HashMap<String, Quest>,
     pub spawn_room: String,

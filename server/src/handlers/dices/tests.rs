@@ -9,7 +9,7 @@ fn dices_not_connected_returns_invalid_command() {
         dices_request(
             &server,
             addr(1),
-            &vec!["1".to_string()],
+            &["1".to_string()],
             [0, 0, 0, 0, 0, 0, 0, 0, 0, 0].to_vec()
         ),
         err(ErrorCode::INVALID_COMMAND)
@@ -26,7 +26,7 @@ fn dices_no_gold_returns_not_enough_gold() {
         dices_request(
             &server,
             addr(1),
-            &vec!["1".to_string()],
+            &["1".to_string()],
             [0, 0, 0, 0, 0, 0, 0, 0, 0, 0].to_vec()
         ),
         err(ErrorCode::NOT_ENOUGH_GOLD)
@@ -43,7 +43,7 @@ fn dices_invalid_number_args_returns_invalid_args() {
         dices_request(
             &server,
             addr(1),
-            &vec![],
+            &[],
             [0, 0, 0, 0, 0, 0, 0, 0, 0, 0].to_vec()
         ),
         err(ErrorCode::INVALID_ARGS)
@@ -52,8 +52,7 @@ fn dices_invalid_number_args_returns_invalid_args() {
         dices_request(
             &server,
             addr(1),
-            &vec![
-                "1".to_string(),
+            &["1".to_string(),
                 "2".to_string(),
                 "3".to_string(),
                 "4".to_string(),
@@ -63,8 +62,7 @@ fn dices_invalid_number_args_returns_invalid_args() {
                 "8".to_string(),
                 "9".to_string(),
                 "10".to_string(),
-                "11".to_string(),
-            ],
+                "11".to_string()],
             [0, 0, 0, 0, 0, 0, 0, 0, 0, 0].to_vec()
         ),
         err(ErrorCode::INVALID_ARGS)
@@ -81,7 +79,7 @@ fn dices_invalid_arg_type_returns_invalid_args() {
         dices_request(
             &server,
             addr(1),
-            &vec!["test".to_string()],
+            &["test".to_string()],
             [0, 0, 0, 0, 0, 0, 0, 0, 0, 0].to_vec()
         ),
         err(ErrorCode::INVALID_ARGS)
@@ -98,7 +96,7 @@ fn dices_invalid_arg_range_returns_invalid_args() {
         dices_request(
             &server,
             addr(1),
-            &vec!["0".to_string()],
+            &["0".to_string()],
             [0, 0, 0, 0, 0, 0, 0, 0, 0, 0].to_vec()
         ),
         err(ErrorCode::INVALID_ARGS)
@@ -107,7 +105,7 @@ fn dices_invalid_arg_range_returns_invalid_args() {
         dices_request(
             &server,
             addr(1),
-            &vec!["11".to_string()],
+            &["11".to_string()],
             [0, 0, 0, 0, 0, 0, 0, 0, 0, 0].to_vec()
         ),
         err(ErrorCode::INVALID_ARGS)
@@ -124,8 +122,7 @@ fn dices_with_losing_roll_returns_game_loose() {
         dices_request(
             &server,
             addr(1),
-            &vec![
-                "1".to_string(),
+            &["1".to_string(),
                 "2".to_string(),
                 "3".to_string(),
                 "4".to_string(),
@@ -134,8 +131,7 @@ fn dices_with_losing_roll_returns_game_loose() {
                 "7".to_string(),
                 "8".to_string(),
                 "9".to_string(),
-                "10".to_string(),
-            ],
+                "10".to_string()],
             [1, 1, 1, 1, 1, 1, 1, 1, 1, 1].to_vec()
         ),
         Message::Response {
@@ -155,12 +151,10 @@ fn dices_with_winning_roll_returns_success_with_gains() {
         dices_request(
             &server,
             addr(1),
-            &vec![
-                "1".to_string(),
+            &["1".to_string(),
                 "2".to_string(),
                 "2".to_string(),
-                "2".to_string(),
-            ],
+                "2".to_string()],
             [1, 1, 1, 2, 2, 1, 1, 1, 1, 2].to_vec()
         ),
         Message::Response {
@@ -186,12 +180,10 @@ fn dices_with_bad_roll_returns_game_lose() {
         dices_request(
             &server,
             addr(1),
-            &vec![
-                "1".to_string(),
+            &["1".to_string(),
                 "2".to_string(),
                 "2".to_string(),
-                "2".to_string(),
-            ],
+                "2".to_string()],
             [1, 1, 1, 2, 2, 1, 1, 1, 1, 1].to_vec()
         ),
         Message::Response {
@@ -216,12 +208,10 @@ fn dices_with_wrong_location_returns_forbidden_action() {
         dices_request(
             &server,
             addr(1),
-            &vec![
-                "1".to_string(),
+            &["1".to_string(),
                 "2".to_string(),
                 "2".to_string(),
-                "2".to_string(),
-            ],
+                "2".to_string()],
             [1, 1, 1, 2, 2, 1, 1, 1, 1, 2].to_vec()
         ),
         err(ErrorCode::FORBIDDEN_ACTION)

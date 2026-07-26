@@ -91,7 +91,6 @@ fn populate_rooms(world: &World, dungeon: &mut Dungeon, gid: Uuid) {
             let Some((id, item)) = world
                 .items
                 .iter()
-                .map(|(id, item)| (id, item))
                 .clone()
                 .choose(&mut rand::rng())
             else {
@@ -105,7 +104,7 @@ fn populate_rooms(world: &World, dungeon: &mut Dungeon, gid: Uuid) {
 }
 
 fn generate_rooms(world: &World, return_room: String, gid: Uuid) -> HashMap<String, Room> {
-    let mut rooms_pool: Vec<&Room> = world.rooms.iter().map(|(_, room)| room).collect();
+    let mut rooms_pool: Vec<&Room> = world.rooms.values().collect();
 
     let mut room_grid: HashMap<Coord, String> = HashMap::new();
     let mut rooms: HashMap<String, Room> = HashMap::new();
@@ -129,11 +128,10 @@ fn generate_rooms(world: &World, return_room: String, gid: Uuid) -> HashMap<Stri
             continue;
         };
 
-        if let Some(room_id) = room_grid.get(&coord) {
-            if *room_id == return_room {
+        if let Some(room_id) = room_grid.get(coord)
+            && *room_id == return_room {
                 continue;
             }
-        }
 
         let Some(dir) = [
             (Direction::North, TO_NORTH),

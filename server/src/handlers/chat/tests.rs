@@ -5,7 +5,7 @@ use crate::test_utils::{addr, connect, err, test_server};
 fn chat_without_connection_returns_invalid_command() {
     let server = test_server();
     let result = chat_request(
-        &vec!["GLOBAL".to_string(), "hi".to_string()],
+        &["GLOBAL".to_string(), "hi".to_string()],
         &server,
         addr(1),
     );
@@ -16,7 +16,7 @@ fn chat_without_connection_returns_invalid_command() {
 fn chat_without_body_returns_invalid_args() {
     let server = test_server();
     connect(&server, addr(1), "alice");
-    let result = chat_request(&vec!["GLOBAL".to_string()], &server, addr(1));
+    let result = chat_request(&["GLOBAL".to_string()], &server, addr(1));
     assert_eq!(result, err(ErrorCode::INVALID_ARGS));
 }
 
@@ -25,7 +25,7 @@ fn chat_with_unknown_scope_returns_invalid_args() {
     let server = test_server();
     connect(&server, addr(1), "alice");
     let result = chat_request(
-        &vec!["WHISPER".to_string(), "hi".to_string()],
+        &["WHISPER".to_string(), "hi".to_string()],
         &server,
         addr(1),
     );
@@ -37,7 +37,7 @@ fn chat_group_scope_without_group_returns_not_in_group() {
     let server = test_server();
     connect(&server, addr(1), "alice");
     let result = chat_request(
-        &vec!["GROUP".to_string(), "hi".to_string()],
+        &["GROUP".to_string(), "hi".to_string()],
         &server,
         addr(1),
     );
@@ -51,7 +51,7 @@ fn chat_global_broadcasts_to_others_not_sender() {
     let mut rx_bob = connect(&server, addr(2), "bob");
 
     let result = chat_request(
-        &vec!["GLOBAL".to_string(), "hello world".to_string()],
+        &["GLOBAL".to_string(), "hello world".to_string()],
         &server,
         addr(1),
     );

@@ -9,7 +9,7 @@ use std::{collections::HashMap, net::SocketAddr};
 mod tests;
 
 pub(super) fn sell_request(
-    args: &Vec<String>,
+    args: &[String],
     server_info: &SharedServer,
     peer_addr: SocketAddr,
 ) -> Message {

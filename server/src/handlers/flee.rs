@@ -6,7 +6,7 @@ use crate::{
     structures::enums::{error::ErrorCode, state::State},
 };
 
-pub fn flee(peer_addr: SocketAddr, args: &Vec<String>, server_info: &SharedServer) -> Message {
+pub fn flee(peer_addr: SocketAddr, args: &[String], server_info: &SharedServer) -> Message {
     if args.len() != 1 {
         return Message::Response {
             error: ErrorCode::INVALID_ARGS,
@@ -47,7 +47,7 @@ pub fn flee(peer_addr: SocketAddr, args: &Vec<String>, server_info: &SharedServe
 			}
         },
         _ => {
-			return Message::Response { error: ErrorCode::INVALID_COMMAND, payload: Payload::Empty };
+			Message::Response { error: ErrorCode::INVALID_COMMAND, payload: Payload::Empty }
 		}
 }
 }

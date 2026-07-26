@@ -41,7 +41,7 @@ pub fn quests_request(server_info: &SharedServer, peer_addr: SocketAddr) -> Mess
     for (quest_id, step) in &player.quests_in_progress {
         let quest = binding.world.quests.get(quest_id).unwrap();
         quests.push(QuestView {
-            quest_id: quest_id,
+            quest_id,
             status: Status::Active {
                 progress: format!("{}/{}", step, quest.goals.len()),
             },

@@ -7,7 +7,7 @@ use crate::{
         game::World,
         group::Group,
         item::Item,
-        npc::NPC,
+        npc::Npc,
         player::Player,
         room::{Owner, Room},
     },
@@ -61,8 +61,8 @@ impl ServerInfo {
             fights: HashMap::new(),
             dungeons: HashMap::new(),
             base_world: world.clone(),
-            world: world,
-            db: db,
+            world,
+            db,
         }
     }
 
@@ -108,7 +108,7 @@ impl ServerInfo {
         self.world.items.get(id)
     }
 
-    pub fn resolve_npc(&self, id: &str) -> Option<&NPC> {
+    pub fn resolve_npc(&self, id: &str) -> Option<&Npc> {
         match parse_dungeon_id(id) {
             Some(gid) => match self.dungeons.get(&gid) {
                 Some(dungeon) => dungeon.npcs.get(id),
@@ -128,7 +128,7 @@ impl ServerInfo {
         }
     }
 
-    pub fn resolve_npc_mut(&mut self, id: &str) -> Option<&mut NPC> {
+    pub fn resolve_npc_mut(&mut self, id: &str) -> Option<&mut Npc> {
         match parse_dungeon_id(id) {
             Some(gid) => match self.dungeons.get_mut(&gid) {
                 Some(dungeon) => dungeon.npcs.get_mut(id),
@@ -140,11 +140,10 @@ impl ServerInfo {
 
     pub fn disconnect_player(&mut self, peer_addr: SocketAddr) -> Result<(), ErrorCode> {
         let _ = self.try_leave_group(peer_addr);
-        if let Ok(player) = self.get_player(peer_addr) {
-            if let State::InFight { target_id } = &player.status {
+        if let Ok(player) = self.get_player(peer_addr)
+            && let State::InFight { target_id } = &player.status {
                 let _ = self.try_leave_fight(peer_addr, target_id.clone());
             }
-        }
         self.try_save_player(peer_addr)?;
         let _ = self.try_remove_player(peer_addr);
         self.send_players_event(peer_addr);

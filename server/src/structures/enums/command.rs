@@ -2,7 +2,7 @@ use serde::{Deserialize, Serialize};
 use std::str::FromStr;
 use strum::{EnumIter, EnumString};
 
-#[allow(non_camel_case_types)]
+#[allow(non_camel_case_types, clippy::upper_case_acronyms)]
 #[derive(Debug, Serialize, Deserialize, PartialEq, EnumIter, EnumString)]
 #[strum(ascii_case_insensitive)]
 pub enum Command {

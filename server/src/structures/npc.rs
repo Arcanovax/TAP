@@ -4,7 +4,7 @@ use crate::structures::enums::npc_kind::NPCKind;
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
-pub struct NPC {
+pub struct Npc {
     pub name: String,
     #[serde(default)]
     pub dialog: HashMap<String, Vec<String>>,
@@ -12,7 +12,7 @@ pub struct NPC {
     pub quest: Option<String>,
 }
 
-impl NPC {
+impl Npc {
     pub fn references(&self) -> Vec<&str> {
         let mut refs = match &self.kind {
             NPCKind::Enemy { loot, .. } => loot.iter().map(String::as_str).collect(),

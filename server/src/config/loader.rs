@@ -4,7 +4,7 @@ use crate::{
         enums::exits::Direction,
         game::World,
         item::Item,
-        npc::NPC,
+        npc::Npc,
         quest::Quest,
         room::{OwnedItem, Room},
     },
@@ -35,7 +35,7 @@ struct ConfigFile {
     #[serde(default)]
     import: Vec<String>,
     #[serde(default)]
-    npc: HashMap<String, NPC>,
+    npc: HashMap<String, Npc>,
     #[serde(default)]
     item: HashMap<String, Item>,
     #[serde(default)]
@@ -163,7 +163,7 @@ impl Loader {
         for (name, npc) in parsed.npc {
             let id = format!("npc.{}", name);
             self.define(&id, &path)?;
-            for (d, _) in &npc.dialog {
+            for d in npc.dialog.keys() {
                 if let Some(file_a) = self
                     .definer
                     .insert(id.clone() + ".dialog." + d, path.clone())
@@ -223,8 +223,8 @@ impl Loader {
         let mut visibles: HashSet<PathBuf> = HashSet::new();
         let mut queue = vec![start.to_path_buf()];
 
-        while queue.len() != 0 {
-            let f = queue.pop().unwrap();
+        while let Some(f) = queue.pop() {
+            
             if visibles.contains(&f) {
                 continue;
             }
@@ -239,7 +239,7 @@ impl Loader {
     fn check_scope(&self) -> Result<(), ConfigError> {
         for (id, obj) in self.referencing_entries() {
             let f = &self.definer[id];
-            let visibles = self.get_visible_file(&f);
+            let visibles = self.get_visible_file(f);
 
             for r in obj {
                 let g = &self.definer[r];
@@ -259,7 +259,7 @@ impl Loader {
 
     fn check_singles_type(&self) -> Result<(), ConfigError> {
         for (id, r) in self.singletons() {
-            if let None = self.world.rooms.get(r) {
+            if !self.world.rooms.contains_key(r) {
                 return Err(ConfigError::WrongRef {
                     from_id: id.to_string(),
                     ref_id: r.to_string(),

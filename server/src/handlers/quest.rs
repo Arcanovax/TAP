@@ -12,7 +12,7 @@ use std::net::SocketAddr;
 mod tests;
 
 pub(super) fn quest_request(
-    args: &Vec<String>,
+    args: &[String],
     server_info: &SharedServer,
     peer_addr: SocketAddr,
 ) -> Message {
@@ -37,10 +37,9 @@ pub(super) fn quest_request(
         return Message::Response {
             error: ErrorCode::NPC_NOT_FOUND,
             payload: Payload::Empty,
-        }
-        .into();
+        };
     }
-    match binding.try_accept_quest(peer_addr, &npc_ref) {
+    match binding.try_accept_quest(peer_addr, npc_ref) {
         Ok(quest) => {
             info!(npc = npc_ref, "quest accepted");
             Message::Response {

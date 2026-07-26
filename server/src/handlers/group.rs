@@ -8,11 +8,11 @@ use std::net::SocketAddr;
 mod tests;
 
 pub(super) fn group_request(
-    args: &Vec<String>,
+    args: &[String],
     server_info: &SharedServer,
     peer_addr: SocketAddr,
 ) -> Message {
-    if args.len() == 0 {
+    if args.is_empty() {
         return Message::Response {
             error: ErrorCode::INVALID_ARGS,
             payload: Payload::Empty,
@@ -35,11 +35,10 @@ pub(super) fn group_request(
 fn group_create_request(
     server_info: &SharedServer,
     peer_addr: SocketAddr,
-    args: &Vec<String>,
+    args: &[String],
 ) -> Message {
-    let group_name: String;
-    if args.len() <= 1 {
-        group_name = match server_info.lock().unwrap().get_player(peer_addr) {
+    let group_name: String = if args.len() <= 1 {
+        match server_info.lock().unwrap().get_player(peer_addr) {
             Ok(player) => player.name.clone() + "'s group",
             Err(code) => {
                 return Message::Response {
@@ -47,10 +46,10 @@ fn group_create_request(
                     payload: Payload::Empty,
                 };
             }
-        };
+        }
     } else {
-        group_name = args[1..].join(" ");
-    }
+        args[1..].join(" ")
+    };
 
     match server_info
         .lock()
@@ -77,7 +76,7 @@ fn group_leave_request(server_info: &SharedServer, peer_addr: SocketAddr) -> Mes
 }
 
 fn group_invite_request(
-    args: &Vec<String>,
+    args: &[String],
     server_info: &SharedServer,
     peer_addr: SocketAddr,
 ) -> Message {
@@ -98,7 +97,7 @@ fn group_invite_request(
 fn group_join_request(
     server_info: &SharedServer,
     peer_addr: SocketAddr,
-    args: &Vec<String>,
+    args: &[String],
 ) -> Message {
     if args.len() <= 1 {
         return Message::Response {

@@ -12,7 +12,7 @@ mod tests;
 pub fn drop_request(
     server_info: &SharedServer,
     peer_addr: SocketAddr,
-    args: &Vec<String>,
+    args: &[String],
 ) -> Message {
     let mut binding = server_info.lock().unwrap();
     if !binding.is_connected(peer_addr) {

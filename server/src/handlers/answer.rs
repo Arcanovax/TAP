@@ -13,7 +13,7 @@ use crate::{
 pub fn handle_answer(
     peer_addr: SocketAddr,
     server_info: &SharedServer,
-    args: &Vec<String>,
+    args: &[String],
 ) -> HandlerOutcome {
     if args.len() != 1 {
         return Message::Response {
@@ -61,7 +61,7 @@ pub fn handle_answer(
     }
 
     HandlerOutcome {
-        message: message,
+        message,
         event: Some(GameEvent::Answer {
             answer: args[0].to_string(),
         }),

@@ -9,14 +9,14 @@ use crate::{
 #[test]
 fn dungeon_without_subcommand_returns_invalid_args() {
     let server = test_server();
-    let result = dungeon_request(&vec![], &server, addr(20001));
+    let result = dungeon_request(&[], &server, addr(20001));
     assert_eq!(result, err(ErrorCode::INVALID_ARGS));
 }
 
 #[test]
 fn dungeon_unknown_subcommand_returns_invalid_args() {
     let server = test_server();
-    let result = dungeon_request(&vec!["FOO".to_string()], &server, addr(20001));
+    let result = dungeon_request(&["FOO".to_string()], &server, addr(20001));
     assert_eq!(result, err(ErrorCode::INVALID_ARGS));
 }
 

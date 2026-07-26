@@ -3,7 +3,7 @@ use crate::{
     state::SharedServer,
     structures::{
         enums::{error::ErrorCode, npc_kind::NPCKind},
-        npc::NPC,
+        npc::Npc,
     },
 };
 use serde::Serialize;
@@ -33,8 +33,8 @@ struct NPCView<'a> {
     has_quest: bool,
 }
 
-impl<'a> From<&'a NPC> for NPCView<'a> {
-    fn from(npc: &'a NPC) -> Self {
+impl<'a> From<&'a Npc> for NPCView<'a> {
+    fn from(npc: &'a Npc) -> Self {
         let kind = match &npc.kind {
             NPCKind::Citizen => NPCKindView::Citizen,
             NPCKind::Merchant { inventory, .. } => NPCKindView::Merchant {
@@ -56,13 +56,13 @@ impl<'a> From<&'a NPC> for NPCView<'a> {
 
         NPCView {
             name: &npc.name,
-            kind: kind,
+            kind,
             has_quest: npc.quest.is_some(),
         }
     }
 }
 
-pub(super) fn npc_request(server_info: &SharedServer, args: &Vec<String>) -> Message {
+pub(super) fn npc_request(server_info: &SharedServer, args: &[String]) -> Message {
     if args.len() != 1 {
         return Message::Response {
             error: ErrorCode::INVALID_ARGS,

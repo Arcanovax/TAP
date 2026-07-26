@@ -13,7 +13,7 @@ use crate::{
     },
 };
 
-pub fn execute_attack<'a>(
+pub fn execute_attack(
     player_id: SocketAddr,
     target_id: &str,
     world_mut: &mut ServerInfo,
@@ -23,15 +23,13 @@ pub fn execute_attack<'a>(
         let mut dmg: u32 = 15;
 
         for id in player.inventory.keys() {
-            if let Some(item) = world_mut.resolve_item(id) {
-                if let ItemKind::Weapon { damages } = item.kind {
-                    if dmg < damages {
+            if let Some(item) = world_mut.resolve_item(id)
+                && let ItemKind::Weapon { damages } = item.kind
+                    && dmg < damages {
                         dmg = damages;
                     }
-                }
-            }
         }
-        (dmg, player.hp.clone(), player.name.clone())
+        (dmg, player.hp, player.name.clone())
     };
 
     let mut trigger_enemy_attack = false;
@@ -86,8 +84,8 @@ pub fn execute_attack<'a>(
     }
 
     for fighter in &fighters_list {
-        if *fighter != player_name {
-            if let Some(con) = world_mut
+        if *fighter != player_name
+            && let Some(con) = world_mut
                 .connections
                 .values()
                 .find(|c| c.player.name == *fighter)
@@ -98,9 +96,7 @@ pub fn execute_attack<'a>(
                     enemy_hp: target_hp_after,
                     loot: loot_list.clone(),
                 }));
-            } else {
             }
-        }
     }
 
     let mut fighters: HashMap<String, u32> = HashMap::new();
@@ -161,7 +157,7 @@ pub fn execute_attack<'a>(
             attacker_name: player_name,
             target_hp: target_hp_after,
             damage: curr_damages,
-            status: status,
+            status,
             fighters: Some(fighters),
             loot: loot_list,
         };

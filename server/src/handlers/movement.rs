@@ -9,7 +9,7 @@ use tracing::info;
 #[cfg(test)]
 mod tests;
 
-pub fn move_request(server: &SharedServer, peer_addr: SocketAddr, dest: &Vec<String>) -> Message {
+pub fn move_request(server: &SharedServer, peer_addr: SocketAddr, dest: &[String]) -> Message {
     if dest.len() != 1 {
         return Message::Response {
             error: ErrorCode::INVALID_ARGS,

@@ -56,15 +56,13 @@ pub fn handle_request(
                 }
             };
 
-            if is_in_dungeon && ["GROUP"].contains(&name.to_uppercase().as_str()) {
-                if args.len() > 0 && args[0] == "LEAVE".to_string() {
+            if is_in_dungeon && ["GROUP"].contains(&name.to_uppercase().as_str())
+                && !args.is_empty() && args[0] == "LEAVE" {
                     return Message::Response {
                         error: ErrorCode::FORBIDDEN_ACTION,
                         payload: Payload::Empty,
-                    }
-                    .into();
+                    };
                 }
-            }
 
             if is_in_fight
                 && ["TAKE", "DROP", "QUEST", "BUY", "SELL", "TALK", "MOVE"]
@@ -73,8 +71,7 @@ pub fn handle_request(
                 return Message::Response {
                     error: ErrorCode::FORBIDDEN_ACTION,
                     payload: Payload::Empty,
-                }
-                .into();
+                };
             }
             match Command::parse(name) {
                 Some(Command::CONNECT) => connect_request(args, server_info, peer_addr, tx).into(),

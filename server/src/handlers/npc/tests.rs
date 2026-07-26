@@ -7,7 +7,7 @@ use crate::test_utils::{
 #[test]
 fn npc_right_name_returns_success() {
     let server = populated_server();
-    let res = npc_request(&server, &vec![String::from("guard")]);
+    let res = npc_request(&server, &[String::from("guard")]);
     assert_eq!(
         res,
         Message::Response {
@@ -27,7 +27,7 @@ fn npc_right_name_returns_success() {
 #[test]
 fn npc_wrong_name_returns_npc_not_found() {
     let server = populated_server();
-    let res = npc_request(&server, &vec![String::from("nobody")]);
+    let res = npc_request(&server, &[String::from("nobody")]);
     assert_eq!(
         res,
         Message::Response {
@@ -62,7 +62,7 @@ fn npcs_in_dungeon_returns_dungeon_npcs() {
 #[test]
 fn npc_in_dungeon_by_id_returns_success() {
     let server = dungeon_server();
-    let res = npc_request(&server, &vec![dg_npc(0)]);
+    let res = npc_request(&server, &[dg_npc(0)]);
     assert_eq!(
         res,
         Message::Response {

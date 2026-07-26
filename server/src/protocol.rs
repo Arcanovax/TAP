@@ -157,7 +157,7 @@ impl Message {
                 EventType::GROUP_JOIN { player_name } => {
                     format!("EVT GROUP JOIN {player_name}\n")
                 }
-                EventType::DUNGEON_CREATE => format!("EVT DUNGEON CREATE\n"),
+                EventType::DUNGEON_CREATE => "EVT DUNGEON CREATE\n".to_string(),
                 EventType::GROUP_LEAVE { player_name } => {
                     format!("EVT GROUP LEAVE {player_name}\n")
                 }
@@ -201,7 +201,7 @@ impl Message {
                     loot,
                 } => {
                     let loot_list = {
-                        if loot.len() > 0 {
+                        if !loot.is_empty() {
                             loot.join("//")
                         } else {
                             "Nothing".to_string()
@@ -212,7 +212,7 @@ impl Message {
                 EventType::ROOM_DROP { player_name, item } => {
                     format!("EVT ROOM DROP {player_name} {item}\n")
                 }
-                EventType::SERVER_RESET => format!("EVT SERVER RESET\n"),
+                EventType::SERVER_RESET => "EVT SERVER RESET\n".to_string(),
                 EventType::QUEST_UPDATE {
                     quest_id,
                     goal,
@@ -244,16 +244,16 @@ impl From<Result<Value, ErrorCode>> for Message {
     fn from(result: Result<Value, ErrorCode>) -> Self {
         match result {
             Ok(data) => {
-                return Message::Response {
+                Message::Response {
                     error: ErrorCode::SUCCESS,
                     payload: Payload::Json(data),
-                };
+                }
             }
             Err(code) => {
-                return Message::Response {
+                Message::Response {
                     error: code,
                     payload: Payload::Empty,
-                };
+                }
             }
         }
     }
@@ -263,16 +263,16 @@ impl From<Result<String, ErrorCode>> for Message {
     fn from(result: Result<String, ErrorCode>) -> Self {
         match result {
             Ok(data) => {
-                return Message::Response {
+                Message::Response {
                     error: ErrorCode::SUCCESS,
                     payload: Payload::Text(data),
-                };
+                }
             }
             Err(code) => {
-                return Message::Response {
+                Message::Response {
                     error: code,
                     payload: Payload::Empty,
-                };
+                }
             }
         }
     }

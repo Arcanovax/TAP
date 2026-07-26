@@ -7,7 +7,7 @@ use crate::{
 #[cfg(test)]
 mod tests;
 
-pub fn quest_info_request(server_info: &SharedServer, args: &Vec<String>) -> Message {
+pub fn quest_info_request(server_info: &SharedServer, args: &[String]) -> Message {
     if args.len() != 1 {
         return Message::Response {
             error: ErrorCode::INVALID_ARGS,

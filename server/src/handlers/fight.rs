@@ -17,21 +17,21 @@ pub mod is_it_my_turn;
 mod tests;
 
 fn is_he_there(name: &str, player_loc: &Room) -> bool {
-    if player_loc.npc.len() != 0 {
+    if !player_loc.npc.is_empty() {
         for npc in &player_loc.npc {
             if npc == name {
                 return true;
             }
         }
-        return false;
+        false
     } else {
-        return false;
-    };
+        false
+    }
 }
 
 pub fn fight_request(
     peer_addr: SocketAddr,
-    args: &Vec<String>,
+    args: &[String],
     server_info: &SharedServer,
 ) -> Message {
     if args.len() != 1 {
@@ -192,12 +192,12 @@ pub fn fight_request(
             }
         }
         State::Discuss => {
-            return Message::Response {
+            Message::Response {
                 error: ErrorCode::INVALID_COMMAND,
                 payload: Payload::Json(
                     serde_json::to_value("You can't fight in your state.").unwrap(),
                 ),
-            };
+            }
         }
     }
 }

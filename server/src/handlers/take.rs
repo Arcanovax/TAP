@@ -9,11 +9,7 @@ use tracing::info;
 #[cfg(test)]
 mod tests;
 
-pub fn take_request(
-    server_info: &SharedServer,
-    peer_addr: SocketAddr,
-    args: &Vec<String>,
-) -> Message {
+pub fn take_request(server_info: &SharedServer, peer_addr: SocketAddr, args: &[String]) -> Message {
     let mut binding = server_info.lock().unwrap();
     if !binding.is_connected(peer_addr) {
         return Message::Response {

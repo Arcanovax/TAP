@@ -10,7 +10,7 @@ use crate::{
 fn group_create_without_connected_return_invalid_command() {
     let server = test_server();
     let addr = addr(10101);
-    let result = group_create_request(&server, addr, &vec![]);
+    let result = group_create_request(&server, addr, &[]);
     assert_eq!(result, err(ErrorCode::INVALID_COMMAND));
 }
 
@@ -19,7 +19,7 @@ fn group_create_with_connected_return_success() {
     let server = test_server();
     let addr = addr(10101);
     connect(&server, addr, "test_user");
-    let result = group_create_request(&server, addr, &vec![]);
+    let result = group_create_request(&server, addr, &[]);
     assert_success_contains(&result, "group");
 }
 
@@ -28,8 +28,8 @@ fn group_create_when_in_group_return_already_in_group() {
     let server = test_server();
     let addr = addr(10101);
     connect(&server, addr, "test_user");
-    group_create_request(&server, addr, &vec![]);
-    let result = group_create_request(&server, addr, &vec![]);
+    group_create_request(&server, addr, &[]);
+    let result = group_create_request(&server, addr, &[]);
     assert_eq!(result, err(ErrorCode::ALREADY_IN_GROUP));
 }
 
@@ -41,11 +41,9 @@ fn group_create_with_args_return_success() {
     let result = group_create_request(
         &server,
         addr,
-        &vec![
-            "test".to_string(),
+        &["test".to_string(),
             "custom".to_string(),
-            "group".to_string(),
-        ],
+            "group".to_string()],
     );
     assert_success_contains(&result, "group");
 }
@@ -56,7 +54,7 @@ fn group_create_with_args_return_success() {
 fn group_leave_without_connected_return_invalid_command() {
     let server = test_server();
     let addr = addr(10101);
-    group_create_request(&server, addr, &vec![]);
+    group_create_request(&server, addr, &[]);
     let result = group_leave_request(&server, addr);
     assert_eq!(result, err(ErrorCode::INVALID_COMMAND));
 }
@@ -75,7 +73,7 @@ fn group_leave_with_group_return_success() {
     let server = test_server();
     let addr = addr(10101);
     connect(&server, addr, "test_user");
-    group_create_request(&server, addr, &vec![]);
+    group_create_request(&server, addr, &[]);
     let result = group_leave_request(&server, addr);
     assert_eq!(result, err(ErrorCode::SUCCESS));
 }
@@ -103,7 +101,7 @@ fn group_invite_when_not_in_group_returns_not_in_group() {
     let server = test_server();
     connect(&server, addr(1), "alice");
     let result = group_invite_request(
-        &vec!["INVITE".to_string(), "bob".to_string()],
+        &["INVITE".to_string(), "bob".to_string()],
         &server,
         addr(1),
     );
@@ -114,8 +112,8 @@ fn group_invite_when_not_in_group_returns_not_in_group() {
 fn group_invite_with_wrong_args_returns_invalid_args() {
     let server = test_server();
     connect(&server, addr(1), "alice");
-    group_create_request(&server, addr(1), &vec![]);
-    let result = group_invite_request(&vec!["INVITE".to_string()], &server, addr(1));
+    group_create_request(&server, addr(1), &[]);
+    let result = group_invite_request(&["INVITE".to_string()], &server, addr(1));
     assert_eq!(result, err(ErrorCode::INVALID_ARGS));
 }
 
@@ -123,9 +121,9 @@ fn group_invite_with_wrong_args_returns_invalid_args() {
 fn group_invite_self_returns_invalid_args() {
     let server = test_server();
     connect(&server, addr(1), "alice");
-    group_create_request(&server, addr(1), &vec![]);
+    group_create_request(&server, addr(1), &[]);
     let result = group_invite_request(
-        &vec!["INVITE".to_string(), "alice".to_string()],
+        &["INVITE".to_string(), "alice".to_string()],
         &server,
         addr(1),
     );
@@ -136,11 +134,11 @@ fn group_invite_self_returns_invalid_args() {
 fn group_invite_notifies_target() {
     let server = test_server();
     connect(&server, addr(1), "alice");
-    group_create_request(&server, addr(1), &vec![]);
+    group_create_request(&server, addr(1), &[]);
     let mut rx_bob = connect(&server, addr(2), "bob");
 
     let result = group_invite_request(
-        &vec!["INVITE".to_string(), "bob".to_string()],
+        &["INVITE".to_string(), "bob".to_string()],
         &server,
         addr(1),
     );
@@ -166,7 +164,7 @@ fn group_join_without_invitation_returns_invalid_command() {
     let result = group_join_request(
         &server,
         addr(1),
-        &vec!["JOIN".to_string(), "test".to_string()],
+        &["JOIN".to_string(), "test".to_string()],
     );
     assert_eq!(result, err(ErrorCode::INVALID_COMMAND));
 }
@@ -175,10 +173,10 @@ fn group_join_without_invitation_returns_invalid_command() {
 fn group_join_notifies_existing_members() {
     let server = test_server();
     let mut rx_alice = connect(&server, addr(1), "alice");
-    group_create_request(&server, addr(1), &vec![]);
+    group_create_request(&server, addr(1), &[]);
     let _rx_bob = connect(&server, addr(2), "bob");
     group_invite_request(
-        &vec!["INVITE".to_string(), "bob".to_string()],
+        &["INVITE".to_string(), "bob".to_string()],
         &server,
         addr(1),
     );
@@ -186,7 +184,7 @@ fn group_join_notifies_existing_members() {
     let result = group_join_request(
         &server,
         addr(2),
-        &vec!["JOIN".to_string(), "alice".to_string()],
+        &["JOIN".to_string(), "alice".to_string()],
     );
 
     assert_success_contains(&result, "group");

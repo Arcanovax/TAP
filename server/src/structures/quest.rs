@@ -47,11 +47,11 @@ impl Goal {
     }
 }
 
-impl Into<String> for Goal {
-    fn into(self) -> String {
-        match self {
+impl From<Goal> for String {
+    fn from(val: Goal) -> Self {
+        match val {
             Goal::Collect { item, amount } => format!("Collect {} {}", amount, item),
-            Goal::Answer { .. } => format!("Find the answer of his riddle"),
+            Goal::Answer { .. } => "Find the answer of his riddle".to_string(),
             Goal::Talk { dialog } => {
                 let mut splitted = dialog.splitn(3, ".");
                 let npc = splitted.next().unwrap().to_owned() + "." + splitted.next().unwrap();

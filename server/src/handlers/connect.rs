@@ -9,7 +9,7 @@ use std::net::SocketAddr;
 mod tests;
 
 pub(super) fn connect_request(
-    args: &Vec<String>,
+    args: &[String],
     server_info: &SharedServer,
     peer_addr: SocketAddr,
     tx: &Tx,

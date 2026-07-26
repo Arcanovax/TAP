@@ -7,7 +7,7 @@ use crate::structures::enums::state::State;
 impl ServerInfo {
     fn create_new_group(&mut self, name: &str, group_leader: SocketAddr) -> Uuid {
         let group = Group::new(name, group_leader);
-        let group_id = group.id.clone();
+        let group_id = group.id;
         self.groups.insert(group.id, group);
         group_id
     }
@@ -93,7 +93,7 @@ impl ServerInfo {
             info!(group = %group_id, "group deleted");
             return true;
         }
-        return false;
+        false
     }
 
     pub fn try_leave_fight(
@@ -128,8 +128,8 @@ impl ServerInfo {
             }
 
             let fight_turn = {
-                let turn = self.fights.get(&target).unwrap().turn;
-                turn.clone()
+                
+                self.fights.get(&target).unwrap().turn
             };
 
             if nb_receivers == fight_turn as usize {
@@ -217,14 +217,14 @@ impl ServerInfo {
         let invitations = self
             .invitations
             .entry(receiver_addr)
-            .or_insert_with(HashMap::new);
+            .or_default();
         if invitations.get(&inviter_name) == Some(&group_id) {
             return Err(ErrorCode::ALREADY_INVITED);
         }
         invitations.insert(inviter_name.clone(), group_id);
         let _ = receiver_tx.send(Message::Event(EventType::GROUP_INVITE {
             sender: inviter_name,
-            group_name: String::from(group_name),
+            group_name,
         }));
         Ok(())
     }

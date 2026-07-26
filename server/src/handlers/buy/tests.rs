@@ -22,7 +22,7 @@ use crate::test_utils::{addr, connect, err, give_gold, ok_pair, populated_server
 fn buy_without_connection_returns_invalid_command() {
     let server = populated_server();
     let result = buy_request(
-        &vec!["merchant".to_string(), "sword".to_string()],
+        &["merchant".to_string(), "sword".to_string()],
         &server,
         addr(1),
     );
@@ -33,7 +33,7 @@ fn buy_without_connection_returns_invalid_command() {
 fn buy_without_args_returns_invalid_args() {
     let server = populated_server();
     connect(&server, addr(1), "alice");
-    let result = buy_request(&vec![], &server, addr(1));
+    let result = buy_request(&[], &server, addr(1));
     assert_eq!(result, err(ErrorCode::INVALID_ARGS));
 }
 
@@ -41,7 +41,7 @@ fn buy_without_args_returns_invalid_args() {
 fn buy_with_merchant_but_no_item_returns_invalid_args() {
     let server = populated_server();
     connect(&server, addr(1), "alice");
-    let result = buy_request(&vec!["merchant".to_string()], &server, addr(1));
+    let result = buy_request(&["merchant".to_string()], &server, addr(1));
     assert_eq!(result, err(ErrorCode::INVALID_ARGS));
 }
 
@@ -50,7 +50,7 @@ fn buy_with_zero_amount_returns_invalid_args() {
     let server = populated_server();
     connect(&server, addr(1), "alice");
     let result = buy_request(
-        &vec!["merchant".to_string(), "sword".to_string(), "0".to_string()],
+        &["merchant".to_string(), "sword".to_string(), "0".to_string()],
         &server,
         addr(1),
     );
@@ -69,7 +69,7 @@ fn buy_without_merchant_in_room_returns_npc_not_found() {
         .unwrap()
         .location = "room.market".to_string();
     let result = buy_request(
-        &vec!["merchant".to_string(), "sword".to_string()],
+        &["merchant".to_string(), "sword".to_string()],
         &server,
         addr(1),
     );
@@ -82,7 +82,7 @@ fn buy_item_not_sold_returns_item_not_found() {
     connect(&server, addr(1), "alice");
     give_gold(&server, addr(1), 100);
     let result = buy_request(
-        &vec!["merchant".to_string(), "shield".to_string()],
+        &["merchant".to_string(), "shield".to_string()],
         &server,
         addr(1),
     );
@@ -95,7 +95,7 @@ fn buy_with_insufficient_gold_returns_not_enough_gold() {
     connect(&server, addr(1), "alice");
     give_gold(&server, addr(1), 5); // sword vaut 10
     let result = buy_request(
-        &vec!["merchant".to_string(), "sword".to_string()],
+        &["merchant".to_string(), "sword".to_string()],
         &server,
         addr(1),
     );
@@ -116,7 +116,7 @@ fn buy_existing_item_adds_to_inventory_and_debits_gold() {
     connect(&server, addr(1), "alice");
     give_gold(&server, addr(1), 100);
     let result = buy_request(
-        &vec!["merchant".to_string(), "sword".to_string()],
+        &["merchant".to_string(), "sword".to_string()],
         &server,
         addr(1),
     );
@@ -137,7 +137,7 @@ fn buy_with_amount_debits_and_stacks() {
     connect(&server, addr(1), "alice");
     give_gold(&server, addr(1), 100);
     let result = buy_request(
-        &vec!["merchant".to_string(), "sword".to_string(), "3".to_string()],
+        &["merchant".to_string(), "sword".to_string(), "3".to_string()],
         &server,
         addr(1),
     );

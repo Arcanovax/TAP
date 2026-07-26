@@ -6,7 +6,7 @@ use crate::{
         enums::{error::ErrorCode, exits::Direction, item_kind::ItemKind, npc_kind::NPCKind},
         game::World,
         item::Item,
-        npc::NPC,
+        npc::Npc,
         quest::{Goal, Quest},
         room::Room,
     },
@@ -204,7 +204,7 @@ pub(crate) fn test_world() -> World {
 
     world.npcs.insert(
         "guard".to_string(),
-        NPC {
+        Npc {
             name: "guard".to_string(),
             dialog: HashMap::new(),
             kind: NPCKind::Citizen,
@@ -213,7 +213,7 @@ pub(crate) fn test_world() -> World {
     );
     world.npcs.insert(
         "merchant".to_string(),
-        NPC {
+        Npc {
             name: "merchant".to_string(),
             dialog: HashMap::new(),
             kind: NPCKind::Merchant {
@@ -224,7 +224,7 @@ pub(crate) fn test_world() -> World {
     );
     world.npcs.insert(
         "villager".to_string(),
-        NPC {
+        Npc {
             name: "villager".to_string(),
             dialog: HashMap::new(),
             kind: NPCKind::Citizen,
@@ -233,7 +233,7 @@ pub(crate) fn test_world() -> World {
     );
     world.npcs.insert(
         "goblin".to_string(),
-        NPC {
+        Npc {
             name: "goblin".to_string(),
             dialog: HashMap::new(),
             kind: NPCKind::Enemy {
@@ -359,7 +359,7 @@ pub(crate) fn test_dungeon() -> Dungeon {
     let mut npcs = HashMap::new();
     npcs.insert(
         dg_npc(0),
-        NPC {
+        Npc {
             name: "goblin".to_string(),
             dialog: HashMap::new(),
             kind: NPCKind::Enemy {

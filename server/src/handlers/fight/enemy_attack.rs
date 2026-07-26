@@ -45,13 +45,11 @@ pub fn enemy_attack(opponent_id: &str, world: &mut ServerInfo) {
             .inventory
             .clone();
         for id in inventory.keys() {
-            if let Some(item) = world.resolve_item(id) {
-                if let ItemKind::Armor { protection } = item.kind {
-                    if protection > start_defense {
+            if let Some(item) = world.resolve_item(id)
+                && let ItemKind::Armor { protection } = item.kind
+                    && protection > start_defense {
                         start_defense = protection;
                     }
-                }
-            }
         }
         start_defense
     };
@@ -89,14 +87,13 @@ pub fn enemy_attack(opponent_id: &str, world: &mut ServerInfo) {
     if target_killed {
         if nb_fighters == 1 {
             world.fights.remove(opponent_id);
-            if let Some(npc) = world.resolve_npc_mut(opponent_id) {
-                if let NPCKind::Enemy {
+            if let Some(npc) = world.resolve_npc_mut(opponent_id)
+                && let NPCKind::Enemy {
                     ref mut hp, max_hp, ..
                 } = npc.kind
                 {
                     *hp = max_hp;
                 }
-            }
         } else {
             let fight = world.fights.get_mut(opponent_id).unwrap();
             fight

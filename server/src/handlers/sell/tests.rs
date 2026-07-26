@@ -21,7 +21,7 @@ use crate::test_utils::{addr, connect, err, give_item, ok_pair, populated_server
 fn sell_without_connection_returns_invalid_command() {
     let server = populated_server();
     let result = sell_request(
-        &vec!["merchant".to_string(), "sword".to_string()],
+        &["merchant".to_string(), "sword".to_string()],
         &server,
         addr(1),
     );
@@ -32,7 +32,7 @@ fn sell_without_connection_returns_invalid_command() {
 fn sell_without_args_returns_invalid_args() {
     let server = populated_server();
     connect(&server, addr(1), "alice");
-    let result = sell_request(&vec![], &server, addr(1));
+    let result = sell_request(&[], &server, addr(1));
     assert_eq!(result, err(ErrorCode::INVALID_ARGS));
 }
 
@@ -40,7 +40,7 @@ fn sell_without_args_returns_invalid_args() {
 fn sell_with_merchant_but_no_item_returns_invalid_args() {
     let server = populated_server();
     connect(&server, addr(1), "alice");
-    let result = sell_request(&vec!["merchant".to_string()], &server, addr(1));
+    let result = sell_request(&["merchant".to_string()], &server, addr(1));
     assert_eq!(result, err(ErrorCode::INVALID_ARGS));
 }
 
@@ -50,7 +50,7 @@ fn sell_with_zero_amount_returns_invalid_args() {
     connect(&server, addr(1), "alice");
     give_item(&server, addr(1), "sword", 1);
     let result = sell_request(
-        &vec!["merchant".to_string(), "sword".to_string(), "0".to_string()],
+        &["merchant".to_string(), "sword".to_string(), "0".to_string()],
         &server,
         addr(1),
     );
@@ -70,7 +70,7 @@ fn sell_without_merchant_in_room_returns_npc_not_found() {
         .unwrap()
         .location = "room.market".to_string();
     let result = sell_request(
-        &vec!["merchant".to_string(), "sword".to_string()],
+        &["merchant".to_string(), "sword".to_string()],
         &server,
         addr(1),
     );
@@ -85,7 +85,7 @@ fn sell_to_non_merchant_returns_invalid_args() {
     connect(&server, addr(1), "alice");
     give_item(&server, addr(1), "sword", 1);
     let result = sell_request(
-        &vec!["guard".to_string(), "sword".to_string()],
+        &["guard".to_string(), "sword".to_string()],
         &server,
         addr(1),
     );
@@ -97,7 +97,7 @@ fn sell_item_not_in_inventory_returns_item_not_in_inventory() {
     let server = populated_server();
     connect(&server, addr(1), "alice");
     let result = sell_request(
-        &vec!["merchant".to_string(), "sword".to_string()],
+        &["merchant".to_string(), "sword".to_string()],
         &server,
         addr(1),
     );
@@ -110,7 +110,7 @@ fn sell_more_than_owned_returns_item_not_in_inventory() {
     connect(&server, addr(1), "alice");
     give_item(&server, addr(1), "sword", 1);
     let result = sell_request(
-        &vec!["merchant".to_string(), "sword".to_string(), "2".to_string()],
+        &["merchant".to_string(), "sword".to_string(), "2".to_string()],
         &server,
         addr(1),
     );
@@ -125,7 +125,7 @@ fn sell_existing_item_removes_it_and_credits_gold() {
     connect(&server, addr(1), "alice");
     give_item(&server, addr(1), "sword", 1);
     let result = sell_request(
-        &vec!["merchant".to_string(), "sword".to_string()],
+        &["merchant".to_string(), "sword".to_string()],
         &server,
         addr(1),
     );
@@ -147,7 +147,7 @@ fn sell_with_amount_credits_and_decrements() {
     connect(&server, addr(1), "alice");
     give_item(&server, addr(1), "sword", 3);
     let result = sell_request(
-        &vec!["merchant".to_string(), "sword".to_string(), "2".to_string()],
+        &["merchant".to_string(), "sword".to_string(), "2".to_string()],
         &server,
         addr(1),
     );
@@ -168,7 +168,7 @@ fn sell_with_quest_item_returns_forbidden_action() {
     connect(&server, addr(1), "alice");
     give_item(&server, addr(1), "quest_item", 1);
     let result = sell_request(
-        &vec!["merchant".to_string(), "quest_item".to_string()],
+        &["merchant".to_string(), "quest_item".to_string()],
         &server,
         addr(1),
     );

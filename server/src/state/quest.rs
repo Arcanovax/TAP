@@ -14,7 +14,7 @@ impl ServerInfo {
             Some(npc) => npc,
             None => return Err(ErrorCode::NPC_NOT_FOUND),
         };
-        if let None = npc.quest {
+        if npc.quest.is_none() {
             return Err(ErrorCode::NO_QUEST_AVAILABLE);
         }
         let quest_ref = npc.quest.clone().unwrap();
@@ -26,7 +26,7 @@ impl ServerInfo {
         }
         player.quests_in_progress.insert(quest_ref.clone(), 0);
         let quest = self.world.quests.get(&quest_ref).unwrap();
-        Ok((quest_ref, &quest))
+        Ok((quest_ref, quest))
     }
 
     pub fn advance_quests(&mut self, peer_addr: SocketAddr, event: Option<&GameEvent>) {
@@ -54,18 +54,15 @@ impl ServerInfo {
             };
             let quest = self.world.quests.get(id).unwrap().clone();
             let tx = self.get_connection(peer_addr).unwrap().tx.clone();
-            match &quest.goals[new_step - 1] {
-                Goal::Retrieve { item, amount, .. } => {
-                    let (item, amount) = (item.clone(), *amount);
-                    let player = self.get_player_mut(peer_addr).unwrap();
-                    if let Some(qty) = player.inventory.get_mut(&item) {
-                        *qty -= amount;
-                        if qty == &mut 0 {
-                            player.inventory.remove(&item);
-                        }
+            if let Goal::Retrieve { item, amount, .. } = &quest.goals[new_step - 1] {
+                let (item, amount) = (item.clone(), *amount);
+                let player = self.get_player_mut(peer_addr).unwrap();
+                if let Some(qty) = player.inventory.get_mut(&item) {
+                    *qty -= amount;
+                    if qty == &mut 0 {
+                        player.inventory.remove(&item);
                     }
                 }
-                _ => {}
             }
             if new_step == quest.goals.len() {
                 info!(quest = %id, reward = %quest.reward, "quest completed");

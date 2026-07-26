@@ -15,7 +15,7 @@ const DICES_MAX: u8 = 10;
 pub fn dices_request(
     server_info: &SharedServer,
     peer_addr: SocketAddr,
-    args: &Vec<String>,
+    args: &[String],
     mut draw: Vec<u8>,
 ) -> Message {
     let mut binding = server_info.lock().unwrap();
@@ -44,7 +44,7 @@ pub fn dices_request(
         }
     };
 
-    if args.len() == 0 || args.len() > 10 {
+    if args.is_empty() || args.len() > 10 {
         return Message::Response {
             error: ErrorCode::INVALID_ARGS,
             payload: Payload::Empty,

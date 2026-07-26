@@ -7,7 +7,7 @@ use crate::test_utils::{
 #[test]
 fn take_without_connection_returns_invalid_command() {
     let server = populated_server();
-    let result = take_request(&server, addr(1), &vec!["sword".to_string()]);
+    let result = take_request(&server, addr(1), &["sword".to_string()]);
     assert_eq!(result, err(ErrorCode::INVALID_COMMAND));
 }
 
@@ -15,7 +15,7 @@ fn take_without_connection_returns_invalid_command() {
 fn take_without_args_returns_invalid_args() {
     let server = populated_server();
     connect(&server, addr(1), "alice");
-    let result = take_request(&server, addr(1), &vec![]);
+    let result = take_request(&server, addr(1), &[]);
     assert_eq!(result, err(ErrorCode::INVALID_ARGS));
 }
 
@@ -23,7 +23,7 @@ fn take_without_args_returns_invalid_args() {
 fn take_existing_item_moves_it_to_inventory() {
     let server = populated_server();
     connect(&server, addr(1), "alice");
-    let result = take_request(&server, addr(1), &vec!["sword".to_string()]);
+    let result = take_request(&server, addr(1), &["sword".to_string()]);
     assert_eq!(result, ok_pair(&[("taken", "sword")]));
     // l'item est bien passé dans l'inventaire
     let guard = server.lock().unwrap();
@@ -35,7 +35,7 @@ fn take_existing_item_moves_it_to_inventory() {
 fn take_unknown_item_returns_item_not_found() {
     let server = populated_server();
     connect(&server, addr(1), "alice");
-    let result = take_request(&server, addr(1), &vec!["shield".to_string()]);
+    let result = take_request(&server, addr(1), &["shield".to_string()]);
     assert_eq!(result, err(ErrorCode::ITEM_NOT_FOUND));
 }
 
@@ -47,7 +47,7 @@ fn take_unknown_item_returns_item_not_found() {
 fn take_existing_item_in_dungeon_moves_it_to_inventory() {
     let server = dungeon_server();
     connect_in_dungeon(&server, addr(1), "alice");
-    let result = take_request(&server, addr(1), &vec![dg_item(0)]);
+    let result = take_request(&server, addr(1), &[dg_item(0)]);
     assert_eq!(result, ok_pair(&[("taken", dg_item(0).as_str())]));
     let guard = server.lock().unwrap();
     let player = guard.get_player(addr(1)).unwrap();
@@ -59,7 +59,7 @@ fn take_unknown_item_in_dungeon_returns_item_not_found() {
     let server = dungeon_server();
     connect_in_dungeon(&server, addr(1), "alice");
     // dg_item(9) n'est pas dans la salle d'entrée.
-    let result = take_request(&server, addr(1), &vec![dg_item(9)]);
+    let result = take_request(&server, addr(1), &[dg_item(9)]);
     assert_eq!(result, err(ErrorCode::ITEM_NOT_FOUND));
 }
 
@@ -67,7 +67,7 @@ fn take_unknown_item_in_dungeon_returns_item_not_found() {
 fn take_removes_item_from_dungeon_room() {
     let server = dungeon_server();
     connect_in_dungeon(&server, addr(1), "alice");
-    take_request(&server, addr(1), &vec![dg_item(0)]);
+    take_request(&server, addr(1), &[dg_item(0)]);
     // l'item a bien quitté la salle du donjon
     let guard = server.lock().unwrap();
     let room = guard.resolve_room(&dg_room(0)).unwrap();
@@ -85,6 +85,6 @@ fn take_in_empty_dungeon_room_returns_item_not_found() {
         .get_player_mut(addr(1))
         .unwrap()
         .location = dg_room(1);
-    let result = take_request(&server, addr(1), &vec![dg_item(0)]);
+    let result = take_request(&server, addr(1), &[dg_item(0)]);
     assert_eq!(result, err(ErrorCode::ITEM_NOT_FOUND));
 }

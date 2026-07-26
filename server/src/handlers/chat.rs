@@ -8,7 +8,7 @@ use tracing::info;
 mod tests;
 
 pub(super) fn chat_request(
-    args: &Vec<String>,
+    args: &[String],
     server_info: &SharedServer,
     peer_addr: SocketAddr,
 ) -> Message {
@@ -81,8 +81,8 @@ pub(super) fn chat_request(
         }));
     }
     info!(scope = %scope.to_uppercase(), body = %body, "chat sent");
-    return Message::Response {
+    Message::Response {
         error: ErrorCode::SUCCESS,
         payload: Payload::Empty,
-    };
+    }
 }

@@ -103,11 +103,10 @@ impl ServerInfo {
         if !self.connections.contains_key(&peer_addr) {
             return Err(ErrorCode::INVALID_COMMAND);
         }
-        if let Some(item) = self.resolve_item(item) {
-            if matches!(item.kind, ItemKind::QuestItem) {
+        if let Some(item) = self.resolve_item(item)
+            && matches!(item.kind, ItemKind::QuestItem) {
                 return Err(ErrorCode::FORBIDDEN_ACTION);
             }
-        }
         let con = self.connections.get_mut(&peer_addr).unwrap();
         let location = con.player.location.clone();
         match con.player.inventory.get_mut(item) {
@@ -163,7 +162,7 @@ impl ServerInfo {
     pub fn try_save_player(&self, peer_addr: SocketAddr) -> Result<(), ErrorCode> {
         let player = self.get_player(peer_addr)?;
         let db = self.db.clone();
-        match save_player(&db, &player) {
+        match save_player(&db, player) {
             Ok(()) => {}
             Err(_) => return Err(ErrorCode::DISCONNECTION_FAIL),
         };

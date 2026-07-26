@@ -161,10 +161,9 @@ pub async fn run(addr: String, port: String) -> Result<(), Box<dyn std::error::E
                                     Err(_) => break,
                                 }
                                 let request = parse_command(line.as_str());
-                                match &request {
-                                    Message::Command { name, args } => info!(command = %name, params = ?args, "command received"),
-                                    _ => {}
-                                };
+                                if let Message::Command { name, args } = &request {
+                                     info!(command = %name, params = ?args, "command received");
+                                }
                                 let response = handle_request(&request, &server_info_copy, peer_addr, &tx);
                                 match &response {
                                     Message::Response { error: ErrorCode::SUCCESS, .. } => {
@@ -180,11 +179,10 @@ pub async fn run(addr: String, port: String) -> Result<(), Box<dyn std::error::E
                                 };
                                 let _ = write_half.write_all(response.to_str().as_bytes()).await;
                                 line.clear();
-                                if let Message::Command { name, .. } = &request {
-                                    if name.to_uppercase() == "QUIT" {
+                                if let Message::Command { name, .. } = &request
+                                    && name.to_uppercase() == "QUIT" {
                                         break;
                                     }
-                                }
                             }
                             Some(event) = rx.recv() => {
                                 let _ = write_half.write_all(event.to_str().as_bytes()).await;

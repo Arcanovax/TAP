@@ -8,7 +8,7 @@ use std::net::SocketAddr;
 #[cfg(test)]
 mod tests;
 
-pub(super) fn item_request(server_info: &SharedServer, args: &Vec<String>) -> Message {
+pub(super) fn item_request(server_info: &SharedServer, args: &[String]) -> Message {
     if args.len() != 1 {
         return Message::Response {
             error: ErrorCode::INVALID_ARGS,

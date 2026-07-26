@@ -2,12 +2,12 @@ use std::collections::HashMap;
 
 use uuid::Uuid;
 
-use crate::structures::{item::Item, npc::NPC, room::Room};
+use crate::structures::{item::Item, npc::Npc, room::Room};
 
 #[derive(Debug)]
 pub struct Dungeon {
     pub rooms: HashMap<String, Room>,
-    pub npcs: HashMap<String, NPC>,
+    pub npcs: HashMap<String, Npc>,
     pub items: HashMap<String, Item>,
 }
 

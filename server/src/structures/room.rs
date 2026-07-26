@@ -54,7 +54,7 @@ impl Room {
         self.npc
             .iter()
             .chain(self.items.iter().map(|item| &item.item))
-            .map(|s| String::as_str(s))
+            .map(String::as_str)
             .chain(self.exits.values().map(|str| str.as_str()))
             .collect()
     }
