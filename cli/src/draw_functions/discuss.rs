@@ -85,10 +85,9 @@ pub fn draw_room_discuss(world: &mut World, frame: &mut Frame, name: String, sen
 
     let mut scroll_output = ScrollView::new(Size::new(content_width, content_height));
 
-    let city_name: Paragraph =
-        Paragraph::new(Text::from(world.room.room.description.as_str()))
-            .centered()
-            .wrap(Wrap { trim: true });
+    let city_name: Paragraph = Paragraph::new(Text::from(world.room.room.description.as_str()))
+        .centered()
+        .wrap(Wrap { trim: true });
 
     frame.render_widget(city_block, right_layout[0]);
     scroll_output.render_widget(city_name, Rect::new(0, 0, content_width, content_height));
@@ -205,9 +204,9 @@ pub fn draw_room_discuss(world: &mut World, frame: &mut Frame, name: String, sen
 
     // CHAT
     let messages = match world.chat.channel {
-        Channels::GLOBAL => world.chat.global_messages.clone(),
-        Channels::ROOM => world.chat.room_messages.clone(),
-        Channels::GROUP => world.chat.group_messages.clone(),
+        Channels::Global => world.chat.global_messages.clone(),
+        Channels::Room => world.chat.room_messages.clone(),
+        Channels::Group => world.chat.group_messages.clone(),
     };
 
     let chat = Block::new()
@@ -253,7 +252,7 @@ pub fn draw_room_discuss(world: &mut World, frame: &mut Frame, name: String, sen
 
     // CHANNELS
     let global_channel = Paragraph::new("(F7) Global")
-        .fg(if world.chat.channel == Channels::GLOBAL {
+        .fg(if world.chat.channel == Channels::Global {
             Color::LightBlue
         } else {
             Color::White
@@ -261,7 +260,7 @@ pub fn draw_room_discuss(world: &mut World, frame: &mut Frame, name: String, sen
         .block(Block::new().borders(Borders::ALL));
 
     let room_channel = Paragraph::new("(F8) Room")
-        .fg(if world.chat.channel == Channels::ROOM {
+        .fg(if world.chat.channel == Channels::Room {
             Color::LightBlue
         } else {
             Color::White
@@ -269,7 +268,7 @@ pub fn draw_room_discuss(world: &mut World, frame: &mut Frame, name: String, sen
         .block(Block::new().borders(Borders::ALL));
 
     let group_channel = Paragraph::new("(F9) Group")
-        .fg(if world.chat.channel == Channels::GROUP {
+        .fg(if world.chat.channel == Channels::Group {
             Color::LightBlue
         } else {
             Color::White

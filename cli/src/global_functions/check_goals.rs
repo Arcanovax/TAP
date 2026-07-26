@@ -2,10 +2,10 @@ use std::collections::HashMap;
 
 use crate::{
     enums::goals::Goal,
-    structures::{npc::NPC, quest::Quest},
+    structures::{npc::Npc, quest::Quest},
 };
 
-pub fn check_goals(list_npcs: HashMap<String, NPC>, quest: &mut Quest) {
+pub fn check_goals(list_npcs: HashMap<String, Npc>, quest: &mut Quest) {
     for goal in quest.goals.iter_mut() {
         match goal {
             Goal::Retrieve {

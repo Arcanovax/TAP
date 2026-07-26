@@ -5,13 +5,13 @@ use serde::{Deserialize, Serialize};
 use crate::enums::npc_kind::NPCKind;
 
 #[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
-pub struct NPC {
+pub struct Npc {
     pub name: String,
     pub kind: NPCKind,
     pub has_quest: bool,
 }
 
-impl Display for NPC {
+impl Display for Npc {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let quest = {
             if self.has_quest {

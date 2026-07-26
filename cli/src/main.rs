@@ -67,6 +67,8 @@ async fn main() -> Result<(), Error> {
     let result = world.run(&mut terminal);
     execute!(stdout(), DisableMouseCapture)?;
     ratatui::restore();
-    if let States::ServerError(msg) = world.state { println!("Server Error: {}", msg) }
+    if let States::ServerError(msg) = world.state {
+        println!("Server Error: {}", msg)
+    }
     result
 }

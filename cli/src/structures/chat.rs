@@ -12,7 +12,7 @@ pub struct Chat {
 impl Chat {
     pub fn new() -> Self {
         Self {
-            channel: Channels::GLOBAL,
+            channel: Channels::Global,
             global_messages: VecDeque::new(),
             room_messages: VecDeque::new(),
             group_messages: VecDeque::new(),

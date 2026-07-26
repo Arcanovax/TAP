@@ -73,7 +73,7 @@ impl Room<'_> {
             fight: Fight::new(),
             dialogs: VecDeque::new(),
             players: Vec::new(),
-            focus: Focus::COMMAND,
+            focus: Focus::Command,
             chat_scroll_pos: ScrollViewState::new(),
             discuss_scroll_pos: ScrollViewState::new(),
             output_scroll_pos: ScrollViewState::new(),

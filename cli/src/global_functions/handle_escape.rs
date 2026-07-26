@@ -9,19 +9,19 @@ pub fn handle_escape(world: &mut World) {
             world.state = States::Quit(*step + 1, Box::new(*prev_state.clone()), *cancelled_instant)
         }
         States::InFight { .. } => {
-            if world.room.focus == Focus::BAG {
+            if world.room.focus == Focus::Bag {
                 world.room.fight.bag = false;
-                world.room.focus = Focus::COMMAND;
+                world.room.focus = Focus::Command;
                 world.room.bag = Vec::new();
             }
         }
         States::Trade(..) => {
-            world.room.focus = Focus::COMMAND;
+            world.room.focus = Focus::Command;
             world.state = States::Idle;
         }
         _ => {
-            if let Focus::CHOICE(..) = world.room.focus {
-                world.room.focus = Focus::NPC;
+            if let Focus::Choice(..) = world.room.focus {
+                world.room.focus = Focus::Npc;
                 world.room.npc_list_state.select_first();
             } else {
                 world.state = States::Quit(1, Box::new(world.state.clone()), None)

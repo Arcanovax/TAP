@@ -26,7 +26,7 @@ use crate::{
         response_handling::response_handling, trade_event::trade_event,
     },
     structures::{
-        chat::Chat, group::Group, items::Item, npc::NPC, player::Player, room::Room,
+        chat::Chat, group::Group, items::Item, npc::Npc, player::Player, room::Room,
         rooms_view::RoomsView,
     },
 };
@@ -50,7 +50,7 @@ pub struct World<'a> {
     pub message_error: String,
     pub click: bool,
     pub list_items: HashMap<String, Item>,
-    pub list_npcs: HashMap<String, NPC>,
+    pub list_npcs: HashMap<String, Npc>,
     pub input: String,
     pub state: States,
     pub tx_to_serv: tokio::sync::mpsc::Sender<String>,

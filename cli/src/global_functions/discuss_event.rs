@@ -17,7 +17,7 @@ pub fn discuss_event(key: KeyEvent, world: &mut World, name: String) {
             world.counter = 0;
             world.index_sentence = 0;
             world.state = States::Idle;
-            world.room.focus = Focus::COMMAND;
+            world.room.focus = Focus::Command;
         }
     }
 }

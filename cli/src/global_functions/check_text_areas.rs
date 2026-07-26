@@ -3,7 +3,7 @@ use ratatui::crossterm::event::{KeyCode, KeyEvent};
 use crate::{enums::focus::Focus, structures::world::World};
 
 pub fn check_text_areas(world: &mut World, key: KeyEvent) -> bool {
-    if (world.room.focus == Focus::COMMAND || world.room.focus == Focus::CHATTEXT)
+    if (world.room.focus == Focus::Command || world.room.focus == Focus::ChatText)
         && ![
             KeyCode::Tab,
             KeyCode::Enter,
@@ -22,7 +22,7 @@ pub fn check_text_areas(world: &mut World, key: KeyEvent) -> bool {
         ]
         .contains(&key.code)
     {
-        if world.room.focus == Focus::COMMAND {
+        if world.room.focus == Focus::Command {
             world.room.text_area.input(key);
             world.index_command = 0;
         } else {

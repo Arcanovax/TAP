@@ -11,7 +11,7 @@ use crate::{
         fight::Fight,
         help_commands::CommandHelp,
         items::Item,
-        npc::NPC,
+        npc::Npc,
         quest::Quest,
         quest_view::{QuestStatus, QuestView, QuestsView},
         room::{Room, RoomPayload},
@@ -219,7 +219,7 @@ pub fn response_handling(world: &mut World, answers: Vec<&str>) {
                     }
 
                     PendingAction::DungeonNpcs => {
-                        let dungeon_npcs: HashMap<String, NPC> =
+                        let dungeon_npcs: HashMap<String, Npc> =
                             serde_json::from_str(&real_answer).unwrap();
                         world.list_npcs.extend(dungeon_npcs);
                         let _ = world.tx_to_serv.try_send(String::from("ROOMS\n"));
@@ -389,7 +389,7 @@ pub fn response_handling(world: &mut World, answers: Vec<&str>) {
                     }
 
                     PendingAction::Npc => {
-                        let npc_view: NPC = serde_json::from_str(&real_answer).unwrap();
+                        let npc_view: Npc = serde_json::from_str(&real_answer).unwrap();
                         world.output.push_back(format!("{npc_view}"));
                     }
 
@@ -434,7 +434,7 @@ pub fn response_handling(world: &mut World, answers: Vec<&str>) {
                                 .push_back(format!("[me] {}", args.clone())),
                             _ => {}
                         }
-                        if world.room.focus != Focus::CHAT {
+                        if world.room.focus != Focus::Chat {
                             world.room.chat_scroll_pos.scroll_to_bottom();
                         }
                         world.action = PendingAction::None;
@@ -490,7 +490,7 @@ pub fn response_handling(world: &mut World, answers: Vec<&str>) {
                         let result: AttackResult = serde_json::from_str(&real_answer).unwrap();
                         world.player.hp = result.attacker_hp;
                         let fight = &mut world.room.fight;
-                        if fight.target_name == "" {
+                        if fight.target_name.is_empty() {
                             fight.target_name = match world.list_npcs.get(name) {
                                 Some(npc) => npc.name.clone(),
                                 None => name.clone(),
@@ -507,10 +507,12 @@ pub fn response_handling(world: &mut World, answers: Vec<&str>) {
                                 None => result.target_hp,
                             };
                         }
-                        if let Some(fighters) = result.fighters { fight.fighters = fighters }
+                        if let Some(fighters) = result.fighters {
+                            fight.fighters = fighters
+                        }
                         fight.target_hp = result.target_hp;
                         world.state = result.status;
-                        world.room.focus = Focus::COMMAND;
+                        world.room.focus = Focus::Command;
                         if result.damage > 0 {
                             let (damages, enn_hp) = (result.damage, result.target_hp);
                             world.output.push_back(format!(
@@ -542,7 +544,7 @@ pub fn response_handling(world: &mut World, answers: Vec<&str>) {
                     }
                     _ => {}
                 }
-                if world.room.focus != Focus::OUTPUT {
+                if world.room.focus != Focus::Output {
                     world.room.output_scroll_pos.scroll_to_bottom();
                 }
             }
