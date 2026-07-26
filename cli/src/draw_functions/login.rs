@@ -43,7 +43,7 @@ pub fn login_draw(world: &mut World, frame: &mut Frame) {
 
     if mess_len >= descr.len() {
         world.counter = 0;
-    } else if world.counter % 2 == 0 {
+    } else if world.counter.is_multiple_of(2) {
         world.message.push(descr.chars().nth(mess_len).unwrap());
     }
 

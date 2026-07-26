@@ -76,7 +76,7 @@ pub fn draw_room_fight(world: &mut World, frame: &mut Frame) {
         Span::raw(world.player.gold.to_string()),
     ]));
 
-    let id: Paragraph = Paragraph::new(Text::from(Text::from(lines)))
+    let id: Paragraph = Paragraph::new(Text::from(lines))
         .centered()
         .block(Block::new().borders(Borders::TOP | Borders::LEFT | Borders::RIGHT));
 
@@ -101,7 +101,7 @@ pub fn draw_room_fight(world: &mut World, frame: &mut Frame) {
     let mut scroll_output = ScrollView::new(Size::new(content_width, content_height));
 
     let city_name: Paragraph =
-        Paragraph::new(Text::from(Text::from(world.room.room.description.as_str())))
+        Paragraph::new(Text::from(world.room.room.description.as_str()))
             .centered()
             .wrap(Wrap { trim: true });
 
@@ -171,7 +171,7 @@ pub fn draw_room_fight(world: &mut World, frame: &mut Frame) {
         let nb_raws = nb_fighters.div_ceil(fighters_on_raw);
         let fighters_raws =
             Layout::vertical(vec![Constraint::Fill(1); nb_raws]).split(right_layout[3]);
-        let mut copy_nb_fighters = nb_fighters.clone();
+        let mut copy_nb_fighters = nb_fighters;
         while raw_counter < nb_raws {
             let fighters_layout = Layout::horizontal(vec![
                 Constraint::Fill(1);
@@ -440,19 +440,16 @@ pub fn draw_room_fight(world: &mut World, frame: &mut Frame) {
         let mut bag_content: Vec<ListItem> = Vec::new();
         world.room.bag = Vec::new();
 
-        for (item, _) in &world.player.inventory {
+        for item in world.player.inventory.keys() {
             let item_kind = {
                 let item_name = world.list_items.get(item).unwrap();
                 item_name.kind.clone()
             };
-            match item_kind {
-                ItemKind::Potion { .. } => {
-                    bag_content.push(ListItem::new(
-                        Line::from(item.as_str()).alignment(Alignment::Center),
-                    ));
-                    world.room.bag.push(item.clone());
-                }
-                _ => {}
+            if let ItemKind::Potion { .. } = item_kind {
+                bag_content.push(ListItem::new(
+                    Line::from(item.as_str()).alignment(Alignment::Center),
+                ));
+                world.room.bag.push(item.clone());
             }
         }
         let content_size = bag_content.len();

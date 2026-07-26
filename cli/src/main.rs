@@ -56,7 +56,7 @@ async fn main() -> Result<(), Error> {
 
     let original_hook = std::panic::take_hook();
     std::panic::set_hook(Box::new(move |panic_info| {
-        let _ = ratatui::restore();
+        ratatui::restore();
         let _ = execute!(std::io::stdout(), DisableMouseCapture);
         original_hook(panic_info);
     }));
@@ -67,9 +67,6 @@ async fn main() -> Result<(), Error> {
     let result = world.run(&mut terminal);
     execute!(stdout(), DisableMouseCapture)?;
     ratatui::restore();
-    match world.state {
-        States::ServerError(msg) => println!("Server Error: {}", msg),
-        _ => {}
-    }
+    if let States::ServerError(msg) = world.state { println!("Server Error: {}", msg) }
     result
 }

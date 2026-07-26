@@ -71,7 +71,7 @@ pub fn draw_trade(world: &mut World, frame: &mut Frame, inventory: Vec<String>) 
         Span::raw(world.player.gold.to_string()),
     ]));
 
-    let id: Paragraph = Paragraph::new(Text::from(Text::from(lines)))
+    let id: Paragraph = Paragraph::new(Text::from(lines))
         .centered()
         .block(Block::new().borders(Borders::TOP | Borders::LEFT | Borders::RIGHT));
 
@@ -101,7 +101,7 @@ pub fn draw_trade(world: &mut World, frame: &mut Frame, inventory: Vec<String>) 
     let mut scroll_output = ScrollView::new(Size::new(content_width, content_height));
 
     let city_name: Paragraph =
-        Paragraph::new(Text::from(Text::from(world.room.room.description.as_str())))
+        Paragraph::new(Text::from(world.room.room.description.as_str()))
             .centered()
             .wrap(Wrap { trim: true });
 
@@ -135,7 +135,7 @@ pub fn draw_trade(world: &mut World, frame: &mut Frame, inventory: Vec<String>) 
         Line::from("Nothing").alignment(Alignment::Center),
     )];
 
-    if world.player.inventory.len() > 0 {
+    if !world.player.inventory.is_empty() {
         items_list = Vec::new();
         for (item, quantity) in &world.player.inventory {
             if let Some(item_obj) = world.list_items.get(item) {
@@ -262,8 +262,7 @@ pub fn draw_trade(world: &mut World, frame: &mut Frame, inventory: Vec<String>) 
         match world.room.focus {
             Focus::BUY => {
                 if let Some(selected_item) = inventory
-                    .iter()
-                    .nth(world.room.buy_list_state.selected().unwrap_or(0))
+                    .get(world.room.buy_list_state.selected().unwrap_or(0))
                 {
                     if let Some(item) = world.list_items.get(selected_item) {
                         Paragraph::new(Text::from(format!("({}) {}", selected_item, item)))
@@ -310,7 +309,7 @@ pub fn draw_trade(world: &mut World, frame: &mut Frame, inventory: Vec<String>) 
         Channels::ROOM => world.chat.room_messages.clone(),
         Channels::GROUP => {
             if !world.group.in_group {
-                if world.group.invitation.len() == 0 {
+                if world.group.invitation.is_empty() {
                     let mut my_vec = VecDeque::new();
                     my_vec.push_back("Not yet in a group.".to_string());
                     my_vec.clone()

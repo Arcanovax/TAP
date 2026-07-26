@@ -105,21 +105,21 @@ impl Display for Room<'_> {
         for item in &self.items {
             items_list.push(format!("- {}", item));
         }
-        if items_list.len() == 0 {
+        if items_list.is_empty() {
             items_list.push("Nothing.".to_string());
         }
         let mut npc_list: Vec<String> = Vec::new();
         for npc in &self.npcs {
             npc_list.push(format!("- {}", npc));
         }
-        if npc_list.len() == 0 {
+        if npc_list.is_empty() {
             npc_list.push("Nobody.".to_string());
         }
         let mut players_list: Vec<String> = Vec::new();
         for player in &self.players {
             players_list.push(format!("- {}", player));
         }
-        if players_list.len() == 0 {
+        if players_list.is_empty() {
             players_list.push("You are alone.".to_string());
         }
         write!(

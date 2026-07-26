@@ -136,7 +136,7 @@ pub fn event_handling(world: &mut World, answer: Vec<&str>) {
                         } else {
                             world.state = States::Idle;
                             world.room.fight = Fight::new();
-                            world.output.push_back(format!("An error occurs with enemy HP so I decided to evacuate you immediately."));
+                            world.output.push_back("An error occurs with enemy HP so I decided to evacuate you immediately.".to_string());
                         }
                     }
                     "HEALING" => {
@@ -178,16 +178,13 @@ pub fn event_handling(world: &mut World, answer: Vec<&str>) {
                         "Congratulation! You validate the goal '{}' of the {} quest.",
                         update.previous_goal, quest_name
                     ));
-                    match update.previous_goal {
-                        Goal::Retrieve { item, amount, .. } => {
-                            world
-                                .player
-                                .inventory
-                                .entry(item)
-                                .and_modify(|f| *f -= amount);
-                            world.player.inventory.retain(|_, quantity| *quantity > 0);
-                        }
-                        _ => {}
+                    if let Goal::Retrieve { item, amount, .. } = update.previous_goal {
+                        world
+                            .player
+                            .inventory
+                            .entry(item)
+                            .and_modify(|f| *f -= amount);
+                        world.player.inventory.retain(|_, quantity| *quantity > 0);
                     }
                 }
                 "FINISH" => {

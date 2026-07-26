@@ -85,7 +85,7 @@ pub fn draw_room(world: &mut World, frame: &mut Frame) {
         Span::raw(world.player.gold.to_string()),
     ]));
 
-    let id: Paragraph = Paragraph::new(Text::from(Text::from(lines)))
+    let id: Paragraph = Paragraph::new(Text::from(lines))
         .centered()
         .block(Block::new().borders(Borders::TOP | Borders::LEFT | Borders::RIGHT));
 
@@ -115,7 +115,7 @@ pub fn draw_room(world: &mut World, frame: &mut Frame) {
     let mut scroll_output = ScrollView::new(Size::new(content_width, content_height));
 
     let city_name: Paragraph =
-        Paragraph::new(Text::from(Text::from(world.room.room.description.as_str())))
+        Paragraph::new(Text::from(world.room.room.description.as_str()))
             .centered()
             .wrap(Wrap { trim: true });
 
@@ -149,7 +149,7 @@ pub fn draw_room(world: &mut World, frame: &mut Frame) {
         Line::from("Nobody").alignment(Alignment::Center),
     )];
 
-    if world.room.npcs.len() > 0 {
+    if !world.room.npcs.is_empty() {
         npcs_list = Vec::new();
         for elem in &world.room.npcs {
             if let Some(npc) = world.list_npcs.get(elem) {
@@ -220,7 +220,7 @@ pub fn draw_room(world: &mut World, frame: &mut Frame) {
             )
         })
         .collect();
-    if inventory_items.len() == 0 {
+    if inventory_items.is_empty() {
         inventory_items.push(ListItem::new(
             Line::from("Nothing in your bag").alignment(Alignment::Center),
         ));
@@ -273,7 +273,7 @@ pub fn draw_room(world: &mut World, frame: &mut Frame) {
             )
         })
         .collect();
-    if quests.len() == 0 {
+    if quests.is_empty() {
         quests.push(ListItem::new(
             Line::from("No quest accepted yet.").alignment(Alignment::Center),
         ));
@@ -314,8 +314,7 @@ pub fn draw_room(world: &mut World, frame: &mut Frame) {
                 if let Some(selected_npc) = world
                     .room
                     .npcs
-                    .iter()
-                    .nth(world.room.npc_list_state.selected().unwrap_or(0))
+                    .get(world.room.npc_list_state.selected().unwrap_or(0))
                 {
                     if let Some(npc) = world.list_npcs.get(selected_npc) {
                         Paragraph::new(Text::from(format!("{}", npc)))
@@ -441,7 +440,7 @@ pub fn draw_room(world: &mut World, frame: &mut Frame) {
         Channels::ROOM => world.chat.room_messages.clone(),
         Channels::GROUP => {
             if !world.group.in_group {
-                if world.group.invitation.len() == 0 {
+                if world.group.invitation.is_empty() {
                     let mut my_vec = VecDeque::new();
                     my_vec.push_back("Not yet in a group.".to_string());
                     my_vec.clone()

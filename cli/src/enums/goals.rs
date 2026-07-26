@@ -25,15 +25,15 @@ pub enum Goal {
 impl Display for Goal {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            Goal::Collect { item, amount } => write!(f, "Collect {} {}\n", amount, item),
+            Goal::Collect { item, amount } => writeln!(f, "Collect {} {}", amount, item),
             Goal::Talk { dialog } => {
-                write!(f, "Talk to {}\n", dialog)
+                writeln!(f, "Talk to {}", dialog)
             }
             Goal::Retrieve {
                 item,
                 amount,
                 dialog,
-            } => write!(f, "Gave {} {} to {}\n", amount, item, dialog),
+            } => writeln!(f, "Gave {} {} to {}", amount, item, dialog),
             Goal::Answer { room, .. } => {
                 write!(f, "Answer to his riddle at {}.", room)
             }

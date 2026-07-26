@@ -25,11 +25,10 @@ pub fn handle_global_events(key: KeyEvent, world: &mut World) {
                     if world.index_command > 0 {
                         world.index_command = world.index_command.saturating_sub(1);
                         world.room.text_area.clear();
-                        if world.index_command > 0 {
-                            if let Some(command) = world.old_command.get(world.index_command - 1) {
+                        if world.index_command > 0
+                            && let Some(command) = world.old_command.get(world.index_command - 1) {
                                 world.room.text_area.insert_str(command);
                             }
-                        }
                     }
                 }
                 Focus::BAG => world.room.bag_state.select_next(),
@@ -86,25 +85,19 @@ pub fn handle_global_events(key: KeyEvent, world: &mut World) {
                 Focus::BAG => world.room.bag_state.select_previous(),
                 _ => {}
             },
-            KeyCode::Left => match world.room.focus {
-                Focus::CHAT => {
-                    world.chat.channel = match world.chat.channel {
-                        Channels::GLOBAL => Channels::GROUP,
-                        Channels::GROUP => Channels::ROOM,
-                        Channels::ROOM => Channels::GLOBAL,
-                    }
+            KeyCode::Left => if world.room.focus == Focus::CHAT {
+                world.chat.channel = match world.chat.channel {
+                    Channels::GLOBAL => Channels::GROUP,
+                    Channels::GROUP => Channels::ROOM,
+                    Channels::ROOM => Channels::GLOBAL,
                 }
-                _ => {}
             },
-            KeyCode::Right => match world.room.focus {
-                Focus::CHAT => {
-                    world.chat.channel = match world.chat.channel {
-                        Channels::GLOBAL => Channels::ROOM,
-                        Channels::GROUP => Channels::GLOBAL,
-                        Channels::ROOM => Channels::GROUP,
-                    }
+            KeyCode::Right => if world.room.focus == Focus::CHAT {
+                world.chat.channel = match world.chat.channel {
+                    Channels::GLOBAL => Channels::ROOM,
+                    Channels::GROUP => Channels::GLOBAL,
+                    Channels::ROOM => Channels::GROUP,
                 }
-                _ => {}
             },
             KeyCode::Tab | KeyCode::BackTab => {
                 let current_index = Focus::iterator(&world.state)
@@ -179,8 +172,8 @@ pub fn handle_global_events(key: KeyEvent, world: &mut World) {
                     }
                 }
                 Focus::EXITS => {
-                    if let Some(index) = world.room.exits_list_state.selected_mut() {
-                        if let Some(dir) = world.room.room.exits.keys().nth(*index) {
+                    if let Some(index) = world.room.exits_list_state.selected_mut()
+                        && let Some(dir) = world.room.room.exits.keys().nth(*index) {
                             world
                                 .output
                                 .push_back(format!("\n> {}", format!("MOVE {}\n", dir)));
@@ -188,7 +181,6 @@ pub fn handle_global_events(key: KeyEvent, world: &mut World) {
                             let _ = world.tx_to_serv.try_send(format!("MOVE {}\n", dir));
                             world.action = PendingAction::Move;
                         }
-                    }
                 }
                 Focus::CHOICE(second, selected_npc, inventory) => {
                     if let Some(index) = world.room.choice_list_state.selected() {
@@ -230,8 +222,8 @@ pub fn handle_global_events(key: KeyEvent, world: &mut World) {
                 }
                 Focus::NPC => {
                     if let Some(index) = world.room.npc_list_state.selected() {
-                        if let Some(selected_npc) = world.room.npcs.get(index) {
-                            if let Some(npc) = world.list_npcs.get(selected_npc) {
+                        if let Some(selected_npc) = world.room.npcs.get(index)
+                            && let Some(npc) = world.list_npcs.get(selected_npc) {
                                 match &npc.kind {
                                     NPCKind::Citizen => {
                                         world.output.push_back(format!(
@@ -262,16 +254,15 @@ pub fn handle_global_events(key: KeyEvent, world: &mut World) {
                                     }
                                 }
                             }
-                        }
                         world.room.npc_list_state.select(None);
                     }
                 }
                 Focus::INVENTORY | Focus::BAG => {
-                    if world.room.focus == Focus::BAG && world.room.bag.len() == 0 {
+                    if world.room.focus == Focus::BAG && world.room.bag.is_empty() {
                         world.room.fight.bag = false;
                         world.room.focus = Focus::COMMAND;
                     } else {
-                        if world.room.focus == Focus::INVENTORY && world.player.inventory.len() == 0
+                        if world.room.focus == Focus::INVENTORY && world.player.inventory.is_empty()
                         {
                             world.output.push_back(
                                 "\nAre you really trying to use... nothing?".to_string(),
@@ -284,7 +275,7 @@ pub fn handle_global_events(key: KeyEvent, world: &mut World) {
                                 } else {
                                     let index = world.room.bag_state.selected().unwrap();
                                     world.room.fight.bag = false;
-                                    world.room.bag.iter().nth(index)
+                                    world.room.bag.get(index)
                                 }
                             };
                             match item_name {

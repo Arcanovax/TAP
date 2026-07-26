@@ -28,8 +28,8 @@ pub fn trade_event(world: &mut World, key: KeyEvent, inventory: Vec<String>, npc
         }
         KeyCode::Enter => match world.room.focus {
             Focus::BUY => {
-                if let Some(index) = world.room.buy_list_state.selected_mut() {
-                    if let Some(item) = inventory.iter().nth(*index) {
+                if let Some(index) = world.room.buy_list_state.selected_mut()
+                    && let Some(item) = inventory.get(*index) {
                         world
                             .output
                             .push_back(format!("\n> {}", format!("BUY {} {}\n", npc_id, item)));
@@ -43,17 +43,16 @@ pub fn trade_event(world: &mut World, key: KeyEvent, inventory: Vec<String>, npc
                             world.action = PendingAction::Buy(item.clone());
                         }
                     }
-                }
             }
             Focus::SELL => {
-                if world.player.inventory.len() == 0 {
+                if world.player.inventory.is_empty() {
                     world.output.push_back(String::from(
                         "Good job! You didn't sell anything, and you didn't earned anything!",
                     ));
                     world.room.output_scroll_pos.scroll_to_bottom();
                 } else {
-                    if let Some(index) = world.room.sell_list_state.selected_mut() {
-                        if let Some((item, ..)) = world.player.inventory.iter().nth(*index) {
+                    if let Some(index) = world.room.sell_list_state.selected_mut()
+                        && let Some((item, ..)) = world.player.inventory.iter().nth(*index) {
                             world.output.push_back(format!(
                                 "\n> {}",
                                 format!("SELL {} {}\n", npc_id, item)
@@ -68,7 +67,6 @@ pub fn trade_event(world: &mut World, key: KeyEvent, inventory: Vec<String>, npc
                                 world.action = PendingAction::Sell(item.clone());
                             }
                         }
-                    }
                 }
             }
             _ => world.room.focus = Focus::BUY,

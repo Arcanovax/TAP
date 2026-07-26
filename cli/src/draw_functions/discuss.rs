@@ -61,7 +61,7 @@ pub fn draw_room_discuss(world: &mut World, frame: &mut Frame, name: String, sen
         Span::raw(world.player.gold.to_string()),
     ]));
 
-    let id: Paragraph = Paragraph::new(Text::from(Text::from(lines)))
+    let id: Paragraph = Paragraph::new(Text::from(lines))
         .centered()
         .block(Block::new().borders(Borders::TOP | Borders::LEFT | Borders::RIGHT));
 
@@ -86,7 +86,7 @@ pub fn draw_room_discuss(world: &mut World, frame: &mut Frame, name: String, sen
     let mut scroll_output = ScrollView::new(Size::new(content_width, content_height));
 
     let city_name: Paragraph =
-        Paragraph::new(Text::from(Text::from(world.room.room.description.as_str())))
+        Paragraph::new(Text::from(world.room.room.description.as_str()))
             .centered()
             .wrap(Wrap { trim: true });
 
@@ -130,7 +130,7 @@ pub fn draw_room_discuss(world: &mut World, frame: &mut Frame, name: String, sen
     if world.index_sentence < mess_len {
         world.counter += 1;
 
-        if world.counter % 2 == 0 {
+        if world.counter.is_multiple_of(2) {
             world.message.push(sentence[world.index_sentence]);
             world.index_sentence += 1;
         }

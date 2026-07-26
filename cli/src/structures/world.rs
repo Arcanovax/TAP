@@ -112,10 +112,10 @@ impl World<'_> {
                     if instant.elapsed() >= Duration::from_secs(2) {
                         self.state = *prev_state.clone();
                     } else {
-                        escape_handling(self, frame, step.clone(), cancelled_instant.clone());
+                        escape_handling(self, frame, *step, *cancelled_instant);
                     }
                 }
-                None => escape_handling(self, frame, step.clone(), cancelled_instant.clone()),
+                None => escape_handling(self, frame, *step, *cancelled_instant),
             },
             States::Trade(inventory, ..) => draw_trade(self, frame, inventory.clone()),
             _ => {}

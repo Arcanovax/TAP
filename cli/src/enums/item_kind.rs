@@ -14,11 +14,11 @@ pub enum ItemKind {
 impl Display for ItemKind {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            ItemKind::Armor { protection } => write!(f, "Armor: +{}\n", protection),
-            ItemKind::Miscellaneous => write!(f, "Miscellaneous\n"),
-            ItemKind::QuestItem => write!(f, "QuestItem\n"),
-            ItemKind::Potion { healing } => write!(f, "Potion: +{}HP\n", healing),
-            ItemKind::Weapon { damages } => write!(f, "Weapon: +{} damages\n", damages),
+            ItemKind::Armor { protection } => writeln!(f, "Armor: +{}", protection),
+            ItemKind::Miscellaneous => writeln!(f, "Miscellaneous"),
+            ItemKind::QuestItem => writeln!(f, "QuestItem"),
+            ItemKind::Potion { healing } => writeln!(f, "Potion: +{}HP", healing),
+            ItemKind::Weapon { damages } => writeln!(f, "Weapon: +{} damages", damages),
         }
     }
 }

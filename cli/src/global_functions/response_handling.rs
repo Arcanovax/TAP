@@ -115,7 +115,7 @@ pub fn response_handling(world: &mut World, answers: Vec<&str>) {
                         world.player.quests.insert(id.clone(), new_quest);
                         let quests_number = world.player.quests.len();
                         if quests_number == world.player.quests_views.len() {
-                            if world.rooms.len() == 0 {
+                            if world.rooms.is_empty() {
                                 let _ = world.tx_to_serv.try_send("ROOMS\n".to_string());
                                 world.action = PendingAction::Rooms;
                             } else {
@@ -263,7 +263,7 @@ pub fn response_handling(world: &mut World, answers: Vec<&str>) {
                         let quests_list: Vec<QuestsView> =
                             serde_json::from_str(&real_answer).unwrap();
                         if world.action == PendingAction::ClientQuests {
-                            if quests_list.len() > 0
+                            if !quests_list.is_empty()
                                 && (quests_list.len() != world.player.quests.len())
                             {
                                 let id = &quests_list[0].quest_id.clone();
@@ -272,7 +272,7 @@ pub fn response_handling(world: &mut World, answers: Vec<&str>) {
                                 let _ = world.tx_to_serv.try_send(format!("QUEST_INFO {}\n", id));
                                 world.action = PendingAction::QuestInfo(id.clone(), status);
                             } else {
-                                if world.rooms.len() == 0 {
+                                if world.rooms.is_empty() {
                                     let _ = world.tx_to_serv.try_send("ROOMS\n".to_string());
                                     world.action = PendingAction::Rooms;
                                 } else {
@@ -306,7 +306,7 @@ pub fn response_handling(world: &mut World, answers: Vec<&str>) {
                             for (item, number) in &world.player.inventory {
                                 world.output.push_back(format!("- {} x{}", item, number));
                             }
-                            if world.player.inventory.len() == 0 {
+                            if world.player.inventory.is_empty() {
                                 world.output.push_back("Nothing".to_string());
                             }
                         }
@@ -352,10 +352,10 @@ pub fn response_handling(world: &mut World, answers: Vec<&str>) {
                                     if let ItemKind::Potion { healing } = it.kind {
                                         healing
                                     } else {
-                                        0 as u32
+                                        0_u32
                                     }
                                 }
-                                None => 0 as u32,
+                                None => 0_u32,
                             }
                         };
                         world.player.hp = world.player.hp.saturating_add(heal).min(100);
@@ -490,7 +490,7 @@ pub fn response_handling(world: &mut World, answers: Vec<&str>) {
                         let result: AttackResult = serde_json::from_str(&real_answer).unwrap();
                         world.player.hp = result.attacker_hp;
                         let fight = &mut world.room.fight;
-                        if fight.target_name == "".to_string() {
+                        if fight.target_name == "" {
                             fight.target_name = match world.list_npcs.get(name) {
                                 Some(npc) => npc.name.clone(),
                                 None => name.clone(),
@@ -507,10 +507,7 @@ pub fn response_handling(world: &mut World, answers: Vec<&str>) {
                                 None => result.target_hp,
                             };
                         }
-                        match result.fighters {
-                            Some(fighters) => fight.fighters = fighters,
-                            None => {}
-                        }
+                        if let Some(fighters) = result.fighters { fight.fighters = fighters }
                         fight.target_hp = result.target_hp;
                         world.state = result.status;
                         world.room.focus = Focus::COMMAND;
@@ -565,7 +562,7 @@ pub fn response_handling(world: &mut World, answers: Vec<&str>) {
                                 _ => {}
                             }
                         }
-                        *world.player.inventory.entry(item_id).or_insert(0) += amount.clone();
+                        *world.player.inventory.entry(item_id).or_insert(0) += amount;
                         world.player.gold -= cost;
                         world.output.push_back(format!("[Server Response] You successfully bought {} {}. It costs you {} golds!", amount, item_name, cost));
                         world.room.output_scroll_pos.scroll_to_bottom();
@@ -645,7 +642,7 @@ pub fn response_handling(world: &mut World, answers: Vec<&str>) {
                     world.action = PendingAction::ClientLook;
                 }
                 PendingAction::SendChat(command, args) => {
-                    world.output.push_back(format!(""));
+                    world.output.push_back(String::new());
                     world.output.push_back(format!("> {command} {args}"));
                     world.output.push_back(format!("[Error] {}", real_answer));
                     world.action = PendingAction::None;
