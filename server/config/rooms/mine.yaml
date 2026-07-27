@@ -1,0 +1,34 @@
+import:
+  - "quarry.yaml"   # exit South
+
+room:
+  mine:
+    name: "The Abandoned Prospect"
+    description: "A dark, dripping mine where the only sounds are water falling from the stalactites and the leathery flap of bats overhead. An old mine car sits dead-center on its rails, patiently awaiting a shove it will never receive."
+    exits:
+      South: "room.quarry"
+    npc:
+      - "npc.door"
+
+npc:
+  door:
+    name: "Portix"
+    dialog:
+      default:
+        - "The door remain silent."
+      quest.search.3:
+        - "If you want to come in, you have to bring me three items: A goblin tooth, a sacred seashell, and a golden token."
+        - "Travel the world to find them and bring them back to me."
+      quest.search.7:
+        - "Now that's a magnificent goblin tooth! The first lock has popped open."
+      quest.search.8:
+        - "What a wonderful golden token! The second lock has popped open."
+      quest.search.9:
+        - "I can hear the sounds of the sea in this sacred seashell. The last lock has popped open."
+        - "Just as you start pushing the door to finally get inside, it slams shut."
+        - "From inside, you hear a woman's voice saying to you :"
+        - "'Who are you? Can't you just leave us alone?'"
+        - "It's almost our fathers' birthdays (they were born on the same day), and we're planning a surprise for them."
+        - "It's taking a few longer than expected but we are almost ready."
+        - "Take these 50 golds and leave us alone! Don't come back!"
+    kind: Citizen

@@ -1,0 +1,152 @@
+use crate::{
+    protocol::{EventType, Message},
+    structures::{
+        dungeon::{Dungeon, parse_dungeon_id},
+        enums::{error::ErrorCode, npc_kind::NPCKind, state::State},
+        fight::Fight,
+        game::World,
+        group::Group,
+        item::Item,
+        npc::Npc,
+        player::Player,
+        room::{Owner, Room},
+    },
+};
+use redb::Database;
+use std::{
+    collections::HashMap,
+    net::SocketAddr,
+    sync::{Arc, Mutex},
+};
+use tokio::sync::mpsc::UnboundedSender;
+use tracing::info;
+use uuid::Uuid;
+
+mod broadcast;
+mod dungeon;
+pub mod group;
+mod player;
+mod quest;
+mod world;
+
+pub type Tx = UnboundedSender<Message>;
+pub type SharedServer = Arc<Mutex<ServerInfo>>;
+
+#[derive(Debug)]
+pub struct Connection {
+    pub addr: SocketAddr,
+    pub tx: Tx,
+    pub player: Player,
+}
+
+pub struct ServerInfo {
+    pub connections: HashMap<SocketAddr, Connection>,
+    name_to_addr: HashMap<String, SocketAddr>,
+    groups: HashMap<Uuid, Group>,
+    invitations: HashMap<SocketAddr, HashMap<String, Uuid>>,
+    pub fights: HashMap<String, Fight>,
+    pub world: World,
+    pub db: Arc<Database>,
+    pub dungeons: HashMap<Uuid, Dungeon>,
+    pub base_world: World,
+}
+
+impl ServerInfo {
+    pub fn new(world: World, db: Arc<Database>) -> Self {
+        ServerInfo {
+            connections: HashMap::new(),
+            name_to_addr: HashMap::new(),
+            groups: HashMap::new(),
+            invitations: HashMap::new(),
+            fights: HashMap::new(),
+            dungeons: HashMap::new(),
+            base_world: world.clone(),
+            world,
+            db,
+        }
+    }
+
+    pub fn reset(&mut self, base_world: &World) {
+        for (id, room) in &mut self.world.rooms {
+            if let Some(base_room) = base_world.rooms.get(id) {
+                room.items.retain(|item| item.owner == Owner::Player);
+                room.items.extend(base_room.items.clone());
+            }
+        }
+
+        for (id, npc) in &mut self.world.npcs {
+            if let Some(base_npc) = base_world.npcs.get(id) {
+                match &npc.kind {
+                    NPCKind::Merchant { .. } => *npc = base_npc.clone(),
+                    NPCKind::Enemy { defeated, .. } => {
+                        if !*defeated {
+                            continue;
+                        }
+                        *npc = base_npc.clone();
+                    }
+                    _ => {}
+                }
+            }
+        }
+
+        for con in self.connections.values() {
+            let _ = con.tx.send(Message::Event(EventType::SERVER_RESET));
+        }
+    }
+
+    pub fn resolve_room(&self, id: &str) -> Option<&Room> {
+        match parse_dungeon_id(id) {
+            Some(gid) => match self.dungeons.get(&gid) {
+                Some(dungeon) => dungeon.rooms.get(id),
+                None => None,
+            },
+            None => self.world.rooms.get(id),
+        }
+    }
+
+    pub fn resolve_item(&self, id: &str) -> Option<&Item> {
+        self.world.items.get(id)
+    }
+
+    pub fn resolve_npc(&self, id: &str) -> Option<&Npc> {
+        match parse_dungeon_id(id) {
+            Some(gid) => match self.dungeons.get(&gid) {
+                Some(dungeon) => dungeon.npcs.get(id),
+                None => None,
+            },
+            None => self.world.npcs.get(id),
+        }
+    }
+
+    pub fn resolve_room_mut(&mut self, id: &str) -> Option<&mut Room> {
+        match parse_dungeon_id(id) {
+            Some(gid) => match self.dungeons.get_mut(&gid) {
+                Some(dungeon) => dungeon.rooms.get_mut(id),
+                None => None,
+            },
+            None => self.world.rooms.get_mut(id),
+        }
+    }
+
+    pub fn resolve_npc_mut(&mut self, id: &str) -> Option<&mut Npc> {
+        match parse_dungeon_id(id) {
+            Some(gid) => match self.dungeons.get_mut(&gid) {
+                Some(dungeon) => dungeon.npcs.get_mut(id),
+                None => None,
+            },
+            None => self.world.npcs.get_mut(id),
+        }
+    }
+
+    pub fn disconnect_player(&mut self, peer_addr: SocketAddr) -> Result<(), ErrorCode> {
+        let _ = self.try_leave_group(peer_addr);
+        if let Ok(player) = self.get_player(peer_addr)
+            && let State::InFight { target_id } = &player.status {
+                let _ = self.try_leave_fight(peer_addr, target_id.clone());
+            }
+        self.try_save_player(peer_addr)?;
+        let _ = self.try_remove_player(peer_addr);
+        self.send_players_event(peer_addr);
+        Ok(())
+    }
+}

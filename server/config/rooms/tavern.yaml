@@ -1,0 +1,64 @@
+import:
+  - "city_square.yaml"  # exit South
+  - "game_room.yaml"    # exit North
+  - "../items/potions.yaml"   # inventaire de bar_owner
+
+room:
+  tavern:
+    name: "The Awesome Pub"
+    description: "A warm and lively tavern. Through the door spill the clinking of glasses, cheerfully off-key singing, and the kind of hearty laughter that usually precedes a bar tab nobody can pay."
+    exits:
+      South: "room.city_square"
+      North: "room.game_room"
+    npc:
+      - "npc.bar_owner"
+      - "npc.client_1"
+      - "npc.client_2"
+
+npc:
+  bar_owner:
+    name: "Grossbarrix"
+    dialog:
+      default:
+        - "Welcome to The Awesome Pub! Take a seat and look at the menu."
+        - "Did the guard tell you about those missing teenagers?"
+      quest.restock.1:
+        - "You found cheese? Real, actual cheese? The regulars have been eyeing the furniture. You're a lifesaver — here, a proper pint, on the house."
+    kind:
+      Merchant:
+        gold: 45
+        inventory:
+          - "item.ale"
+          - "item.pint"
+          - "item.peanuts"
+    quest: "quest.restock"
+
+  client_1:
+    name: "Nésousix"
+    dialog:
+      default:
+        - "These runaway teens don't think about how worried their parents will be."
+        - "The guard is looking for people to help find them."
+    kind: Citizen
+
+  client_2:
+    name: "Spacix"
+    dialog:
+      default:
+        - "It's a good thing when young people spread their wings and fly."
+        - "It's too bad that the guard is looking for people to help him find them."
+    kind: Citizen
+
+quest:
+  restock:
+    name: "The Awesome Restock"
+    description: "The pub has run clean out of snacks and the regulars are eyeing the furniture. Fetch a couple of cheeses from the market."
+    reward: "item.pint"
+    goals:
+      - Collect:
+          item: "item.cheese"
+          amount: 2
+      - Retrieve:
+          item: "item.cheese"
+          amount: 2
+          dialog: "npc.bar_owner.dialog.quest.restock.1"
