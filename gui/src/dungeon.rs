@@ -106,7 +106,7 @@ fn merge_colliders(dst: &mut Grid, src: &Grid) {
 }
 
 pub async fn get_dungeon_map(dungeon: &mut Dungeon, data: &RoomData) -> Room {
-	let map = load_texture("assets/map/dungeon/floor.png").await.unwrap();
+	let map = load_texture("gui/assets/map/dungeon/floor.png").await.unwrap();
 	let mut colliders: Grid = [
 				[0,0,0,0,0,0,0,0,0,0,1,0,0,0,1,0,0,0,0,0,0,0,0,0,0],
 				[0,0,0,0,0,0,0,0,0,1,1,0,0,0,1,0,0,0,0,0,0,0,0,0,0],
@@ -141,25 +141,25 @@ pub async fn get_dungeon_map(dungeon: &mut Dungeon, data: &RoomData) -> Room {
 	if !dungeon.walls_loaded{
 		dungeon.walls = Vec::new();
 		if data.exits.contains_key(&Direction::North) {
-			dungeon.walls.push(load_texture("assets/map/dungeon/top_on.png").await.unwrap());
+			dungeon.walls.push(load_texture("gui/assets/map/dungeon/top_on.png").await.unwrap());
 		} else {
-			dungeon.walls.push(load_texture("assets/map/dungeon/top_off.png").await.unwrap());
+			dungeon.walls.push(load_texture("gui/assets/map/dungeon/top_off.png").await.unwrap());
 		}
 
 		if data.exits.contains_key(&Direction::South) {
-			dungeon.walls.push(load_texture("assets/map/dungeon/bottom_on.png").await.unwrap());
+			dungeon.walls.push(load_texture("gui/assets/map/dungeon/bottom_on.png").await.unwrap());
 		} else {
-			dungeon.walls.push(load_texture("assets/map/dungeon/bottom_off.png").await.unwrap());
+			dungeon.walls.push(load_texture("gui/assets/map/dungeon/bottom_off.png").await.unwrap());
 		}
 		if data.exits.contains_key(&Direction::East) {
-			dungeon.walls.push(load_texture("assets/map/dungeon/right_on.png").await.unwrap());
+			dungeon.walls.push(load_texture("gui/assets/map/dungeon/right_on.png").await.unwrap());
 		} else {
-			dungeon.walls.push(load_texture("assets/map/dungeon/right_off.png").await.unwrap());
+			dungeon.walls.push(load_texture("gui/assets/map/dungeon/right_off.png").await.unwrap());
 		}
 		if data.exits.contains_key(&Direction::West) {
-			dungeon.walls.push(load_texture("assets/map/dungeon/left_on.png").await.unwrap());
+			dungeon.walls.push(load_texture("gui/assets/map/dungeon/left_on.png").await.unwrap());
 		} else {
-			dungeon.walls.push(load_texture("assets/map/dungeon/left_off.png").await.unwrap());
+			dungeon.walls.push(load_texture("gui/assets/map/dungeon/left_off.png").await.unwrap());
 		}
 		dungeon.walls_loaded = true;
 	}

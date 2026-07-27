@@ -61,8 +61,8 @@ pub async fn get_rooms() -> HashMap<String, Room> {
 				[1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
 				[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
 			],
-			first_layer: load_texture("assets/map/farm/layer1.png").await.unwrap(),
-			second_layer: Some(load_texture("assets/map/farm/layer2.png").await.unwrap()),
+			first_layer: load_texture("gui/assets/map/farm/layer1.png").await.unwrap(),
+			second_layer: Some(load_texture("gui/assets/map/farm/layer2.png").await.unwrap()),
 			spawns: HashMap::from([
             	(Spawn::East, vec2(380.0, 150.0)),
 				(Spawn::Center, vec2(300.0, 150.0)),
@@ -89,8 +89,8 @@ pub async fn get_rooms() -> HashMap<String, Room> {
             [1,0,0,0,0,0,0,1,1,1,0,0,0,0,0,0,1,0,0,0,0,0,0,0,1],
             [1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1],
         ],
-        first_layer: load_texture("assets/map/mine/layer1.png").await.unwrap(),
-        second_layer: Some(load_texture("assets/map/mine/layer2.png").await.unwrap()),
+        first_layer: load_texture("gui/assets/map/mine/layer1.png").await.unwrap(),
+        second_layer: Some(load_texture("gui/assets/map/mine/layer2.png").await.unwrap()),
 		spawns: HashMap::from([
 				(Spawn::South, vec2(200.0, 190.0)),
 				(Spawn::Center, vec2(200.0, 130.0)),
@@ -117,7 +117,7 @@ pub async fn get_rooms() -> HashMap<String, Room> {
             [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,0,0,1],
             [1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1],
         ],
-        first_layer: load_texture("assets/map/place/layer1.png").await.unwrap(),
+        first_layer: load_texture("gui/assets/map/place/layer1.png").await.unwrap(),
         second_layer: None,
 		spawns: HashMap::from([
             	(Spawn::West, vec2(10.0, 130.0)),
@@ -148,8 +148,8 @@ pub async fn get_rooms() -> HashMap<String, Room> {
 			[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
 			[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
         ],
-        first_layer: load_texture("assets/map/tower/layer1.png").await.unwrap(),
-        second_layer: Some(load_texture("assets/map/tower/layer2.png").await.unwrap()),
+        first_layer: load_texture("gui/assets/map/tower/layer1.png").await.unwrap(),
+        second_layer: Some(load_texture("gui/assets/map/tower/layer2.png").await.unwrap()),
 		spawns: HashMap::from([
             	(Spawn::West, vec2(10.0, 90.0)),
 				(Spawn::Center, vec2(200.0, 130.0)),
@@ -177,7 +177,7 @@ pub async fn get_rooms() -> HashMap<String, Room> {
 			[1,1,1,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
 			[1,1,1,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
         ],
-        first_layer: load_texture("assets/map/gambling/gambling.png").await.unwrap(),
+        first_layer: load_texture("gui/assets/map/gambling/gambling.png").await.unwrap(),
         second_layer: None,
 		spawns: HashMap::from([
             	(Spawn::South, vec2(50.0, 190.0)),
@@ -205,7 +205,7 @@ pub async fn get_rooms() -> HashMap<String, Room> {
 			[1,0,0,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
 			[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
         ],
-        first_layer: load_texture("assets/map/beach/layer1.png").await.unwrap(),
+        first_layer: load_texture("gui/assets/map/beach/layer1.png").await.unwrap(),
         second_layer: None,
 		spawns: HashMap::from([
             	(Spawn::North, vec2(270.0, 0.0)),
@@ -234,8 +234,8 @@ pub async fn get_rooms() -> HashMap<String, Room> {
 			[1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1],
 			[1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,1,1,1,1,1,1,1,1,1],
         ],
-        first_layer: load_texture("assets/map/market/layer1.png").await.unwrap(),
-        second_layer: Some(load_texture("assets/map/market/layer2.png").await.unwrap()),
+        first_layer: load_texture("gui/assets/map/market/layer1.png").await.unwrap(),
+        second_layer: Some(load_texture("gui/assets/map/market/layer2.png").await.unwrap()),
 		spawns: HashMap::from([
             	(Spawn::North, vec2(180.0, 0.0)),
 				(Spawn::East, vec2(380.0, 50.0)),
@@ -264,7 +264,7 @@ pub async fn get_rooms() -> HashMap<String, Room> {
 			[1,0,0,0,0,0,0,0,0,0,0,0,0,1,1,0,1,0,0,0,0,0,0,0,1],
 			[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,1,1,1,1,1,1,1,1,1],
         ],
-        first_layer: load_texture("assets/map/saloon/layer1.png").await.unwrap(),
+        first_layer: load_texture("gui/assets/map/saloon/layer1.png").await.unwrap(),
         second_layer: None,
 		spawns: HashMap::from([
 				(Spawn::North, vec2(50.0, 0.0)),
@@ -294,8 +294,8 @@ pub async fn get_rooms() -> HashMap<String, Room> {
 			[1,1,0,0,0,0,0,0,0,0,1,1,1,1,1,1,0,0,0,0,0,0,0,0,1],
 			[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
         ],
-        first_layer: load_texture("assets/map/parc/layer1.png").await.unwrap(),
-        second_layer: Some(load_texture("assets/map/parc/layer2.png").await.unwrap()),
+        first_layer: load_texture("gui/assets/map/parc/layer1.png").await.unwrap(),
+        second_layer: Some(load_texture("gui/assets/map/parc/layer2.png").await.unwrap()),
 		spawns: HashMap::from([
             	(Spawn::North, vec2(190.0, 0.0)),
 				(Spawn::West, vec2(10.0, 120.0)),
@@ -323,7 +323,7 @@ pub async fn get_rooms() -> HashMap<String, Room> {
 			[1,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,1,1,0,0,1],
 			[1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,1,1,1,1,1,1,1,1,1,1],
         ],
-        first_layer: load_texture("assets/map/forge/layer1.png").await.unwrap(),
+        first_layer: load_texture("gui/assets/map/forge/layer1.png").await.unwrap(),
         second_layer: None,
 		spawns: HashMap::from([
             	(Spawn::West, vec2(10.0, 130.0)),
@@ -355,8 +355,8 @@ pub async fn get_rooms() -> HashMap<String, Room> {
 			[1,1,0,0,0,0,0,1,1,1,1,0,0,0,1,1,1,0,0,0,0,0,0,0,1],
 			[1,1,1,1,1,1,1,1,1,1,1,0,0,0,1,1,1,1,1,1,1,1,1,1,1],
         ],
-        first_layer: load_texture("assets/map/montain/layer1.png").await.unwrap(),
-        second_layer: Some(load_texture("assets/map/montain/layer2.png").await.unwrap()),
+        first_layer: load_texture("gui/assets/map/montain/layer1.png").await.unwrap(),
+        second_layer: Some(load_texture("gui/assets/map/montain/layer2.png").await.unwrap()),
 		spawns: HashMap::from([
   			(Spawn::South, vec2(200.0, 200.0)),
 			(Spawn::North, vec2(240.0, 70.0)),

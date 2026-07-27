@@ -201,7 +201,7 @@ async fn main() {
 				.unwrap()
 				.block_on(network_task(tx_to_game, rx_from_game));
 		});
-	let texture = load_texture("assets/player_skin.png").await.unwrap();
+	let texture = load_texture("gui/assets/player_skin.png").await.unwrap();
     texture.set_filter(FilterMode::Nearest);
     let mut game: Game = Game{
 		focus: InputFocus::Game,
@@ -247,7 +247,7 @@ async fn main() {
     };
 
 	let rooms: std::collections::HashMap<String, rooms::Room> = get_rooms().await;
-	let floor: Texture2D = load_texture("assets/map/fightmap.png").await.unwrap();
+	let floor: Texture2D = load_texture("gui/assets/map/fightmap.png").await.unwrap();
 
     loop {
 		while let Ok(msg) = game.rx_from_serv.try_recv() {
