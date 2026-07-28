@@ -25,9 +25,10 @@ pub fn execute_attack(
         for id in player.inventory.keys() {
             if let Some(item) = world_mut.resolve_item(id)
                 && let ItemKind::Weapon { damages } = item.kind
-                    && dmg < damages {
-                        dmg = damages;
-                    }
+                && dmg < damages
+            {
+                dmg = damages;
+            }
         }
         (dmg, player.hp, player.name.clone())
     };
@@ -89,14 +90,14 @@ pub fn execute_attack(
                 .connections
                 .values()
                 .find(|c| c.player.name == *fighter)
-            {
-                let _ = con.tx.send(Message::Event(EventType::ATTACK {
-                    player_name: player_name.clone(),
-                    damages: curr_damages,
-                    enemy_hp: target_hp_after,
-                    loot: loot_list.clone(),
-                }));
-            }
+        {
+            let _ = con.tx.send(Message::Event(EventType::ATTACK {
+                player_name: player_name.clone(),
+                damages: curr_damages,
+                enemy_hp: target_hp_after,
+                loot: loot_list.clone(),
+            }));
+        }
     }
 
     let mut fighters: HashMap<String, u32> = HashMap::new();

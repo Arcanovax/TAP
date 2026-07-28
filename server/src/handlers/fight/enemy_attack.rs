@@ -47,9 +47,10 @@ pub fn enemy_attack(opponent_id: &str, world: &mut ServerInfo) {
         for id in inventory.keys() {
             if let Some(item) = world.resolve_item(id)
                 && let ItemKind::Armor { protection } = item.kind
-                    && protection > start_defense {
-                        start_defense = protection;
-                    }
+                && protection > start_defense
+            {
+                start_defense = protection;
+            }
         }
         start_defense
     };
@@ -91,9 +92,9 @@ pub fn enemy_attack(opponent_id: &str, world: &mut ServerInfo) {
                 && let NPCKind::Enemy {
                     ref mut hp, max_hp, ..
                 } = npc.kind
-                {
-                    *hp = max_hp;
-                }
+            {
+                *hp = max_hp;
+            }
         } else {
             let fight = world.fights.get_mut(opponent_id).unwrap();
             fight

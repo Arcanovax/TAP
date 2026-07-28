@@ -191,13 +191,9 @@ pub fn fight_request(
                 },
             }
         }
-        State::Discuss => {
-            Message::Response {
-                error: ErrorCode::INVALID_COMMAND,
-                payload: Payload::Json(
-                    serde_json::to_value("You can't fight in your state.").unwrap(),
-                ),
-            }
-        }
+        State::Discuss => Message::Response {
+            error: ErrorCode::INVALID_COMMAND,
+            payload: Payload::Json(serde_json::to_value("You can't fight in your state.").unwrap()),
+        },
     }
 }

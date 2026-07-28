@@ -127,10 +127,7 @@ impl ServerInfo {
                 }
             }
 
-            let fight_turn = {
-                
-                self.fights.get(&target).unwrap().turn
-            };
+            let fight_turn = { self.fights.get(&target).unwrap().turn };
 
             if nb_receivers == fight_turn as usize {
                 enemy_attack(&target, self);
@@ -214,10 +211,7 @@ impl ServerInfo {
         let receiver_addr = receiver_con.addr;
         let receiver_tx = receiver_con.tx.clone();
 
-        let invitations = self
-            .invitations
-            .entry(receiver_addr)
-            .or_default();
+        let invitations = self.invitations.entry(receiver_addr).or_default();
         if invitations.get(&inviter_name) == Some(&group_id) {
             return Err(ErrorCode::ALREADY_INVITED);
         }

@@ -243,18 +243,14 @@ impl From<Result<(), ErrorCode>> for Message {
 impl From<Result<Value, ErrorCode>> for Message {
     fn from(result: Result<Value, ErrorCode>) -> Self {
         match result {
-            Ok(data) => {
-                Message::Response {
-                    error: ErrorCode::SUCCESS,
-                    payload: Payload::Json(data),
-                }
-            }
-            Err(code) => {
-                Message::Response {
-                    error: code,
-                    payload: Payload::Empty,
-                }
-            }
+            Ok(data) => Message::Response {
+                error: ErrorCode::SUCCESS,
+                payload: Payload::Json(data),
+            },
+            Err(code) => Message::Response {
+                error: code,
+                payload: Payload::Empty,
+            },
         }
     }
 }
@@ -262,18 +258,14 @@ impl From<Result<Value, ErrorCode>> for Message {
 impl From<Result<String, ErrorCode>> for Message {
     fn from(result: Result<String, ErrorCode>) -> Self {
         match result {
-            Ok(data) => {
-                Message::Response {
-                    error: ErrorCode::SUCCESS,
-                    payload: Payload::Text(data),
-                }
-            }
-            Err(code) => {
-                Message::Response {
-                    error: code,
-                    payload: Payload::Empty,
-                }
-            }
+            Ok(data) => Message::Response {
+                error: ErrorCode::SUCCESS,
+                payload: Payload::Text(data),
+            },
+            Err(code) => Message::Response {
+                error: code,
+                payload: Payload::Empty,
+            },
         }
     }
 }

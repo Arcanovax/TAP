@@ -7,7 +7,7 @@ use crate::structures::enums::error::ErrorCode;
 use crate::structures::room::Owner;
 use redb::Database;
 use std::net::SocketAddr;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 use std::sync::{Arc, Mutex};
 use std::time::Duration;
 use tokio::io::{AsyncBufReadExt, AsyncWriteExt, BufReader};
@@ -66,7 +66,11 @@ async fn cleanup_tcp_connection(
     debug!("TCP connection closed");
 }
 
-pub async fn run(addr: String, port: String) -> Result<(), Box<dyn std::error::Error>> {
+pub async fn run(
+    addr: String,
+    port: String,
+    config: PathBuf,
+) -> Result<(), Box<dyn std::error::Error>> {
     let (file_writer, _guard) =
         tracing_appender::non_blocking(tracing_appender::rolling::daily("logs", "tap.log"));
 
@@ -87,7 +91,7 @@ pub async fn run(addr: String, port: String) -> Result<(), Box<dyn std::error::E
     let mut sigterm = signal(SignalKind::terminate())?;
 
     let db = Arc::new(Database::create("game.redb")?);
-    let mut world = load(Path::new("config.yaml"))?;
+    let mut world = load(&config)?;
     let base_world = world.clone();
 
     if let Ok(Some(saved)) = load_world(&db) {

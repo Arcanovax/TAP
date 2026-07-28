@@ -23,12 +23,10 @@ pub(super) fn dungeon_request(
     match args[0].to_uppercase().as_str() {
         "CREATE" => dungeon_create_request(server_info, peer_addr),
         "JOIN" => dungeon_join_request(server_info, peer_addr),
-        _ => {
-            Message::Response {
-                error: ErrorCode::INVALID_ARGS,
-                payload: Payload::Empty,
-            }
-        }
+        _ => Message::Response {
+            error: ErrorCode::INVALID_ARGS,
+            payload: Payload::Empty,
+        },
     }
 }
 
