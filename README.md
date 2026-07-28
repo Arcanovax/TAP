@@ -50,3 +50,33 @@ You must have
 rustc 1.96.0 (ac68faa20 2026-05-25)
 ```
 
+Once that's done, you can go to the root of the project and run the server with
+
+```BASH
+cargo run -p server
+```
+
+Once the server is running, in an other terminal, you can run either cli, gui or both with the same command ``cargo run -p <the_service_you_want>``.
+
+## Available commands
+
+```BASH
+cargo build -p <service>    - Build the binary of the chosen service at the path target/debug/<service>
+cargo run -p <service>      - Build and run the binary of the chosen service
+cargo clippy -p <service>   - Lint the chosen service
+cargo clean                 - Delete the 'target' folder.
+```
+
+# Resources
+
+- **Rust** : [The french version of The Book](https://jimskapt.github.io/rust-book-fr/), [Rust by example](https://doc.rust-lang.org/rust-by-example/index.html)
+- **Tokio** : [Tokio tutorial](https://tokio.rs/tokio/tutorial)
+- **Ratatui** : [Ratatui website](https://ratatui.rs/)
+
+## AI Usage
+
+Generative AI tools were used during development for:
+
+- Debugging
+- Understanding Rust concepts when documentation isn't clear enough
+
