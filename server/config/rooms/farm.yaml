@@ -1,0 +1,51 @@
+import:
+  - "city_square.yaml"   # exit East
+  - "../items/potions.yaml"   # quests crows : peanuts (goals) + bread (rewards)
+
+room:
+  farm:
+    name: "The Abundant Pasture"
+    description: "Neat rows of crops stretch toward a lopsided barn, watched over by a suspiciously well-fed cow. It is all, the farmer will insist before you even ask, one hundred percent organic — weeds included."
+    exits:
+      East: "room.city_square"
+    npc:
+      - "npc.farmer"
+      - "npc.cow"
+
+npc:
+  farmer:
+    name: "Sanpesticix"
+    dialog:
+      default:
+        - "Hello adventurer! Would you like to try some fruits and vegetables from my farm? They're a little pricey, but they're locally grown."
+        - "Otherwise, I have some others from the kingdom of Mexico that are cheaper."
+      quest.search.2:
+        - "My daughter? I'm not worried about her. She's resourceful!"
+        - "But it's true that she spent a lot of time in the mountains these last few days."
+        - "I hope she's fine!"
+      quest.crows.1:
+        - "Ha! The peanuts did the trick: the crows took the bait and left my corn alone. Thanks, adventurer! Take this loaf of bread as a reward for your efforts."
+    kind: Citizen
+    quest: "quest.crows"
+
+  cow:
+    name: "Bigtastix"
+    dialog:
+      default:
+        - "Moo"
+        - "What did you expect? I'm a cow."
+    kind: Citizen
+
+quest:
+  crows:
+    name: "A Murder in the Corn"
+    description: "Crows from the awkward forest keep raiding Sanpesticix's crops. Fetch some peanuts to bait them away from the fields."
+    reward: "item.bread"
+    goals:
+      - Collect:
+          item: "item.peanuts"
+          amount: 2
+      - Retrieve:
+          item: "item.peanuts"
+          amount: 2
+          dialog: "npc.farmer.dialog.quest.crows.1"
