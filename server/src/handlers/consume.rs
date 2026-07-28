@@ -99,7 +99,7 @@ pub fn consume(peer_addr: SocketAddr, args: &[String], server_info: &SharedServe
                         player_name: p_name.clone(),
                         heal: healing,
                     }));
-                } 
+                }
             }
             if turn == fighters.len() as u32 {
                 enemy_attack(&target_id, world_mut);

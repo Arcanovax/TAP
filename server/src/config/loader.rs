@@ -224,7 +224,6 @@ impl Loader {
         let mut queue = vec![start.to_path_buf()];
 
         while let Some(f) = queue.pop() {
-            
             if visibles.contains(&f) {
                 continue;
             }

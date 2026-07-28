@@ -141,9 +141,10 @@ impl ServerInfo {
     pub fn disconnect_player(&mut self, peer_addr: SocketAddr) -> Result<(), ErrorCode> {
         let _ = self.try_leave_group(peer_addr);
         if let Ok(player) = self.get_player(peer_addr)
-            && let State::InFight { target_id } = &player.status {
-                let _ = self.try_leave_fight(peer_addr, target_id.clone());
-            }
+            && let State::InFight { target_id } = &player.status
+        {
+            let _ = self.try_leave_fight(peer_addr, target_id.clone());
+        }
         self.try_save_player(peer_addr)?;
         let _ = self.try_remove_player(peer_addr);
         self.send_players_event(peer_addr);

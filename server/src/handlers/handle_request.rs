@@ -56,13 +56,16 @@ pub fn handle_request(
                 }
             };
 
-            if is_in_dungeon && ["GROUP"].contains(&name.to_uppercase().as_str())
-                && !args.is_empty() && args[0] == "LEAVE" {
-                    return Message::Response {
-                        error: ErrorCode::FORBIDDEN_ACTION,
-                        payload: Payload::Empty,
-                    };
-                }
+            if is_in_dungeon
+                && ["GROUP"].contains(&name.to_uppercase().as_str())
+                && !args.is_empty()
+                && args[0] == "LEAVE"
+            {
+                return Message::Response {
+                    error: ErrorCode::FORBIDDEN_ACTION,
+                    payload: Payload::Empty,
+                };
+            }
 
             if is_in_fight
                 && ["TAKE", "DROP", "QUEST", "BUY", "SELL", "TALK", "MOVE"]

@@ -104,9 +104,10 @@ impl ServerInfo {
             return Err(ErrorCode::INVALID_COMMAND);
         }
         if let Some(item) = self.resolve_item(item)
-            && matches!(item.kind, ItemKind::QuestItem) {
-                return Err(ErrorCode::FORBIDDEN_ACTION);
-            }
+            && matches!(item.kind, ItemKind::QuestItem)
+        {
+            return Err(ErrorCode::FORBIDDEN_ACTION);
+        }
         let con = self.connections.get_mut(&peer_addr).unwrap();
         let location = con.player.location.clone();
         match con.player.inventory.get_mut(item) {

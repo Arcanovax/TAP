@@ -11,10 +11,7 @@ fn quest_info_with_wrong_args_returns_invalid_args() {
     );
     // 2 arguments
     assert_eq!(
-        quest_info_request(
-            &server,
-            &["quest.fetch".to_string(), "extra".to_string()],
-        ),
+        quest_info_request(&server, &["quest.fetch".to_string(), "extra".to_string()],),
         err(ErrorCode::INVALID_ARGS)
     );
 }

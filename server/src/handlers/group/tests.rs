@@ -41,9 +41,11 @@ fn group_create_with_args_return_success() {
     let result = group_create_request(
         &server,
         addr,
-        &["test".to_string(),
+        &[
+            "test".to_string(),
             "custom".to_string(),
-            "group".to_string()],
+            "group".to_string(),
+        ],
     );
     assert_success_contains(&result, "group");
 }
@@ -100,11 +102,7 @@ fn group_leave_event_receive_leave_event() {
 fn group_invite_when_not_in_group_returns_not_in_group() {
     let server = test_server();
     connect(&server, addr(1), "alice");
-    let result = group_invite_request(
-        &["INVITE".to_string(), "bob".to_string()],
-        &server,
-        addr(1),
-    );
+    let result = group_invite_request(&["INVITE".to_string(), "bob".to_string()], &server, addr(1));
     assert_eq!(result, err(ErrorCode::NOT_IN_GROUP));
 }
 
@@ -137,11 +135,7 @@ fn group_invite_notifies_target() {
     group_create_request(&server, addr(1), &[]);
     let mut rx_bob = connect(&server, addr(2), "bob");
 
-    let result = group_invite_request(
-        &["INVITE".to_string(), "bob".to_string()],
-        &server,
-        addr(1),
-    );
+    let result = group_invite_request(&["INVITE".to_string(), "bob".to_string()], &server, addr(1));
 
     assert_eq!(result, err(ErrorCode::SUCCESS));
     assert_eq!(
@@ -161,11 +155,7 @@ fn group_invite_notifies_target() {
 fn group_join_without_invitation_returns_invalid_command() {
     let server = test_server();
     connect(&server, addr(1), "alice");
-    let result = group_join_request(
-        &server,
-        addr(1),
-        &["JOIN".to_string(), "test".to_string()],
-    );
+    let result = group_join_request(&server, addr(1), &["JOIN".to_string(), "test".to_string()]);
     assert_eq!(result, err(ErrorCode::INVALID_COMMAND));
 }
 
@@ -175,17 +165,9 @@ fn group_join_notifies_existing_members() {
     let mut rx_alice = connect(&server, addr(1), "alice");
     group_create_request(&server, addr(1), &[]);
     let _rx_bob = connect(&server, addr(2), "bob");
-    group_invite_request(
-        &["INVITE".to_string(), "bob".to_string()],
-        &server,
-        addr(1),
-    );
+    group_invite_request(&["INVITE".to_string(), "bob".to_string()], &server, addr(1));
 
-    let result = group_join_request(
-        &server,
-        addr(2),
-        &["JOIN".to_string(), "alice".to_string()],
-    );
+    let result = group_join_request(&server, addr(2), &["JOIN".to_string(), "alice".to_string()]);
 
     assert_success_contains(&result, "group");
     assert_eq!(

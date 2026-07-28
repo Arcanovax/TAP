@@ -24,9 +24,10 @@ impl ServerInfo {
         };
 
         if let Some(group) = self.groups.get(&gid)
-            && group.group_leader != peer_addr {
-                return Err(ErrorCode::NOT_GROUP_LEADER);
-            }
+            && group.group_leader != peer_addr
+        {
+            return Err(ErrorCode::NOT_GROUP_LEADER);
+        }
 
         if self.dungeons.contains_key(&gid) {
             return Err(ErrorCode::DUNGEON_ALREADY_IN_PROGRESS);
@@ -131,8 +132,7 @@ impl ServerInfo {
 mod tests {
     use super::*;
     use crate::test_utils::{
-        addr, connect, dg_room, group_with, populated_server, test_dungeon,
-        test_gid,
+        addr, connect, dg_room, group_with, populated_server, test_dungeon, test_gid,
     };
 
     // --- close_dungeon (la fonction elle-même) ---
