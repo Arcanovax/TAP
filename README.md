@@ -98,32 +98,60 @@ Generative AI tools were used during development for:
 
 The server is a Tokio TCP server built around three ideas: **one task per connection**, **one shared world behind a mutex**, and **one central dispatcher** that turns a text line into a handler call.
 
+**Connection lifecycle.** The accept loop spawns one task per client; that task then loops on a `select!` with two arms — the socket and the player's event queue.
+
 ```
-                            ┌──────────────────────────────┐
-   TCP accept loop ────────►│ tokio::spawn (1 task/client) │
-   (server/src/lib.rs)      └──────────────┬───────────────┘
-                                           │
-                       ┌───────────────────┴────────────────────┐
-                       │  select! { read_line(socket)           │
-                       │            rx.recv()  ◄── events }     │
-                       └───────────────────┬────────────────────┘
-                                           │ line
-                              parse_command │
-                                           ▼
-                              Message::Command { name, args }
-                                           │
-                                  handle_request()             ← dispatcher
-                                           │
-                     ┌─────────────────────┴─────────────────────┐
-                     ▼                                           ▼
-            handlers/<command>.rs                    Arc<Mutex<ServerInfo>>
-            (look, move, take, fight, …)             world · connections ·
-                     │                               groups · fights · dungeons
-                     ▼                                           │
-            Message::Response ──► to_str() ──► socket            │
-                                                                 ▼
-                                                    con.tx.send(Message::Event)
-                                                    (mpsc → the target's task)
+   listener.accept()  ──►  tokio::spawn  ──►  one task per connected client
+                                                        │
+      ┌─────────────────────────────────────────────────┴───────────────────┐
+      │  loop { select! {                                                   │
+      │      read_line(socket)  ──►  a command arrived   → command path     │
+      │      rx.recv()          ──►  an event arrived    → sent to socket   │
+      │  } }                                                                │
+      └─────────────────────────────────────────────────────────────────────┘
+```
+
+**Command path** — everything below happens inside that same task, synchronously:
+
+```bash
+   "MOVE north\n"
+        │
+        │  parse_command            (lib.rs)
+        ▼
+   Message::Command { name: "MOVE", args: ["north"] }
+        │
+        │  handle_request           (handlers/handle_request.rs)
+        │    · in-fight / in-dungeon guards
+        │    · Command::parse → exhaustive match
+        ▼
+   handlers/movement.rs
+        │
+        │  lock()  ──────────────►  ┌────────────────────────────────┐
+        │  read the room, move      │     Arc<Mutex<ServerInfo>>     │
+        │  the player, queue the    │  world · connections · groups  │
+        │  ROOM_LEAVE/ROOM_JOIN     │      fights · dungeons         │
+        │  events, drop the guard   └────────────────────────────────┘
+        ▼
+   HandlerOutcome { message, event }
+        │
+        │  advance_quests(event)    (state/quest.rs, runs for every command)
+        ▼
+   Message::Response ──► to_str() ──► "OK room=loc.beach\n" ──► socket
+```
+
+**Event path** — how another player learns about it. The handler never writes to a foreign socket: it pushes into that player's channel, and *their* task does the writing.
+
+```bash
+   task of player A (running the handler)      task of player B (idle in select!)
+   ──────────────────────────────────────      ─────────────────────────────────
+   get_room_receivers(A)
+        │  &[Connection B, …]
+        ▼
+   con.tx.send(Event::ROOM_JOIN) ──► mpsc ──►  rx.recv()
+                                                    │
+                                                    ▼
+                                               to_str() ──► socket B
+                                        "EVT ROOM PRESENCE ENTER alice\n"
 ```
 
 ## Dispatcher / router, not inline handling
@@ -141,7 +169,7 @@ Why a router:
 - **The quest engine is a post-dispatch hook.** Handlers return a `HandlerOutcome { message, event: Option<GameEvent> }`; after dispatch, `advance_quests` replays that event against every quest in progress. Quest logic is therefore written once in `state/quest.rs`, not scattered across every handler that could satisfy a goal.
 - **Handlers stay synchronous and pure-ish.** A handler takes `&SharedServer` and returns a `Message`; it does no I/O. That is what makes them unit-testable without a socket (see `test_utils.rs`).
 
-The trade-off we accepted: the dispatcher is a large `match` and every handler signature goes through it, so a change of signature touches one long file. We preferred that to duplicated guards.
+The trade-off we accepted: the dispatcher is a large `match` and every handler signature goes through it, so a change of signature touches one long file.
 
 ## Concurrency model
 
@@ -176,8 +204,6 @@ Dungeons are the one part of the world that is not in the config: they are gener
 
 The server implements the line-based text protocol of **RFC 42TAP**: UTF-8, one message per line terminated by `\n`, three frame kinds — `OK …`, `ERR <code> <NAME>`, `EVT <category> <type> <data>`. The greeting sent on connect is `OK hello proto=1`.
 
-All wire encoding is concentrated in a single function, `Message::to_str` (`server/src/protocol.rs`), which is the only place in the codebase that produces protocol bytes; it is covered by golden tests asserting the exact string of every response shape and every event. The design document is `server/docs/superpowers/specs/2026-06-24-rfc-text-protocol-design.md`.
-
 The sections below document where we **deviate from the RFC** and why.
 
 ## 1. Extension commands
@@ -205,7 +231,6 @@ Two consequences worth stating explicitly:
 - **Several distinct conditions share code `404`** (`ITEM_NOT_FOUND`, `NPC_NOT_FOUND`, `ROOM_NOT_FOUND`, `FORBIDDEN_ACTION`, `NOT_YOUR_TURN`, `UNUSABLE_ITEM`, …). The numeric code stays the RFC's "not found / not allowed" class, and the **symbolic name carries the precision**: `ERR 404 NOT_YOUR_TURN` is unambiguous for a human and for a client that matches on the name. We preferred that to minting a dozen new numbers that no other implementation would understand.
 - **The `9xx` class separates "your request is malformed" from "your request is invalid in the game world".** A client can decide to log the former and display the latter without a lookup table.
 
-`ErrorCode::name()` is derived from `Debug` rather than a hand-written table, so a new variant can never be emitted with a stale name.
 
 ## 4. `ERR` frames carry no payload — with one exception
 
@@ -225,15 +250,6 @@ Success payloads follow the RFC's hybrid model, chosen per command:
 | `OK <json>` | `LOOK`, `INVENTORY`, `STATUS`, `ATTACK`, `QUEST`, `QUESTS`, and the extension queries |
 
 Deviation: **`Payload::Pair` is a `HashMap`, not a single pair.** The RFC only ever shows one `key=value` per response, but `BUY`, `SELL` and `DICES` need to report two facts at once (e.g. the item and the remaining gold), so they emit several space-separated pairs on one line. The grammar stays `key=value` tokens; only the cardinality changes. Note that `HashMap` iteration order is unspecified, so **clients must parse pairs by key, never by position**.
-
-Two JSON payloads also differ from the RFC's example structures:
-
-- **`STATUS.status`** is serialised straight from the internal `State` enum, i.e. `"Idle"`, `"Discuss"` or `{"InFight":{"target_id":"npc.x"}}` — the RFC's vocabulary is a flat string (`healthy` / `combat` / `talking`). Ours is a superset: it also tells the client *who* the player is fighting, which our clients use to render the combat view without an extra round-trip.
-- **`LOOK.room.exits`** is an object keyed by direction, as the RFC requires, but the keys are capitalised (`"North"`) because they are the `Direction` enum's variant names. Inbound direction parsing is case-insensitive, so `MOVE north` and `MOVE NORTH` both work; only the outbound spelling deviates.
-
-## 6. Inbound parsing
-
-`parse_command` splits on whitespace and never fails: an empty line or an unknown verb becomes `ERR 903 INVALID_COMMAND`, a wrong argument count becomes `ERR 902 INVALID_ARGS`. Two-word commands (`GROUP CREATE`, `DUNGEON JOIN`) are parsed as verb + first argument and resolved inside the handler. Multi-word resource names are rebuilt handler-side with `args.join(" ")`, which is why `TAKE Healing Potion` works.
 
 # Combat System
 
@@ -273,11 +289,26 @@ RUST_LOG=server::handlers::fight=debug,info cargo run -p server server/config.ya
 Each JSON line carries a timestamp, a level, the message and its structured fields, the emitting module (`target`), and the enclosing span:
 
 ```json
-{"timestamp":"2026-07-28T05:56:07.420433Z","level":"INFO",
- "fields":{"message":"command received","command":"connect","params":"[\"remi\"]"},
- "target":"server",
- "span":{"peer_addr":"127.0.0.1:49098","name":"connection"},
- "spans":[{"peer_addr":"127.0.0.1:49098","name":"connection"}]}
+{
+    "timestamp": "2026-07-28T05:56:07.420433Z",
+    "level": "INFO",
+    "fields": {
+        "message": "command received",
+        "command": "connect",
+        "params": "[\"remi\"]"
+    },
+    "target": "server",
+    "span": { 
+            "peer_addr":"127.0.0.1:49098",
+            "name": "connection"
+    },
+    "spans": [
+        {
+            "peer_addr": "127.0.0.1:49098",
+            "name": "connection"
+        }
+    ]
+}
 ```
 
 The key mechanism is the **`connection` span**, opened at `accept()` and attached to the whole client task with `.instrument(span)`. It is created with `peer_addr` filled and `player` empty; `CONNECT` then back-fills it with `tracing::Span::current().record("player", name)`. From that point on, **every line produced anywhere in that task — including deep inside a handler that has no idea what a socket is — carries both the address and the player name**, without a single call site passing them around.
@@ -306,7 +337,6 @@ Live:
 
 ```BASH
 cargo run -p server server/config.yaml            # human-readable stream on stdout
-tail -f logs/tap.log.$(date +%F) | jq -r '"\(.timestamp) \(.span.player // .span.peer_addr) \(.fields.message)"'
 ```
 
 Per-player replay — the span makes it a one-liner:
@@ -331,49 +361,6 @@ The server does not implement rate limiting; the logs are the detection layer, a
 ```BASH
 jq -r 'select(.level == "WARN") | .span.peer_addr' logs/tap.log.$(date +%F) \
   | sort | uniq -c | sort -rn | head
-```
-
-A legitimate client emits near-zero `WARN` lines: it only sends commands it knows. A peer at the top of this list is scanning the command space or speaking the wrong protocol.
-
-**Connection churn / reconnect loop** — count connection openings per address (needs `RUST_LOG=debug`):
-
-```BASH
-jq -r 'select(.fields.message == "TCP connection established") | .span.peer_addr' logs/tap.log.$(date +%F) \
-  | cut -d: -f1 | sort | uniq -c | sort -rn | head
-```
-
-Many connections from one IP with few or no `connected` lines afterwards is a port scan or a connect-flood; the same IP with many successful connects is a multi-boxing player.
-
-**Command flood** — commands per player per minute:
-
-```BASH
-jq -r 'select(.fields.message == "command received")
-       | "\(.timestamp[0:16]) \(.span.player // .span.peer_addr)"' logs/tap.log.$(date +%F) \
-  | sort | uniq -c | sort -rn | head
-```
-
-Human play sits in the low tens per minute; a scripted client stands out by an order of magnitude.
-
-**Chat spam** — `chat sent` logs its `scope` and `body`, so repeated identical bodies, or a single player dominating `GLOBAL`, are visible directly:
-
-```BASH
-jq -r 'select(.fields.message == "chat sent" and .fields.scope == "GLOBAL") | .span.player' \
-  logs/tap.log.$(date +%F) | sort | uniq -c | sort -rn | head
-```
-
-**Name squatting** — a peer repeatedly hitting `201 NAME_IN_USE` or `904 ALREADY_CONNECTED` is trying to take over an existing player name:
-
-```BASH
-jq -r 'select(.fields.code == 201 or .fields.code == 904) | .span.peer_addr' logs/tap.log.$(date +%F) \
-  | sort | uniq -c | sort -rn
-```
-
-**Economy exploits** — combat and quest events log damage, loot and rewards, so an abnormal gold or loot rate per player is computable from the same stream:
-
-```BASH
-jq -r 'select(.fields.message == "enemy defeated") | .span.player' logs/tap.log.$(date +%F) \
-  | sort | uniq -c | sort -rn | head
-```
 
 # Group Contributions
 
