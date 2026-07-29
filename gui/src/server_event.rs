@@ -96,11 +96,13 @@ pub async fn handle_events(game: &mut Game, answer: Vec<&str>){
 			}
 			"ATTACK" => {
 				let mut fight_over = false;
+				let mut enemy_id: Option<String> = None;
 				if let Some(fight) = game.active_fight.as_mut() {
 					if let Ok(new_life) = answer[5].parse::<i32>() {
 						fight.enemy_hp = new_life;
-
+						
 						if fight.enemy_hp <= 0 {
+							enemy_id = Some(fight.enemy.id.clone());
 							fight.chat.push(format!("{} attacked and killed the enemy", answer[3]));
 							fight_over = true;
 						} else {
@@ -117,6 +119,14 @@ pub async fn handle_events(game: &mut Game, answer: Vec<&str>){
 					game.active_fight = None;
 					game.player.gold = None;
 					game.player.inventory.is_load = false;
+					if let Some(id) = enemy_id {
+						if let Some(npc) = game.loaded_npcs.get_mut(&id){
+								npc.npc_talk = Some(NpcTalk{
+									texts: vec!["You Won".to_string()],
+									text_i: 0,
+								});
+							}
+    				}
 				}
 			}
 			"ENEMY" => {
@@ -145,6 +155,9 @@ pub async fn handle_events(game: &mut Game, answer: Vec<&str>){
 							}
 							game.active_fight = None;
 							game.player.state = None;
+							game.dungeon = None;
+							game.player.new_spawn = Spawn::None;
+							game.map_data = None;
 						}
 						else {
 							fight.players.remove(answer[3]);

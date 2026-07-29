@@ -292,6 +292,25 @@ pub async fn handle_response(game: &mut Game, answer: &str, state: &str){
 									game.active_fight = None;
 									game.player.gold = None;
 									game.player.inventory.is_load = false;
+									if let Some(npc) = game.loaded_npcs.get_mut(npc_id) {
+										let mut texts = vec!["You won, you got :".to_string()];
+										if let Some(loot_list) = fight_data.loot{
+											for item_id in &loot_list {
+									
+												if let Some(item) = game.loaded_items.get(item_id) {
+													texts.push(format!(" {}", item.name));
+												
+													}
+											
+												}
+											}
+										let text = vec![texts.join(",")];
+
+										npc.npc_talk = Some(NpcTalk {
+											texts: text,
+											text_i: 0,
+										});
+									}
 								}
 								else{
 									fight.chat.push(format!("You attack and deal {} damage", fight_data.damage));
@@ -692,7 +711,8 @@ pub struct FightData  {
 	pub damage: i32,
     pub fighters: HashMap<String,i32>,
     pub status: Status,
-	pub target_hp: i32
+	pub target_hp: i32,
+	pub loot: Option<Vec<String>>
 }
 
 
