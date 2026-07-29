@@ -600,6 +600,9 @@ fn handle_game(game: &mut Game, map: &Room, map_data: LookData){
 
 		set_default_camera();
 		draw_player_info(game);
+		if !game.is_connected{
+			draw_text("Server Offline", screen_width()/2.0 - 100.0, 25.0, 35.0 as f32, RED);
+		}
 
 		if !game.quests.all.is_empty(){
 			display_quests(game);
@@ -620,6 +623,8 @@ fn handle_game(game: &mut Game, map: &Room, map_data: LookData){
 			draw_item_info(rect, &item);
 		};
 		game.player.inventory.active_item_info = None;
+
+    	
 		draw_menu(game);
 
 	}
