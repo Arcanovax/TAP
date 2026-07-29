@@ -194,7 +194,7 @@ pub async fn handle_response(game: &mut Game, answer: &str, state: &str){
 			match serde_json::from_str::<HashMap<String, NpcData>>(answer) {
 					Ok(npcs_data) => {
 						for (npc_id , npc_data) in npcs_data{
-							let texture: Texture2D = get_npc_texture(&npc_id).await;
+							let texture: Texture2D = get_npc_texture(&npc_id, &npc_data.kind).await;
 							let npc: Npc = Npc::new(
 								npc_id.clone(),
 								texture,
@@ -292,24 +292,27 @@ pub async fn handle_response(game: &mut Game, answer: &str, state: &str){
 									game.active_fight = None;
 									game.player.gold = None;
 									game.player.inventory.is_load = false;
+									game.need_load_npcs = true;
 									if let Some(npc) = game.loaded_npcs.get_mut(npc_id) {
 										let mut texts = vec!["You won, you got :".to_string()];
 										if let Some(loot_list) = fight_data.loot{
 											for item_id in &loot_list {
 									
-												if let Some(item) = game.loaded_items.get(item_id) {
-													texts.push(format!(" {}", item.name));
-												
+												if let Some(item) = game.loaded_items.get(item_id){
+													if item_id != "item.gold"{
+														texts.push(format!(" {}", item.name));
 													}
 											
 												}
 											}
+										}
 										let text = vec![texts.join(",")];
 
 										npc.npc_talk = Some(NpcTalk {
 											texts: text,
 											text_i: 0,
 										});
+										
 									}
 								}
 								else{

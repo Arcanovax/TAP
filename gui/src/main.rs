@@ -530,6 +530,11 @@ fn handle_game(game: &mut Game, map: &Room, map_data: LookData){
 				let npc: Option<Npc> = game.loaded_npcs.get(npc_id).cloned();
 				if let Some(npc) = npc {
 
+					if let NPCKind::Enemy {defeated , .. } = npc.kind{
+						if defeated{
+							draw_rectangle(place.x, place.y, 10.0, 10.0, RED);
+						}
+					}
 					let npc_texture: Texture2D = npc.clone().texture;
 
 					let distance = place.distance(vec2(game.player.x, game.player.y));
