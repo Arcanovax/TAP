@@ -80,3 +80,21 @@ Generative AI tools were used during development for:
 - Debugging
 - Understanding Rust concepts when documentation isn't clear enough
 
+# Architecture
+
+# Protocol Implementation
+
+# Combat System
+
+# Quest System
+
+# World Design
+
+# Server Logging
+
+# Group Contributions
+
+# Building and Running
+
+# Testing
+
