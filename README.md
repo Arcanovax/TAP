@@ -1,4 +1,4 @@
-*This project has been created as part of the 42 curriculum by mthetcha, relaforge, bfitte.*
+*This project has been created as part of the 42 curriculum by mthetcha, relaforg, bfitte.*
 
 # Description
 
@@ -29,12 +29,22 @@ All parts of the project (server, CLI, GUI) are in Rust so the entire project is
 
 # Instructions
 
-You must have version 1.96 of Rust to run the program. If you don't, just follow the next instructions:
+You must have version 1.96+ of Rust to run the program. If you don't, just follow the next instructions:
 
 Download and install the last stable version of rustup
 
 ```BASH
 sudo apt install rustup
+```
+
+or
+
+```BASH
+curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+```
+
+
+```BASH
 rustup default stable
 ```
 
@@ -50,10 +60,12 @@ You must have
 rustc 1.96.0 (ac68faa20 2026-05-25)
 ```
 
+or higher
+
 Once that's done, you can go to the root of the project and run the server with
 
 ```BASH
-cargo run -p server
+cargo run -p server <config_entry_point>
 ```
 
 Once the server is running, in an other terminal, you can run either cli, gui or both with the same command ``cargo run -p <the_service_you_want>``.
@@ -69,7 +81,7 @@ cargo clean                 - Delete the 'target' folder.
 
 # Resources
 
-- **Rust** : [The french version of The Book](https://jimskapt.github.io/rust-book-fr/), [Rust by example](https://doc.rust-lang.org/rust-by-example/index.html)
+- **Rust** : [The french version of The Book](https://jimskapt.github.io/rust-book-fr/), [Rust by example](https://doc.rust-lang.org/rust-by-example/index.html), [Rustlings](https://rustlings.rust-lang.org/)
 - **Tokio** : [Tokio tutorial](https://tokio.rs/tokio/tutorial)
 - **Ratatui** : [Ratatui website](https://ratatui.rs/)
 
