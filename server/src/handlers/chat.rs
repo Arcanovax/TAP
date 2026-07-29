@@ -25,7 +25,7 @@ pub(super) fn chat_request(
         };
     }
     let scope = &args[0];
-    let body = args[1..].join(" ") + "\n";
+    let body = args[1..].join(" ");
     let mut binding = server_info.lock().unwrap();
 
     let sender_name = match binding.get_player(peer_addr) {
