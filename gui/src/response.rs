@@ -483,6 +483,12 @@ pub async fn handle_response(game: &mut Game, answer: &str, state: &str){
 			if  state =="OK"{
 				match serde_json::from_str::<QuestData>(answer) {
 					Ok(quest) => {
+						if let Some(npc) = game.loaded_npcs.get_mut(npc_id) {
+							npc.npc_talk = Some(NpcTalk {
+								texts: vec!["Quest accepted".to_string()],
+								text_i: 0,
+							});
+						}
 						game.quests.all.push(Quest {
 							npc_id: npc_id.to_string(),
 							quest_id: quest.quest_id,
