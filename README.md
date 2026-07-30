@@ -279,10 +279,10 @@ The player has three options during their turn:
 # Quest System
 
 There are four types of quests:
-- Retrieve and deliver an item to an NPC
-- Collect specific items
-- Talk to an NPC
-- Answer a riddle.
+- **Retrieve** and deliver an item to an NPC
+- **Collect** specific items
+- **Talk** to an NPC
+- **Answer** a riddle.
 
 The player structure has two attributes for quest management: 
 - **quests_in_progress**: a HashMap with the quest ID as key and its progress step as value
@@ -299,6 +299,46 @@ If the current step equals the total number of goals, the quest is marked as fin
 The reward is then added to the player's inventory, and the quest ID is moved to finished_quests.
 
 # World Design
+
+## This is our world:
+
+![Our beautiful world](/images/image.png "City")
+
+The central part is The Answer Place at the center of the map, the default spawn room.
+
+## NPCS
+
+There are three different types of NPC in this world: 
+- **Citizen** : Just some dialogs (``TALK`` command).
+- **Merchant** : You can shop with him (``BUY`` or ``SELL`` command) or just talk to him.
+- **Enemy** : You can fight him (``ATTACK`` command) or just talk to him.
+
+Every NPC may have a quest for you (``QUEST`` command), if you want to be sure you can use the ``NPC <id_npc>`` command.
+
+## Items
+
+There are four types of items in this world:
+- **Armor** : Increase your armor value. The armor value is subtracted from the damage you take in combat.
+- **Weapon** : You have a basic attack value of 15. If you have a weapon, you deal damage equal to the weapon's damage value.
+- **Potion** : During a fight (or not) you can drink a potion (it's not really potions, it's mostly just food) to healing you.
+- **Miscellaneous** : Often a quest item or just gold.
+
+## Dungeons
+
+In the Forest (The room on the far right of the map) we can create a dungeon (with the DUNGEON CREATE command on CLI or simply enter the dungeon using the GUI).
+
+Dungeons are procedurally generated using the names of existing rooms. There will be between three and six rooms per dungeon.
+
+The rooms are populated exclusively with enemies from those already included in the configuration.
+
+The created dungeon is linked with a group. If the player is not in one, a group is automatically created.
+
+All members of the group can join the dungeon with the DUNGEON JOIN command.
+
+A dungeon is removed when the group is deleted (all members leaved it or leaved the game) or all enemies or defeated.
+
+You can leave a dungeon by taking the same path you used to enter it but the dungeon is not removed while the above criteria aren't satisfied.
+
 
 # Server Logging
 
