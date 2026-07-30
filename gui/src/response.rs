@@ -306,29 +306,24 @@ pub async fn handle_response(game: &mut Game, answer: &str, state: &str){
 								if fight_data.target_hp <= 0{
 									fight.chat.push(format!("You deal {} damage and killed the enemy", fight_data.damage));
 
-									if let Some(npc) = game.loaded_npcs.get_mut(npc_id) {
-										let mut texts = vec!["You won, you got :".to_string()];
-										if let Some(loot_list) = fight_data.loot{
-											for item_id in &loot_list {
+									let mut texts = vec!["[Server] Well played, you won the fight and get:".to_string()];
+									if let Some(loot_list) = fight_data.loot{
+										for item_id in &loot_list {
 
-												if let Some(item) = game.loaded_items.get(item_id){
-													if item_id != "item.gold"{
-														texts.push(format!(" {}", item.name));
-													}
-
+											if let Some(item) = game.loaded_items.get(item_id){
+												if item_id != "item.gold"{
+													texts.push(format!(" {}", item.name));
 												}
+
 											}
 										}
-										let text = vec![texts.join(" ")];
-										if let NPCKind::Enemy { defeated, .. } = &mut npc.kind {
-											*defeated = true;
-										}
-										npc.npc_talk = Some(NpcTalk {
-											texts: text,
-											text_i: 0,
-										});
-
 									}
+									let text = texts.join(" ");
+									game.chat.channel = 2;
+									game.chat.group_messages.push(text);
+									game.end_dungeon = false;
+
+									
 									game.need_load_npcs = true;
 									game.player.state = None;
 									game.map_data = None;

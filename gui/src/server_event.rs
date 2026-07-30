@@ -119,30 +119,26 @@ pub async fn handle_events(game: &mut Game, answer: Vec<&str>){
 					game.active_fight = None;
 					game.player.gold = None;
 					game.player.inventory.is_load = false;
-					if let Some(id) = enemy_id {
-						if let Some(npc) = game.loaded_npcs.get_mut(&id){
-								let mut texts = vec!["You won, you got :".to_string()];
-								let loot_str = answer[6];
-								for item_id in loot_str.split("//") {
+					
+					
+					let loot_str = answer[6];
+					let mut texts = vec!["[Server] Well played, you won the fight and get:".to_string()];
+					
+					for item_id in loot_str.split("//") {
 
-									if let Some(item) = game.loaded_items.get(item_id){
-										if item_id != "item.gold"{
-											texts.push(format!(" {}", item.name));
-										}
-
-									}
-								
-								}
-								let text = vec![texts.join(" ")];
-								if let NPCKind::Enemy { defeated, .. } = &mut npc.kind {
-									*defeated = true;
-								}
-								npc.npc_talk = Some(NpcTalk {
-									texts: text,
-									text_i: 0,
-								});
+						if let Some(item) = game.loaded_items.get(item_id){
+							if item_id != "item.gold"{
+								texts.push(format!(" {}", item.name));
 							}
-    				}
+
+						}
+					}
+						
+						let text = texts.join(" ");
+						game.chat.channel = 2;
+						game.chat.group_messages.push(text);
+						game.end_dungeon = false;
+    				
 				}
 			}
 			"ENEMY" => {

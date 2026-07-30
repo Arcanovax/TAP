@@ -550,12 +550,16 @@ if game.player.new_spawn != Spawn::None && game.player.new_spawn != Spawn::Cente
 			if let Some(place) = npc_slots.pop() {
 				let npc: Option<Npc> = game.loaded_npcs.get(npc_id).cloned();
 				if let Some(npc) = npc {
+					if let NPCKind::Enemy {defeated , .. } = npc.kind{
+						if defeated{continue;}
+					}
 
 					let npc_texture: Texture2D = npc.clone().texture;
 					let distance = place.distance(vec2(game.player.x, game.player.y));
 					if distance < activation_distance {
 						active_npc = Some((place, npc.clone()));
 					}
+
 
 					draw_texture_ex(
 						&npc_texture,
@@ -566,25 +570,6 @@ if game.player.new_spawn != Spawn::None && game.player.new_spawn != Spawn::Cente
 					);
 
 					npc_texture.set_filter(FilterMode::Nearest);
-					if let NPCKind::Enemy {defeated , .. } = npc.kind{
-						if defeated{
-							let dead_param = DrawTextureParams {
-								dest_size: Some(vec2(7.5, 7.5)),
-								..Default::default()
-							};
-							if let Some(item) = game.loaded_items.get("dead").cloned() {
-								let dead_texture = item.texture;
-								draw_texture_ex(
-									&dead_texture,
-									place.x+5.0,
-									place.y + 10.0,
-									RED,
-									dead_param.clone()
-								);
-								dead_texture.set_filter(FilterMode::Nearest);
-							}
-						}
-					}
 				}
 
 			} else {
