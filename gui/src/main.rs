@@ -551,7 +551,7 @@ if game.player.new_spawn != Spawn::None && game.player.new_spawn != Spawn::Cente
 				let npc: Option<Npc> = game.loaded_npcs.get(npc_id).cloned();
 				if let Some(npc) = npc {
 					if let NPCKind::Enemy {defeated , .. } = npc.kind{
-						if defeated{continue;}
+						if defeated && game.in_dungeon{continue;}
 					}
 
 					let npc_texture: Texture2D = npc.clone().texture;
