@@ -449,6 +449,9 @@ if game.player.new_spawn != Spawn::None && game.player.new_spawn != Spawn::Cente
 				game.pending_action = PendingAction::Look;
 			}
 			else{
+				game.chat.channel = 2;
+				let rp: String = format!("[Server] You Beat the dungeon !");
+				game.chat.group_messages.push(rp);
 				game.end_dungeon = false;
 			}
 			

@@ -202,6 +202,10 @@ pub async fn handle_response(game: &mut Game, answer: &str, state: &str){
 		PendingAction::Npcs => {
 			match serde_json::from_str::<HashMap<String, NpcData>>(answer) {
 					Ok(npcs_data) => {
+						let not_only_enemy = npcs_data.values().any(|npc| matches!(npc.kind, NPCKind::Citizen));
+						if not_only_enemy && game.in_dungeon{
+							game.end_dungeon = true;
+						}
 						for (npc_id , npc_data) in npcs_data{
 							let texture: Texture2D = get_npc_texture(&npc_id, &npc_data.kind).await;
 							let npc: Npc = Npc::new(
@@ -325,6 +329,7 @@ pub async fn handle_response(game: &mut Game, answer: &str, state: &str){
 										});
 
 									}
+									game.need_load_npcs = true;
 									game.player.state = None;
 									game.map_data = None;
 									game.active_fight = None;
