@@ -211,7 +211,6 @@ pub async fn handle_response(game: &mut Game, answer: &str, state: &str){
 								npc_data.kind,
 								npc_data.has_quest,
 							);
-
 							game.loaded_npcs.insert(npc_id, npc);
 						}
 						game.need_load_npcs = false;
@@ -249,12 +248,17 @@ pub async fn handle_response(game: &mut Game, answer: &str, state: &str){
 				if let Some(val_str) = answer.strip_prefix("room=") {
 					match val_str.trim().parse::<String>() {
 						Ok(spawn) => {
+							
 							game.player.new_spawn = new_spawn.clone();
 							if let Some(ref mut dungeon) = game.dungeon{
 								dungeon.walls_loaded = false;
 							}
 							if let Some(ref mut mapdata) = game.map_data{
-								mapdata.room.id =spawn.to_string();
+								if spawn == "room.forest" && game.in_dungeon{
+									game.in_dungeon = false;
+								}
+								
+								mapdata.room.id = spawn.to_string();
 							}
 						}
 						Err(e) => {
@@ -297,12 +301,7 @@ pub async fn handle_response(game: &mut Game, answer: &str, state: &str){
 								fight.enemy_hp = fight_data.target_hp;
 								if fight_data.target_hp <= 0{
 									fight.chat.push(format!("You deal {} damage and killed the enemy", fight_data.damage));
-									game.player.state = None;
-									game.map_data = None;
-									game.player.new_spawn = Spawn::Center;
-									game.active_fight = None;
-									game.player.gold = None;
-									game.player.inventory.is_load = false;
+
 									if let Some(npc) = game.loaded_npcs.get_mut(npc_id) {
 										let mut texts = vec!["You won, you got :".to_string()];
 										if let Some(loot_list) = fight_data.loot{
@@ -316,7 +315,7 @@ pub async fn handle_response(game: &mut Game, answer: &str, state: &str){
 												}
 											}
 										}
-										let text = vec![texts.join(",")];
+										let text = vec![texts.join(" ")];
 										if let NPCKind::Enemy { defeated, .. } = &mut npc.kind {
 											*defeated = true;
 										}
@@ -326,6 +325,11 @@ pub async fn handle_response(game: &mut Game, answer: &str, state: &str){
 										});
 
 									}
+									game.player.state = None;
+									game.map_data = None;
+									game.active_fight = None;
+									game.player.gold = None;
+									game.player.inventory.is_load = false;
 								}
 								else{
 									fight.chat.push(format!("You attack and deal {} damage", fight_data.damage));
@@ -591,6 +595,7 @@ pub async fn handle_response(game: &mut Game, answer: &str, state: &str){
 		PendingAction::DungeonCreate => {
 			if state=="OK"{
 				game.dungeon = Some(Dungeon::new());
+				game.in_dungeon = true;
 			}
 			else if answer.contains("NOT_GROUP_LEADER"){
 				game.player.y += 10.0;
@@ -604,6 +609,7 @@ pub async fn handle_response(game: &mut Game, answer: &str, state: &str){
 		PendingAction::DungeonJoin => {
 			if state=="OK"{
 				game.dungeon = Some(Dungeon::new());
+				game.in_dungeon = true;
 			}
 			else{
 				game.dungeon = Some(Dungeon::new());
