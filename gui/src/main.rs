@@ -614,7 +614,8 @@ fn handle_game(game: &mut Game, map: &Room, map_data: LookData){
 		set_default_camera();
 		draw_player_info(game);
 		if !game.is_connected{
-			draw_text("Server Offline", screen_width()/2.0 - 100.0, 25.0, 35.0 as f32, RED);
+			game.is_auth = false;
+			game.map_data = None;
 		}
 
 		if !game.quests.all.is_empty(){
