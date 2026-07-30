@@ -10,7 +10,8 @@ pub enum ItemKind {
     Weapon { damages: i32 },
     Armor { protection: i32 },
     Miscellaneous,
-	QuestItem
+	QuestItem,
+	None
 }
 
 #[derive(Clone, PartialEq)]
@@ -41,6 +42,7 @@ pub async fn get_item_texture(item_id: &str) -> Texture2D {
         "item.cheese" => "assets/items/cheese.png",
         "item.bread" => "assets/items/bread.png",
         "item.breastplate" => "assets/items/breastplate.png",
+		"dead" => "assets/items/dead.png",
         _ => return Texture2D::empty(),
     };
 

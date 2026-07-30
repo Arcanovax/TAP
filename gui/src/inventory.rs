@@ -101,6 +101,7 @@ pub fn draw_item_info(rect: Rect, item: &Item){
         ItemKind::Armor { protection } => ("Armor", Some(format!("Protection: {}", protection))),
         ItemKind::Miscellaneous => ("Miscellaneous", None),
 		ItemKind::QuestItem => ("Quest Item", None),
+		ItemKind::None => ("None", None),
     };
 	let item_type = format!("Type: {}", type_name);
 

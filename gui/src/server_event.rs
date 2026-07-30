@@ -50,7 +50,7 @@ pub async fn handle_events(game: &mut Game, answer: Vec<&str>){
 								let i: usize = pos.parse().unwrap_or(0) + 1;
 								quest.progress = format!("{}/{}", i, all);
 								}
-								
+
 
 							}
 						}
@@ -100,7 +100,7 @@ pub async fn handle_events(game: &mut Game, answer: Vec<&str>){
 				if let Some(fight) = game.active_fight.as_mut() {
 					if let Ok(new_life) = answer[5].parse::<i32>() {
 						fight.enemy_hp = new_life;
-						
+
 						if fight.enemy_hp <= 0 {
 							enemy_id = Some(fight.enemy.id.clone());
 							fight.chat.push(format!("{} attacked and killed the enemy", answer[3]));
@@ -119,6 +119,7 @@ pub async fn handle_events(game: &mut Game, answer: Vec<&str>){
 					game.active_fight = None;
 					game.player.gold = None;
 					game.player.inventory.is_load = false;
+					println!("RSSEETTT");
 					if let Some(id) = enemy_id {
 						if let Some(npc) = game.loaded_npcs.get_mut(&id){
 								npc.npc_talk = Some(NpcTalk{
