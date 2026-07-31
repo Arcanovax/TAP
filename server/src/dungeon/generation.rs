@@ -1,6 +1,6 @@
 use crate::structures::{
     dungeon::{Dungeon, format_dungeon_id},
-    enums::{exits::Direction, npc_kind::NPCKind},
+    enums::{exits::Direction, item_kind::ItemKind, npc_kind::NPCKind},
     game::World,
     room::Room,
 };
@@ -87,8 +87,12 @@ fn populate_rooms(world: &World, dungeon: &mut Dungeon, gid: Uuid) {
         ennemy_index += i;
 
         let mut i = 0;
+        let item_pool = world
+            .items
+            .iter()
+            .filter(|(_, item)| !matches!(item.kind, ItemKind::QuestItem));
         while i < nb_item {
-            let Some((id, item)) = world.items.iter().clone().choose(&mut rand::rng()) else {
+            let Some((id, item)) = item_pool.clone().choose(&mut rand::rng()) else {
                 break;
             };
             room.items.push(id.clone().into());
