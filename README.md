@@ -12,10 +12,10 @@ The goal of this project is to build a Multi-User Dungeon (MUD) — a shared-wor
 
 The primary technical objective is to design a TCP server capable of handling multiple concurrent connections while executing asynchronous code to manage real-time events.
 
-The project is divided into three main components: 
+The project is divided into three main components:
 - **Server:** Manages the persistent game world, static data, and asynchronous interactions between players.
 - **CLI Client:** Allows users to interact with the game via terminal commands, running asynchronously to process and display events sent by the server.
-- **GUI Client:** Provides the same real-time functionality and asynchronous event handling as the CLI, but within a graphical interface.  
+- **GUI Client:** Provides the same real-time functionality and asynchronous event handling as the CLI, but within a graphical interface.
 
 ### Overview
 
@@ -262,7 +262,7 @@ The first on the list play at first, then it's the second, etc... When the last 
 ## Damages
 
 The basic attack deals 15 damages to the enemy. It can be increase by weapons. You deal as much damage as your best weapon. The enemies don't have any defenses.
-When it's enemy's turn, if there is just one player, he is the target (obviously) but if there are more than one, I retrieve the exact time since the 1 January 1970 and I extract the nanoseconds of this time. 
+When it's enemy's turn, if there is just one player, he is the target (obviously) but if there are more than one, I retrieve the exact time since the 1 January 1970 and I extract the nanoseconds of this time.
 
 Next, I calculate the remainder when these nanoseconds are divided by the number of fighters so I have a result between 0 and number_of_fighters - 1. And I use it to chose a target in the fighters list.
 
@@ -284,7 +284,7 @@ There are four types of quests:
 - **Talk** to an NPC
 - **Answer** a riddle.
 
-The player structure has two attributes for quest management: 
+The player structure has two attributes for quest management:
 - **quests_in_progress**: a HashMap with the quest ID as key and its progress step as value
 - **finished_quest**: a HashSet containing the IDs of completed quests.
 
@@ -308,7 +308,7 @@ The central part is The Answer Place at the center of the map, the default spawn
 
 ## NPCS
 
-There are three different types of NPC in this world: 
+There are three different types of NPC in this world:
 - **Citizen** : Just some dialogs (``TALK`` command).
 - **Merchant** : You can shop with him (``BUY`` or ``SELL`` command) or just talk to him.
 - **Enemy** : You can fight him (``ATTACK`` command) or just talk to him.
@@ -381,7 +381,7 @@ Each JSON line carries a timestamp, a level, the message and its structured fiel
         "params": "[\"remi\"]"
     },
     "target": "server",
-    "span": { 
+    "span": {
             "peer_addr":"127.0.0.1:49098",
             "name": "connection"
     },
@@ -444,7 +444,126 @@ The server does not implement rate limiting; the logs are the detection layer, a
 ```BASH
 jq -r 'select(.level == "WARN") | .span.peer_addr' logs/tap.log.$(date +%F) \
   | sort | uniq -c | sort -rn | head
+```
 
 # Group Contributions
+
+The initial project consisted of three parts, which were then assigned to each member of the group
+
+- **Relaforg**: implemented the `server`. This includes TCP protocol handling, world management, persistence, command routing, event broadcasting, quest progression, group and dungeon systems, as well as error handling.
+
+- **Bfitte**: implemented the command-line client, the `cli`. This includes the terminal interface, user input handling, command distribution, and the display of server responses and events in a text-based environment.
+He also contributed to the server’s functionality, particularly in adding the combat system and managing the game’s narrative.
+
+
+- **Mthetcha**: Implemented the graphical client, the `gui`. This includes the game’s main user interface, the rendering of rooms and NPCs, the display of the inventory, character status, interactions, the visual integration of combat, dialogs, and world events.
+This also includes the creation of maps, which were made using sprites from the game Stardew Valley.
+
+
 # Building and Running
+
+This project uses Cargo as its build system and workspace manager.
+
+## Prerequisites
+
+- Rust 1.96 or newer
+- A terminal with access to the repository root
+
+Install or update Rust if needed:
+
+```bash
+rustup default stable
+rustc --version
+```
+
+## Build the workspace
+
+From the repository root, build all crates:
+
+```bash
+cargo build
+```
+
+Or build a specific component:
+
+```bash
+cargo build -p server
+cargo build -p cli
+cargo build -p gui
+```
+
+## Run the server
+
+The server needs a configuration entry point. The default config file is:
+
+```bash
+cargo run -p server server/config.yaml
+```
+
+This starts the game world and listens for incoming client connections.
+
+## Run the CLI client
+
+Open a second terminal and start the terminal client:
+
+```bash
+cargo run -p cli
+```
+
+The CLI connects to the server and lets the player interact with the world through text commands.
+
+## Run the GUI client
+
+Open a third terminal and start the graphical client:
+
+```bash
+cargo run -p gui
+```
+
+The GUI client connects to the same server and provides a visual experience for exploration, combat, quests, and inventory.
+
+## Optional: logging
+
+To see more detailed server logs during development:
+
+```bash
+RUST_LOG=debug cargo run -p server server/config.yaml
+```
+
 # Testing
+
+The project can be tested in several ways depending on the feature you want to validate.
+
+## Multiplayer testing
+
+To test multiplayer behavior:
+
+1. Start the server in one terminal.
+2. Launch two clients in separate terminals, for example two CLI instances or one CLI and one GUI.
+3. Connect each client with a different name.
+4. Use commands such as `WHO`, `CHAT`, `MOVE`, and `LOOK` to verify that players appear, messages are broadcast, and room changes are propagated correctly.
+
+This verifies that presence updates, chat propagation, and room events work across multiple connections.
+
+## Combat system testing
+
+To test combat:
+
+1. Move to a room containing an enemy NPC.
+2. Use `ATTACK` to start or continue combat.
+3. Verify that HP changes, damage values, and turn order behave as expected.
+4. Try `CONSUME` to consume an item and regain health
+5. Try `FLEE` to confirm that the fight ends properly and that the player is penalized as intended.
+
+This exercises the server-side combat logic, turn management, and combat event propagation to the clients.
+
+## Quest mechanics testing
+
+To test quests:
+
+1. Talk to an NPC that offers a quest using `QUEST`.
+2. You will obtain the quest, then follow its steps (for example, collecting items, speaking to NPCs, or answering a riddle).
+3. Observe quest updates in the client and confirm that rewards are granted once the quest is completed.
+4. Check that the quest state is correctly saved and updated after subsequent actions.
+
+This verifies the quest progression engine, reward handling, and event notifications from the server.
