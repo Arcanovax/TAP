@@ -12,7 +12,8 @@ pub enum NPCKind {
 		max_hp: u32,
 		damages: Option<u32>,
 		loot: Option<Vec<String>>,
-		defeated: bool
+		defeated: bool,
+		kind: String
 	},
 	Citizen
 }
@@ -235,10 +236,9 @@ fn handle_shop(game: &mut Game, npc: &Npc){
 	}
 }
 
-pub async fn get_npc_texture(item_id: &str) -> Texture2D {
-    let path = match item_id {
+pub async fn get_npc_texture(item_id: &str, kind: &NPCKind) -> Texture2D {
+    let mut path = match item_id {
         "npc.city_gard" => "gui/assets/npc/city_gard.png",
-		"npc.goblins" => "gui/assets/npc/goblin.png",
 		"npc.h" => "gui/assets/npc/goblin.png",
 		"npc.blacksmith" => "gui/assets/npc/black-smith.png",
 		"npc.old_man" => "gui/assets/npc/old_man.png",
@@ -258,6 +258,14 @@ pub async fn get_npc_texture(item_id: &str) -> Texture2D {
 		
         _ => "gui/assets/npc/monster.png",
     };
+	if let NPCKind::Enemy {kind , .. } = kind{
+		path = match  kind.as_str() {
+			"goblin" => "gui/assets/npc/goblin.png",
+			"politician" => "gui/assets/npc/politician.png",
+			"dragon" => "gui/assets/npc/dragon.png",
+			_ => "gui/assets/npc/monster.png",
+		}
+	}
 
     load_texture(path).await.unwrap()
 }

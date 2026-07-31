@@ -56,6 +56,18 @@ pub fn event_handling(world: &mut World, answer: Vec<&str>) {
                 }
                 _ => {}
             },
+            "DUNGEON" => {
+                match answer[2] {
+                    "END" => {
+                        world.output.push_back("[Server] Congratulation! This dungeon is cleared!".to_string());
+                        world.dungeon = false;
+                        let _ =world.tx_to_serv.try_send(String::from("LOOK\n"));
+                        world.action = PendingAction::ClientLook;
+                    },
+                    "CREATE" => {},
+                    _ => {}
+                }
+            }
             "STATS" => {}
             "FIGHT" => {
                 match answer[2] {

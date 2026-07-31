@@ -76,6 +76,25 @@ struct Player {
 	gold: Option<i32>
 }
 
+
+impl Player {
+    pub fn new() -> Self {
+        Self {
+			x: 0.0,
+            y: 0.0,
+            line: 0,
+            row: 0,
+            is_mooving: false,
+            speed: 1.8,
+			inventory: Inventory::new(),
+            name:"".to_string(),
+			new_spawn: Spawn::Center,
+			state: None,
+			gold: None
+		}
+	}
+}
+
 #[derive(Deserialize, Debug, Clone)]
 struct PlayerState{
 	hp: i32,
@@ -115,6 +134,8 @@ struct Game {
 	pub dungeon: Option<Dungeon>,
 	pub gambling: Games,
 	pub is_connected: bool,
+	pub in_dungeon: bool,
+	pub end_dungeon: bool
 }
 
 
@@ -207,19 +228,7 @@ async fn main() {
 		focus: InputFocus::Game,
         chat: Chat::new(),
         menu: Menu::new(),
-        player: Player {
-            x: 0.0,
-            y: 0.0,
-            line: 0,
-            row: 0,
-            is_mooving: false,
-            speed: 1.8,
-			inventory: Inventory::new(),
-            name:"".to_string(),
-			new_spawn: Spawn::Center,
-			state: None,
-			gold: None
-        },
+        player: Player::new(),
         skin:texture,
 		tx_to_serv: tx_to_serv,
         rx_from_serv: rx_from_serv,
@@ -243,7 +252,9 @@ async fn main() {
 		mouse: Vec2::new(0.0, 0.0),
 		dungeon: None,
 		gambling: Games::new(),
-		is_connected: false
+		is_connected: false,
+		in_dungeon: false,
+		end_dungeon: false
     };
 
 	let rooms: std::collections::HashMap<String, rooms::Room> = get_rooms().await;
@@ -392,7 +403,7 @@ async fn main() {
 							if let Some(room_data) = room_data {
 								if let Some(dungeon) = &mut game.dungeon {
 									let map: Room = get_dungeon_map(dungeon, &room_data).await;
-
+									
 									handle_game(&mut game, &map, map_data);
 								}
 							}
@@ -401,6 +412,7 @@ async fn main() {
 								Some(room_data) => room_data,
 								None => &get_empty_room(),
 							};
+			
 							handle_game(&mut game, map, map_data);
 						}
 						} else {
@@ -423,7 +435,7 @@ async fn main() {
 
 
 fn handle_game(game: &mut Game, map: &Room, map_data: LookData){
-	if game.player.new_spawn != Spawn::None && game.player.new_spawn != Spawn::Center{
+if game.player.new_spawn != Spawn::None && game.player.new_spawn != Spawn::Center{
 			let spawn: Vec2 = map.spawns
 				.get(&game.player.new_spawn)
 				.or_else(|| map.spawns.get(&Spawn::Center))
@@ -432,8 +444,17 @@ fn handle_game(game: &mut Game, map: &Room, map_data: LookData){
 			game.player.x = spawn.x;
 			game.player.y = spawn.y;
 			game.player.new_spawn = Spawn::None;
-			game.tx_to_serv.try_send("LOOK\n".to_string()).ok();
-			game.pending_action = PendingAction::Look;
+			if !game.end_dungeon{
+				game.tx_to_serv.try_send("LOOK\n".to_string()).ok();
+				game.pending_action = PendingAction::Look;
+			}
+			else{
+				game.chat.channel = 2;
+				let rp: String = format!("[Server] You Beat the dungeon !");
+				game.chat.group_messages.push(rp);
+				game.end_dungeon = false;
+			}
+			
 		}
 
 
@@ -529,13 +550,16 @@ fn handle_game(game: &mut Game, map: &Room, map_data: LookData){
 			if let Some(place) = npc_slots.pop() {
 				let npc: Option<Npc> = game.loaded_npcs.get(npc_id).cloned();
 				if let Some(npc) = npc {
+					if let NPCKind::Enemy {defeated , .. } = npc.kind{
+						if defeated && game.in_dungeon{continue;}
+					}
 
 					let npc_texture: Texture2D = npc.clone().texture;
-
 					let distance = place.distance(vec2(game.player.x, game.player.y));
 					if distance < activation_distance {
-						active_npc = Some((place, npc));
+						active_npc = Some((place, npc.clone()));
 					}
+
 
 					draw_texture_ex(
 						&npc_texture,
@@ -595,6 +619,11 @@ fn handle_game(game: &mut Game, map: &Room, map_data: LookData){
 
 		set_default_camera();
 		draw_player_info(game);
+		if !game.is_connected{
+			game.is_auth = false;
+			game.map_data = None;
+			game.player = Player::new();
+		}
 
 		if !game.quests.all.is_empty(){
 			display_quests(game);
@@ -615,6 +644,8 @@ fn handle_game(game: &mut Game, map: &Room, map_data: LookData){
 			draw_item_info(rect, &item);
 		};
 		game.player.inventory.active_item_info = None;
+
+
 		draw_menu(game);
 
 	}

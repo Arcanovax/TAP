@@ -115,6 +115,7 @@ impl ServerInfo {
         for addr in addrs {
             if let Some(con) = self.connections.get_mut(&addr) {
                 con.player.location = entrance.clone();
+                let _ = con.tx.send(Message::Event(EventType::DUNGEON_END));
                 for tx in &receiver_txs {
                     let _ = tx.send(Message::Event(EventType::ROOM_JOIN {
                         player_name: con.player.name.clone(),

@@ -86,7 +86,7 @@ pub fn draw_group(game: &mut Game){
 
 		if let Some(invitation) = game.group.invitation.as_ref(){
 			let invit_rect: Rect = Rect::new(rect.x ,rect.y+ 100.0, rect.w, 60.0);
-			let text: String = format!("{} invate you in his group",invitation.sender);
+			let text: String = format!("{} invited you in his group",invitation.sender);
 			draw_text_center(invit_rect, &text, 18);
 			let btn_weight = 100.0;
 			let space: f32 = 15.0;

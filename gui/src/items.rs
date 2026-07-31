@@ -10,7 +10,8 @@ pub enum ItemKind {
     Weapon { damages: i32 },
     Armor { protection: i32 },
     Miscellaneous,
-	QuestItem
+	QuestItem,
+	None
 }
 
 #[derive(Clone, PartialEq)]

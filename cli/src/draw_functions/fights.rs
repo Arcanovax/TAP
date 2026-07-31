@@ -125,7 +125,7 @@ pub fn draw_room_fight(world: &mut World, frame: &mut Frame) {
                 .title_alignment(Center),
         )
         .gauge_style(Style::new().fg(gauge_color).on_blue().italic())
-        .percent(world.player.hp as u16);
+        .percent(world.player.hp.min(100) as u16);
 
     frame.render_widget(hp_bar, left_layout[1]);
 
@@ -196,7 +196,7 @@ pub fn draw_room_fight(world: &mut World, frame: &mut Frame) {
                             .title_alignment(Center),
                     )
                     .gauge_style(Style::new().fg(gauge_color).on_blue().italic())
-                    .percent(*hp as u16);
+                    .percent(*hp.min(&100) as u16);
                 frame.render_widget(hp_bar, fighters_layout[x]);
                 counter += 1;
             }
@@ -224,7 +224,7 @@ pub fn draw_room_fight(world: &mut World, frame: &mut Frame) {
                         .title_alignment(Center),
                 )
                 .gauge_style(Style::new().fg(gauge_color).on_blue().italic())
-                .percent(*hp as u16);
+                .percent(*hp.min(&100) as u16);
 
             frame.render_widget(hp_bar, fighters_layout[counter]);
             counter += 1;

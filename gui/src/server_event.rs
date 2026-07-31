@@ -50,7 +50,7 @@ pub async fn handle_events(game: &mut Game, answer: Vec<&str>){
 								let i: usize = pos.parse().unwrap_or(0) + 1;
 								quest.progress = format!("{}/{}", i, all);
 								}
-								
+
 
 							}
 						}
@@ -101,6 +101,7 @@ pub async fn handle_events(game: &mut Game, answer: Vec<&str>){
 						fight.enemy_hp = new_life;
 
 						if fight.enemy_hp <= 0 {
+	
 							fight.chat.push(format!("{} attacked and killed the enemy", answer[3]));
 							fight_over = true;
 						} else {
@@ -117,6 +118,26 @@ pub async fn handle_events(game: &mut Game, answer: Vec<&str>){
 					game.active_fight = None;
 					game.player.gold = None;
 					game.player.inventory.is_load = false;
+					game.need_load_npcs = true;
+					
+					let loot_str = answer[6];
+					let mut texts = vec!["[Server] Well played, you won the fight and get:".to_string()];
+					
+					for item_id in loot_str.split("//") {
+
+						if let Some(item) = game.loaded_items.get(item_id){
+							if item_id != "item.gold"{
+								texts.push(format!(" {}", item.name));
+							}
+
+						}
+					}
+						
+						let text = texts.join(" ");
+						game.chat.channel = 2;
+						game.chat.group_messages.push(text);
+						game.end_dungeon = false;
+
 				}
 			}
 			"ENEMY" => {
@@ -145,6 +166,9 @@ pub async fn handle_events(game: &mut Game, answer: Vec<&str>){
 							}
 							game.active_fight = None;
 							game.player.state = None;
+							game.dungeon = None;
+							game.player.new_spawn = Spawn::None;
+							game.map_data = None;
 						}
 						else {
 							fight.players.remove(answer[3]);
