@@ -48,7 +48,7 @@ fn chat_global_broadcasts_to_others_not_sender() {
     assert_eq!(
         rx_bob.try_recv().expect("bob should receive the chat"),
         Message::Event(EventType::CHAT {
-            body: "hello world\n".to_string(),
+            body: "hello world".to_string(),
             sender: "alice".to_string(),
             scope: ChatScope::GLOBAL,
         })
