@@ -7,7 +7,7 @@ use crate::structures::enums::error::ErrorCode;
 use crate::structures::room::Owner;
 use redb::Database;
 use std::net::SocketAddr;
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
 use std::sync::{Arc, Mutex};
 use std::time::Duration;
 use tokio::io::{AsyncBufReadExt, AsyncWriteExt, BufReader};
