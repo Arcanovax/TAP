@@ -403,7 +403,7 @@ async fn main() {
 							if let Some(room_data) = room_data {
 								if let Some(dungeon) = &mut game.dungeon {
 									let map: Room = get_dungeon_map(dungeon, &room_data).await;
-									
+
 									handle_game(&mut game, &map, map_data);
 								}
 							}
@@ -412,7 +412,7 @@ async fn main() {
 								Some(room_data) => room_data,
 								None => &get_empty_room(),
 							};
-			
+
 							handle_game(&mut game, map, map_data);
 						}
 						} else {
@@ -435,7 +435,7 @@ async fn main() {
 
 
 fn handle_game(game: &mut Game, map: &Room, map_data: LookData){
-if game.player.new_spawn != Spawn::None && game.player.new_spawn != Spawn::Center{
+		if game.player.new_spawn != Spawn::None && game.player.new_spawn != Spawn::Center{
 			let spawn: Vec2 = map.spawns
 				.get(&game.player.new_spawn)
 				.or_else(|| map.spawns.get(&Spawn::Center))
@@ -454,7 +454,7 @@ if game.player.new_spawn != Spawn::None && game.player.new_spawn != Spawn::Cente
 				game.chat.group_messages.push(rp);
 				game.end_dungeon = false;
 			}
-			
+
 		}
 
 
