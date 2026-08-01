@@ -1,0 +1,185 @@
+
+use crate::*;
+const RECT_MENU: Vec2 = vec2(250.0, 300.0);
+const RECT_ICON: Vec2 = vec2(70.0, 40.0);
+
+
+
+pub struct Invitation {
+	pub sender: String,
+}
+
+
+pub struct Group {
+	pub is_active: bool,
+	pub in_group: bool,
+	pub typed: String,
+	pub chat_is_active: bool,
+	pub invitation: Option<Invitation>,
+	pub name: String,
+	pub grouplist: Vec<String>,
+	pub invite_info: Option<InviteInfo>,
+	pub owner: String
+}
+
+
+pub struct InviteInfo{
+	pub state: String,
+	pub time: f64,
+	pub color: Color,
+}
+
+
+impl Group {
+	pub fn new() -> Self {
+		Self {
+			is_active: false,
+			in_group: false,
+			typed: String::new(),
+			chat_is_active: false,
+			invitation: None,
+			name: String::new(),
+			grouplist: Vec::new(),
+			invite_info: None,
+			owner: String::new()
+			}
+	}
+}
+
+fn send_group_invite(game: &mut Game){
+	let rq: String = format!("GROUP INVITE {}\n",game.group.typed);
+	game.tx_to_serv.try_send(rq).ok();
+	game.pending_action = PendingAction::GroupInvite(game.group.typed.clone());
+	game.group.typed = String::new();
+}
+
+
+
+pub fn draw_group(game: &mut Game){
+	let mouse = game.mouse;
+	let rect: Rect = get_rect_right(RECT_MENU, screen_height());
+	draw_rectangle(rect.x, rect.y, rect.w, rect.h, Color::new(0.0, 0.0, 0.0, 0.5));
+
+
+
+	if !game.group.in_group {
+		let input_group_name: Rect = Rect::new(rect.x+(rect.w/2.0-(100.0)),rect.y+30.0, 200.0, 40.0);
+
+		draw_text("Group name:", input_group_name.x, input_group_name.y-2.5, 25.0, WHITE);
+		let input_hovered: bool = input_text(input_group_name, &mut game.group.typed,game.focus == InputFocus::GroupMenu,  mouse);
+		if input_hovered && is_mouse_button_pressed(MouseButton::Left)  {
+			game.focus = InputFocus::GroupMenu;
+			game.group.chat_is_active = true;
+		}
+		else if !input_hovered && is_mouse_button_pressed(MouseButton::Left) {
+			game.group.chat_is_active = false;
+			game.focus = InputFocus::Game;
+		}
+		let btn: Rect = Rect::new(rect.x+(rect.w/2.0-(100.0)),rect.y+80.0, 200.0, 30.0);
+		if get_button(btn, "Create group", 20, WHITE,mouse) {
+			let rq: String = format!("GROUP CREATE {}\n",game.group.typed);
+			game.tx_to_serv.try_send(rq).ok();
+			game.pending_action = PendingAction::GroupCreate(game.group.typed.clone());
+			game.group.typed = String::new();
+		}
+
+
+		if let Some(invitation) = game.group.invitation.as_ref(){
+			let invit_rect: Rect = Rect::new(rect.x ,rect.y+ 100.0, rect.w, 60.0);
+			let text: String = format!("{} invited you in his group",invitation.sender);
+			draw_text_center(invit_rect, &text, 18);
+			let btn_weight = 100.0;
+			let space: f32 = 15.0;
+			let join_btn: Rect = Rect::new(invit_rect.x + space,invit_rect.y + 50.0, btn_weight, 20.0);
+			let deny_btn: Rect = Rect::new(invit_rect.x + invit_rect.w - btn_weight - space ,invit_rect.y + 50.0, btn_weight, 20.0);
+			if get_button(join_btn, "Join", 20,GREEN, mouse) {
+				let rq: String = format!("GROUP JOIN {}\n",invitation.sender);
+				game.tx_to_serv.try_send(rq).ok();
+				game.pending_action = PendingAction::GroupJoin(invitation.sender.clone());
+				game.group.invitation = None;
+			}
+			if get_button(deny_btn, "Deny", 20, RED, mouse) {
+				game.group.invitation = None;
+			}
+		}
+	}
+	else {
+
+		draw_text_center_top(rect, &game.group.name, 35, 20.0);
+
+		if game.group.grouplist.is_empty(){
+			game.tx_to_serv.try_send("GROUP LIST\n".to_string()).ok();
+			game.pending_action = PendingAction::GroupList;
+		}
+		else {
+			for (i,player) in game.group.grouplist.iter().enumerate(){
+					draw_text(player,rect.x,rect.y + 65.0 + i as f32 * 35.0,30.0,WHITE,);
+			}
+		}
+
+
+		let input_rect: Rect = Rect::new(rect.x+(rect.w/2.0-(120.0)),rect.y + rect.h - 100.0, 150.0, 35.0);
+
+		draw_text("Invite a player:", input_rect.x, input_rect.y-2.5, 20.0, WHITE);
+		let input_hovered: bool = input_text(input_rect, &mut game.group.typed,game.focus == InputFocus::GroupMenu,  mouse);
+		if input_hovered && is_mouse_button_pressed(MouseButton::Left)  {
+			game.focus = InputFocus::GroupMenu;
+			game.group.chat_is_active = true;
+		}
+		else if !input_hovered && is_mouse_button_pressed(MouseButton::Left) {
+			game.group.chat_is_active = false;
+			game.focus = InputFocus::Game;
+		}
+		if is_key_pressed(KeyCode::Enter) && game.focus == InputFocus::GroupMenu{
+			send_group_invite(game);
+			game.focus = InputFocus::Game;
+		}
+		let invite_btn: Rect = Rect::new(input_rect.x + input_rect.w,input_rect.y, 70.0, 35.0);
+		if let Some(info) = game.group.invite_info.as_ref() {
+			if get_time() - info.time > 3.0 {
+        		game.group.invite_info = None;
+			}
+			else {
+				let color = info.color;
+				let state = info.state.clone();
+				if get_button(invite_btn, "Invite", 25, color,mouse) && !game.group.typed.is_empty(){
+					send_group_invite(game);}
+				draw_text(state, input_rect.x, input_rect.y+input_rect.h+15.0, 25.0, WHITE);}
+		}
+		else{
+			if get_button(invite_btn, "Invite", 25, WHITE,mouse) && !game.group.typed.is_empty(){
+				send_group_invite(game);}
+		}
+		let leave_btn: Rect = Rect::new(rect.x+(rect.w/2.0-(120.0)),rect.y + rect.h - 40.0, 150.0, 35.0);
+		if get_button(leave_btn, "Leave group", 20, WHITE,mouse) {
+			game.tx_to_serv.try_send("GROUP LEAVE\n".to_string()).ok();
+			game.pending_action = PendingAction::GroupLeave;
+			game.group.typed = String::new();
+		}
+	}
+}
+
+pub fn draw_icon(game: &mut Game){
+	let mut icon: Rect = get_rect_bottom(RECT_ICON, screen_width());
+	icon.x -= 10.0;
+	icon.y -= 10.0;
+	if get_button(icon, "Group", 30, YELLOW, game.mouse){
+		game.group.is_active = true
+	}
+}
+
+pub fn handle_group(game: &mut Game) {
+	if !game.group.is_active {
+		draw_icon(game);
+		if is_key_pressed(KeyCode::F) && game.focus == InputFocus::Game {
+			game.group.is_active = true;
+		}
+	}
+	else{
+		if is_key_pressed(KeyCode::F) && game.focus == InputFocus::Game {
+			game.group.is_active = false;
+			game.focus = InputFocus::Game;
+		}
+		draw_group(game);
+	}
+}

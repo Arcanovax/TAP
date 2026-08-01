@@ -1,0 +1,58 @@
+use crate::{
+    protocol::{Message, Payload},
+    state::SharedServer,
+    structures::enums::error::ErrorCode,
+};
+use std::net::SocketAddr;
+
+#[cfg(test)]
+mod tests;
+
+pub(super) fn item_request(server_info: &SharedServer, args: &[String]) -> Message {
+    if args.len() != 1 {
+        return Message::Response {
+            error: ErrorCode::INVALID_ARGS,
+            payload: Payload::Empty,
+        };
+    }
+
+    let binding = server_info.lock().unwrap();
+
+    let item_ref = &args[0];
+    let item = match binding.resolve_item(item_ref) {
+        Some(item) => item,
+        None => {
+            return Message::Response {
+                error: ErrorCode::ITEM_NOT_FOUND,
+                payload: Payload::Empty,
+            };
+        }
+    };
+
+    Message::Response {
+        error: ErrorCode::SUCCESS,
+        payload: Payload::Json(serde_json::to_value(item).unwrap()),
+    }
+}
+
+pub(super) fn items_request(server_info: &SharedServer, peer_addr: SocketAddr) -> Message {
+    let binding = server_info.lock().unwrap();
+    match binding.get_player(peer_addr) {
+        Ok(player) if player.in_dungeon() && player.group_id.is_some() => {
+            match binding.dungeons.get(&player.group_id.unwrap()) {
+                Some(dungeon) => Message::Response {
+                    error: ErrorCode::SUCCESS,
+                    payload: Payload::Json(serde_json::to_value(&dungeon.items).unwrap()),
+                },
+                _ => Message::Response {
+                    error: ErrorCode::SUCCESS,
+                    payload: Payload::Json(serde_json::to_value(&binding.world.items).unwrap()),
+                },
+            }
+        }
+        _ => Message::Response {
+            error: ErrorCode::SUCCESS,
+            payload: Payload::Json(serde_json::to_value(&binding.world.items).unwrap()),
+        },
+    }
+}

@@ -1,0 +1,126 @@
+use crate::{
+    protocol::{Message, Payload},
+    state::SharedServer,
+    structures::{
+        enums::{error::ErrorCode, npc_kind::NPCKind},
+        npc::Npc,
+    },
+};
+use serde::Serialize;
+use std::{collections::HashMap, net::SocketAddr};
+
+#[cfg(test)]
+mod tests;
+
+#[derive(Serialize)]
+enum NPCKindView {
+    Merchant {
+        inventory: Vec<String>,
+    },
+    Enemy {
+        hp: u32,
+        max_hp: u32,
+        kind: String,
+        defeated: bool,
+    },
+    Citizen,
+}
+
+#[derive(Serialize)]
+struct NPCView<'a> {
+    name: &'a str,
+    kind: NPCKindView,
+    has_quest: bool,
+}
+
+impl<'a> From<&'a Npc> for NPCView<'a> {
+    fn from(npc: &'a Npc) -> Self {
+        let kind = match &npc.kind {
+            NPCKind::Citizen => NPCKindView::Citizen,
+            NPCKind::Merchant { inventory, .. } => NPCKindView::Merchant {
+                inventory: inventory.clone(),
+            },
+            NPCKind::Enemy {
+                hp,
+                max_hp,
+                kind,
+                defeated,
+                ..
+            } => NPCKindView::Enemy {
+                hp: *hp,
+                max_hp: *max_hp,
+                kind: kind.to_string(),
+                defeated: *defeated,
+            },
+        };
+
+        NPCView {
+            name: &npc.name,
+            kind,
+            has_quest: npc.quest.is_some(),
+        }
+    }
+}
+
+pub(super) fn npc_request(server_info: &SharedServer, args: &[String]) -> Message {
+    if args.len() != 1 {
+        return Message::Response {
+            error: ErrorCode::INVALID_ARGS,
+            payload: Payload::Empty,
+        };
+    }
+
+    let binding = server_info.lock().unwrap();
+
+    let npc_ref = &args[0];
+    let npc = match binding.resolve_npc(npc_ref) {
+        Some(npc) => npc,
+        None => {
+            return Message::Response {
+                error: ErrorCode::NPC_NOT_FOUND,
+                payload: Payload::Empty,
+            };
+        }
+    };
+
+    Message::Response {
+        error: ErrorCode::SUCCESS,
+        payload: Payload::Json(serde_json::to_value::<NPCView>(npc.into()).unwrap()),
+    }
+}
+
+pub(super) fn npcs_request(server_info: &SharedServer, peer_addr: SocketAddr) -> Message {
+    let binding = server_info.lock().unwrap();
+
+    let mut npcs: HashMap<String, NPCView> = HashMap::new();
+
+    for (id, npc) in &binding.world.npcs {
+        npcs.insert(id.into(), npc.into());
+    }
+
+    match binding.get_player(peer_addr) {
+        Ok(player) if player.in_dungeon() && player.group_id.is_some() => {
+            match binding.dungeons.get(&player.group_id.unwrap()) {
+                Some(dungeon) => {
+                    let mut npcs: HashMap<String, NPCView> = HashMap::new();
+
+                    for (id, npc) in &dungeon.npcs {
+                        npcs.insert(id.into(), npc.into());
+                    }
+                    Message::Response {
+                        error: ErrorCode::SUCCESS,
+                        payload: Payload::Json(serde_json::to_value(&npcs).unwrap()),
+                    }
+                }
+                _ => Message::Response {
+                    error: ErrorCode::SUCCESS,
+                    payload: Payload::Json(serde_json::to_value(&npcs).unwrap()),
+                },
+            }
+        }
+        _ => Message::Response {
+            error: ErrorCode::SUCCESS,
+            payload: Payload::Json(serde_json::to_value(&npcs).unwrap()),
+        },
+    }
+}

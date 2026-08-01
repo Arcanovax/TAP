@@ -1,0 +1,70 @@
+import:
+  - "tavern.yaml"
+  - "blacksmith.yaml"
+  - "farm.yaml"
+  - "market.yaml"
+  - "beach.yaml"
+  - "../items/potions.yaml"
+  - "../items/misc.yaml"
+
+room:
+  city_square:
+    name: "The Answer Place"
+    description: "A small, quiet square where every road seems to begin. A bulletin board creaks in the breeze, promising answers to questions no one quite remembers asking. From the tavern to the north drifts the faint, encouraging smell of ale."
+    exits:
+      North: "room.tavern"
+      East: "room.blacksmiths_shop"
+      West: "room.farm"
+      South: "room.market"
+    npc:
+      - "npc.city_gard"
+    items:
+      - "item.ale"
+
+npc:
+  city_gard:
+    name: "Haltlarix"
+    dialog:
+      default:
+        - "Hello adventurer! Keep safe!"
+        - "I used to be an adventurer like you. Then I took an arrow in the knee."
+      quest.search.0:
+        - "The farmer's daughter and the blacksmith's son have disappeared. Everyone seems to think they ran away together. But their parents think there's another reason and are worried. Go see them to find out more."
+    kind: Citizen
+    quest: "quest.search"
+
+quest:
+  search:
+      name: "Where are they"
+      description: "The farmer's daughter and the blacksmith's son have disappeared. Everyone thinks they ran away together, but their respective fathers don't agree. Try to find them."
+      reward: "item.gold"
+      goals:
+        - Talk:
+            dialog: "npc.city_gard.dialog.quest.search.0"
+        - Talk:
+            dialog: "npc.blacksmith.dialog.quest.search.1"
+        - Talk:
+            dialog: "npc.farmer.dialog.quest.search.2"
+        - Talk:
+            dialog: "npc.door.dialog.quest.search.3"
+        - Collect:
+            item: "item.goblin_tooth"
+            amount: 1
+        - Collect:
+            item: "item.golden_token"
+            amount: 1
+        - Collect:
+            item: "item.sacred_seashell"
+            amount: 1
+        - Retrieve:
+            item: "item.goblin_tooth"
+            amount: 1
+            dialog: "npc.door.dialog.quest.search.7"
+        - Retrieve:
+            item: "item.golden_token"
+            amount: 1
+            dialog: "npc.door.dialog.quest.search.8"
+        - Retrieve:
+            item: "item.sacred_seashell"
+            amount: 1
+            dialog: "npc.door.dialog.quest.search.9"
