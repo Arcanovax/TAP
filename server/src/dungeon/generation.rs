@@ -90,7 +90,8 @@ fn populate_rooms(world: &World, dungeon: &mut Dungeon, gid: Uuid) {
         let item_pool = world
             .items
             .iter()
-            .filter(|(_, item)| !matches!(item.kind, ItemKind::QuestItem));
+            .filter(|(_, item)| !matches!(item.kind, ItemKind::QuestItem))
+            .filter(|(id, _)| *id != "item.gold");
         while i < nb_item {
             let Some((id, item)) = item_pool.clone().choose(&mut rand::rng()) else {
                 break;
