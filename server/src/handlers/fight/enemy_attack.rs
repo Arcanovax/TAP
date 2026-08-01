@@ -55,7 +55,23 @@ pub fn enemy_attack(opponent_id: &str, world: &mut ServerInfo) {
         start_defense
     };
 
-    let (target_hp, e_damages) = {
+    let (target_hp, e_damages, peer_addr) = {
+
+		let peer_addr = world
+			.connections
+			.values()
+			.find(|f| f.player.name == target_name)
+			.unwrap()
+			.addr;
+
+		let receivers = {
+			if let Ok(receivers) = world.get_room_receivers(peer_addr) {
+				receivers.iter().map(|f|f.tx.clone()).collect()
+			} else {
+				Vec::new()
+			}
+		};
+
         let target = &mut world
             .connections
             .values_mut()
@@ -68,12 +84,15 @@ pub fn enemy_attack(opponent_id: &str, world: &mut ServerInfo) {
             if damages_after_defense < target.hp {
                 target.hp -= damages_after_defense;
             } else {
+			for receiver in receivers {
+				let _ = receiver.send(Message::Event(EventType::ROOM_LEAVE { player_name: target_name.clone() }));
+			}
                 target_killed = true;
                 target.hp = target.max_hp - 10;
-                target.location = String::from("room.city_square");
+                target.location = world.world.spawn_room.clone();
                 target.status = State::Idle;
             }
-            (target.hp, damages_after_defense)
+            (target.hp, damages_after_defense, peer_addr.clone())
         } else {
             unreachable!("No enemy here!");
         }
@@ -86,6 +105,11 @@ pub fn enemy_attack(opponent_id: &str, world: &mut ServerInfo) {
     }
 
     if target_killed {
+		if let Ok(receivers) = world.get_room_receivers(peer_addr) {
+			for receiver in receivers {
+				let _ = receiver.tx.send(Message::Event(EventType::ROOM_JOIN { player_name: target_name.clone() }));
+			}
+		}
         if nb_fighters == 1 {
             world.fights.remove(opponent_id);
             if let Some(npc) = world.resolve_npc_mut(opponent_id)
