@@ -1,4 +1,4 @@
-use std::collections::{HashMap, VecDeque};
+use std::{collections::{HashMap, VecDeque}, fs::OpenOptions, io::Write};
 
 use crate::{
     enums::{
@@ -54,7 +54,12 @@ pub fn response_handling(world: &mut World, answers: Vec<&str>) {
                     | PendingAction::ClientLook
                     | PendingAction::MoveLook
                     | PendingAction::DungeonLook => {
-                        let payload: RoomPayload = serde_json::from_str(&real_answer).unwrap();
+						if let Ok(mut file) = OpenOptions::new().create(true).append(true).open("debug_network.txt") {
+								let _ = writeln!(file, "all (State {:?}) : {:#?}", world.action, real_answer);}
+                        let Ok(payload): Result<RoomPayload, _> = serde_json::from_str(&real_answer) else {
+							let _ = world.tx_to_serv.try_send("LOOK\n".to_string());
+							return;
+						};
                         if world.action == PendingAction::Look {
                             world.room.apply_update(payload);
                             world
