@@ -4,20 +4,8 @@ use crate::{
     enums::{
         actions::PendingAction, focus::Focus, item_kind::ItemKind, npc_kind::NPCKind,
         states::States,
-    },
-    global_functions::check_goals::check_goals,
-    structures::{
-        attack_results::AttackResult,
-        fight::Fight,
-        help_commands::CommandHelp,
-        items::Item,
-        npc::Npc,
-        quest::Quest,
-        quest_view::{QuestStatus, QuestView, QuestsView},
-        room::{Room, RoomPayload},
-        rooms_view::RoomsView,
-        status_view::StatusView,
-        world::World,
+    }, global_functions::check_goals::check_goals, structures::{
+        attack_results::AttackResult, fight::Fight, help_commands::CommandHelp, items::Item, npc::Npc, quest::Quest, quest_view::{QuestStatus, QuestView, QuestsView}, room::{Room, RoomPayload}, room_view::RoomView, rooms_view::RoomsView, status_view::StatusView, world::World,
     },
 };
 
@@ -35,7 +23,7 @@ pub fn response_handling(world: &mut World, answers: Vec<&str>) {
                     world.player.name = world.input.to_string();
                     world.input.clear();
                     let _ = world.tx_to_serv.try_send(String::from("ITEMS\n"));
-                    world.action = PendingAction::Items;
+                    world.action = PendingAction::ClientItems;
                 }
             }
             States::Idle | States::InFight { .. } => {
@@ -122,7 +110,7 @@ pub fn response_handling(world: &mut World, answers: Vec<&str>) {
                         if quests_number == world.player.quests_views.len() {
                             if world.rooms.is_empty() {
                                 let _ = world.tx_to_serv.try_send("ROOMS\n".to_string());
-                                world.action = PendingAction::Rooms;
+                                world.action = PendingAction::ClientRooms;
                             } else {
                                 world.action = PendingAction::None;
                             }
@@ -138,7 +126,7 @@ pub fn response_handling(world: &mut World, answers: Vec<&str>) {
                         }
                     }
 
-                    PendingAction::Rooms | PendingAction::DungeonRooms => {
+                    PendingAction::ClientRooms | PendingAction::DungeonRooms => {
                         if world.action == PendingAction::DungeonRooms {
                             let new_rooms: HashMap<String, RoomsView> =
                                 serde_json::from_str(&real_answer).unwrap();
@@ -170,6 +158,7 @@ pub fn response_handling(world: &mut World, answers: Vec<&str>) {
                         if *world.player.inventory.get(&item.to_string()).unwrap_or(&0) < 1 {
                             world.player.inventory.remove(&item.to_string());
                         }
+                        world.action = PendingAction::None;
                     }
 
                     PendingAction::Take(item) => {
@@ -185,6 +174,7 @@ pub fn response_handling(world: &mut World, answers: Vec<&str>) {
                         }
                         let quantity = world.player.inventory.entry(item.to_string()).or_insert(0);
                         *quantity += 1;
+                        world.action = PendingAction::None;
                     }
 
                     PendingAction::Status | PendingAction::ClientStatus => {
@@ -203,10 +193,22 @@ pub fn response_handling(world: &mut World, answers: Vec<&str>) {
                         }
                     }
 
-                    PendingAction::Items => {
+                    PendingAction::Item => {
+                        let item: Item = serde_json::from_str(&real_answer).unwrap();
+                        world.output.push_back(format!("{}", item));
+                        world.action = PendingAction::None;
+                    }
+
+                    PendingAction::Room => {
+                        let room: RoomView = serde_json::from_str(&real_answer).unwrap();
+                        world.output.push_back(format!("{}", room));
+                        world.action = PendingAction::None;
+                    }
+
+                    PendingAction::ClientItems => {
                         world.list_items = serde_json::from_str(&real_answer).unwrap();
                         let _ = world.tx_to_serv.try_send(String::from("NPCS\n"));
-                        world.action = PendingAction::Npcs;
+                        world.action = PendingAction::ClientNpcs;
                     }
 
                     PendingAction::DungeonItems => {
@@ -217,7 +219,7 @@ pub fn response_handling(world: &mut World, answers: Vec<&str>) {
                         world.action = PendingAction::DungeonNpcs;
                     }
 
-                    PendingAction::Npcs => {
+                    PendingAction::ClientNpcs => {
                         world.list_npcs = serde_json::from_str(&real_answer).unwrap();
                         let _ = world.tx_to_serv.try_send(String::from("LOOK\n"));
                         world.action = PendingAction::ClientLook;
@@ -279,7 +281,7 @@ pub fn response_handling(world: &mut World, answers: Vec<&str>) {
                             } else {
                                 if world.rooms.is_empty() {
                                     let _ = world.tx_to_serv.try_send("ROOMS\n".to_string());
-                                    world.action = PendingAction::Rooms;
+                                    world.action = PendingAction::ClientRooms;
                                 } else {
                                     world.action = PendingAction::None;
                                 }
@@ -294,6 +296,7 @@ pub fn response_handling(world: &mut World, answers: Vec<&str>) {
                             world
                                 .output
                                 .push_back(format!("Your quests are : \n{}", displayed_list));
+                            world.action = PendingAction::None;
                         }
                     }
 
@@ -335,6 +338,7 @@ pub fn response_handling(world: &mut World, answers: Vec<&str>) {
                             );
                         }
                         world.room.npc_list_state.select(None);
+                        world.action = PendingAction::None;
                     }
 
                     PendingAction::Consume(item) => {
@@ -391,11 +395,13 @@ pub fn response_handling(world: &mut World, answers: Vec<&str>) {
                         world.output.push_back(format!(
                             "Currently, there {be} {number} {plural} connected."
                         ));
+                        world.action = PendingAction::None;
                     }
 
                     PendingAction::Npc => {
                         let npc_view: Npc = serde_json::from_str(&real_answer).unwrap();
                         world.output.push_back(format!("{npc_view}"));
+                        world.action = PendingAction::None;
                     }
 
                     PendingAction::GroupLeave => {
@@ -547,6 +553,12 @@ pub fn response_handling(world: &mut World, answers: Vec<&str>) {
                             ));
                         }
                     }
+                    PendingAction::Rooms
+                    | PendingAction::Items
+                    | PendingAction::Npcs => {
+                        world.output.push_back("[Error] Forbidden Request!".to_string());
+                        world.action = PendingAction::None;
+                    }
                     _ => {}
                 }
                 if world.room.focus != Focus::Output {
@@ -640,11 +652,11 @@ pub fn response_handling(world: &mut World, answers: Vec<&str>) {
                         world.action = PendingAction::None;
                     }
                 },
-                PendingAction::Items => {
+                PendingAction::ClientItems => {
                     let _ = world.tx_to_serv.try_send(String::from("NPCS\n"));
-                    world.action = PendingAction::Npcs;
+                    world.action = PendingAction::ClientNpcs;
                 }
-                PendingAction::Npcs => {
+                PendingAction::ClientNpcs => {
                     let _ = world.tx_to_serv.try_send(String::from("LOOK\n"));
                     world.action = PendingAction::ClientLook;
                 }
