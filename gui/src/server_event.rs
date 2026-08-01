@@ -101,7 +101,7 @@ pub async fn handle_events(game: &mut Game, answer: Vec<&str>){
 						fight.enemy_hp = new_life;
 
 						if fight.enemy_hp <= 0 {
-	
+
 							fight.chat.push(format!("{} attacked and killed the enemy", answer[3]));
 							fight_over = true;
 						} else {
@@ -119,20 +119,20 @@ pub async fn handle_events(game: &mut Game, answer: Vec<&str>){
 					game.player.gold = None;
 					game.player.inventory.is_load = false;
 					game.need_load_npcs = true;
-					
+
 					let loot_str = answer[6];
 					let mut texts = vec!["[Server] Well played, you won the fight and get:".to_string()];
-					
+
 					for item_id in loot_str.split("//") {
 
 						if let Some(item) = game.loaded_items.get(item_id){
-							if item_id != "item.gold"{
-								texts.push(format!(" {}", item.name));
-							}
+
+							texts.push(format!(" {}", item.name));
+
 
 						}
 					}
-						
+
 						let text = texts.join(" ");
 						game.chat.channel = 2;
 						game.chat.group_messages.push(text);
@@ -199,6 +199,17 @@ pub async fn handle_events(game: &mut Game, answer: Vec<&str>){
 		}
 	}
 
+	if answer[1] == "DUNGEON"{
+		match answer[2] {
+			"END" => {
+				game.map_data = None;
+				game.in_dungeon = false;
+				game.end_dungeon = true;
+			}
+			_=> return
+		}
+	}
+
 	if answer[1] == "ROOM"{
 		match answer[2] {
 			"PRESENCE" => {
@@ -232,12 +243,6 @@ pub async fn handle_events(game: &mut Game, answer: Vec<&str>){
 		}
 
 	}
-
-
-	// 	// if let Some(quest_finish) = server_event.quest_finish {
-	// 	// 	game.quests.retain(|quest| quest.name != quest_finish.quest_name);
-	// 	// }
-
 }
 
 

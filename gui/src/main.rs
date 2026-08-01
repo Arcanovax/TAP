@@ -436,7 +436,7 @@ async fn main() {
 
 
 fn handle_game(game: &mut Game, map: &Room, map_data: LookData){
-if game.player.new_spawn != Spawn::None && game.player.new_spawn != Spawn::Center{
+		if game.player.new_spawn != Spawn::None && game.player.new_spawn != Spawn::Center{
 			let spawn: Vec2 = map.spawns
 				.get(&game.player.new_spawn)
 				.or_else(|| map.spawns.get(&Spawn::Center))
