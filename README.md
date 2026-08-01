@@ -302,7 +302,7 @@ The reward is then added to the player's inventory, and the quest ID is moved to
 
 ## This is our world:
 
-![Our beautiful world](/images/image.png "City")
+![Our beautiful world](/images/world.png "City")
 
 The central part is The Answer Place at the center of the map, the default spawn room.
 
