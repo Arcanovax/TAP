@@ -84,6 +84,7 @@ cargo clean                 - Delete the 'target' folder.
 - **Rust** : [The french version of The Book](https://jimskapt.github.io/rust-book-fr/), [Rust by example](https://doc.rust-lang.org/rust-by-example/index.html), [Rustlings](https://rustlings.rust-lang.org/)
 - **Tokio** : [Tokio tutorial](https://tokio.rs/tokio/tutorial)
 - **Ratatui** : [Ratatui website](https://ratatui.rs/)
+- **Macroquad** :  [Macroquad Examples](https://macroquad.rs/examples/)
 
 ## AI Usage
 
