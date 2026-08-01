@@ -4,8 +4,21 @@ use crate::{
     enums::{
         actions::PendingAction, focus::Focus, item_kind::ItemKind, npc_kind::NPCKind,
         states::States,
-    }, global_functions::check_goals::check_goals, structures::{
-        attack_results::AttackResult, fight::Fight, help_commands::CommandHelp, items::Item, npc::Npc, quest::Quest, quest_view::{QuestStatus, QuestView, QuestsView}, room::{Room, RoomPayload}, room_view::RoomView, rooms_view::RoomsView, status_view::StatusView, world::World,
+    },
+    global_functions::check_goals::check_goals,
+    structures::{
+        attack_results::AttackResult,
+        fight::Fight,
+        help_commands::CommandHelp,
+        items::Item,
+        npc::Npc,
+        quest::Quest,
+        quest_view::{QuestStatus, QuestView, QuestsView},
+        room::{Room, RoomPayload},
+        room_view::RoomView,
+        rooms_view::RoomsView,
+        status_view::StatusView,
+        world::World,
     },
 };
 
@@ -553,10 +566,10 @@ pub fn response_handling(world: &mut World, answers: Vec<&str>) {
                             ));
                         }
                     }
-                    PendingAction::Rooms
-                    | PendingAction::Items
-                    | PendingAction::Npcs => {
-                        world.output.push_back("[Error] Forbidden Request!".to_string());
+                    PendingAction::Rooms | PendingAction::Items | PendingAction::Npcs => {
+                        world
+                            .output
+                            .push_back("[Error] Forbidden Request!".to_string());
                         world.action = PendingAction::None;
                     }
                     _ => {}
@@ -565,6 +578,26 @@ pub fn response_handling(world: &mut World, answers: Vec<&str>) {
                     world.room.output_scroll_pos.scroll_to_bottom();
                 }
             }
+            States::InDiscuss(..) => match world.action {
+                PendingAction::ClientInventory => {
+                    let list_items: Vec<String> = serde_json::from_str(&real_answer).unwrap();
+
+                    world.player.inventory.clear();
+
+                    for item in list_items {
+                        *world.player.inventory.entry(item).or_insert(0) += 1;
+                    }
+
+                    let _ = world.tx_to_serv.try_send(String::from("GOLD\n"));
+                    world.action = PendingAction::ClientGold;
+                }
+                PendingAction::ClientGold => {
+                    let gold: Vec<&str> = real_answer.split("=").collect();
+                    world.player.gold = gold[1].parse().unwrap();
+                    world.action = PendingAction::None;
+                }
+                _ => {}
+            },
             States::Trade(..) => {
                 match &world.action {
                     PendingAction::Buy(item_name) => {

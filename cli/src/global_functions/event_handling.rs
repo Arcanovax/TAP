@@ -68,7 +68,6 @@ pub fn event_handling(world: &mut World, answer: Vec<&str>) {
                 "CREATE" => {}
                 _ => {}
             },
-            "STATS" => {}
             "FIGHT" => {
                 match answer[2] {
                     "ENTER" => {
@@ -194,13 +193,9 @@ pub fn event_handling(world: &mut World, answer: Vec<&str>) {
                         "Congratulation! You validate the goal '{}' of the {} quest.",
                         update.previous_goal, quest_name
                     ));
-                    if let Goal::Retrieve { item, amount, .. } = update.previous_goal {
-                        world
-                            .player
-                            .inventory
-                            .entry(item)
-                            .and_modify(|f| *f -= amount);
-                        world.player.inventory.retain(|_, quantity| *quantity > 0);
+                    if let Goal::Retrieve { .. } = update.previous_goal {
+                        let _ = world.tx_to_serv.try_send(String::from("INVENTORY\n"));
+                        world.action = PendingAction::ClientInventory;
                     }
                 }
                 "FINISH" => {
@@ -217,11 +212,8 @@ pub fn event_handling(world: &mut World, answer: Vec<&str>) {
                         "Unbelievable! You've completed the quest {} and earned {}.",
                         quest_name, finish.reward
                     ));
-                    if finish.reward == "item.gold" {
-                        world.player.gold += 50;
-                    } else {
-                        *world.player.inventory.entry(finish.reward).or_insert(0) += 1;
-                    }
+                    let _ = world.tx_to_serv.try_send(String::from("INVENTORY\n"));
+                    world.action = PendingAction::ClientInventory;
                 }
                 _ => {}
             },
