@@ -155,7 +155,7 @@ The server is a Tokio TCP server built around three ideas: **one task per connec
                                         "EVT ROOM PRESENCE ENTER alice\n"
 ```
 
-## Dispatcher / router, not inline handling
+## Dispatcher / router
 
 Command handling is **centralised in a router** (`server/src/handlers/handle_request.rs`) rather than inlined in the read loop:
 
@@ -428,24 +428,9 @@ Per-player replay — the span makes it a one-liner:
 ```BASH
 jq -r 'select(.span.player == "remi")' logs/tap.log.2026-07-28
 ```
-
-Command mix and error distribution:
-
-```BASH
-jq -r 'select(.fields.message == "command received") | .fields.command' logs/*.log.* | sort | uniq -c | sort -rn
-jq -r 'select(.fields.error) | .fields.error' logs/*.log.* | sort | uniq -c | sort -rn
-```
-
 ## Detecting abuse patterns
 
 The server does not implement rate limiting; the logs are the detection layer, and every field needed for it is already indexed by the `connection` span.
-
-**Protocol probing / broken client** — a peer producing a burst of `9xx`:
-
-```BASH
-jq -r 'select(.level == "WARN") | .span.peer_addr' logs/tap.log.$(date +%F) \
-  | sort | uniq -c | sort -rn | head
-```
 
 # Group Contributions
 
