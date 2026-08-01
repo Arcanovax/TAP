@@ -1,8 +1,5 @@
-
-
 use macroquad::prelude::*;
 use serde::Deserialize;
-
 
 #[derive(Clone, PartialEq, Debug, Deserialize)]
 pub enum ItemKind {
@@ -10,19 +7,18 @@ pub enum ItemKind {
     Weapon { damages: i32 },
     Armor { protection: i32 },
     Miscellaneous,
-	QuestItem,
-	None
+    QuestItem,
+    None,
 }
 
 #[derive(Clone, PartialEq)]
 pub struct Item {
     pub id: String,
-	pub name: String,
+    pub name: String,
     pub texture: Texture2D,
     pub price: i32,
-	pub kind: ItemKind
+    pub kind: ItemKind,
 }
-
 
 pub async fn get_item_texture(item_id: &str) -> Texture2D {
     let path = match item_id {

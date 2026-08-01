@@ -1,156 +1,146 @@
-mod utils;
-mod rooms;
-mod chat;
-mod menu;
-mod inventory;
-mod start;
-mod group;
-mod player;
-mod items;
-mod npc;
-mod server_event;
-mod response;
 mod camera;
-mod fight;
-mod quest;
+mod chat;
 mod dungeon;
+mod fight;
 mod gambling;
+mod group;
+mod inventory;
+mod items;
+mod menu;
+mod npc;
+mod player;
+mod quest;
+mod response;
+mod rooms;
+mod server_event;
+mod start;
+mod utils;
 
-use fight::*;
-use player::*;
-use items::*;
-use server_event::*;
 use camera::*;
-use response::*;
-use quest::*;
 use dungeon::*;
+use fight::*;
 use gambling::*;
+use items::*;
+use player::*;
+use quest::*;
+use response::*;
+use server_event::*;
 
-use utils::*;
 use npc::*;
 use std::collections::HashMap;
+use utils::*;
 
-use macroquad::prelude::*;
-use rooms::*;
+use crate::chat::handle_chat;
 use chat::Chat;
-use menu::*;
+use group::*;
 use inventory::*;
+use macroquad::prelude::*;
+use menu::*;
+use rooms::*;
+use serde::Deserialize;
+use start::*;
 use std::sync::mpsc;
 use tokio::io::{AsyncReadExt, AsyncWriteExt};
 use tokio::net::TcpStream;
-use start::*;
-use group::*;
-use crate::chat::handle_chat;
-use serde::Deserialize;
-
 
 pub const CHANNELS: [&str; 3] = ["Room", "Global", "Group"];
 
-
-
-
-
 #[derive(Clone, Debug, PartialEq, Hash, Eq)]
 pub enum Spawn {
-	None,
+    None,
     North,
     South,
     East,
     West,
-	Center
+    Center,
 }
-
-
 
 struct Player {
     x: f32,
     y: f32,
     line: i32,
-	row: i32,
+    row: i32,
     is_mooving: bool,
-	speed: f32,
-	inventory: Inventory,
+    speed: f32,
+    inventory: Inventory,
     name: String,
-	new_spawn:Spawn,
-	state: Option<PlayerState>,
-	gold: Option<i32>
+    new_spawn: Spawn,
+    state: Option<PlayerState>,
+    gold: Option<i32>,
 }
-
 
 impl Player {
     pub fn new() -> Self {
         Self {
-			x: 0.0,
+            x: 0.0,
             y: 0.0,
             line: 0,
             row: 0,
             is_mooving: false,
             speed: 1.8,
-			inventory: Inventory::new(),
-            name:"".to_string(),
-			new_spawn: Spawn::Center,
-			state: None,
-			gold: None
-		}
-	}
+            inventory: Inventory::new(),
+            name: "".to_string(),
+            new_spawn: Spawn::Center,
+            state: None,
+            gold: None,
+        }
+    }
 }
 
 #[derive(Deserialize, Debug, Clone)]
-struct PlayerState{
-	hp: i32,
-	max_hp: i32,
-	status: Status
+struct PlayerState {
+    hp: i32,
+    max_hp: i32,
+    status: Status,
 }
 
 #[derive(Deserialize, Debug, Clone, PartialEq)]
 pub enum Status {
-	InFight {target_id: String},
+    InFight { target_id: String },
     Idle,
-	Discuss
+    Discuss,
 }
 
-
 struct Game {
-	pub focus: InputFocus,
+    pub focus: InputFocus,
     pub menu: Menu,
     pub player: Player,
     pub chat: Chat,
     pub skin: Texture2D,
-	pub tx_to_serv: tokio::sync::mpsc::Sender<String>,
+    pub tx_to_serv: tokio::sync::mpsc::Sender<String>,
     pub is_auth: bool,
     pub rx_from_serv: std::sync::mpsc::Receiver<String>,
-	pub group: Group,
-	pub pending_action: PendingAction,
-	pub map_data: Option<LookData>,
-	pub loaded_items:HashMap<String, Item>,
-	pub loaded_npcs: HashMap<String,Npc>,
-	pub need_load_npcs: bool,
-	pub nb_players: i32,
-	pub config: GameConfig,
-	pub active_fight: Option<Fight>,
-	pub quests: Quests,
-	pub npc_shop: NpcShop,
-	pub mouse: Vec2,
-	pub dungeon: Option<Dungeon>,
-	pub gambling: Games,
-	pub is_connected: bool,
-	pub in_dungeon: bool,
-	pub end_dungeon: bool
+    pub group: Group,
+    pub pending_action: PendingAction,
+    pub map_data: Option<LookData>,
+    pub loaded_items: HashMap<String, Item>,
+    pub loaded_npcs: HashMap<String, Npc>,
+    pub need_load_npcs: bool,
+    pub nb_players: i32,
+    pub config: GameConfig,
+    pub active_fight: Option<Fight>,
+    pub quests: Quests,
+    pub npc_shop: NpcShop,
+    pub mouse: Vec2,
+    pub dungeon: Option<Dungeon>,
+    pub gambling: Games,
+    pub is_connected: bool,
+    pub in_dungeon: bool,
+    pub end_dungeon: bool,
 }
 
-
-
-
 struct GameConfig {
-	sprite_width: f32,
+    sprite_width: f32,
     sprite_height: f32,
     tile_size: f32,
-   	camera:Camera2D
+    camera: Camera2D,
 }
 
 async fn network_task(tx: mpsc::Sender<String>, mut rx: tokio::sync::mpsc::Receiver<String>) {
     loop {
-		let addr:String = std::env::args().nth(1).unwrap_or_else(|| "127.0.0.1:8080".into());
+        let addr: String = std::env::args()
+            .nth(1)
+            .unwrap_or_else(|| "127.0.0.1:8080".into());
         let stream = match TcpStream::connect(addr).await {
             Ok(stream) => stream,
             Err(_) => {
@@ -201,7 +191,7 @@ fn config() -> Conf {
         window_title: "TAP".to_owned(),
         window_width: 1280,
         window_height: 720,
-		fullscreen: false,
+        fullscreen: false,
         ..Default::default()
     }
 }
@@ -215,439 +205,395 @@ pub enum InputFocus {
 
 #[macroquad::main(config)]
 async fn main() {
-
-	let (tx_to_game, rx_from_serv) = mpsc::channel::<String>();
-	let (tx_to_serv, rx_from_game) = tokio::sync::mpsc::channel::<String>(32);
-	std::thread::spawn(move || {
-			tokio::runtime::Runtime::new()
-				.unwrap()
-				.block_on(network_task(tx_to_game, rx_from_game));
-		});
-	let texture = load_texture("gui/assets/player_skin.png").await.unwrap();
+    let (tx_to_game, rx_from_serv) = mpsc::channel::<String>();
+    let (tx_to_serv, rx_from_game) = tokio::sync::mpsc::channel::<String>(32);
+    std::thread::spawn(move || {
+        tokio::runtime::Runtime::new()
+            .unwrap()
+            .block_on(network_task(tx_to_game, rx_from_game));
+    });
+    let texture = load_texture("gui/assets/player_skin.png").await.unwrap();
     texture.set_filter(FilterMode::Nearest);
-    let mut game: Game = Game{
-		focus: InputFocus::Game,
+    let mut game: Game = Game {
+        focus: InputFocus::Game,
         chat: Chat::new(),
         menu: Menu::new(),
         player: Player::new(),
-        skin:texture,
-		tx_to_serv: tx_to_serv,
+        skin: texture,
+        tx_to_serv: tx_to_serv,
         rx_from_serv: rx_from_serv,
         is_auth: false,
-		group: Group::new(),
-		pending_action: PendingAction::None,
-		map_data: None,
-		loaded_items: HashMap::new(),
-		loaded_npcs: HashMap::new(),
-		need_load_npcs:true,
-		nb_players: 0,
-		config: GameConfig{
-			sprite_width: 16.0,
-			sprite_height: 32.0,
-			tile_size: 16.0,
-			camera: Camera2D::default()
-		},
-		active_fight: None,
-		quests: Quests { all: Vec::new(), is_load: false, i:0},
-		npc_shop: NpcShop { is_active: false, buy_info: None, sell_info: None},
-		mouse: Vec2::new(0.0, 0.0),
-		dungeon: None,
-		gambling: Games::new(),
-		is_connected: false,
-		in_dungeon: false,
-		end_dungeon: false
+        group: Group::new(),
+        pending_action: PendingAction::None,
+        map_data: None,
+        loaded_items: HashMap::new(),
+        loaded_npcs: HashMap::new(),
+        need_load_npcs: true,
+        nb_players: 0,
+        config: GameConfig {
+            sprite_width: 16.0,
+            sprite_height: 32.0,
+            tile_size: 16.0,
+            camera: Camera2D::default(),
+        },
+        active_fight: None,
+        quests: Quests {
+            all: Vec::new(),
+            is_load: false,
+            i: 0,
+        },
+        npc_shop: NpcShop {
+            is_active: false,
+            buy_info: None,
+            sell_info: None,
+        },
+        mouse: Vec2::new(0.0, 0.0),
+        dungeon: None,
+        gambling: Games::new(),
+        is_connected: false,
+        in_dungeon: false,
+        end_dungeon: false,
     };
 
-	let rooms: std::collections::HashMap<String, rooms::Room> = get_rooms().await;
-	let floor: Texture2D = load_texture("gui/assets/map/fightmap.png").await.unwrap();
+    let rooms: std::collections::HashMap<String, rooms::Room> = get_rooms().await;
+    let floor: Texture2D = load_texture("gui/assets/map/fightmap.png").await.unwrap();
 
     loop {
-		while let Ok(msg) = game.rx_from_serv.try_recv() {
-			println!("Send: {:?}", game.pending_action);
+        while let Ok(msg) = game.rx_from_serv.try_recv() {
+            println!("Send: {:?}", game.pending_action);
             println!("GET: {}", msg);
-			let parts: Vec<&str> = msg.split_whitespace().collect();
-			if parts.is_empty() { continue; }
+            let parts: Vec<&str> = msg.split_whitespace().collect();
+            if parts.is_empty() {
+                continue;
+            }
 
-			let answer = parts[1..].join(" ");
-			let state: &str = parts[0];
+            let answer = parts[1..].join(" ");
+            let state: &str = parts[0];
 
-			match state {
-            "SYS" => {
-                match answer.as_str() {
+            match state {
+                "SYS" => match answer.as_str() {
                     "CONNECTED" => game.is_connected = true,
                     "DISCONNECTED" => game.is_connected = false,
                     _ => {}
-                }
+                },
+                "OK" | "ERR" => handle_response(&mut game, answer.as_str(), state).await,
+                "EVT" => handle_events(&mut game, parts).await,
+                _ => {}
             }
-            "OK" | "ERR" => handle_response(&mut game, answer.as_str(), state).await,
-            "EVT" => handle_events(&mut game, parts).await,
-            _ => {}
-        	}
+        }
+        game.mouse = vec2(mouse_position().0, mouse_position().1);
 
-		}
-		game.mouse = vec2(mouse_position().0, mouse_position().1);
+        if !game.is_auth {
+            handle_starter(&mut game);
 
+            next_frame().await;
+            if !game.is_connected {
+                continue;
+            }
+        } else {
+            if game.nb_players == 0 && game.pending_action == PendingAction::None {
+                game.tx_to_serv.try_send("WHO \n".to_string()).ok();
+                game.pending_action = PendingAction::Who;
+            } else {
+                if let Some(ref mut dungeon) = game.dungeon {
+                    if dungeon.err_join {
+                        game.tx_to_serv
+                            .try_send("DUNGEON CREATE \n".to_string())
+                            .ok();
+                        game.pending_action = PendingAction::DungeonCreate;
+                    } else if dungeon.rooms.is_empty() {
+                        game.tx_to_serv.try_send("ROOMS \n".to_string()).ok();
+                        game.pending_action = PendingAction::Rooms;
+                        game.player.x = 15.0;
+                        game.player.y = 130.0;
+                    } else if !game.group.in_group {
+                        game.group.in_group = true;
+                        let name: String = format!("{}'s Group ", game.player.name);
+                        game.group.name = name;
+                    }
+                }
 
+                if game.map_data.is_none() && game.pending_action == PendingAction::None {
+                    game.tx_to_serv.try_send("LOOK \n".to_string()).ok();
+                    game.pending_action = PendingAction::Look;
+                } else if game.loaded_items.is_empty() && game.pending_action == PendingAction::None
+                {
+                    game.tx_to_serv.try_send("ITEMS \n".to_string()).ok();
+                    game.pending_action = PendingAction::Items;
+                } else if game.need_load_npcs && game.pending_action == PendingAction::None {
+                    game.tx_to_serv.try_send("NPCS \n".to_string()).ok();
+                    game.pending_action = PendingAction::Npcs;
+                } else if game.player.state.is_none() && game.pending_action == PendingAction::None
+                {
+                    game.tx_to_serv.try_send("STATUS \n".to_string()).ok();
+                    game.pending_action = PendingAction::Status;
+                } else if !game.quests.is_load && game.pending_action == PendingAction::None {
+                    game.tx_to_serv.try_send("QUESTS \n".to_string()).ok();
+                    game.pending_action = PendingAction::Quests;
+                } else if game.player.gold.is_none() && game.pending_action == PendingAction::None {
+                    game.tx_to_serv.try_send("GOLD \n".to_string()).ok();
+                    game.pending_action = PendingAction::Gold;
+                } else {
+                    if let Some(state) = game.player.state.clone() {
+                        if state.status != Status::Idle {
+                            handle_fight(&mut game, &floor);
 
+                            if is_key_pressed(KeyCode::C) {
+                                break;
+                            }
+                        } else {
+                            if let Some(quest) =
+                                game.quests.all.iter().find(|quest| quest.info.is_none())
+                            {
+                                let msg = format!("QUEST_INFO {} \n", quest.quest_id.clone());
+                                game.tx_to_serv.try_send(msg).ok();
+                                game.pending_action =
+                                    PendingAction::QuestInfo(quest.quest_id.clone());
+                            }
 
-		if !game.is_auth{
-			handle_starter(&mut game);
+                            if !game.player.inventory.is_load
+                                && game.pending_action == PendingAction::None
+                            {
+                                game.tx_to_serv.try_send("INVENTORY \n".to_string()).ok();
+                                game.pending_action = PendingAction::Inventory;
+                            }
+                            if is_key_pressed(KeyCode::C) && game.focus == InputFocus::Game {
+                                game.tx_to_serv.try_send("QUIT \n".to_string()).ok();
+                                game.pending_action = PendingAction::Quit;
+                                break;
+                            }
 
-			next_frame().await;
-			if !game.is_connected {
-				continue;
-			}
-		}
+                            if let Some(map_data) = game.map_data.clone() {
+                                if game.dungeon.is_some() {
+                                    let mut room_data = None;
+                                    if let Some(dungeon) = &game.dungeon {
+                                        if !dungeon.rooms.is_empty() {
+                                            if let Some(rd) = dungeon.rooms.get(&map_data.room.id) {
+                                                room_data = Some(rd.clone());
+                                            } else {
+                                                game.dungeon = None;
+                                                game.player.new_spawn = Spawn::North
+                                            }
+                                        }
+                                    }
+                                    if let Some(room_data) = room_data {
+                                        if let Some(dungeon) = &mut game.dungeon {
+                                            let map: Room =
+                                                get_dungeon_map(dungeon, &room_data).await;
 
-		else {
-			if game.nb_players == 0 && game.pending_action == PendingAction::None{
-				game.tx_to_serv.try_send("WHO \n".to_string()).ok();
-				game.pending_action = PendingAction::Who;
-			}
-			else{
+                                            handle_game(&mut game, &map, map_data);
+                                        }
+                                    } else {
+                                        let map = match rooms.get(&map_data.room.id) {
+                                            Some(room_data) => room_data,
+                                            None => &get_empty_room(),
+                                        };
 
-			if let Some(ref mut dungeon) = game.dungeon{
-
-				if dungeon.err_join{
-					game.tx_to_serv.try_send("DUNGEON CREATE \n".to_string()).ok();
-					game.pending_action = PendingAction::DungeonCreate;
-				}
-				else if dungeon.rooms.is_empty(){
-					game.tx_to_serv.try_send("ROOMS \n".to_string()).ok();
-					game.pending_action = PendingAction::Rooms;
-					game.player.x = 15.0;
-					game.player.y = 130.0;
-
-				}
-				else if !game.group.in_group{
-					game.group.in_group = true;
-					let name: String = format!("{}'s Group ",game.player.name);
-					game.group.name = name;
-				}
-			}
-
-
-			if game.map_data.is_none() && game.pending_action == PendingAction::None {
-				game.tx_to_serv.try_send("LOOK \n".to_string()).ok();
-				game.pending_action = PendingAction::Look;
-			}
-
-			else if game.loaded_items.is_empty() && game.pending_action == PendingAction::None{
-				game.tx_to_serv.try_send("ITEMS \n".to_string()).ok();
-				game.pending_action = PendingAction::Items;
-			}
-
-			else if game.need_load_npcs && game.pending_action == PendingAction::None{
-				game.tx_to_serv.try_send("NPCS \n".to_string()).ok();
-				game.pending_action = PendingAction::Npcs;
-			}
-
-			else if game.player.state.is_none() && game.pending_action == PendingAction::None{
-				game.tx_to_serv.try_send("STATUS \n".to_string()).ok();
-				game.pending_action = PendingAction::Status;
-			}
-
-			else if !game.quests.is_load && game.pending_action == PendingAction::None{
-				game.tx_to_serv.try_send("QUESTS \n".to_string()).ok();
-				game.pending_action = PendingAction::Quests;
-			}
-
-
-
-			else if game.player.gold.is_none() && game.pending_action == PendingAction::None{
-				game.tx_to_serv.try_send("GOLD \n".to_string()).ok();
-				game.pending_action = PendingAction::Gold;
-			}
-
-			else{
-				if let Some(state) = game.player.state.clone() {
-					if state.status != Status::Idle{
-						handle_fight(&mut game, &floor);
-
-						if is_key_pressed(KeyCode::C){
-							break;
-						}
-					}
-					else{
-
-					if let Some(quest) = game.quests.all.iter().find(|quest| quest.info.is_none()) {
-						let msg = format!("QUEST_INFO {} \n", quest.quest_id.clone());
-						game.tx_to_serv.try_send(msg).ok();
-						game.pending_action = PendingAction::QuestInfo(quest.quest_id.clone());
-
-					}
-
-					if !game.player.inventory.is_load && game.pending_action == PendingAction::None{
-						game.tx_to_serv.try_send("INVENTORY \n".to_string()).ok();
-						game.pending_action = PendingAction::Inventory;
-					}
-					if is_key_pressed(KeyCode::C) && game.focus == InputFocus::Game{
-						game.tx_to_serv.try_send("QUIT \n".to_string()).ok();
-						game.pending_action = PendingAction::Quit;
-						break;
-					}
-
-					if let Some(map_data) = game.map_data.clone() {
-						if game.dungeon.is_some() {
-
-							let mut room_data = None;
-							if let Some(dungeon) = &game.dungeon {
-								if !dungeon.rooms.is_empty() {
-									if let Some(rd) = dungeon.rooms.get(&map_data.room.id) {
-										room_data = Some(rd.clone());
-									} else {
-										game.dungeon = None;
-										game.player.new_spawn = Spawn::North
-									}
-								}
-							}
-							if let Some(room_data) = room_data {
-								if let Some(dungeon) = &mut game.dungeon {
-									let map: Room = get_dungeon_map(dungeon, &room_data).await;
-
-									handle_game(&mut game, &map, map_data);
-								}
-							}
-							else {
-							let map = match rooms.get(&map_data.room.id) {
-								Some(room_data) => room_data,
-								None => &get_empty_room(),
-							};
-
-							handle_game(&mut game, map, map_data);
-						}
-						} else {
-							let map = match rooms.get(&map_data.room.id) {
-								Some(room_data) => room_data,
-								None => &get_empty_room(),
-							};
-							handle_game(&mut game, map, map_data);
-						}
-					}
-
-				}
-
-			}
-		}
-		next_frame().await
-		}
+                                        handle_game(&mut game, map, map_data);
+                                    }
+                                } else {
+                                    let map = match rooms.get(&map_data.room.id) {
+                                        Some(room_data) => room_data,
+                                        None => &get_empty_room(),
+                                    };
+                                    handle_game(&mut game, map, map_data);
+                                }
+                            }
+                        }
+                    }
+                }
+                next_frame().await
+            }
+        }
     }
-}
 
+    fn handle_game(game: &mut Game, map: &Room, map_data: LookData) {
+        if game.player.new_spawn != Spawn::None && game.player.new_spawn != Spawn::Center {
+            let spawn: Vec2 = map
+                .spawns
+                .get(&game.player.new_spawn)
+                .or_else(|| map.spawns.get(&Spawn::Center))
+                .copied()
+                .unwrap_or(Vec2::ZERO);
+            game.player.x = spawn.x;
+            game.player.y = spawn.y;
+            game.player.new_spawn = Spawn::None;
+            if !game.end_dungeon {
+                game.tx_to_serv.try_send("LOOK\n".to_string()).ok();
+                game.pending_action = PendingAction::Look;
+            } else {
+                game.chat.channel = 2;
+                let rp: String = format!("[Server] You Beat the dungeon !");
+                game.chat.group_messages.push(rp);
+                game.end_dungeon = false;
+            }
+        } else if game.player.new_spawn != Spawn::None {
+            let spawn: Vec2 = map.spawns[&game.player.new_spawn];
+            game.player.x = spawn.x;
+            game.player.y = spawn.y;
+            game.player.new_spawn = Spawn::None;
+        }
 
-fn handle_game(game: &mut Game, map: &Room, map_data: LookData){
-		if game.player.new_spawn != Spawn::None && game.player.new_spawn != Spawn::Center{
-			let spawn: Vec2 = map.spawns
-				.get(&game.player.new_spawn)
-				.or_else(|| map.spawns.get(&Spawn::Center))
-				.copied()
-				.unwrap_or(Vec2::ZERO);
-			game.player.x = spawn.x;
-			game.player.y = spawn.y;
-			game.player.new_spawn = Spawn::None;
-			if !game.end_dungeon{
-				game.tx_to_serv.try_send("LOOK\n".to_string()).ok();
-				game.pending_action = PendingAction::Look;
-			}
-			else{
-				game.chat.channel = 2;
-				let rp: String = format!("[Server] You Beat the dungeon !");
-				game.chat.group_messages.push(rp);
-				game.end_dungeon = false;
-			}
+        let floor: Texture2D = map.first_layer.clone();
+        let builds: Option<Texture2D> = map.second_layer.clone();
+        let map_obstacles = map.colliders;
+        if let Some(builds_texture) = builds.as_ref() {
+            builds_texture.set_filter(FilterMode::Nearest);
+        }
+        floor.set_filter(FilterMode::Nearest);
 
-		}
+        clear_background(BLACK);
 
+        camera_handler(game);
 
-		else if game.player.new_spawn != Spawn::None{
-			let spawn: Vec2 = map.spawns[&game.player.new_spawn];
-			game.player.x = spawn.x;
-			game.player.y = spawn.y;
-			game.player.new_spawn = Spawn::None;
-		}
+        if game.focus == InputFocus::Game {
+            player_handler(game, &map_obstacles);
+        }
 
+        let current_skin_texture = game.skin.clone();
+        let sprite_width: f32 = game.config.sprite_width;
+        let sprite_height: f32 = game.config.sprite_height;
+        let source_x: f32 = game.player.row as f32 * sprite_width;
+        let source_y: f32 = game.player.line as f32 * sprite_height;
 
-		let floor: Texture2D = map.first_layer.clone();
-		let builds: Option<Texture2D> = map.second_layer.clone();
-		let map_obstacles = map.colliders;
-		if let Some(builds_texture) = builds.as_ref() {
-			builds_texture.set_filter(FilterMode::Nearest);
-		}
-		floor.set_filter(FilterMode::Nearest);
+        let map_params = DrawTextureParams {
+            dest_size: Some(vec2(floor.width(), floor.height())),
+            ..Default::default()
+        };
 
-		clear_background(BLACK);
+        draw_texture_ex(&floor, 0.0, 0.0, WHITE, map_params);
 
-		camera_handler(game);
+        draw_dungeon_wall(game);
 
-		if game.focus == InputFocus::Game{
-			player_handler(game, &map_obstacles);
-		}
+        for player_name in map_data.players.iter() {
+            let cut_sheet = DrawTextureParams {
+                source: Some(Rect::new(0.0, 0.0, sprite_width, sprite_height - 1.0)),
+                dest_size: Some(vec2(sprite_width, sprite_height - 1.0)),
+                ..Default::default()
+            };
+            if player_name.as_ref() == game.player.name {
+                continue;
+            }
+            if let Some(coords) = map.spawns.get(&Spawn::Center) {
+                draw_texture_ex(
+                    &current_skin_texture,
+                    coords.x,
+                    coords.y,
+                    WHITE,
+                    cut_sheet.clone(),
+                );
 
-		let current_skin_texture = game.skin.clone();
-		let sprite_width: f32 = game.config.sprite_width;
-		let sprite_height: f32 = game.config.sprite_height;
-		let source_x: f32 = game.player.row as f32 * sprite_width;
-		let source_y: f32 = game.player.line as f32 * sprite_height;
+                let screen_pos = world_to_screen_pos(*coords);
+                let sprite_rect = world_to_screen_pos(vec2(sprite_width, sprite_height));
+                set_default_camera();
+                let rect_width = 80.0;
+                let rect_height = 15.0;
+                let rect = Rect::new(
+                    screen_pos.x + (sprite_rect.x / 2.0) - (rect_width / 2.0),
+                    screen_pos.y - rect_height,
+                    rect_width,
+                    rect_height,
+                );
+                draw_text_center(rect, player_name, 20);
+                camera_handler(game);
+            }
+        }
 
+        let mut npc_slots: Vec<Vec2> = find_npc_spawns(&map.colliders, game.config.tile_size);
+        let texture_param = DrawTextureParams {
+            dest_size: Some(vec2(sprite_width, sprite_height)),
+            ..Default::default()
+        };
 
+        let activation_distance = 20.0;
+        let mut active_npc: Option<(Vec2, Npc)> = None;
 
+        for npc_id in map_data.npcs.iter() {
+            if let Some(place) = npc_slots.pop() {
+                let npc: Option<Npc> = game.loaded_npcs.get(npc_id).cloned();
+                if let Some(npc) = npc {
+                    if let NPCKind::Enemy { defeated, .. } = npc.kind {
+                        if defeated && game.in_dungeon {
+                            continue;
+                        }
+                    }
 
-		let map_params = DrawTextureParams {
-			dest_size: Some(vec2(floor.width(), floor.height())),
-			..Default::default()
-		};
+                    let npc_texture: Texture2D = npc.clone().texture;
+                    let distance = place.distance(vec2(game.player.x, game.player.y));
+                    if distance < activation_distance {
+                        active_npc = Some((place, npc.clone()));
+                    }
 
+                    draw_texture_ex(&npc_texture, place.x, place.y, WHITE, texture_param.clone());
 
+                    npc_texture.set_filter(FilterMode::Nearest);
+                }
+            } else {
+                break;
+            }
+        }
 
-		draw_texture_ex(
-			&floor,
-			0.0,
-			0.0,
-			WHITE,
-			map_params,
-		);
+        let cut_sheet = DrawTextureParams {
+            source: Some(Rect::new(
+                source_x,
+                source_y + 1.0,
+                sprite_width,
+                sprite_height - 1.0,
+            )),
+            dest_size: Some(vec2(sprite_width, sprite_height - 1.0)),
+            ..Default::default()
+        };
+        draw_texture_ex(
+            &current_skin_texture,
+            game.player.x.round(),
+            game.player.y.round(),
+            WHITE,
+            cut_sheet,
+        );
 
-		draw_dungeon_wall(game);
+        if let Some(builds_texture) = builds.as_ref() {
+            let builds_params = DrawTextureParams {
+                dest_size: Some(vec2(builds_texture.width(), builds_texture.height())),
+                ..Default::default()
+            };
 
-		for player_name in map_data.players.iter(){
-			let cut_sheet = DrawTextureParams {
-			source: Some(Rect::new(0.0, 0.0, sprite_width, sprite_height - 1.0)),
-			dest_size: Some(vec2(sprite_width, sprite_height - 1.0)),
-			..Default::default()
-			};
-			if player_name.as_ref() == game.player.name{
-				continue;
-			}
-			if let Some(coords) = map.spawns.get(&Spawn::Center) {
-			draw_texture_ex(
-				&current_skin_texture,
-				coords.x,
-				coords.y,
-				WHITE,
-				cut_sheet.clone());
+            draw_texture_ex(builds_texture, 0.0, 0.0, WHITE, builds_params);
+        }
 
-			let screen_pos = world_to_screen_pos(*coords);
-			let sprite_rect = world_to_screen_pos(vec2(sprite_width, sprite_height));
-			set_default_camera();
-			let rect_width = 80.0;
-			let rect_height = 15.0;
-			let rect = Rect::new(screen_pos.x + (sprite_rect.x / 2.0) - (rect_width / 2.0), screen_pos.y-rect_height, rect_width, rect_height);
-			draw_text_center(rect, player_name, 20);
-			camera_handler(game);
-			}
-		}
+        if let Some((place, npc)) = active_npc {
+            handle_npc_interactions(game, place, npc);
+            camera_handler(game);
+        } else {
+            game.npc_shop.is_active = false;
+        }
 
+        set_default_camera();
+        draw_player_info(game);
+        if !game.is_connected {
+            game.is_auth = false;
+            game.map_data = None;
+            game.player = Player::new();
+        }
 
-		let mut npc_slots: Vec<Vec2> = find_npc_spawns(&map.colliders, game.config.tile_size);
-		let texture_param = DrawTextureParams {
-			dest_size: Some(vec2(sprite_width, sprite_height)),
-			..Default::default()
-		};
+        if !game.quests.all.is_empty() {
+            display_quests(game);
+        }
 
-		let activation_distance = 20.0;
-		let mut active_npc: Option<(Vec2, Npc)> = None;
+        if game.focus == InputFocus::Game {
+            while get_char_pressed().is_some() {}
+        }
 
-		for npc_id in map_data.npcs.iter() {
-			if let Some(place) = npc_slots.pop() {
-				let npc: Option<Npc> = game.loaded_npcs.get(npc_id).cloned();
-				if let Some(npc) = npc {
-					if let NPCKind::Enemy {defeated , .. } = npc.kind{
-						if defeated && game.in_dungeon{continue;}
-					}
+        handle_menu(game);
 
-					let npc_texture: Texture2D = npc.clone().texture;
-					let distance = place.distance(vec2(game.player.x, game.player.y));
-					if distance < activation_distance {
-						active_npc = Some((place, npc.clone()));
-					}
+        handle_inv(game);
+        handle_chat(game);
+        handle_group(game);
+        handle_games(game);
+        if let Some((rect, item)) = game.player.inventory.active_item_info.clone() {
+            draw_item_info(rect, &item);
+        };
+        game.player.inventory.active_item_info = None;
 
-
-					draw_texture_ex(
-						&npc_texture,
-						place.x,
-						place.y,
-						WHITE,
-						texture_param.clone()
-					);
-
-					npc_texture.set_filter(FilterMode::Nearest);
-				}
-
-			} else {
-				break;
-			}
-		}
-
-
-		let cut_sheet = DrawTextureParams {
-			source: Some(Rect::new(source_x, source_y + 1.0, sprite_width, sprite_height - 1.0)),
-			dest_size: Some(vec2(sprite_width, sprite_height - 1.0)),
-			..Default::default()
-		};
-		draw_texture_ex(
-			&current_skin_texture,
-			game.player.x.round(), game.player.y.round(),
-			WHITE,
-			cut_sheet
-		);
-
-
-
-
-		if let Some(builds_texture) = builds.as_ref() {
-			let builds_params = DrawTextureParams {
-				dest_size: Some(vec2(builds_texture.width(), builds_texture.height())),
-				..Default::default()
-			};
-
-			draw_texture_ex(
-				builds_texture,
-				0.0,
-				0.0,
-				WHITE,
-				builds_params,
-			);
-		}
-
-		if let Some((place, npc)) = active_npc {
-			handle_npc_interactions(game, place, npc);
-			camera_handler(game);
-		}
-		else{
-			game.npc_shop.is_active = false;
-		}
-
-
-		set_default_camera();
-		draw_player_info(game);
-		if !game.is_connected{
-			game.is_auth = false;
-			game.map_data = None;
-			game.player = Player::new();
-		}
-
-		if !game.quests.all.is_empty(){
-			display_quests(game);
-		}
-
-		if game.focus == InputFocus::Game {
-			while get_char_pressed().is_some() {}
-		}
-
-
-		handle_menu(game);
-
-		handle_inv(game);
-		handle_chat(game);
-		handle_group(game);
-		handle_games(game);
-		if let Some((rect, item)) = game.player.inventory.active_item_info.clone(){
-			draw_item_info(rect, &item);
-		};
-		game.player.inventory.active_item_info = None;
-
-
-		draw_menu(game);
-
-	}
+        draw_menu(game);
+    }
 }
