@@ -1,8 +1,5 @@
 use std::{
-    collections::{HashMap, VecDeque},
-    io::{self},
-    sync::mpsc::{Receiver, TryRecvError},
-    time::{Duration, Instant},
+    collections::{HashMap, VecDeque}, io::{self}, sync::mpsc::{Receiver, TryRecvError}, time::{Duration, Instant},
 };
 
 use ratatui::{
