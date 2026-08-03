@@ -25,7 +25,6 @@ async fn network_task(tx: mpsc::Sender<String>, mut rx: tokio::sync::mpsc::Recei
     let read_task = tokio::spawn(async move {
         let mut reader = BufReader::new(half_reader);
         let mut line = String::new();
-        // let mut buf = [0u8; 1024];
         loop {
             line.clear();
             match reader.read_line(&mut line).await {
