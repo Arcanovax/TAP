@@ -13,7 +13,10 @@ use tokio::io::{AsyncBufReadExt, AsyncWriteExt, BufReader};
 use tokio::net::TcpStream;
 
 async fn network_task(tx: mpsc::Sender<String>, mut rx: tokio::sync::mpsc::Receiver<String>) {
-    let stream = match TcpStream::connect("127.0.0.1:8080").await {
+	let addr: String = std::env::args()
+            .nth(1)
+            .unwrap_or_else(|| "127.0.0.1:8080".into());
+    let stream = match TcpStream::connect(addr).await {
         Ok(s) => s,
         Err(_) => return,
     };
