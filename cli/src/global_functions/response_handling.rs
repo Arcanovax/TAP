@@ -1,4 +1,4 @@
-use std::{collections::{HashMap, VecDeque}};
+use std::collections::{HashMap, VecDeque};
 
 use crate::{
     enums::{
@@ -119,16 +119,17 @@ pub fn response_handling(world: &mut World, answers: Vec<&str>) {
                             }
                         }
                         world.player.quests.insert(id.clone(), new_quest);
-						let ids: Vec<&String> = world.player.quests.keys().collect();
-						let (next_id, next_status) = {
-							let mut result: (String, QuestStatus) = ("".to_string(), QuestStatus::Completed);
-							for quest in &world.player.quests_views {
-								if !ids.contains(&&quest.quest_id) {
-									result = (quest.quest_id.clone(), quest.status.clone());
-								}
-							}
-							result
-						};
+                        let ids: Vec<&String> = world.player.quests.keys().collect();
+                        let (next_id, next_status) = {
+                            let mut result: (String, QuestStatus) =
+                                ("".to_string(), QuestStatus::Completed);
+                            for quest in &world.player.quests_views {
+                                if !ids.contains(&&quest.quest_id) {
+                                    result = (quest.quest_id.clone(), quest.status.clone());
+                                }
+                            }
+                            result
+                        };
                         if next_id.is_empty() {
                             if world.rooms.is_empty() {
                                 let _ = world.tx_to_serv.try_send("ROOMS\n".to_string());
@@ -341,8 +342,8 @@ pub fn response_handling(world: &mut World, answers: Vec<&str>) {
                     }
 
                     PendingAction::Talk(name) => {
-						for sentence in real_answer.split("\\") {
-							world.room.dialogs.push_back(sentence.chars().collect());
+                        for sentence in real_answer.split("\\") {
+                            world.room.dialogs.push_back(sentence.chars().collect());
                         }
                         if let Some(npc) = world.list_npcs.get(name) {
                             world.state = States::InDiscuss(
