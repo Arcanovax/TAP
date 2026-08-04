@@ -70,6 +70,26 @@ cargo run -p server <config_entry_point>
 
 Once the server is running, in an other terminal, you can run either cli, gui or both with the same command ``cargo run -p <the_service_you_want>``.
 
+# Launcher
+
+Instead of starting each service manually, you can use the Rust launcher to automatically start the server and the desired client.
+
+The launcher will:
+
+- Start the server in a separate terminal window.
+- Start the GUI or CLI depending on the selected client
+
+
+Start the GUI client:
+```BASH
+cargo run -p launcher
+```
+Start the CLI client:
+```BASH
+cargo run -p launcher cli
+```
+
+
 ## Available commands
 
 ```BASH
