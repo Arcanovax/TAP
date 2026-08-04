@@ -13,11 +13,13 @@ use std::time::Duration;
 use tokio::io::{AsyncBufReadExt, AsyncWriteExt, BufReader};
 use tokio::net::TcpListener;
 use tokio::net::tcp::OwnedWriteHalf;
-use tokio::signal::unix::{SignalKind, signal};
 use tokio::time::interval;
 use tracing::{Instrument, debug, error, info, warn};
 use tracing_subscriber::layer::SubscriberExt;
 use tracing_subscriber::util::SubscriberInitExt;
+
+#[cfg(unix)]
+use tokio::signal::unix::{signal, SignalKind};
 
 mod config;
 mod dungeon;
@@ -37,6 +39,21 @@ fn parse_command(line: &str) -> Message {
     Message::Command {
         name: command_name,
         args,
+    }
+}
+
+async fn shutdown_signal() {
+    #[cfg(unix)]
+    {
+        tokio::select! {
+            _ = tokio::signal::ctrl_c() => {}
+            _ = signal(SignalKind::terminate()).expect("failed to install SIGTERM handler") => {}
+        }
+    }
+
+    #[cfg(not(unix))]
+    {
+        let _ = tokio::signal::ctrl_c().await;
     }
 }
 
@@ -86,9 +103,6 @@ pub async fn run(
                 .with_writer(file_writer),
         )
         .init();
-
-    let mut sigint = signal(SignalKind::interrupt())?;
-    let mut sigterm = signal(SignalKind::terminate())?;
 
     let db = Arc::new(Database::create("game.redb")?);
     let mut world = load(&config)?;
@@ -200,11 +214,7 @@ pub async fn run(
                 .instrument(span),
             );
         }
-        _ = sigint.recv() => {
-            server_shutdown(&db, &server_info);
-            break Ok(());
-        }
-        _ = sigterm.recv() => {
+        _ = shutdown_signal() => {
             server_shutdown(&db, &server_info);
             break Ok(());
         }

@@ -4,5 +4,6 @@ members = [
     "cli",
     "server",
     "gui",
+    "launcher"
 ]
 resolver="2"
