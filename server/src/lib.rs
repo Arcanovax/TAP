@@ -45,12 +45,13 @@ fn parse_command(line: &str) -> Message {
 async fn shutdown_signal() {
     #[cfg(unix)]
     {
+        let mut sigterm = signal(SignalKind::terminate()).expect("failed to install SIGTERM handler");
+
         tokio::select! {
             _ = tokio::signal::ctrl_c() => {}
-            _ = signal(SignalKind::terminate()).expect("failed to install SIGTERM handler") => {}
+            _ = sigterm.recv() => {}
         }
     }
-
     #[cfg(not(unix))]
     {
         let _ = tokio::signal::ctrl_c().await;

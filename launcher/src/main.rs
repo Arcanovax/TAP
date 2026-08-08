@@ -20,6 +20,19 @@ fn main() {
             .expect("Cannot start the server");
     }
 
+    #[cfg(unix)]
+    {
+        Command::new("gnome-terminal")
+            .args([
+                "--",
+                "sh",
+                "-c",
+                "cargo run -p server ./server/config.yaml; exec bash"
+            ])
+            .spawn()
+            .expect("Cannot start the server (Vérifie que gnome-terminal est installé)");
+    }
+
     let start_client = Command::new("cargo")
         .args(["run", "-p", client])
         .status()
